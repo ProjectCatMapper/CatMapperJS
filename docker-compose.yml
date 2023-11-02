@@ -1,0 +1,21 @@
+version: '3.7'
+
+services:
+
+  app:
+    container_name: [REDACTED]-js
+    image: jscat
+    build:
+      context: .
+      dockerfile: Dockerfile
+    user: root
+    expose:
+      - 3000
+    volumes:
+      - '.:/app'
+      - '/app/node_modules'
+    ports:
+      - 3000:80
+    stdin_open: true
+    tty: true
+

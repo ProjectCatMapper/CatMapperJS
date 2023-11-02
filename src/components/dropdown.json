@@ -1,0 +1,22 @@
+{
+    "ADM0" : ["Name","SocioMapID"],
+    "ADM1" : ["Name","SocioMapID"],
+    "ADM2" : ["Name","SocioMapID","glottocode"],
+    "ADM3" : ["Name","SocioMapID"],
+    "ADMD" : ["Name","SocioMapID"],
+    "ADME" : ["Name","SocioMapID"],
+    "ADML" : ["Name","SocioMapID"],
+    "ADMX" : ["Name","SocioMapID"],
+    "CATEGORY" : ["Name","SocioMapID","glottocode"],
+    "DATASET" : ["Name"],
+    "DIALECT" : ["Name","SocioMapID","glottocode"],
+    "DISTRICT" : ["Name","SocioMapID","glottocode"],
+    "ETHNICITY" : ["Name","SocioMapID"],
+    "FAMILY" : ["Name","SocioMapID","glottocode"],
+    "GENERIC" : ["Name","SocioMapID"],
+    "LANGUAGE" : ["Name","SocioMapID","glottocode"],
+    "LANGUOID" : ["Name","SocioMapID","glottocode"],
+    "PPL" : ["Name","SocioMapID"],
+    "RELIGION" : ["Name","SocioMapID"],
+    "VARIABLE" : ["Name","SocioMapID"]
+}
