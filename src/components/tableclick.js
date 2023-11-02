@@ -58,7 +58,7 @@ export default function Tableclick(props) {
     
 
     useEffect(() => {
-        fetch("http://localhost:5001/category?value=" + props.socioid.socioid,
+        fetch("https://catmapper.org/api/category?value=" + props.socioid.socioid,
             {
                 method: "GET"
             })

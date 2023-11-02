@@ -2,7 +2,8 @@
   "name": "[REDACTED]",
   "version": "0.1.0",
   "private": true,
-  "proxy": "http://localhost:5001",
+  "homepage": "/js",
+  "proxy": "http://catmapper.org/api",
   "dependencies": {
     "@apollo/client": "^3.8.4",
     "@auth0/auth0-react": "^2.2.1",
