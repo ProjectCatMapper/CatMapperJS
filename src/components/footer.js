@@ -48,7 +48,7 @@ const footer = () => {
         <Grid item xs={6}>
         <Card variant="outlined" style={{backgroundColor: 'black',border: '1px solid white',}}>
         <CardContent>
-      <Typography sx={{ fontSize: 20 }} color="#fff" gutterBottom>
+      <Typography id='sociomapfooter' sx={{ fontSize: 20 }} color="#fff" gutterBottom>
         Description
       </Typography>
       <Typography variant="p" color="#fff" component="div">
@@ -72,7 +72,7 @@ const footer = () => {
       <Grid item xs={6}>
       <Card variant="outlined" style={{backgroundColor: 'black',border: '1px solid white',}}>
         <CardContent>
-      <Typography sx={{ fontSize: 20 }} color="#fff" gutterBottom>
+      <Typography id='sociomapfooter' sx={{ fontSize: 20 }} color="#fff" gutterBottom>
         Dataset Progress
       </Typography>
       <Typography variant="table" color="#000" component="div">
@@ -110,7 +110,7 @@ const footer = () => {
       <Grid item xs={6}>
       <Card variant="outlined" style={{backgroundColor: 'black',border: '1px solid white',}}>
         <CardContent>
-      <Typography sx={{ fontSize: 20 }} color="#fff" gutterBottom>
+      <Typography id='sociomapfooter' sx={{ fontSize: 20 }} color="#fff" gutterBottom>
         Citation
       </Typography>
       <Typography variant="p" color="#fff" component="div">
@@ -126,7 +126,7 @@ const footer = () => {
       <Grid item xs={6}>
       <Card variant="outlined" style={{backgroundColor: 'black',border: '1px solid white',paddingLeft:10,}}>
         <CardContent>
-      <Typography sx={{ fontSize: 20 }} color="#fff" gutterBottom>
+      <Typography id='sociomapfooter' sx={{ fontSize: 20 }} color="#fff" gutterBottom>
         Funding
       </Typography>
       <Typography variant="p" color="#fff" component="div">
