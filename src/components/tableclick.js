@@ -77,23 +77,23 @@ export default function Tableclick(props) {
   const nodesMap = new Map();
   const newrelationships = [];
 
-  useEffect(() => {
-    fetch("http://localhost:5001/category?value=" + props.socioid.socioid,
-      {
-        method: "GET"
-      })
-      .then(response => {
-        return response.json()
-      })
-      .then(data => {
-        setUsert(data.current_response)
-        setMapt(data.future_response)
-        setrev(data.center)
-        // setPoints(data.poid)
-        setlabel(data.label)
-        setfdrop(data.relnames)
-      })
-  }, [])
+    useEffect(() => {
+        fetch("https://catmapper.org/api/category?value=" + props.socioid.socioid,
+            {
+                method: "GET"
+            })
+            .then(response => {
+                return response.json()
+            })
+            .then(data => {
+                setUsert(data.current_response)
+                setMapt(data.future_response)
+                setrev(data.center)
+                setPoints(data.poid)
+                setlabel(data.label)
+                setfdrop(data.relnames)
+            })
+    }, [])
 
   {if (geoPolygonsRef.current && mapContainerRef.current) {
     const polygonBounds = geoPolygonsRef.current.getBounds().pad(2);

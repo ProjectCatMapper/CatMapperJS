@@ -64,7 +64,7 @@ export default function Searchbar() {
 
   function handleclick(tvalue, age) {
     console.log(`option: ${selectedOption},tvalue: ${tvalue}, age: ${age}`)
-    fetch("http://localhost:5001/count?label=" + age + "&options=" + selectedOption + "&value=" + tvalue,
+    fetch("https://catmapper.org/api/count?label=" + age + "&options=" + selectedOption + "&value=" + tvalue,
       {
         method: "GET"
       })

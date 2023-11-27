@@ -18,7 +18,7 @@ const client = new ApolloClient({
 });
 */
 ReactDOM.render(
-  <BrowserRouter>
+  <BrowserRouter basename="/js">
       <Auth0Provider
     domain="dev-onnldmkcx3jun1em.us.auth0.com"
     clientId="2QWgZvzukTh348ToXR7RbvgiaulSmSfc"
