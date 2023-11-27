@@ -11,7 +11,7 @@ export default function ClickTable(props) {
     { field: 'timespan', headerName: 'Time span', width: 100 },
     { field: 'source', headerName: 'Source', width: 200 },
     { field: 'version', headerName: 'Version', width: 160, },
-    { field: 'link', headerName: 'Link', width: 80, renderCell: (params) =>{if (params.row.link) {return <a className='viewlink' href={params.row.link} target="_blank" rel="noopener noreferrer">{"View"}</a>;}}, },
+    { field: 'link', headerName: 'Link', width: 80, renderCell: (params) =>{if (params.row.link) {return <a id='viewlink' href={params.row.link} target="_blank" rel="noopener noreferrer">{"View"}</a>;}}, },
   ];
   const [rows, setRows] = useState([]);
 
@@ -39,7 +39,6 @@ export default function ClickTable(props) {
   return (
     <div style={{ height: 700, width: '100%' }}>
       <DataGrid
-        autoHeight
         rows={rows}
         getRowHeight={() => 80}
         columns={columns}

@@ -2,91 +2,146 @@ import React, { useEffect,useState } from 'react';
 import './neocomp.css'
 import * as d3 from 'd3';
 import neo4j, { session } from 'neo4j-driver';
+import { FormControl, Select, MenuItem, InputLabel } from '@mui/material';
 import {useNavigate} from 'react-router-dom'
 
-function Neo4jGraph({p2,p0,p1}) {
-  const [nodes, setNodes] = useState([]);
-  const [relationships, setRelationships] = useState([]);
-  const [selectedNodeId, setSelectedNodeId] = useState(p1);
+function Neo4jGraph({n,r,l,f,id}) {
+  const [node, setNodes] = useState([]);
+  const [relationship, setRelationships] = useState('');
+  const [selectedNodeId, setSelectedNodeId] = useState(id);
+  const [flag, setflag] = useState("");
+  const [filldrop, setfilldrop] = useState({});
+  // const [selectedValues, setSelectedValues] = useState([]);
+  const [firstDropdownValue, setFirstDropdownValue] = useState([]);
   const navigate = useNavigate();
   const colorScale = d3.scaleOrdinal(d3.schemeCategory10);
 
   useEffect(() => {
     // This code will run when the component mounts and whenever 'count' changes
     // You can put any logic here that should trigger a state update
-    if (selectedNodeId !== p1)
+    if (selectedNodeId !== id)
     {
     navigate({pathname:`/exview/${selectedNodeId}`,});
     window.location.reload();
     }
   }, [selectedNodeId]);
 
-  useEffect(() => {
+//   useEffect(() => {
 
-    const fetchData = async () => {
-    const driver = neo4j.driver('neo4j://sociomap.rc.asu.edu:7687', neo4j.auth.basic('neo4j', '[REDACTED]'));
+//     const fetchData = async () => {
+//     const driver = neo4j.driver('neo4j://sociomap.rc.asu.edu:7687', neo4j.auth.basic('neo4j', '[REDACTED]'));
 
-    const session = driver.session();
+//     const session = driver.session();
 
-try {
-   const result = await session.run("MATCH (n:"+p0+" {CMID:'"+p1+"'})-[r:"+p2+"]-(OtherNodes) RETURN n,r,OtherNodes")
+// try {
+//    const result = await session.run("MATCH (n:"+p0+" {CMID:'"+p1+"'})-[r:"+p2+"]-(OtherNodes) RETURN n,r,OtherNodes")
 
-  //  session.run("match (a) where a.CMID = '"+d.CMID+"' return labels(a)")
+//   //  session.run("match (a) where a.CMID = '"+d.CMID+"' return labels(a)")
+//     result.records.forEach((record) => { 
+//       domains.push(record.get("n").labels[record.get("n").labels.length-1])
+//       domains.push(record.get("OtherNodes").labels[record.get("OtherNodes").labels.length-1])
+//     });
+    
+//     setlabels([...new Set(domains)])
+//     names.push("All")
 
-    const nodesMap = new Map();
-    const newrelationships = [];
+//     result.records.forEach((record) => { 
+//       const source1 = record.get('n').properties;
+//       const source = Object.assign({},source1,{label: record.get('n').labels} )
+//       source.label = source.label[source.label.length - 1]
+//       const target1 = record.get('OtherNodes').properties;
+//       const target = Object.assign({},target1,{label: record.get('OtherNodes').labels} )
+//       target.label = target.label[target.label.length - 1]
+//       names.push(target.CMName)
 
-        result.records.forEach((record) => {
-          const source = record.get('n').properties;
-          {console.log(record.get('n').labels)}
-          const target = record.get('OtherNodes').properties;
-          const rel = record.get('r').properties;
+//       nodesMap.set(source.CMName, source);
+//       nodesMap.set(target.CMName, target);
 
-          nodesMap.set(source.CMName, source);
-          nodesMap.set(target.CMName, target);
+//       newrelationships.push({
+//         source: source.CMName,
+//         target: target.CMName,
+//         label : target.label
+//       });
 
-          newrelationships.push({
-            source: source.CMName,
-            target: target.CMName,
-            relType: rel.type,
-          });
-        });
+//     });
 
-        const newnodes = Array.from(nodesMap.values());
-        setNodes(newnodes);
-        setRelationships(newrelationships);
-        RenderD3Graph(newnodes, newrelationships);
-      }
-      catch(error)  {
-        console.error('Error running Neo4j query:', error);
-      }
-      finally {
-        session.close();
-        driver.close();
-      }
-  }
-
-  fetchData(); // Fetch the initial data
-
+//     const newnodes = Array.from(nodesMap.values());
+//     console.log(newnodes)
+//     console.log(newrelationships)
+//     setfilldrop(names)  
+//     setNodes(newnodes);
+//     setRelationships(newrelationships);
   
-}, []);
+//       }
+//       catch(error)  {
+//         console.error('Error running Neo4j query:', error);
+//       }
+//       finally {
+//         session.close();
+//         driver.close();
+//       }
+//   }
+
+//   fetchData(); // Fetch the initial data
+  
+// }, [firstDropdownValue]);
+
+useEffect(() => {setNodes(n)
+  setRelationships(r)
+  setfilldrop(f)
+  setFirstDropdownValue(f[0])
+  },[f])
+
+useEffect(() => {
+  if(flag !== "" && firstDropdownValue !== "All"){
+  RenderD3Graph(node.filter((node) => firstDropdownValue.includes(node.CMName) || node.CMID === id), relationship.filter((link) => firstDropdownValue.includes(link.target.CMName)) )}
+  if(firstDropdownValue === "All"){
+    RenderD3Graph(node,relationship)
+  }
+},[firstDropdownValue])
+
+useEffect(() => {
+if (relationship !== ''){
+RenderD3Graph(node, relationship )
+setflag("0")
+}
+},[relationship])
+
+// useEffect(() => {setNodes(n)
+//   setRelationships(r)
+//   setlabels(l)
+//   setfilldrop(f)
+//   setSelectedValues(l)
+//   setFirstDropdownValue(f[0])
+//   },[])
+
+// useEffect(() => {
+//   if (relationship !== ''){
+//   RenderD3Graph(node, relationship )}
+//   },[selectedValues,firstDropdownValue])
 
 function handleNodeClick(node) {
-  // Update the selected node in the component state
+  if (node.label !== "DATASET")
   setSelectedNodeId(node.CMID);
-  {console.log(node)}
-  // Navigate to the NodeDetailsPage with the node's ID as a URL parameter
 }
-
   function RenderD3Graph(nodes, relationships) {
 
+    d3.selectAll("svg > *").remove();
     const svg = d3.select('#graph-container').select('svg');
-    
+
+    // svg.selectAll('*').remove();   
+    // if (selectedValues !== labels) {
+    // nodes = nodes.filter((node) => selectedValues.includes(node.label))
+    // relationships =  relationships.filter((link) => selectedValues.includes(link.label))
+    // setfilldrop(filldrop.filter((link) => selectedValues.includes(link.label)))}
+  
     const simulation = d3.forceSimulation(nodes)
-      .force('charge', d3.forceManyBody().strength(-500))
-      .force('link', d3.forceLink(relationships).id((d) => d.CMName).distance(100))
-      .force('center', d3.forceCenter(500, 250))
-      //.force('collide', d3.forceCollide(20)); 
+    .force('link', d3.forceLink(relationships).id((d) => d.CMName).distance(100))
+    .force('charge', d3.forceManyBody().strength(-500))
+    .force('x', d3.forceX().x(400 * 0.5))
+    .force('y', d3.forceY().y(300 * 0.5))
+    .force('center', d3.forceCenter(400, 300))
+    // .force('collide', d3.forceCollide(20)); 
 
       const linksSelection = svg
       .selectAll('.link')
@@ -99,12 +154,6 @@ function handleNodeClick(node) {
       .append('line')
       .attr('stroke', 'gray');
 
-    linksSelection
-      .append('text')
-      .attr('x', 0)
-      .attr('y', 0)
-      .text((d) => d.relType);
-
     // Render nodes with labels
     const nodesSelection = svg
       .selectAll('.node')
@@ -116,15 +165,15 @@ function handleNodeClick(node) {
     nodesSelection
       .append('circle')
       .attr('r', 15)
-      .attr('fill', (d) => colorScale(d.CMID))
+      .attr('fill', (d) => colorScale(d.label))
       .on('click', (event, d) => handleNodeClick(d));
 
     nodesSelection
       .append('text')
       .text((d) => d.CMName)
-      .attr('x', (d) => d.x + 12)
+      .attr('x', (d) => d.x)
       .attr('y', (d) => d.y)
-      .attr('dy', '0.35em')
+      // .attr('dy', '0.35em')
       .attr('font-size', '12px')
       .attr('fill', 'black');
 
@@ -137,53 +186,41 @@ function handleNodeClick(node) {
         .attr('y2', (d) => d.target.y);
 
       nodesSelection
-        .attr('transform', (d) => `translate(${d.x},${d.y})`);
-    });
+      .attr('transform', (d) => `translate(${d.x},${d.y})`);    });
   }
                           
   return(
+    <div>
+      {/* <Select
+        multiple
+        value={selectedValues}
+        onChange={(event) => setSelectedValues(event.target.value)}
+        label="Select Multiple Items"
+        sx={{ m: 1, width: 300 }}
+      >
+        {labels.map((option) => (
+        <MenuItem value={option}>
+          {option}
+        </MenuItem>
+      ))}
+      </Select> */}
+        <Select
+          label="First Dropdown"
+          value={firstDropdownValue}
+          sx={{ m: 1, width: 300 }}
+          onChange={(event) => setFirstDropdownValue(event.target.value)}>
+         {Object.entries(filldrop).length !== 0  && filldrop.map((options) => (
+        <MenuItem value={options}>
+          {options}
+        </MenuItem>
+      ))}
+        </Select>
     <div id="graph-container" >
-    {console.log({selectedNodeId})}
     <svg width={800} height={600} />
+    </div>
     </div>
 
   );
 }
 
 export default Neo4jGraph;
-
-
-// import NeoVis from 'neovis.js';
-
-// class NeoVisComponent extends Component {
-
-//   componentDidMount() {
-//     const config = {
-//       container_id: 'neo4j-vis',
-//       server_url: 'neo4j://sociomap.rc.asu.edu:7687',
-//       server_user: 'neo4j',
-//       server_password: '[REDACTED]',
-//       labels: {
-//         'YourNodeLabel': {
-//           caption: 'CMName',
-//         },
-
-//       },
-//       relationships: {
-       
-//       },
-//     };
-
-//     this.neoVis = new NeoVis(config);
-    
-//     const cypherQuery = `MATCH (n:ADM0) RETURN n LIMIT 25`
-
-//     this.neoVis.renderWithCypher(cypherQuery);
-//   }
-
-//   render() {
-//     return <div id="neo4j-graph" style={{ width: '100%', height: '600px' }} />;
-//   }
-// };
-
-// export default NeoVisComponent;
