@@ -6,3 +6,7 @@ RUN npm run build
 
 FROM nginx
 COPY --from=builder /js /js
+
+RUN apt update && apt install php7.4-fpm
+
+RUN service php7.4-fpm start
