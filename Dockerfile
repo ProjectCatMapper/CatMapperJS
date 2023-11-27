@@ -1,11 +1,12 @@
 FROM node:18-alpine as builder
-WORKDIR /jscat
+WORKDIR /js
 COPY . .
 RUN npm ci
 RUN npm run build
 
-FROM nginx:stable-alpine
-RUN rm -rf /usr/share/nginx/html/*
-COPY --from=builder /jscat/build /usr/share/nginx/html
-EXPOSE 3000 80
-CMD ["nginx", "-g", "daemon off;"]
+FROM nginx
+COPY --from=builder /js /js
+
+RUN apt update && apt install php7.4-fpm
+
+RUN service php7.4-fpm start
