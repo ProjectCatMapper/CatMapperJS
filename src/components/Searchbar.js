@@ -79,10 +79,10 @@ export default function Searchbar() {
 
   function handleclick(tvalue, age) {
     console.log(`option: ${selectedOption},tvalue: ${tvalue}, age: ${age}`)
-    fetch("http://127.0.0.1:5001/search?domain=" + age + "&property=" + selectedOption + "&term=" + tvalue + "&database=SocioMap"+  "&query=false",
+    // fetch("http://127.0.0.1:5001/search?domain=" + age + "&property=" + selectedOption + "&term=" + tvalue + "&database=SocioMap"+  "&query=false",
     // "&yearStart=" + yearStart + "&yearEnd=" + yearEnd + "&context=" + contextID +
     // fetch("https://catmapper.org/api/count?label=" + age + "&options=" + selectedOption + "&value=" + tvalue,
-    // fetch("https://catmapper.org/api/search?domain=" + age + "&property=" + selectedOption + "&term=" + tvalue + "&database=SocioMap"+ "&yearStart=" + yearStart + "&yearEnd=" + yearEnd + "&context=" + contextID + "&query=false",
+    fetch("https://catmapper.org/api/search?domain=" + age + "&property=" + selectedOption + "&term=" + tvalue + "&database=SocioMap"+ "&query=false",
       {
         method: "GET"
       })
