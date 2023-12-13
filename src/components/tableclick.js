@@ -78,7 +78,8 @@ export default function Tableclick(props) {
   const newrelationships = [];
 
     useEffect(() => {
-        fetch("https://catmapper.org/api/category?value=" + props.socioid.socioid,
+      fetch("http://127.0.0.1:5001/category?value=" + props.socioid.socioid,
+        // fetch("https://catmapper.org/api/category?value=" + props.socioid.socioid,
             {
                 method: "GET"
             })
@@ -181,11 +182,11 @@ export default function Tableclick(props) {
 
   try {
     return (
-      <div style={{ backgroundColor: 'white', width: "100%", height: 900, color: "black" }}>
-        <Box sx={{ width: '20%', height: "100%", backgroundImage: `linear-gradient(60deg, #29323c 0%, #485563 100%)` }}>
-          <h2 style={{ color: "black", position: "absolute", left: "70px", top: "120px" }}>Category Info</h2>
+      <div style={{ backgroundColor: 'white', width: "100%", height: 1100, color: "black" }}>
+        <Box sx={{ width: '100%', height: "25%", backgroundImage: `linear-gradient(60deg, #29323c 0%, #485563 100%)` }}>
+          <h2 style={{ color: "black", position: "absolute", left: "45%", top: "120px" }}>Category Info</h2>
         </Box>
-        <Box sx={{ width: '80%', position: "absolute", left: "400px", top: "100px" }}>
+        <Box sx={{ width: '100%', height: "auto" , position: "absolute", left: "10px", top: "360px" }}>
           <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
             <Tabs sx={{ overflowY: "scroll", maxHeight: 700 }} value={value} onChange={handleChange} aria-label="basic tabs example">
               <Tab label="Samples" {...a11yProps(0)} />
@@ -204,7 +205,7 @@ export default function Tableclick(props) {
               <MapContainer ref={mapContainerRef} center={rev}
                 zoom="5"
                 scrollWheelZoom={true}
-                style={{ height: "100vh" }}>
+                style={{ height: "80vh" }}>
                 <GeoJSON ref={geoPolygonsRef} data={mapt} style={{ color: "red" }} />
                 {/* {(points.length !== undefined)  ? (points.map((point) => (
         <Marker

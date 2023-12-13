@@ -10,7 +10,6 @@ h1,h4,p,a{
   color: #fff;
 }
 
-
 body {
   margin: 0;
   font-family: 'Outfit', 'Segoe UI', 'Roboto', 'Oxygen',
@@ -18,7 +17,6 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-
   background: #000;
 }
 
