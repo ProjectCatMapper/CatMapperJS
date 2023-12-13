@@ -7,8 +7,9 @@ export default function DataTable(props) {
   const columns = [
     { field: 'id', headerName: 'Index', width: 70 },
     { field: 'cmid', headerName: 'CMID', width: 150 },
-    { field: 'name', headerName: 'Name', width: 200 },
+    { field: 'name', headerName: 'CMName', width: 200 },
     { field: 'label', headerName: 'Label', width: 160, },
+    { field: 'country', headerName: 'Country', width: 700, },
   ];
   const [rows, setRows] = useState([]);
   const navigate = useNavigate();
@@ -24,9 +25,10 @@ export default function DataTable(props) {
     setRows(props.users.map((value, key) => {
       return {
         id: key + 1,
-        cmid: value.n.CMID,
-        name: value.n.CMName,
+        cmid: value.CMID,
+        name: value.CMName,
         label: props.label,
+        country: value.country,
       }
     }))
   }, [props.users])
@@ -34,7 +36,6 @@ export default function DataTable(props) {
   // React.useEffect(() => {
   //   console.log(rows)
   // }, [rows])
-
 
   return (
     <div style={{ height: 700, width: '100%' }}>

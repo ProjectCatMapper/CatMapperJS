@@ -2,7 +2,7 @@ import React from 'react'
 import {Link} from 'react-router-dom'
 import './cat_video.css'
 
-import cvideo from "../assets/space.mp4"
+import cvideo from "../assets/new.mp4"
 
 const video = () => {
   return (
