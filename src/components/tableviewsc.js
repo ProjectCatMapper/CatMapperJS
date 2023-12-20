@@ -4,12 +4,14 @@ import { DataGrid } from '@mui/x-data-grid';
 import {useNavigate} from 'react-router-dom'
 
 export default function DataTable(props) {
+  console.log(props)
   const columns = [
     { field: 'id', headerName: 'Index', width: 70 },
     { field: 'cmid', headerName: 'CMID', width: 150 },
     { field: 'name', headerName: 'CMName', width: 200 },
     { field: 'label', headerName: 'Label', width: 160, },
     { field: 'country', headerName: 'Country', width: 700, },
+    { field: 'match', headerName: 'Matching', width: 300, },
   ];
   const [rows, setRows] = useState([]);
   const navigate = useNavigate();
@@ -27,8 +29,9 @@ export default function DataTable(props) {
         id: key + 1,
         cmid: value.CMID,
         name: value.CMName,
-        label: props.label,
+        label: value.domain,
         country: value.country,
+        match: value.matching
       }
     }))
   }, [props.users])

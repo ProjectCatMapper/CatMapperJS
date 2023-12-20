@@ -11,7 +11,9 @@ import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined';
 import { Box } from '@mui/material';
 import DataTable from './tableviewsc';
 import doptions from "./dropdown.json";
-import countries from "./countries.json";
+import countries from "./records.json";
+import Button from '@mui/material/Button';
+import InfoIcon from '@mui/icons-material/Info';
 import "./Searchbar.css";
 
 const BootstrapInput = styled(InputBase)(({ theme }) => ({
@@ -53,7 +55,7 @@ export default function Searchbar() {
   
   const [selectedOption, setSelectedOption] = useState('Name');
 
-  const [selectedcountry, setSelectedCountry] = useState('');
+  const [selectedcountry, setSelectedCountry] = useState(countries[0].code);
 
   const optionsForSelectedCategory = doptions[age];
 
@@ -65,9 +67,9 @@ export default function Searchbar() {
 
   const [tvalue, settvalue] = useState('');
 
-  const [yearStart, setyearStart] = useState(-4000);
+  const [yearStart, setyearStart] = useState(null);
 
-  const [yearEnd, setyearEnd] = useState(2023);
+  const [yearEnd, setyearEnd] = useState(null);
 
   const [isChecked, setIsChecked] = useState(false);
 
@@ -75,27 +77,24 @@ export default function Searchbar() {
 
   const handleCheckboxChange = () => {
     setIsChecked(!isChecked);
+    setSelectedCountry(countries[0].code)
   };
 
-  function handleclick(tvalue, age) {
-    console.log(`option: ${selectedOption},tvalue: ${tvalue}, age: ${age}`)
-    // fetch("http://127.0.0.1:5001/search?domain=" + age + "&property=" + selectedOption + "&term=" + tvalue + "&database=SocioMap"+  "&query=false",
-    // "&yearStart=" + yearStart + "&yearEnd=" + yearEnd + "&context=" + contextID +
+  function handleClick(tvalue, age) {
+    fetch("http://127.0.0.1:5001/search?domain=" + age + "&property=" + selectedOption + "&term=" + tvalue + "&database=SocioMap"+  "&query=false" + "&yearStart=" + yearStart + "&yearEnd=" + yearEnd + "&country=" + selectedcountry + "&context=" + contextID,
     // fetch("https://catmapper.org/api/count?label=" + age + "&options=" + selectedOption + "&value=" + tvalue,
-    fetch("https://catmapper.org/api/search?domain=" + age + "&property=" + selectedOption + "&term=" + tvalue + "&database=SocioMap"+ "&query=false",
+    // fetch("https://catmapper.org/api/search?domain=" + age + "&property=" + selectedOption + "&term=" + tvalue + "&database=SocioMap"+ "&query=false",
       {
         method: "GET"
       })
       .then(response => {
         // console.log(response.json)
         return response.json()
-
       })
       .then(data => {
         setUsers(data)
         console.log(data)
       })
-
   }
 
   return (
@@ -112,27 +111,52 @@ export default function Searchbar() {
             onChange={handleChange}
             input={<BootstrapInput />}
           >
+            <optgroup label="District">
             <option value={"ADM0"}>ADM0</option>
             <option value={"ADM1"}>ADM1</option>
             <option value={"ADM2"}>ADM2</option>
             <option value={"ADM3"}>ADM3</option>
             <option value={"ADMD"}>ADMD</option>
             <option value={"ADME"}>ADME</option>
+            <option value={"ADML"}>ADML</option>
             <option value={"ADMX"}>ADMX</option>
-            <option value={"CATEGORY"}>CATEGORY</option>
-            <option value={"DATASET"}>DATASET</option>
-            <option value={"DIALECT"}>DIALECT</option>
             <option value={"DISTRICT"}>DISTRICT</option>
-            <option value={"ETHNICITY"}>ETHNICITY</option>
+            <option value={"PPL"}>PPL</option>
+            </optgroup>
+            <optgroup label="Category">
+            <option value={"CATEGORY"}>CATEGORY</option>
+            </optgroup>
+            <optgroup label="Dataset">
+            <option value={"DATASET"}>DATASET</option>
+            </optgroup>
+            <optgroup label="Languoid">
+            <option value={"DIALECT"}>DIALECT</option>
             <option value={"FAMILY"}>FAMILY</option>
-            <option value={"GENERIC"}>GENERIC</option>
             <option value={"LANGUAGE"}>LANGUAGE</option>
             <option value={"LANGUOID"}>LANGUOID</option>
-            <option value={"PPL"}>PPL</option>
+            </optgroup>
+            <optgroup label="Ethnicity">
+            <option value={"ETHNICITY"}>ETHNICITY</option>
+            </optgroup>
+            <optgroup label="Generic">
+            <option value={"GENERIC"}>GENERIC</option>
+            </optgroup>
+            <optgroup label="Religion">
             <option value={"RELIGION"}>RELIGION</option>
+            </optgroup>
+            <optgroup label="Variable">
             <option value={"VARIABLE"}>VARIABLE</option>
+            </optgroup>
           </NativeSelect>
         </FormControl>
+        <Button
+      startIcon={<InfoIcon />}
+      onClick={() => {
+        // Handle button click
+        console.log('Info button clicked');
+      }}
+    >
+    </Button>
       <FormControl sx={{ marginLeft: "1%", width: 250,height: 70 }} variant="standard">
       <h6 id='sociomappersearchpagetext'>Property to search</h6>
         <NativeSelect
@@ -151,6 +175,14 @@ export default function Searchbar() {
             ))}
         </NativeSelect>
       </FormControl >
+      <Button
+      startIcon={<InfoIcon />}
+      onClick={() => {
+        // Handle button click
+        console.log('Info button clicked');
+      }}
+    >
+    </Button>
       <input
         type="text"
         id="myInput"
@@ -159,7 +191,7 @@ export default function Searchbar() {
         onChange={(event) => { settvalue(event.target.value) }}
       />
         {/* <TextField onChange={(event) => { settvalue(event.target.value) }} sx={{ m: 1,height: 40, width: 450, backgroundColor: "white" }} variant="standard" /> */}
-        <IconButton color="primary" aria-label="add to shopping cart"  onClick={() => { handleclick(tvalue, age) }} sx={{top:10}}>
+        <IconButton color="primary" aria-label="add to shopping cart"  onClick={() => { handleClick(tvalue, age) }} sx={{top:10}}>
           <SearchOutlinedIcon />
         </IconButton>
         </div>

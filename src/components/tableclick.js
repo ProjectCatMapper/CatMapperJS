@@ -10,7 +10,6 @@ import { MapContainer, TileLayer, GeoJSON, Marker, Popup } from "react-leaflet";
 import Neo4jGraph from './neocomp';
 import './tableclick.css'
 
-// import Graph from './sigmaexplorer';
 
 import neo4j, { session } from 'neo4j-driver';
 import { select } from 'd3';
@@ -53,15 +52,12 @@ export default function Tableclick(props) {
   const [value, setValue] = useState(0);
   const [usert, setUsert] = useState([]);
   const [mapt, setMapt] = useState([""]);
-  const [rev, setrev] = useState([])
-  const [points, setPoints] = useState({});
+  const [rev, setrev] = useState([]);
+  const [points, setPoints] = useState([]);
   const [label, setlabel] = useState([]);
   const [fdrop, setfdrop] = useState([]);
   const [firstDropdownValue, setFirstDropdownValue] = useState('');
-  const mapContainerRef = useRef(null);
-  const geoPolygonsRef = useRef(null);
-
-
+ 
   const [flag, setflag] = useState('');
   const [nodes, setNodes] = useState([]);
   const [relationships, setRelationships] = useState([]);
@@ -77,9 +73,9 @@ export default function Tableclick(props) {
   const nodesMap = new Map();
   const newrelationships = [];
 
-    useEffect(() => {
-      //fetch("http://127.0.0.1:5001/category?value=" + props.socioid.socioid,
-        fetch("https://catmapper.org/api/category?value=" + props.socioid.socioid,
+  useEffect(() => {
+    fetch("http://127.0.0.1:5001/category?cmid=" + props.socioid.socioid + "&database=SocioMap",
+        // fetch("https://catmapper.org/api/category?value=" + props.socioid.socioid + "&database=SocioMap",
             {
                 method: "GET"
             })
@@ -87,19 +83,14 @@ export default function Tableclick(props) {
                 return response.json()
             })
             .then(data => {
-                setUsert(data.current_response)
-                setMapt(data.future_response)
-                setrev(data.center)
-                setPoints(data.poid)
+                setUsert(data.samples)
+                setMapt(data.polygons)
+                setrev(data.info)
+                setPoints(data.points)
                 setlabel(data.label)
                 setfdrop(data.relnames)
             })
     }, [])
-
-  {if (geoPolygonsRef.current && mapContainerRef.current) {
-    const polygonBounds = geoPolygonsRef.current.getBounds().pad(2);
-    mapContainerRef.current.fitBounds(polygonBounds);
-  }}
 
   const handleFirstDropdownChange = async (event) => {
     const value = event.target.value
@@ -184,7 +175,16 @@ export default function Tableclick(props) {
     return (
       <div style={{ backgroundColor: 'white', width: "100%", height: 1100, color: "black" }}>
         <Box sx={{ width: '100%', height: "25%", backgroundImage: `linear-gradient(60deg, #29323c 0%, #485563 100%)` }}>
-          <h2 style={{ color: "black", position: "absolute", left: "45%", top: "120px" }}>Category Info</h2>
+        {console.log(typeof(rev))}
+          <h2 style={{ color: "black", position: "absolute", left: "45%", top: "100px" }}>Category Info</h2>
+          <ul style={{ color: "black", position: "absolute", left: "45%", top: "150px",fontSize: "large" }} >
+        {(rev.length !== 0) ?
+         Object.entries(rev).map(([key, value]) => value && (
+          <li key={key}>
+            <strong>{key}:</strong> {value}
+          </li>
+        )): rev}
+      </ul>
         </Box>
         <Box sx={{ width: '100%', height: "auto" , position: "absolute", left: "10px", top: "360px" }}>
           <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
@@ -199,26 +199,21 @@ export default function Tableclick(props) {
           </CustomTabPanel>
           <CustomTabPanel value={value} index={1}>
             <div style={{ position: "absolute", top: "10", left: "200", width: "95%", height: "50vh" }}>
-              {/* {mapt !== "" ?
-                        || points.length !== undefined ? */}
-              {console.log(rev)}
-              <MapContainer ref={mapContainerRef} center={rev}
+              {console.log(points)}
+              <MapContainer 
+                center={[0,0]}
                 zoom="5"
                 scrollWheelZoom={true}
                 style={{ height: "80vh" }}>
-                <GeoJSON ref={geoPolygonsRef} data={mapt} style={{ color: "red" }} />
-                {/* {(points.length !== undefined)  ? (points.map((point) => (
-        <Marker
-          key={point.id}
-          position={point.coordinates}
-        >
-          <Popup>{point.id}</Popup>
+                <GeoJSON  data={mapt} style={{ color: "red" }} />
+                {(points.length !== 0)  ? (points.map((point) => (
+        <Marker position={point.cood}>
+          <Popup>{point.source}</Popup>
         </Marker>
-      ))):{}} */}
+      ))):points}
                 <TileLayer url='https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png'
                   attribution='&copy; <a href="https://carto.com/">CARTO</a> contributors' />
               </MapContainer>
-              {/* :(<p>No map available</p>)} */}
             </div>
           </CustomTabPanel>
           <CustomTabPanel value={value} index={2}>
