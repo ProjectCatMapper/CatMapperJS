@@ -40,10 +40,10 @@ export default function ClickTable(props) {
 
 
   return (
-    <div style={{ height: 700, width: '100%' }}>
+    <div style={{ height: 500, width: '100%' }}>
       <DataGrid
         rows={rows}
-        getRowHeight={() => 80}
+        getRowHeight={() => 50}
         columns={columns}
         initialState={{
           pagination: {
