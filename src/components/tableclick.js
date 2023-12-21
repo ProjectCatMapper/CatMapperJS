@@ -51,7 +51,7 @@ function a11yProps(index) {
 export default function Tableclick(props) {
   const [value, setValue] = useState(0);
   const [usert, setUsert] = useState([]);
-  const [mapt, setMapt] = useState([""]);
+  const [mapt, setMapt] = useState([]);
   const [rev, setrev] = useState([]);
   const [points, setPoints] = useState([]);
   const [label, setlabel] = useState([]);
@@ -74,7 +74,7 @@ export default function Tableclick(props) {
   const newrelationships = [];
 
   useEffect(() => {
-    fetch("http://127.0.0.1:5001/category?cmid=" + props.socioid.socioid + "&database=SocioMap",
+    fetch("https://catmapper.org/api/category?cmid=" + props.socioid.socioid + "&database=SocioMap",
         // fetch("https://catmapper.org/api/category?value=" + props.socioid.socioid + "&database=SocioMap",
             {
                 method: "GET"
@@ -175,7 +175,7 @@ export default function Tableclick(props) {
     return (
       <div style={{ backgroundColor: 'white', width: "100%", height: 1100, color: "black" }}>
         <Box sx={{ width: '100%', height: "25%", backgroundImage: `linear-gradient(60deg, #29323c 0%, #485563 100%)` }}>
-        {console.log(typeof(rev))}
+        {/* {console.log(mapt.coordinates[0][0][0])} */}
           <h2 style={{ color: "black", position: "absolute", left: "45%", top: "100px" }}>Category Info</h2>
           <ul style={{ color: "black", position: "absolute", left: "45%", top: "150px",fontSize: "large" }} >
         {(rev.length !== 0) ?
@@ -199,8 +199,7 @@ export default function Tableclick(props) {
           </CustomTabPanel>
           <CustomTabPanel value={value} index={1}>
             <div style={{ position: "absolute", top: "10", left: "200", width: "95%", height: "50vh" }}>
-              {console.log(points)}
-              <MapContainer 
+              {mapt.length !== 0 && <MapContainer 
                 center={[0,0]}
                 zoom="5"
                 scrollWheelZoom={true}
@@ -213,7 +212,7 @@ export default function Tableclick(props) {
       ))):points}
                 <TileLayer url='https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png'
                   attribution='&copy; <a href="https://carto.com/">CARTO</a> contributors' />
-              </MapContainer>
+              </MapContainer>}
             </div>
           </CustomTabPanel>
           <CustomTabPanel value={value} index={2}>
