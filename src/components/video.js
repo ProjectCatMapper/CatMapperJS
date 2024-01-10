@@ -15,7 +15,7 @@ const video = () => {
        <p id='sociomapvideo'>SocioMap organizes dynamic and complex category systems commonly used by social scientists and policymakers, including ethnicities, languages, religions, and political districts. Each of these systems includes thousands of categories encoded in diverse, dynamic and incompatible ways across a growing corpus of thousands of datasets. This creates a bottleneck for social scientists trying to merge diverse datasets to conduct novel analyses.</p>
     <div>
        <Link id='sociomapvideo' to='/explore' className='btn'>Explore</Link>
-      <Link id='sociomapvideo' to='/merge' className='btn'>Merge</Link>
+      <Link id='sociomapvideo' to='/translate' className='btn'>Translate</Link>
     </div>
     </div>
     </div>
