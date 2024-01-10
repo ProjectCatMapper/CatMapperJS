@@ -82,6 +82,7 @@ export default function Searchbar() {
 
   function handleClick(tvalue, age) {
     fetch("https://catmapper.org/api/search?domain=" + age + "&property=" + selectedOption + "&term=" + tvalue + "&database=SocioMap"+  "&query=false" + "&yearStart=" + yearStart + "&yearEnd=" + yearEnd + "&country=" + selectedcountry + "&context=" + contextID,
+    // fetch("http://127.0.0.1:5001/search?domain=" + age + "&property=" + selectedOption + "&term=" + tvalue + "&database=SocioMap"+  "&query=false" + "&yearStart=" + yearStart + "&yearEnd=" + yearEnd + "&country=" + selectedcountry + "&context=" + contextID,
     // fetch("https://catmapper.org/api/count?label=" + age + "&options=" + selectedOption + "&value=" + tvalue,
     // fetch("https://catmapper.org/api/search?domain=" + age + "&property=" + selectedOption + "&term=" + tvalue + "&database=SocioMap"+ "&query=false",
       {
@@ -93,7 +94,6 @@ export default function Searchbar() {
       })
       .then(data => {
         setUsers(data)
-        console.log(data)
       })
   }
 
@@ -259,7 +259,7 @@ export default function Searchbar() {
       </div>
       <div style={{ padding: 10, backgroundColor: "black" }}>
         <Box sx={{ width: '100%', color: 'black', backgroundColor: "white" }}>
-          <DataTable users={users} label={age} />
+        {<DataTable users={users} label={age} />}
         </Box>
       </div>
 

@@ -6,6 +6,7 @@ import { FormControl, Select, MenuItem, InputLabel } from '@mui/material';
 import {useNavigate} from 'react-router-dom'
 
 function Neo4jGraph({n,r,l,f,id}) {
+  console.log("a")
   const [node, setNodes] = useState([]);
   const [relationship, setRelationships] = useState('');
   const [selectedNodeId, setSelectedNodeId] = useState(id);

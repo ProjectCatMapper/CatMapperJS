@@ -69,13 +69,13 @@ export default function Tableclick(props) {
   const [selectedValues, setSelectedValues] = useState([]);
   const domains = [];
   let name = [];
-  let names = ({});
+  let names = ({}); 
   const nodesMap = new Map();
   const newrelationships = [];
 
   useEffect(() => {
     fetch("https://catmapper.org/api/category?cmid=" + props.socioid.socioid + "&database=SocioMap",
-        // fetch("https://catmapper.org/api/category?value=" + props.socioid.socioid + "&database=SocioMap",
+        // fetch("http://127.0.0.1:5001/category?cmid=" + props.socioid.socioid + "&database=SocioMap",
             {
                 method: "GET"
             })
@@ -92,9 +92,16 @@ export default function Tableclick(props) {
             })
     }, [])
 
+    const onEachFeature = (feature, layer) => {
+      // Bind popup or tooltip here
+      {console.log(feature)}
+      layer.bindTooltip(`Source: ${feature.source}`, { permanent: false, direction: 'top' });
+    };
+  
+
   const handleFirstDropdownChange = async (event) => {
     const value = event.target.value
-    const driver = neo4j.driver('neo4j://sociomap.rc.asu.edu:7687', neo4j.auth.basic('neo4j', 'sociomap'));
+    const driver = neo4j.driver('bolt://sociomap.rc.asu.edu:7687', neo4j.auth.basic('neo4j', 'sociomap'));
     const session = driver.session();
 
     try {
@@ -199,20 +206,21 @@ export default function Tableclick(props) {
           </CustomTabPanel>
           <CustomTabPanel value={value} index={1}>
             <div style={{ position: "absolute", top: "10", left: "200", width: "95%", height: "50vh" }}>
-              {mapt.length !== 0 && <MapContainer 
+              {mapt.length !== 0 ? <MapContainer 
                 center={[0,0]}
                 zoom="5"
                 scrollWheelZoom={true}
                 style={{ height: "80vh" }}>
-                <GeoJSON  data={mapt} style={{ color: "red" }} />
+                <GeoJSON  data={mapt} style={{ color: "red" }} onEachFeature={onEachFeature} />
                 {(points.length !== 0)  ? (points.map((point) => (
         <Marker position={point.cood}>
+            {console.log(point.cood)}
           <Popup>{point.source}</Popup>
         </Marker>
       ))):points}
                 <TileLayer url='https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png'
                   attribution='&copy; <a href="https://carto.com/">CARTO</a> contributors' />
-              </MapContainer>}
+              </MapContainer> : <p>No map</p>}
             </div>
           </CustomTabPanel>
           <CustomTabPanel value={value} index={2}>

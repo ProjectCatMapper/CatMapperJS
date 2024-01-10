@@ -52,7 +52,8 @@ export default function DataTable(props) {
           },
         }}
         pageSizeOptions={[10, 30, 50]}
-        onRowClick={handleRowClick} />
+        onRowClick={handleRowClick}
+        localeText={{ noRowsLabel: "No results to display" }} />
     </div>
   );
 }
