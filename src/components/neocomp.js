@@ -192,19 +192,6 @@ function handleNodeClick(node) {
                           
   return(
     <div>
-      {/* <Select
-        multiple
-        value={selectedValues}
-        onChange={(event) => setSelectedValues(event.target.value)}
-        label="Select Multiple Items"
-        sx={{ m: 1, width: 300 }}
-      >
-        {labels.map((option) => (
-        <MenuItem value={option}>
-          {option}
-        </MenuItem>
-      ))}
-      </Select> */}
         <Select
           label="First Dropdown"
           value={firstDropdownValue}
