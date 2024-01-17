@@ -37,6 +37,8 @@
     "url": "^0.11.3",
     "use-neo4j": "^0.3.13",
     "util": "^0.12.5",
+    "vis-data": "^7.1.9",
+    "vis-network": "^9.1.9",
     "web-vitals": "^2.1.4"
   },
   "scripts": {
