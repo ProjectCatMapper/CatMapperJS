@@ -4,8 +4,8 @@ import './index.css';
 import App from './App';
 import { BrowserRouter } from 'react-router-dom';
 import { Auth0Provider } from '@auth0/auth0-react';
-import { Neo4jProvider, createDriver } from 'use-neo4j'// Create driver instance
-const driver = createDriver('neo4j', 'localhost', 7687, 'neo4j', '[REDACTED]')
+// import { Neo4jProvider, createDriver } from 'use-neo4j'// Create driver instance
+// const driver = createDriver('neo4j', 'localhost', 7687, 'neo4j', '[REDACTED]')
 /*
 import { ApolloClient, InMemoryCache, ApolloProvider } from '@apollo/client';
 
@@ -26,9 +26,9 @@ ReactDOM.render(
       redirect_uri: 'http://localhost:3000/Profile/'
     }}
   >
-      <Neo4jProvider driver={driver}>
+      {/* <Neo4jProvider driver={driver}> */}
       <App />
-    </Neo4jProvider>
+    {/* </Neo4jProvider> */}
   </Auth0Provider>
    </BrowserRouter>,
   document.getElementById("root")

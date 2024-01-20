@@ -53,15 +53,13 @@ export default function Tableclick(props) {
   const [label, setlabel] = useState([]);
   const [fdrop, setfdrop] = useState([]);
   const [firstDropdownValue, setFirstDropdownValue] = useState('');
+  const [thirdDropdownValue, setThirdDropdownValue] = useState('All');
   const [selectedValues, setSelectedValues] = useState([]);
-
+  const [selectedNodes, setSelectedNodes] = useState([]);
   const [originaldata, setoriginaldata] = useState(null);
-  const [labels, setlabels] = useState([]);
-  const [filldrop, setfilldrop] = useState({});
   const [visData, setVisData] = useState(null);
   const [domains, setdomains] = useState([]);
-  let name = [];
-  let names = ({}); 
+ 
  
   useEffect(() => {
     fetch("https://catmapper.org/api/category?cmid=" + props.socioid.socioid + "&database=SocioMap",
@@ -107,6 +105,10 @@ export default function Tableclick(props) {
           domains  =  Array.from(new Set(domains.flat())).filter((value) => value !== "DISTRICT")
           setSelectedValues(domains)
           setdomains(domains)
+
+          let nodevalues = nodes.map((object) => object.label).slice(1)
+          nodevalues.unshift("All")
+          setSelectedNodes([...nodevalues])
           
           setFirstDropdownValue(event.target.value)
           setoriginaldata({nodes,edges})
@@ -201,6 +203,20 @@ export default function Tableclick(props) {
                   label="Select Multiple Items"
                 >
                   {domains && domains.map((option) => (
+                    <MenuItem value={option}>
+                      {option}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              <FormControl sx={{ m: 1, width: 300 }}>
+                <InputLabel htmlFor="third-dropdown">Nodes</InputLabel>
+                <Select
+                  label="Third Dropdown"
+                  value={thirdDropdownValue}
+                  onChange={(event) =>setThirdDropdownValue(event.target.value)}
+                >
+                  {selectedNodes.map((option) => (
                     <MenuItem value={option}>
                       {option}
                     </MenuItem>
