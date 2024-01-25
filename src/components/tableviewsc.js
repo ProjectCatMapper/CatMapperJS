@@ -10,7 +10,7 @@ export default function DataTable(props) {
     { field: 'cmid', headerName: 'CMID', width: 150 },
     { field: 'name', headerName: 'CMName', width: 200 },
     { field: 'label', headerName: 'Label', width: 160, },
-    { field: 'country', headerName: 'Country', width: 700, },
+    { field: 'country', headerName: 'Country', width: 300, },
     { field: 'match', headerName: 'Matching', width: 300, },
   ];
   const [rows, setRows] = useState([]);

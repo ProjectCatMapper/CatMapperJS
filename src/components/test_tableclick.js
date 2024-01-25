@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
@@ -6,6 +6,7 @@ import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import ClickTable from './tableclickview';
 import { FormControl, Select, MenuItem, InputLabel } from '@mui/material';
+import L from 'leaflet';
 import { MapContainer, TileLayer, GeoJSON, Marker, Popup } from "react-leaflet";
 import './tableclick.css'
 import Neo4jVisualization from './visnet';
@@ -43,7 +44,6 @@ function a11yProps(index) {
   };
 }
 
-
 export default function Tableclick(props) {
   const [value, setValue] = useState(0);
   const [usert, setUsert] = useState([]);
@@ -59,7 +59,60 @@ export default function Tableclick(props) {
   const [originaldata, setoriginaldata] = useState(null);
   const [visData, setVisData] = useState(null);
   const [domains, setdomains] = useState([]);
- 
+
+  const generateTooltipContent = (properties) => {
+    return Object.entries(properties).map(([key, value]) => `${key}: ${value}`).join('\n');  };
+
+  const getColorBasedOnValue = (value) => {
+    value  =  Array.from(new Set(value.flat())).filter((value) => value !== "CATEGORY")
+    value  =  Array.from(new Set(value.flat())).filter((value) => value !== "DISTRICT")
+    if (value == "ADM0"){
+      return "#4f8c9d"
+    }
+    if (value == "ADM1"){
+      return "#5ce8ef"
+    }
+    if (value == "ADM2"){
+      return "#0a4f4e"
+    }
+    if (value == "ADM3"){
+      return "#6fef70"
+    }if (value == "ADMD"){
+      return "#15974d"
+    }
+    if (value == "ADME"){
+      return "#c0e15c"
+    }
+    if (value == "ADML"){
+      return "#738c4e"
+    }
+    if (value == "ADMX"){
+      return "#96ccfe"
+    }
+    if (value == "DATASET"){
+      return "#6b62a5"
+    }
+    if (value == "DIALECT"){
+      return "#d16dbe"
+    }
+    if (value == "FAMILY"){
+      return "#f3c5fa"
+    }
+    if (value == "LANGUAGE"){
+      return "#941483"
+    }
+    if (value == "LANGUOID"){
+      return "#f642d0"
+    }
+    if (value == "ETHNICITY"){
+      return "#6439e5"
+    }
+    if (value == "RELIGION"){
+      return "#e1c471"
+    }
+    };
+  
+  const mapRef = useRef();
  
   useEffect(() => {
     fetch("https://catmapper.org/api/category?cmid=" + props.socioid.socioid + "&database=SocioMap",
@@ -82,15 +135,19 @@ export default function Tableclick(props) {
 
     const fetchData = async (event) => {
         try {
-
           // const response = await fetch("http://127.0.0.1:5001/network?cmid=" + props.socioid.socioid +"&relation=" + event.target.value + "&value="+ label);
           const response = await fetch("https://catmapper.org/api/networks?cmid=" + props.socioid.socioid + "&database=SocioMap&relation=" + event.target.value + "&response=records");
           const result = await response.json();
 
+          console.log(result)
+
           const node = [...Object.entries(result["node"]),...Object.entries(result["relNodes"])].map((node) => ({
             id: node["1"].id,  // Adjust this based on your node structure
             label: node["1"].CMName,  // Adjust this based on your node structure
-            domain: node["1"].labels
+            domain: node["1"].labels,
+            CMID: node["1"].CMID,
+            title: generateTooltipContent(node["1"]),
+            color: getColorBasedOnValue(node["1"].labels),
           }));
 
           const nodes = Array.from(new Set(node.map(JSON.stringify))).map(JSON.parse);
@@ -98,6 +155,7 @@ export default function Tableclick(props) {
           const edges = Object.entries(result["relations"]).map(relationship => ({
             from: relationship["1"].start_node_id,  // Adjust this based on your relationship structure
             to: relationship["1"].end_node_id,  // Adjust this based on your relationship structure
+            color : "black",
           }));
 
           let domains = nodes.map((object) => object.domain).slice(1)
@@ -125,6 +183,19 @@ export default function Tableclick(props) {
       setSelectedValues(event.target.value)
     };
 
+    const updateNodeData = (event) => {
+      if (event.target.value === "All")
+      {
+        setVisData(originaldata)
+      }
+      else{
+      const nodes = originaldata["nodes"].filter((item,index) => {  if (index === 0) {return true;} if (item.label === event.target.value){return item}});
+      const edges = originaldata['edges']
+      setVisData({nodes, edges})
+      }
+      setThirdDropdownValue(event.target.value)
+    };
+
     const onEachFeature = (feature, layer) => {
       // Bind popup or tooltip here
       layer.bindTooltip(`Source: ${feature.source}`, { permanent: false, direction: 'top' });
@@ -134,10 +205,12 @@ export default function Tableclick(props) {
     setValue(newValue);
   };
 
+  useEffect(() => {fetchData({target: { value: fdrop[0]}})},[fdrop])
+
   try {
     return (
       <div style={{ backgroundColor: 'white', width: "100%", height: 1100, color: "black" }}>
-        <Box sx={{ width: '100%', height: "25%", backgroundImage: `linear-gradient(60deg, #29323c 0%, #485563 100%)` }}>
+        <Box sx={{ width: '100%', height: "25%", backgroundImage: `linear-gradient(to right, #93a5cf, #e4efe9)` }}>
         {/* {console.log(mapt.coordinates[0][0][0])} */}
           <h2 style={{ color: "black", position: "absolute", left: "45%", top: "100px" }}>Category Info</h2>
           <ul style={{ color: "black", position: "absolute", left: "45%", top: "150px",fontSize: "large" }} >
@@ -162,7 +235,8 @@ export default function Tableclick(props) {
           </CustomTabPanel>
           <CustomTabPanel value={value} index={1}>
             <div style={{ position: "absolute", top: "10", left: "200", width: "95%", height: "50vh" }}>
-              {mapt.length !== 0 ? <MapContainer 
+              {mapt.length !== 0 ? 
+              <MapContainer 
                 center={[0,0]}
                 zoom="5"
                 scrollWheelZoom={true}
@@ -214,7 +288,7 @@ export default function Tableclick(props) {
                 <Select
                   label="Third Dropdown"
                   value={thirdDropdownValue}
-                  onChange={(event) =>setThirdDropdownValue(event.target.value)}
+                  onChange={updateNodeData}
                 >
                   {selectedNodes.map((option) => (
                     <MenuItem value={option}>
