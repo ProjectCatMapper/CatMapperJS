@@ -4,7 +4,6 @@ import { DataGrid } from '@mui/x-data-grid';
 import './tableclickview.css'
 
 export default function ClickTable(props) {
-  console.log(props.usert)
   const columns = [
     { field: 'id', headerName: 'ID', width: 30 },
     { field: 'name', headerName: 'Name', width: 300 },

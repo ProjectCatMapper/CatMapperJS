@@ -189,6 +189,7 @@ export default function Searchbar() {
         value={tvalue}
         style={{marginTop :22,marginLeft:"1%",width:450,height:45}}
         onChange={(event) => { settvalue(event.target.value) }}
+        onKeyDown={(event) => { if (event.key === 'Enter') {handleClick(tvalue, age)} }}
       />
         {/* <TextField onChange={(event) => { settvalue(event.target.value) }} sx={{ m: 1,height: 40, width: 450, backgroundColor: "white" }} variant="standard" /> */}
         <IconButton color="primary" aria-label="add to shopping cart"  onClick={() => { handleClick(tvalue, age) }} sx={{top:10}}>
