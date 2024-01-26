@@ -7,7 +7,7 @@ import Tab from '@mui/material/Tab';
 import ClickTable from './tableclickview';
 import { FormControl, Select, MenuItem, InputLabel } from '@mui/material';
 import L from 'leaflet';
-import { MapContainer, TileLayer, GeoJSON, Marker, Popup } from "react-leaflet";
+import { MapContainer, TileLayer, GeoJSON, Marker, Popup, useMap } from "react-leaflet";
 import './tableclick.css'
 import Neo4jVisualization from './visnet';
 
@@ -113,7 +113,42 @@ export default function Tableclick(props) {
     };
   
   const mapRef = useRef();
- 
+
+  function SetViewToDataBounds({ points, polygons }) {
+    const map = useMap();
+  
+    useEffect(() => {
+
+      console.log("Points:", points); // Print points data
+      console.log("Polygons:", polygons); // Print polygons data
+
+      // Initialize an empty bounds object
+      let bounds = new L.LatLngBounds();
+  
+      // Add polygons to the bounds if they exist
+      if (polygons) {
+        const polygonBounds = L.geoJSON(polygons).getBounds();
+        bounds.extend(polygonBounds);
+      }
+  
+      // Add points to the bounds if they exist
+      if ( points && points?.length > 0) {
+        points.forEach(point => {
+          if (point.cood && point.cood.length === 2) {
+            bounds.extend(L.latLng(point.cood));
+          }
+        });
+      }
+  
+      // If bounds are valid, fit the map to these bounds
+      if (bounds.isValid()) {
+        map.fitBounds(bounds);
+      }
+    }, [points, polygons, map]);
+  
+    return null;
+  }
+  
   useEffect(() => {
     fetch("https://catmapper.org/api/category?cmid=" + props.socioid.socioid + "&database=SocioMap",
         // fetch("http://127.0.0.1:5001/category?cmid=" + props.socioid.socioid + "&database=SocioMap",
@@ -207,6 +242,13 @@ export default function Tableclick(props) {
 
   useEffect(() => {fetchData({target: { value: fdrop[0]}})},[fdrop])
 
+  // useEffect(() => {
+  //   if (mapRef.current && mapt) {
+  //     const geoJsonLayer = L.geoJSON(mapt);
+  //     mapRef.current.fitBounds(geoJsonLayer.getBounds());
+  //   }
+  // }, [mapt]);
+
   try {
     return (
       <div style={{ backgroundColor: 'white', width: "100%", height: 1100, color: "black" }}>
@@ -240,7 +282,9 @@ export default function Tableclick(props) {
                 center={[0,0]}
                 zoom="5"
                 scrollWheelZoom={true}
-                style={{ height: "80vh" }}>
+                style={{ height: "80vh" }}
+                ref = {mapRef}>
+                <SetViewToDataBounds points={points} polygons={mapt} />
                 <GeoJSON  data={mapt} style={{ color: "red" }} onEachFeature={onEachFeature} />
                 {(points.length !== 0)  ? (points.map((point) => (
         <Marker position={point.cood}>
