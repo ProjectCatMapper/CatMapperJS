@@ -59,6 +59,7 @@ export default function Tableclick(props) {
   const [originaldata, setoriginaldata] = useState(null);
   const [visData, setVisData] = useState(null);
   const [domains, setdomains] = useState([]);
+  const [sources, setsources] = useState([]);
 
   const generateTooltipContent = (properties) => {
     return Object.entries(properties).map(([key, value]) => `${key}: ${value}`).join('\n');  };
@@ -66,6 +67,7 @@ export default function Tableclick(props) {
   const getColorBasedOnValue = (value) => {
     value  =  Array.from(new Set(value.flat())).filter((value) => value !== "CATEGORY")
     value  =  Array.from(new Set(value.flat())).filter((value) => value !== "DISTRICT")
+    value = value.slice(-1)[0]
     if (value == "ADM0"){
       return "#4f8c9d"
     }
@@ -119,9 +121,6 @@ export default function Tableclick(props) {
   
     useEffect(() => {
 
-      console.log("Points:", points); // Print points data
-      console.log("Polygons:", polygons); // Print polygons data
-
       // Initialize an empty bounds object
       let bounds = new L.LatLngBounds();
   
@@ -130,7 +129,6 @@ export default function Tableclick(props) {
         const polygonBounds = L.geoJSON(polygons).getBounds();
         bounds.extend(polygonBounds);
       }
-  
       // Add points to the bounds if they exist
       if ( points && points?.length > 0) {
         points.forEach(point => {
@@ -165,6 +163,7 @@ export default function Tableclick(props) {
                 setPoints(data.points)
                 setlabel(data.label)
                 setfdrop(data.relnames)
+                setsources(data.polysource)
             })
     },[])
 
@@ -173,8 +172,6 @@ export default function Tableclick(props) {
           // const response = await fetch("http://127.0.0.1:5001/network?cmid=" + props.socioid.socioid +"&relation=" + event.target.value + "&value="+ label);
           const response = await fetch("https://catmapper.org/api/networks?cmid=" + props.socioid.socioid + "&database=SocioMap&relation=" + event.target.value + "&response=records");
           const result = await response.json();
-
-          console.log(result)
 
           const node = [...Object.entries(result["node"]),...Object.entries(result["relNodes"])].map((node) => ({
             id: node["1"].id,  // Adjust this based on your node structure
@@ -240,14 +237,29 @@ export default function Tableclick(props) {
     setValue(newValue);
   };
 
-  useEffect(() => {fetchData({target: { value: fdrop[0]}})},[fdrop])
+  const getFeatureStyle = (feature) => {
+    const category = feature.geometry.source;
 
-  // useEffect(() => {
-  //   if (mapRef.current && mapt) {
-  //     const geoJsonLayer = L.geoJSON(mapt);
-  //     mapRef.current.fitBounds(geoJsonLayer.getBounds());
-  //   }
-  // }, [mapt]);
+    const colorMap = {};
+
+    sources.forEach((value, index) => {
+      const color = `#${(index * 100 + 255).toString(16).substring(0, 6)}`;
+      colorMap[value] = color;
+    });
+    
+    console.log(colorMap)
+  
+    return {
+      fillColor: colorMap[category] || 'gray',
+      weight: 2,
+      opacity: 1,
+      color: 'white',
+      dashArray: '0',
+      fillOpacity: 0.3,
+    };
+  };
+
+  useEffect(() => {fetchData({target: { value: fdrop[0]}})},[fdrop])
 
   try {
     return (
@@ -285,7 +297,7 @@ export default function Tableclick(props) {
                 style={{ height: "80vh" }}
                 ref = {mapRef}>
                 <SetViewToDataBounds points={points} polygons={mapt} />
-                <GeoJSON  data={mapt} style={{ color: "red" }} onEachFeature={onEachFeature} />
+                <GeoJSON  data={mapt} style={getFeatureStyle} onEachFeature={onEachFeature} />
                 {(points.length !== 0)  ? (points.map((point) => (
         <Marker position={point.cood}>
           <Popup>{point.source}</Popup>
