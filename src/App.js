@@ -8,17 +8,21 @@ import Catmapper from "./routes/Catmapper";
 import Archamap from "./routes/Archamap"
 import Profile from "./routes/Profile";
 import Sociomapclick from "./routes/Sociomapclick";
+import ArchaMapclick from "./routes/ArchaMapclick";
+import Archamapexplore from "./routes/Archamapexplore";
 
 function App() {
   return (
       <Routes>
         <Route path='/' element={<Catmapper />} />
-        <Route path='/Archamap' element={<Archamap />} />
-        <Route path='/Home' element={<Home />} />
-        <Route path='/explore' element={<Explore />} />
-        <Route path='/translate' element={<Translate />} />
+        <Route path='/archamap' element={<Archamap />} />
+        <Route path='/sociomap' element={<Home />} />
+        <Route path='/sociomap/explore' element={<Explore />} />
+        <Route path='/archamap/explore' element={<Archamapexplore />} />
+        <Route path='/sociomap/translate' element={<Translate />} />
         <Route path='/profile' element={<Profile />} />
-        <Route path='/exview/:socioid' element={<Sociomapclick />} />
+        <Route path='/sociomap/:cmid' element={<Sociomapclick />} />
+        <Route path='/archamap/:cmid' element={<ArchaMapclick />} />
       </Routes>
   );
 }

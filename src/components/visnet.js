@@ -48,7 +48,7 @@ const Neo4jVisualization = ({ visData }) => {
         var clickedNodeData = visData["nodes"].find(obj => obj["id"] === clickedNodeId)
         if (clickedNodeData["CMID"] !== currentid)
     {
-    navigate({pathname:`/exview/${clickedNodeData["CMID"]}`,});
+    navigate({pathname:`/sociomap/${clickedNodeData["CMID"]}`,});
     window.location.reload();
     }
       }

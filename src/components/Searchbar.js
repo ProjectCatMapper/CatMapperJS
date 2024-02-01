@@ -10,10 +10,14 @@ import IconButton from '@mui/material/IconButton';
 import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined';
 import { Box } from '@mui/material';
 import DataTable from './tableviewsc';
-import doptions from "./dropdown.json";
+import archdomain from "./domain_archamap.json"
+import sociodomain from "./domain_sociomap.json"
+import socioptions from "./dropdown.json"
+import archoptions from "./dropdown_archamap.json";
 import countries from "./records.json";
 import Button from '@mui/material/Button';
 import InfoIcon from '@mui/icons-material/Info';
+import { useLocation } from 'react-router-dom';
 import "./Searchbar.css";
 
 const BootstrapInput = styled(InputBase)(({ theme }) => ({
@@ -28,7 +32,6 @@ const BootstrapInput = styled(InputBase)(({ theme }) => ({
     fontSize: 16,
     padding: '10px 26px 10px 12px',
     transition: theme.transitions.create(['border-color', 'box-shadow']),
-    // Use the system font instead of the default Roboto font.
     fontFamily: [
       '-apple-system',
       'BlinkMacSystemFont',
@@ -57,8 +60,6 @@ export default function Searchbar() {
 
   const [selectedcountry, setSelectedCountry] = useState(countries[0].code);
 
-  const optionsForSelectedCategory = doptions[age];
-
   const handleDropdownChange = (event) => {setSelectedOption(event.target.value);};
 
   const handleChange = (event) => { setAge(event.target.value); };
@@ -75,13 +76,27 @@ export default function Searchbar() {
 
   const [contextID, setcontextID] = useState(null);
 
+  let database = "SocioMap"
+
+  let selectedcategory = sociodomain
+
+  let optionsForSelectedCategory = socioptions[age]
+
+  if (useLocation().pathname.includes("archamap")) {
+    database = "ArchaMap"
+    selectedcategory = archdomain
+    optionsForSelectedCategory = archoptions[age]
+  } 
+  
   const handleCheckboxChange = () => {
     setIsChecked(!isChecked);
     setSelectedCountry(countries[0].code)
   };
 
+  console.log(useLocation().pathname.includes("sociomap"))
+
   function handleClick(tvalue, age) {
-    fetch("https://catmapper.org/api/search?domain=" + age + "&property=" + selectedOption + "&term=" + tvalue + "&database=SocioMap"+  "&query=false" + "&yearStart=" + yearStart + "&yearEnd=" + yearEnd + "&country=" + selectedcountry + "&context=" + contextID,
+    fetch("https://catmapper.org/api/search?domain=" + age + "&property=" + selectedOption + "&term=" + tvalue + "&database=" +database+  "&query=false" + "&yearStart=" + yearStart + "&yearEnd=" + yearEnd + "&country=" + selectedcountry + "&context=" + contextID,
     // fetch("http://127.0.0.1:5001/search?domain=" + age + "&property=" + selectedOption + "&term=" + tvalue + "&database=SocioMap"+  "&query=false" + "&yearStart=" + yearStart + "&yearEnd=" + yearEnd + "&country=" + selectedcountry + "&context=" + contextID,
     // fetch("https://catmapper.org/api/count?label=" + age + "&options=" + selectedOption + "&value=" + tvalue,
     // fetch("https://catmapper.org/api/search?domain=" + age + "&property=" + selectedOption + "&term=" + tvalue + "&database=SocioMap"+ "&query=false",
@@ -111,48 +126,20 @@ export default function Searchbar() {
             onChange={handleChange}
             input={<BootstrapInput />}
           >
-            <optgroup label="District">
-            <option value={"ADM0"}>ADM0</option>
-            <option value={"ADM1"}>ADM1</option>
-            <option value={"ADM2"}>ADM2</option>
-            <option value={"ADM3"}>ADM3</option>
-            <option value={"ADMD"}>ADMD</option>
-            <option value={"ADME"}>ADME</option>
-            <option value={"ADML"}>ADML</option>
-            <option value={"ADMX"}>ADMX</option>
-            <option value={"DISTRICT"}>DISTRICT</option>
-            <option value={"PPL"}>PPL</option>
-            </optgroup>
-            <optgroup label="Category">
-            <option value={"CATEGORY"}>CATEGORY</option>
-            </optgroup>
-            <optgroup label="Dataset">
-            <option value={"DATASET"}>DATASET</option>
-            </optgroup>
-            <optgroup label="Languoid">
-            <option value={"DIALECT"}>DIALECT</option>
-            <option value={"FAMILY"}>FAMILY</option>
-            <option value={"LANGUAGE"}>LANGUAGE</option>
-            <option value={"LANGUOID"}>LANGUOID</option>
-            </optgroup>
-            <optgroup label="Ethnicity">
-            <option value={"ETHNICITY"}>ETHNICITY</option>
-            </optgroup>
-            <optgroup label="Generic">
-            <option value={"GENERIC"}>GENERIC</option>
-            </optgroup>
-            <optgroup label="Religion">
-            <option value={"RELIGION"}>RELIGION</option>
-            </optgroup>
-            <optgroup label="Variable">
-            <option value={"VARIABLE"}>VARIABLE</option>
-            </optgroup>
+            {selectedcategory.map((group, index) => (
+          <optgroup key={index} label={group.category}>
+            {group.values.map((value, valueIndex) => (
+              <option key={valueIndex} value={value}>
+                {value}
+              </option>
+            ))}
+          </optgroup>
+        ))}
           </NativeSelect>
         </FormControl>
         <Button
       startIcon={<InfoIcon />}
       onClick={() => {
-        // Handle button click
         console.log('Info button clicked');
       }}
     >

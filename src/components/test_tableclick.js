@@ -8,6 +8,7 @@ import ClickTable from './tableclickview';
 import { FormControl, Select, MenuItem, InputLabel } from '@mui/material';
 import L from 'leaflet';
 import { MapContainer, TileLayer, GeoJSON, Marker, Popup, useMap } from "react-leaflet";
+import { useLocation } from 'react-router-dom';
 import './tableclick.css'
 import Neo4jVisualization from './visnet';
 
@@ -45,6 +46,7 @@ function a11yProps(index) {
 }
 
 export default function Tableclick(props) {
+  console.log(props)
   const [value, setValue] = useState(0);
   const [usert, setUsert] = useState([]);
   const [mapt, setMapt] = useState([]);
@@ -60,6 +62,12 @@ export default function Tableclick(props) {
   const [visData, setVisData] = useState(null);
   const [domains, setdomains] = useState([]);
   const [sources, setsources] = useState([]);
+
+  let database = "SocioMap"
+
+  if (useLocation().pathname.includes("archamap")) {
+    database = "ArchaMap"
+  } 
 
   const generateTooltipContent = (properties) => {
     return Object.entries(properties).map(([key, value]) => `${key}: ${value}`).join('\n');  };
@@ -148,8 +156,8 @@ export default function Tableclick(props) {
   }
   
   useEffect(() => {
-    fetch("https://catmapper.org/api/category?cmid=" + props.socioid.socioid + "&database=SocioMap",
-        // fetch("http://127.0.0.1:5001/category?cmid=" + props.socioid.socioid + "&database=SocioMap",
+    fetch("https://catmapper.org/api/category?cmid=" + props.cmid.cmid + "&database="+ database,
+        // fetch("http://127.0.0.1:5001/category?cmid=" + props.cmid.cmid + "&database="+ database,
             {
                 method: "GET"
             })
@@ -167,10 +175,12 @@ export default function Tableclick(props) {
             })
     },[])
 
+    console.log(points)
+
     const fetchData = async (event) => {
         try {
-          // const response = await fetch("http://127.0.0.1:5001/network?cmid=" + props.socioid.socioid +"&relation=" + event.target.value + "&value="+ label);
-          const response = await fetch("https://catmapper.org/api/networks?cmid=" + props.socioid.socioid + "&database=SocioMap&relation=" + event.target.value + "&response=records");
+          // const response = await fetch("http://127.0.0.1:5001/network?cmid=" + props.cmid.cmid +"&relation=" + event.target.value + "&value="+ label);
+          const response = await fetch("https://catmapper.org/api/networks?cmid=" + props.cmid.cmid + "&database=" +database+ "&relation=" + event.target.value + "&response=records");
           const result = await response.json();
 
           const node = [...Object.entries(result["node"]),...Object.entries(result["relNodes"])].map((node) => ({
@@ -288,13 +298,13 @@ export default function Tableclick(props) {
             <ClickTable usert={usert} />
           </CustomTabPanel>
           <CustomTabPanel value={value} index={1}>
-            <div style={{ position: "absolute", top: "10", left: "200", width: "95%", height: "50vh" }}>
-              {mapt.length !== 0 ? 
+            <div style={{ position: "absolute", top: "10", left: "200", width: "95%", height: "10vh" }}>
+              {mapt.length !== 0 || points.length!==0 ? 
               <MapContainer 
                 center={[0,0]}
                 zoom="5"
                 scrollWheelZoom={true}
-                style={{ height: "80vh" }}
+                style={{ height: 600 }}
                 ref = {mapRef}>
                 <SetViewToDataBounds points={points} polygons={mapt} />
                 <GeoJSON  data={mapt} style={getFeatureStyle} onEachFeature={onEachFeature} />

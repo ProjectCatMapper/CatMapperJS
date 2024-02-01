@@ -1,16 +1,16 @@
 import React from 'react'
-import Navbar from '../components/Navbar'
+import ArchNavbar from '../components/arch_navbar'
 import Tableclick from '../components/test_tableclick'
 import { useParams } from 'react-router-dom'
 
 
-const Sociomapclick = () => {
+const ArchaMapclick = () => {
   return (
     <div>
-      <Navbar />
+      <ArchNavbar />
       <Tableclick cmid ={useParams()}/>
     </div>
   )
 }
 
-export default Sociomapclick
+export default ArchaMapclick

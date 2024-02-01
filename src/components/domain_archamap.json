@@ -1,0 +1,12 @@
+[
+    {"category": "FAUNA", "values": ["KINGDOM","FAUNA","PHYLUM","CLASS","ORDER","FAMILY","GENUS","SPECIES","SUBGENUS","SUBSPECIES"]},
+    {"category": "DISTRICT", "values": ["FEATURE","ADM0","ADM1","ADM2","ADM3","DISTRICT","REGION","SITE"]},
+    {"category": "STONE", "values": ["STONE"]},
+    {"category": "CULTURE", "values": ["CULTURE"]},
+    {"category": "CATEGORY", "values": ["CATEGORY"]},
+    {"category": "CAERAMIC", "values": ["CERAMIC","CERAMIC_TYPE","CERAMIC_WARE"]},
+    {"category": "DATASET", "values": ["DATASET"]},
+    {"category": "PERIOD", "values": ["PERIOD"]},
+    {"category": "PROJECTILE_POINT", "values": ["PROJECTILE_POINT","PROJECTILE_POINT_CLUSTER","PROJECTILE_POINT_TYPE"]},
+    {"category": "VARIABLE", "values": ["VARIABLE"]}
+]
