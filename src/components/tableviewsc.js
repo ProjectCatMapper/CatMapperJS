@@ -2,9 +2,10 @@ import * as React from 'react';
 import { useState } from 'react'
 import { DataGrid } from '@mui/x-data-grid';
 import {useNavigate} from 'react-router-dom'
+import { useLocation } from 'react-router-dom';
+
 
 export default function DataTable(props) {
-  console.log(props)
   const columns = [
     { field: 'id', headerName: 'Index', width: 70 },
     { field: 'cmid', headerName: 'CMID', width: 150 },
@@ -15,12 +16,17 @@ export default function DataTable(props) {
   ];
   const [rows, setRows] = useState([]);
   const navigate = useNavigate();
+
+  let path = "sociomap"
+
+  if (useLocation().pathname.includes("archamap")) {
+    path = "archamap"
+  } 
   
   const handleRowClick = (
     params,
   ) => {
-    navigate({pathname:`/exview/${params.row.cmid}`,
-  });
+    navigate({pathname:`/${path}/${params.row.cmid}`,});
   };
 
   React.useEffect(() => {

@@ -1,5 +1,5 @@
 import React,{useState} from 'react'
-import { Link, NavLink } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import {FaBars,FaTimes} from 'react-icons/fa'
 import './NavbarStyles.css'
 import image from '../assets/white.png'
@@ -16,17 +16,17 @@ const Navbar = () => {
         <Link to ='/'><img src = {image} width={100} height={70}></img></Link>
         </div>
         <div className='image1' style={{margin: 0, paddingTop: 20,paddingLeft:300, border: 0,}}>
-        <Link to ='/Home'><img src = {image1} width={150} height={70}></img></Link>
+        <Link to ='/sociomap'><img src = {image1} width={150} height={70}></img></Link>
         </div>
         <ul className={click ? 'nav-menu active' : 'nav-menu'} style={{color:"white"}}>
             <li >
-                <Link id='sociomapnavbar' to='/Home'>Home</Link>
+                <Link id='sociomapnavbar' to='/sociomap'>Home</Link>
             </li>
             <li >
-                <Link id='sociomapnavbar' to='/explore'>Explore</Link>
+                <Link id='sociomapnavbar' to='/sociomap/explore'>Explore</Link>
             </li>
             <li >
-                <Link id='sociomapnavbar' to='/translate'>Translate</Link>
+                <Link id='sociomapnavbar' to='/sociomap/translate'>Translate</Link>
             </li>
             <li >
                 <Link id='sociomapnavbar' style={{marginRight:10}} to='/merge'>Merge</Link>
