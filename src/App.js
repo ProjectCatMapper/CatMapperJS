@@ -23,6 +23,8 @@ function App() {
         <Route path='/profile' element={<Profile />} />
         <Route path='/sociomap/:cmid' element={<Sociomapclick />} />
         <Route path='/archamap/:cmid' element={<ArchaMapclick />} />
+        <Route path='/sociomap/:cmid/:tabval' element={<Sociomapclick />} />
+        <Route path='/archamap/:cmid/:tabval' element={<ArchaMapclick />} />
       </Routes>
   );
 }

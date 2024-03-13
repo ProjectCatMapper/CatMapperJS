@@ -16,6 +16,7 @@ export default function DataTable(props) {
   ];
   const [rows, setRows] = useState([]);
   const navigate = useNavigate();
+  const tabval = ""
 
   let path = "sociomap"
 

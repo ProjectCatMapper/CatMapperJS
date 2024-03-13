@@ -6,6 +6,7 @@
   "proxy": "http://catmapper.org/api",
   "dependencies": {
     "@auth0/auth0-react": "^2.2.1",
+    "@changey/react-leaflet-markercluster": "^4.0.0-rc1",
     "@emotion/react": "^11.11.1",
     "@emotion/styled": "^11.11.0",
     "@mui/icons-material": "^5.14.11",
@@ -15,6 +16,7 @@
     "css-loader": "^6.10.0",
     "install": "^0.13.0",
     "leaflet": "^1.9.4",
+    "leaflet.markercluster": "^1.5.3",
     "net": "^1.0.2",
     "path": "^0.12.7",
     "react": "^18.2.0",
@@ -24,6 +26,7 @@
     "react-leaflet": "^4.2.1",
     "react-router-dom": "^6.16.0",
     "react-scripts": "^5.0.1",
+    "react-tooltip": "^5.26.3",
     "style-loader": "^3.3.4",
     "util": "^0.12.5",
     "vis-data": "^7.1.9",

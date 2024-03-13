@@ -5,12 +5,15 @@ import Box from '@mui/material/Box';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import ClickTable from './tableclickview';
-import { FormControl, Select, MenuItem, InputLabel } from '@mui/material';
+import { FormControl, Select, MenuItem, InputLabel, recomposeColor } from '@mui/material';
 import L from 'leaflet';
-import { MapContainer, TileLayer, GeoJSON, Marker, Popup, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, GeoJSON, Marker, Popup, useMap,CircleMarker } from "react-leaflet";
 import { useLocation } from 'react-router-dom';
 import './tableclick.css'
 import Neo4jVisualization from './visnet';
+import MarkerClusterGroup from '@changey/react-leaflet-markercluster';
+import 'leaflet/dist/leaflet.css';
+import '@changey/react-leaflet-markercluster/dist/styles.min.css';
 
 function CustomTabPanel(props) {
   const { children, value, index, ...other } = props;
@@ -46,8 +49,7 @@ function a11yProps(index) {
 }
 
 export default function Tableclick(props) {
-  console.log(props)
-  const [value, setValue] = useState(0);
+  const [value, setValue] = useState(Number(props.cmid.tabval) || 0);
   const [usert, setUsert] = useState([]);
   const [mapt, setMapt] = useState([]);
   const [rev, setrev] = useState([]);
@@ -62,6 +64,7 @@ export default function Tableclick(props) {
   const [visData, setVisData] = useState(null);
   const [domains, setdomains] = useState([]);
   const [sources, setsources] = useState([]);
+  const orderOfProperties = ['CONTAINS', 'DISTRICT_OF', 'LANGUAGE_OF', 'RELIGION_OF', 'USES'];
 
   let database = "SocioMap"
 
@@ -175,13 +178,14 @@ export default function Tableclick(props) {
             })
     },[])
 
-    console.log(points)
-
     const fetchData = async (event) => {
         try {
           // const response = await fetch("http://127.0.0.1:5001/network?cmid=" + props.cmid.cmid +"&relation=" + event.target.value + "&value="+ label);
+          // const response = await fetch("http://127.0.0.1:5001/networks?cmid=" + props.cmid.cmid + "&database=" +database+ "&relation=" + event.target.value + "&response=records");
           const response = await fetch("https://catmapper.org/api/networks?cmid=" + props.cmid.cmid + "&database=" +database+ "&relation=" + event.target.value + "&response=records");
           const result = await response.json();
+
+          console.log(result)
 
           const node = [...Object.entries(result["node"]),...Object.entries(result["relNodes"])].map((node) => ({
             id: node["1"].id,  // Adjust this based on your node structure
@@ -257,7 +261,6 @@ export default function Tableclick(props) {
       colorMap[value] = color;
     });
     
-    console.log(colorMap)
   
     return {
       fillColor: colorMap[category] || 'gray',
@@ -271,10 +274,12 @@ export default function Tableclick(props) {
 
   useEffect(() => {fetchData({target: { value: fdrop[0]}})},[fdrop])
 
+  const boxHeight = 100 + (Object.keys(rev).length * 14)
+
   try {
     return (
       <div style={{ backgroundColor: 'white', width: "100%", height: 1100, color: "black" }}>
-        <Box sx={{ width: '100%', height: "25%", backgroundImage: `linear-gradient(to right, #93a5cf, #e4efe9)` }}>
+        <Box sx={{display:'flex',flexDirection:'column', width: '100%', backgroundImage: `linear-gradient(to right, #93a5cf, #e4efe9)`, backgroundSize:'cover' , height: boxHeight}}>
         {/* {console.log(mapt.coordinates[0][0][0])} */}
           <h2 style={{ color: "black", position: "absolute", left: "45%", top: "100px" }}>Category Info</h2>
           <ul style={{ color: "black", position: "absolute", left: "45%", top: "150px",fontSize: "large" }} >
@@ -286,7 +291,7 @@ export default function Tableclick(props) {
         )): rev}
       </ul>
         </Box>
-        <Box sx={{ width: '100%', height: "auto" , position: "absolute", left: "10px", top: "360px" }}>
+        <Box sx={{ width: '100%', height: "auto" , position: "absolute", left: "10px", top: boxHeight + 100 }}>
           <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
             <Tabs sx={{ overflowY: "scroll", maxHeight: 700 }} value={value} onChange={handleChange} aria-label="basic tabs example">
               <Tab label="Samples" {...a11yProps(0)} />
@@ -298,7 +303,7 @@ export default function Tableclick(props) {
             <ClickTable usert={usert} />
           </CustomTabPanel>
           <CustomTabPanel value={value} index={1}>
-            <div style={{ position: "absolute", top: "10", left: "200", width: "95%", height: "10vh" }}>
+            <div style={{ position: "absolute", top: "10", left: "200", width: "95%", height: "auto" }}>
               {mapt.length !== 0 || points.length!==0 ? 
               <MapContainer 
                 center={[0,0]}
@@ -308,13 +313,25 @@ export default function Tableclick(props) {
                 ref = {mapRef}>
                 <SetViewToDataBounds points={points} polygons={mapt} />
                 <GeoJSON  data={mapt} style={getFeatureStyle} onEachFeature={onEachFeature} />
-                {(points.length !== 0)  ? (points.map((point) => (
-        <Marker position={point.cood}>
-          <Popup>{point.source}</Popup>
-        </Marker>
-      ))):points}
                 <TileLayer url='https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png'
                   attribution='&copy; <a href="https://carto.com/">CARTO</a> contributors' />
+                  {points.length !== 0 ? (
+            <MarkerClusterGroup>
+              {points.map((point, index) => (
+                <CircleMarker
+                center={point.cood}
+                radius={10} 
+                color="red" 
+                fillColor="red" 
+                fillOpacity={0.5} 
+              >
+                <Popup>{point.source}</Popup>
+              </CircleMarker>
+                
+              ))}
+            </MarkerClusterGroup>
+          ) : points}
+
               </MapContainer> : <p>No map</p>}
             </div>
           </CustomTabPanel>
@@ -327,11 +344,13 @@ export default function Tableclick(props) {
                   value={firstDropdownValue}
                   onChange={fetchData}
                 >
-                  {fdrop.map((option) => (
-                    <MenuItem value={option}>
-                      {option}
-                    </MenuItem>
-                  ))}
+                  {orderOfProperties.map((property) => (
+        fdrop.includes(property) && (
+          <MenuItem key={property} value={property}>
+            {property}
+          </MenuItem>
+        )
+      ))}
                 </Select>
               </FormControl>
               <FormControl sx={{ m: 1, width: 300 }}>

@@ -64,7 +64,17 @@ export default function Searchbar() {
 
   const handleChange = (event) => { setAge(event.target.value); };
 
-  const [users, setUsers] = useState([])
+  const getStoredDataFromLocalStorage = () => {
+    const storedData = sessionStorage.getItem('myData');
+    return storedData ? JSON.parse(storedData) : [];
+  };
+
+  const [users, setUsers] = useState(getStoredDataFromLocalStorage())
+
+   const saveDataToLocalStorage = (users) => {
+    sessionStorage.setItem('myData', JSON.stringify(users));
+  };
+
 
   const [tvalue, settvalue] = useState('');
 
@@ -109,8 +119,11 @@ export default function Searchbar() {
       })
       .then(data => {
         setUsers(data)
+        saveDataToLocalStorage(data)
       })
   }
+
+  
 
   return (
     <div style={{height:"auto"}}>
@@ -137,8 +150,8 @@ export default function Searchbar() {
         ))}
           </NativeSelect>
         </FormControl>
-        <Button
-      startIcon={<InfoIcon />}
+        <Button 
+      startIcon={<InfoIcon sx={{height: '28px', width : '28px'}} />}
       onClick={() => {
         console.log('Info button clicked');
       }}
@@ -163,9 +176,8 @@ export default function Searchbar() {
         </NativeSelect>
       </FormControl >
       <Button
-      startIcon={<InfoIcon />}
+      startIcon={<InfoIcon sx={{height: '28px', width : '28px'}}/>}
       onClick={() => {
-        // Handle button click
         console.log('Info button clicked');
       }}
     >
@@ -182,11 +194,11 @@ export default function Searchbar() {
         <IconButton color="primary" aria-label="add to shopping cart"  onClick={() => { handleClick(tvalue, age) }} sx={{top:10}}>
           <SearchOutlinedIcon />
         </IconButton>
+        <label id='filters' style={{ whiteSpace: 'nowrap'}}>
+        <input type="checkbox"  checked={isChecked}  onChange={handleCheckboxChange} style={{marginTop:35,marginLeft:"2%"}}/> Advanced search</label>
         </div>
       </Box>
       <div id="filters">
-      <label>
-        <input type="checkbox"  checked={isChecked}  onChange={handleCheckboxChange} style={{marginLeft:"1%"}}/>Optional filters</label>
         {isChecked &&
         <div style={{display:"flex"}}>
           <FormControl sx={{ marginLeft: "1%",marginTop:"1%", width: 250,height: 80 }} variant="standard">

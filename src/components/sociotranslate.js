@@ -4,6 +4,7 @@ import {Select, MenuItem } from '@mui/material';
 import {ExcelRenderer} from 'react-excel-renderer';
 import Button from '@mui/material/Button';
 import { Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow,  TablePagination } from '@mui/material';
+import { useLocation } from 'react-router-dom';
 import './sociotranslate.css'
 
 function Sociotranslate(){
@@ -24,6 +25,8 @@ function Sociotranslate(){
   const [isCheckedfour, setIsCheckedfour] = useState(false);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
+  let fileObj= ""
+  let selectedColumnValues = ""
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
@@ -48,7 +51,46 @@ const handleCheckboxChangethree = () => {
 const handleCheckboxChangefour = () => {
         setIsCheckedfour(!isCheckedfour);}
 
-const handleClick = () => {alert('Button clicked!');};
+const [data, setData] = useState({});
+let database = "SocioMap"
+if (useLocation().pathname.includes("archamap")) {
+    database = "ArchaMap"
+  } 
+
+const handleClick = async () => {
+  try {
+    selectedColumnValues = rows.map((row) => row[columns.indexOf(zeroDropdownValue)]);
+    console.log(selectedColumnValues)
+    // const response = await fetch("http://127.0.0.1:5001/translate", {
+    const response = await fetch("https://catmapper.org/api/translate", {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        database : database,
+        property : secondDropdownValue,
+        domain : firstDropdownValue,
+        key : isCheckedfour,
+        query : false,
+        rows : selectedColumnValues.map(item => ({ term: item})),
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Network response was not ok');
+    }
+
+    const responseData = await response.json();
+    setData(responseData);
+    data.sort((a, b) => a.term.localeCompare(b.term));
+    console.log(data)
+    setColumns(Object.keys(data[0]))
+    setRows(data.map((row) => Object.values(row)))
+  } catch (error) {
+    console.error('Error sending POST request:', error);
+  }
+};
 const handleClicktwo = () => {alert('Button clicked!');};
 
 const handleclear = () => {
@@ -66,7 +108,7 @@ const handleFileChange = (event) => {
       if (fileType === 'application/vnd.ms-excel' || fileType === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') {
         // File is either CSV or XLSX
         setSelectedFile(event.target.files[0]);
-        let fileObj = event.target.files[0];
+        fileObj = event.target.files[0];
 
 ExcelRenderer(fileObj, (err, resp) => {
   if(err){
@@ -254,7 +296,7 @@ ExcelRenderer(fileObj, (err, resp) => {
     {columns.length > 0 && rows.length > 0 && (
         <>
           <TableContainer component={Paper}>
-            <Table>
+            <Table id="myTable">
               <TableHead>
                 <TableRow>
                   {columns.map((col, index) => (
@@ -281,7 +323,7 @@ ExcelRenderer(fileObj, (err, resp) => {
               </TableBody>
             </Table>
           </TableContainer>
-          <TablePagination
+          <TablePagination id='pagination'
             rowsPerPageOptions={[5, 10, 25, { label: 'All', value: -1 }]}
             component="div"
             count={rows.length}
