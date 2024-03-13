@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { Network } from 'vis-network/standalone';
 import {useNavigate} from 'react-router-dom'
+import {Tooltip as ReactTooltip} from 'react-tooltip';
 
 const Neo4jVisualization = ({ visData }) => {
   const navigate = useNavigate();
@@ -12,6 +13,7 @@ const Neo4jVisualization = ({ visData }) => {
       return item;
     }))
   const uniqueMap = new Map();
+  const tabval = 2
 
   filteredData.forEach(obj => {
       uniqueMap.set(obj.color, obj);
@@ -48,7 +50,7 @@ const Neo4jVisualization = ({ visData }) => {
         var clickedNodeData = visData["nodes"].find(obj => obj["id"] === clickedNodeId)
         if (clickedNodeData["CMID"] !== currentid)
     {
-    navigate({pathname:`/sociomap/${clickedNodeData["CMID"]}`,});
+    navigate({pathname:`/sociomap/${clickedNodeData["CMID"]}/${tabval}`,});
     window.location.reload();
     }
       }
