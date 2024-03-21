@@ -55,7 +55,7 @@ export default function Tableclick(props) {
   const [rev, setrev] = useState([]);
   const [points, setPoints] = useState([]);
   const [label, setlabel] = useState([]);
-  const [fdrop, setfdrop] = useState([]);
+  const [fdrop, setfdrop] = useState(["CONTAINS"]);
   const [firstDropdownValue, setFirstDropdownValue] = useState('');
   const [thirdDropdownValue, setThirdDropdownValue] = useState('All');
   const [selectedValues, setSelectedValues] = useState([]);
@@ -73,7 +73,7 @@ export default function Tableclick(props) {
   } 
 
   const generateTooltipContent = (properties) => {
-    return Object.entries(properties).map(([key, value]) => `${key}: ${value}`).join('\n');  };
+    return Object.entries(properties).map(([key, value]) => `${key}: ${value}\n`);};
 
   const getColorBasedOnValue = (value) => {
     value  =  Array.from(new Set(value.flat())).filter((value) => value !== "CATEGORY")
@@ -192,16 +192,20 @@ export default function Tableclick(props) {
             label: node["1"].CMName,  // Adjust this based on your node structure
             domain: node["1"].labels,
             CMID: node["1"].CMID,
-            title: generateTooltipContent(node["1"]),
+            tooltipcon: generateTooltipContent(node["1"]),
             color: getColorBasedOnValue(node["1"].labels),
           }));
 
           const nodes = Array.from(new Set(node.map(JSON.stringify))).map(JSON.parse);
 
           const edges = Object.entries(result["relations"]).map(relationship => ({
-            from: relationship["1"].start_node_id,  // Adjust this based on your relationship structure
-            to: relationship["1"].end_node_id,  // Adjust this based on your relationship structure
+
+            from: relationship["1"].start_node_id,
+            to: relationship["1"].end_node_id,
             color : "black",
+            eventDate: relationship["1"].eventDate,
+            eventType: relationship["1"].eventType,
+            refkey: relationship["1"].referenceKey,
           }));
 
           let domains = nodes.map((object) => object.domain).slice(1)
@@ -216,7 +220,7 @@ export default function Tableclick(props) {
           
           setFirstDropdownValue(event.target.value)
           setoriginaldata({nodes,edges})
-          setVisData({ nodes, edges })
+          setVisData({ nodes, edges, })
         } catch (error) {
           console.error('Error fetching data:', error);
         }
@@ -281,8 +285,8 @@ export default function Tableclick(props) {
       <div style={{ backgroundColor: 'white', width: "100%", height: 1100, color: "black" }}>
         <Box sx={{display:'flex',flexDirection:'column', width: '100%', backgroundImage: `linear-gradient(to right, #93a5cf, #e4efe9)`, backgroundSize:'cover' , height: boxHeight}}>
         {/* {console.log(mapt.coordinates[0][0][0])} */}
-          <h2 style={{ color: "black", position: "absolute", left: "45%", top: "100px" }}>Category Info</h2>
-          <ul style={{ color: "black", position: "absolute", left: "45%", top: "150px",fontSize: "large" }} >
+          <h2 style={{ color: "black", position: "absolute", left: "1%", top: "100px" }}>Category Info</h2>
+          <ul style={{ color: "black", position: "absolute", left: "1%", top: "150px",fontSize: "large" }} >
         {(rev.length !== 0) ?
          Object.entries(rev).map(([key, value]) => value && (
           <li key={key}>
@@ -296,7 +300,7 @@ export default function Tableclick(props) {
             <Tabs sx={{ overflowY: "scroll", maxHeight: 700 }} value={value} onChange={handleChange} aria-label="basic tabs example">
               <Tab label="Samples" {...a11yProps(0)} />
               <Tab label="Map" {...a11yProps(1)} />
-              <Tab label="Node Network" {...a11yProps(2)} />
+              <Tab label="Network Explorer" {...a11yProps(2)} />
             </Tabs>
           </Box>
           <CustomTabPanel value={value} index={0}>

@@ -1,4 +1,4 @@
-import React from "react";
+import {React, useEffect} from "react";
 import {Routes, Route} from "react-router-dom";
 
 import Home from './routes/Home'
@@ -12,6 +12,21 @@ import ArchaMapclick from "./routes/ArchaMapclick";
 import Archamapexplore from "./routes/Archamapexplore";
 
 function App() {
+  useEffect(() => {
+    const handlePopState = () => {
+      if (window.location.pathname.startsWith('/js/sociomap/')) {
+        window.location.reload();
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, []);
+
+
   return (
       <Routes>
         <Route path='/' element={<Catmapper />} />
