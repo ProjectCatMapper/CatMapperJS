@@ -1,0 +1,57 @@
+[
+    { "label": "ADM4", "description": "Level-4 administrative districts" },
+    { "label": "ADM0", "description": "A 0-level district, normally a country past or present" },
+    { "label": "ADM1", "description": "A 1st-level district (e.g., a U.S. state)" },
+    { "label": "ADM2", "description": "A 2nd-level district (e.g., a U.S. county)" },
+    { "label": "ADM3", "description": "A 3rd-level district (e.g., a U.S. city)" },
+    { "label": "ADMD", "description": "A district defined as a development zone within a country" },
+    { "label": "ADME", "description": "A district defined as an ecological zone within a country" },
+    { "label": "ADML", "description": "NA" },
+    { "label": "ADMX", "description": "A district without a clear level" },
+    { "label": "CATEGORY", "description": "Any category this is the table content" },
+    {
+        "label": "DATASET",
+        "description": "A dataset for which SocioMap includes metadata on categories and/or variables"
+      },
+      {
+        "label": "DIALECT",
+        "description": "A languoid defined by a linguistic dialect"
+      },
+      {
+        "label": "DISTRICT",
+        "description": "A category defined by its geographical boundary"
+      },
+      {
+        "label": "ETHNICITY",
+        "description": "A category of people defined by a shared origin which is often socially constructed. This can include categories defined by ethnicity, race, caste, religion, or ecological zone (e.g., hill people). It can be internally or externally defined depending on the source."
+      },
+      {
+        "label": "FAMILY",
+        "description": "A languoid defined by a group of related languages"
+      },
+      {
+        "label": "GENERIC",
+        "description": "A general category used to organize other categories (e.g., Missing)"
+      },
+      {
+        "label": "LANGUAGE",
+        "description": "A languoid defined by a specific language"
+      },
+      {
+        "label": "LANGUOID",
+        "description": "A category defined by a linguistic tradition or group of related linguistic traditions"
+      },
+      {
+        "label": "PPL",
+        "description": "A district defined as a populated place"
+      },
+      {
+        "label": "RELIGION",
+        "description": "A category defined by a religious tradition"
+      },
+      {
+        "label": "VARIABLE",
+        "description": "A variable"
+      }
+  ]
+  

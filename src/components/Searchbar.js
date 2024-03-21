@@ -16,8 +16,10 @@ import socioptions from "./dropdown.json"
 import archoptions from "./dropdown_archamap.json";
 import countries from "./records.json";
 import Button from '@mui/material/Button';
+import Tooltip from '@mui/material/Tooltip';
 import InfoIcon from '@mui/icons-material/Info';
 import { useLocation } from 'react-router-dom';
+import infodata from './infodata.json';
 import "./Searchbar.css";
 
 const BootstrapInput = styled(InputBase)(({ theme }) => ({
@@ -105,6 +107,36 @@ export default function Searchbar() {
 
   console.log(useLocation().pathname.includes("sociomap"))
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10; 
+  const totalPages = Math.ceil(infodata.length / itemsPerPage);
+
+  const handleNextPage = () => {
+    setCurrentPage((prevPage) => Math.min(prevPage + 1, totalPages));
+  };
+
+  const handlePrevPage = () => {
+    setCurrentPage((prevPage) => Math.max(prevPage - 1, 1));
+  };
+
+  const tooltipContent = (
+    <div style={{ color: 'black', backgroundColor: 'white' }}>
+      {infodata
+        .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+        .map((item, index) => (
+          <div key={index} style={{ marginBottom: '10px' }}><span style={{ marginRight: '10px' }}><strong>{item.label}:</strong></span>
+          <span>{item.description}</span></div>
+        ))}
+      <div>
+        Page {currentPage} of {totalPages}
+      </div>
+      <div>
+        <Button onClick={handlePrevPage} disabled={currentPage === 1}>Previous</Button>
+        <Button onClick={handleNextPage} disabled={currentPage === totalPages}>Next</Button>
+      </div>
+    </div>
+  );
+
   function handleClick(tvalue, age) {
     fetch("https://catmapper.org/api/search?domain=" + age + "&property=" + selectedOption + "&term=" + tvalue + "&database=" +database+  "&query=false" + "&yearStart=" + yearStart + "&yearEnd=" + yearEnd + "&country=" + selectedcountry + "&context=" + contextID,
     // fetch("http://127.0.0.1:5001/search?domain=" + age + "&property=" + selectedOption + "&term=" + tvalue + "&database=SocioMap"+  "&query=false" + "&yearStart=" + yearStart + "&yearEnd=" + yearEnd + "&country=" + selectedcountry + "&context=" + contextID,
@@ -122,8 +154,6 @@ export default function Searchbar() {
         saveDataToLocalStorage(data)
       })
   }
-
-  
 
   return (
     <div style={{height:"auto"}}>
@@ -150,13 +180,15 @@ export default function Searchbar() {
         ))}
           </NativeSelect>
         </FormControl>
+        <Tooltip
+      title={tooltipContent}
+      arrow
+    >
         <Button 
       startIcon={<InfoIcon sx={{height: '28px', width : '28px'}} />}
-      onClick={() => {
-        console.log('Info button clicked');
-      }}
     >
     </Button>
+    </Tooltip>
       <FormControl sx={{ marginLeft: "1%", width: 250,height: 70 }} variant="standard">
       <h6 id='sociomappersearchpagetext'>Property to search</h6>
         <NativeSelect
@@ -191,9 +223,11 @@ export default function Searchbar() {
         onKeyDown={(event) => { if (event.key === 'Enter') {handleClick(tvalue, age)} }}
       />
         {/* <TextField onChange={(event) => { settvalue(event.target.value) }} sx={{ m: 1,height: 40, width: 450, backgroundColor: "white" }} variant="standard" /> */}
+        <Tooltip title="Search" arrow sx={{ fontSize: '30px' }}>
         <IconButton color="primary" aria-label="add to shopping cart"  onClick={() => { handleClick(tvalue, age) }} sx={{top:10}}>
-          <SearchOutlinedIcon />
+          <SearchOutlinedIcon sx={{ fontSize: 33 }}/>
         </IconButton>
+        </Tooltip>
         <label id='filters' style={{ whiteSpace: 'nowrap'}}>
         <input type="checkbox"  checked={isChecked}  onChange={handleCheckboxChange} style={{marginTop:35,marginLeft:"2%"}}/> Advanced search</label>
         </div>
