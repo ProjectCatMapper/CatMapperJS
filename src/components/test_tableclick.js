@@ -364,7 +364,6 @@ export default function Tableclick(props) {
                   value={firstDropdownValue}
                   onChange={fetchData}
                 >
-                  {console.log(fdrop)}
                   {orderOfProperties.map((property) => (
         fdrop.includes(property) && (
           <MenuItem key={property} value={property}>
