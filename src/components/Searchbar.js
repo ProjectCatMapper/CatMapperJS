@@ -73,7 +73,7 @@ export default function Searchbar() {
 
   const [users, setUsers] = useState(getStoredDataFromLocalStorage())
 
-   const saveDataToLocalStorage = (users) => {
+   const saveDataToLocalStorage = () => {
     sessionStorage.setItem('myData', JSON.stringify(users));
   };
 

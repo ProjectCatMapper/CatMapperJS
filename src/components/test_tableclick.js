@@ -185,8 +185,6 @@ export default function Tableclick(props) {
           const response = await fetch("https://catmapper.org/api/networks?cmid=" + props.cmid.cmid + "&database=" +database+ "&relation=" + event.target.value + "&response=records");
           const result = await response.json();
 
-          console.log(result)
-
           const node = [...Object.entries(result["node"]),...Object.entries(result["relNodes"])].map((node) => ({
             id: node["1"].id,  // Adjust this based on your node structure
             label: node["1"].CMName,  // Adjust this based on your node structure
@@ -278,15 +276,22 @@ export default function Tableclick(props) {
 
   useEffect(() => {fetchData({target: { value: fdrop[0]}})},[fdrop])
 
-  const boxHeight = 100 + (Object.keys(rev).length * 14)
+  const [boxHeight, setBoxHeight] = useState('auto');
+
+  useEffect(() => {
+    const contentHeight = document.getElementById('content').offsetHeight;
+    setBoxHeight(contentHeight + 'px');
+  }, [rev]);
+
+  // const boxHeight = 100 + (Object.keys(rev).length * 14)
 
   try {
     return (
       <div style={{ backgroundColor: 'white', width: "100%", height: 1100, color: "black" }}>
-        <Box sx={{display:'flex',flexDirection:'column', width: '100%', backgroundImage: `linear-gradient(to right, #93a5cf, #e4efe9)`, backgroundSize:'cover' , height: boxHeight}}>
-        {/* {console.log(mapt.coordinates[0][0][0])} */}
+        {/* <Box sx={{display:'flex',flexDirection:'column', width: '100%', backgroundImage: `linear-gradient(to right, #93a5cf, #e4efe9)`, backgroundSize:'cover' ,height: boxHeight}}>
+        {console.log(mapt.coordinates[0][0][0])}
           <h2 style={{ color: "black", position: "absolute", left: "1%", top: "100px" }}>Category Info</h2>
-          <ul style={{ color: "black", position: "absolute", left: "1%", top: "150px",fontSize: "large" }} >
+        <ul style={{ color: "black", position: "absolute", left: "1%", top: "150px",fontSize: "large" }} >
         {(rev.length !== 0) ?
          Object.entries(rev).map(([key, value]) => value && (
           <li key={key}>
@@ -294,7 +299,18 @@ export default function Tableclick(props) {
           </li>
         )): rev}
       </ul>
-        </Box>
+        </Box> */}
+        <Box sx={{ display: 'grid', gridTemplateRows: '40px auto 20px', width: '100%', backgroundImage: `linear-gradient(to right, #93a5cf, #e4efe9)`, backgroundSize: 'cover' }}>
+  <h2 style={{ color: "black", gridColumn: "1", gridRow: "1" }}>Category Info</h2>
+  <ul id='content' style={{ color: "black", gridColumn: "1", gridRow: "2", fontSize: "large" }}>
+    {(rev.length !== 0) ?
+      Object.entries(rev).map(([key, value]) => value && (
+        <li key={key}>
+          <strong>{key}:</strong> {value}
+        </li>
+      )) : rev}
+  </ul>
+</Box>
         <Box sx={{ width: '100%', height: "auto" , position: "absolute", left: "10px", top: boxHeight + 100 }}>
           <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
             <Tabs sx={{ overflowY: "scroll", maxHeight: 700 }} value={value} onChange={handleChange} aria-label="basic tabs example">
@@ -348,6 +364,7 @@ export default function Tableclick(props) {
                   value={firstDropdownValue}
                   onChange={fetchData}
                 >
+                  {console.log(fdrop)}
                   {orderOfProperties.map((property) => (
         fdrop.includes(property) && (
           <MenuItem key={property} value={property}>
