@@ -64,7 +64,7 @@ export default function Tableclick(props) {
   const [visData, setVisData] = useState(null);
   const [domains, setdomains] = useState([]);
   const [sources, setsources] = useState([]);
-  const orderOfProperties = ['CONTAINS', 'DISTRICT_OF', 'LANGUAGE_OF', 'RELIGION_OF', 'USES'];
+  const orderOfProperties = ['CONTAINS', 'DISTRICT_OF', 'LANGUAGE_OF', 'LANGUOID_OF', 'RELIGION_OF', 'USES'];
 
   let database = "SocioMap"
 

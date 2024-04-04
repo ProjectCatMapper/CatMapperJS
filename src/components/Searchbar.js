@@ -178,6 +178,7 @@ export default function Searchbar() {
             ))}
           </optgroup>
         ))}
+        
           </NativeSelect>
         </FormControl>
         <Tooltip
