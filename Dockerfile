@@ -9,7 +9,7 @@ COPY --from=builder /js /js
 
 RUN apt update 
 RUN apt install -y apt-utils php7.4-fpm 
-RUN apt install python3-certbot python3-certbot-nginx
+# RUN apt install python3-certbot python3-certbot-nginx
 
 RUN service php7.4-fpm start
 
