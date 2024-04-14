@@ -11,11 +11,13 @@ export default function ClickTable(props) {
     { field: 'timespan', headerName: 'Time span', width: 100 },
     { field: 'popest', headerName: 'Population estimate', width: 150 },
     { field: 'samplesize', headerName: 'Sample size', width: 150 },
-    { field: 'source', headerName: 'Source', width: 200 },
+    { field: 'source', headerName: 'Source', width: 200, renderCell: (params1) =>{ return <a id='viewlink' href={params1.row.link2} target="_blank" rel="noopener noreferrer">{params1.row.source}</a>}, },
     { field: 'version', headerName: 'Version', width: 160, },
     { field: 'link', headerName: 'Link', width: 80, renderCell: (params) =>{if (params.row.link) {return <a id='viewlink' href={params.row.link} target="_blank" rel="noopener noreferrer">{"View"}</a>;}}, },
   ];
   const [rows, setRows] = useState([]);
+
+  {console.log(props.usert)}
 
   //React.useEffect(() => {console.log(props.usert)},[])
   
@@ -31,6 +33,7 @@ export default function ClickTable(props) {
         source: value.Source,
         version: value.Version,
         link: value.Link,
+        link2:value.link2
       }
     }))
   }, [props.usert])

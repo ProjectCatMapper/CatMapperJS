@@ -51,9 +51,10 @@ const Neo4jVisualization = ({ visData }) => {
       
       if (!singleClickTimer) {
         singleClickTimer = setTimeout(() => {
-           if (params.nodes[0] > -1) {
+           if (params.nodes[0].length > -1) {
           let tooltipContent = visData.nodes.find(obj => obj.id === params.nodes[0]).tooltipcon.filter(item => item !== 'SocioMapID' && item !== 'SocioMapName');
           tooltipContent = tooltipContent.filter(item => !['SocioMapID', 'SocioMapName'].includes(item.split(':')[0].trim()));
+          console.log(tooltipContent)
           setTooltipContent(tooltipContent.map((item, index) => <span key={index}>{item}<br /></span>));
           setTooltipPosition({ x: params.pointer.DOM.x, y: params.pointer.DOM.y });
          }
