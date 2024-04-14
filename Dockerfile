@@ -7,7 +7,9 @@ RUN npm run build
 FROM nginx
 COPY --from=builder /js /js
 
-RUN apt update && apt install -y php7.4-fpm
+RUN apt update 
+RUN apt install -y apt-utils php7.4-fpm 
+RUN apt install python3-certbot python3-certbot-nginx
 
 RUN service php7.4-fpm start
 
