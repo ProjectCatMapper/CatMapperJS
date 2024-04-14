@@ -13,8 +13,8 @@ RUN apt install -y apt-utils php7.4-fpm
 
 RUN service php7.4-fpm start
 
-# run this after container starts
-# docker rm catmapperjs -f
+# run these commands
+# docker rm nginx -f
 # docker-compose up -d --build nginx
-# docker exec -it catmapperjs bash
+# docker exec -it nginx bash
 # ln -s /js /usr/share/nginx/html/js
