@@ -14,7 +14,7 @@ import Archamapexplore from "./routes/Archamapexplore";
 function App() {
   useEffect(() => {
     const handlePopState = () => {
-      if (window.location.pathname.startsWith('/js/sociomap/')) {
+      if (/\/js\/sociomap\/SM\d+/.test(window.location.pathname)) {
         window.location.reload();
       }
     };

@@ -14,6 +14,8 @@ import Neo4jVisualization from './visnet';
 import MarkerClusterGroup from '@changey/react-leaflet-markercluster';
 import 'leaflet/dist/leaflet.css';
 import '@changey/react-leaflet-markercluster/dist/styles.min.css';
+import CategoriesTable from './categories_table';
+import { Info } from '@mui/icons-material';
 
 function CustomTabPanel(props) {
   const { children, value, index, ...other } = props;
@@ -53,6 +55,7 @@ export default function Tableclick(props) {
   const [usert, setUsert] = useState([]);
   const [mapt, setMapt] = useState([]);
   const [rev, setrev] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [points, setPoints] = useState([]);
   const [label, setlabel] = useState([]);
   const [fdrop, setfdrop] = useState(["CONTAINS"]);
@@ -169,6 +172,7 @@ export default function Tableclick(props) {
             })
             .then(data => {
                 setUsert(data.samples)
+                setCategories(data.categories)
                 setMapt(data.polygons)
                 setrev(data.info)
                 setPoints(data.points)
@@ -300,6 +304,7 @@ export default function Tableclick(props) {
         )): rev}
       </ul>
         </Box> */}
+        {console.log(usert)}
         <Box sx={{ display: 'grid', gridTemplateRows: '40px auto 20px', width: '100%', backgroundImage: `linear-gradient(to right, #93a5cf, #e4efe9)`, backgroundSize: 'cover' }}>
   <h2 style={{ color: "black", gridColumn: "1", gridRow: "1" }}>Category Info</h2>
   <ul id='content' style={{ color: "black", gridColumn: "1", gridRow: "2", fontSize: "large" }}>
@@ -317,6 +322,7 @@ export default function Tableclick(props) {
               <Tab label="Samples" {...a11yProps(0)} />
               <Tab label="Map" {...a11yProps(1)} />
               <Tab label="Network Explorer" {...a11yProps(2)} />
+              {categories.length !== 0 ? <Tab label="Categories" {...a11yProps(3)} /> : null}
             </Tabs>
           </Box>
           <CustomTabPanel value={value} index={0}>
@@ -406,6 +412,9 @@ export default function Tableclick(props) {
               {visData && <Neo4jVisualization visData={visData}  />}
               </div>
             </div>
+          </CustomTabPanel>
+          <CustomTabPanel value={value} index={3}>
+          <CategoriesTable categories={categories} />
           </CustomTabPanel>
         </Box>
       </div>
