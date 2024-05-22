@@ -5,7 +5,7 @@ import Box from '@mui/material/Box';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import ClickTable from './tableclickview';
-import { FormControl, Select, MenuItem, InputLabel, recomposeColor } from '@mui/material';
+import { FormControl, Select, MenuItem, InputLabel } from '@mui/material';
 import L from 'leaflet';
 import { MapContainer, TileLayer, GeoJSON, Marker, Popup, useMap,CircleMarker } from "react-leaflet";
 import { useLocation } from 'react-router-dom';
@@ -311,7 +311,11 @@ export default function Tableclick(props) {
     {(rev.length !== 0) ?
       Object.entries(rev).map(([key, value]) => value && (
         <li key={key}>
-          <strong>{key}:</strong> {value}
+          <strong>{key}:</strong> {key === "Dataset Location" ? <a href={value} target="_blank" rel="noopener noreferrer">
+                  <Box component="span" sx={{ color: 'blue', textDecoration: 'underline' }}>
+                    {value}
+                  </Box>
+                </a> : value}
         </li>
       )) : rev}
   </ul>

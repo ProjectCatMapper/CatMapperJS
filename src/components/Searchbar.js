@@ -1,10 +1,8 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useState } from 'react'
 import { styled } from '@mui/material/styles';
 import FormControl from '@mui/material/FormControl';
 import NativeSelect from '@mui/material/NativeSelect';
-import {InputLabel, Select, MenuItem } from '@mui/material';
-import TextField from '@mui/material/TextField';
 import InputBase from '@mui/material/InputBase';
 import IconButton from '@mui/material/IconButton';
 import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined';
@@ -56,15 +54,13 @@ const BootstrapInput = styled(InputBase)(({ theme }) => ({
 
 export default function Searchbar() {
 
-  const [age, setAge] = React.useState('ADM0');
-  
+  const [domainDrop, setdomainDrop] = React.useState('DISTRICT');
+
+  const [advdomainDrop, setadvdomainDrop] = React.useState('ADM0');
+
   const [selectedOption, setSelectedOption] = useState('Name');
 
   const [selectedcountry, setSelectedCountry] = useState(countries[0].code);
-
-  const handleDropdownChange = (event) => {setSelectedOption(event.target.value);};
-
-  const handleChange = (event) => { setAge(event.target.value); };
 
   const getStoredDataFromLocalStorage = () => {
     const storedData = sessionStorage.getItem('myData');
@@ -92,12 +88,23 @@ export default function Searchbar() {
 
   let selectedcategory = sociodomain
 
-  let optionsForSelectedCategory = socioptions[age]
+  let optionsForSelectedCategory = socioptions[advdomainDrop]
+
+  const categories = [
+    { label: 'CATEGORY', description: 'Any category/domain. Excludes DATASETS.' },
+    { label: 'DATASET', description: 'A dataset for which SocioMap includes metadata on categories and/or variables' },
+    { label: 'DISTRICT', description: 'A category defined by its geographical boundary' },
+    { label: 'ETHNICITY', description: 'A category of people defined by a shared origin which is often socially constructed. This can include categories defined by ethnicity, race, caste, religion, or ecological zone (e.g., hill people). It can be internally or externally defined depending on the source.' },
+    { label: 'GENERIC', description: 'A general category used to organize other categories (e.g., Missing)' },
+    { label: 'LANGUOID', description: 'A category defined by a linguistic tradition or group of related linguistic traditions' },
+    {label: 'RELIGION', description: 'A category defined by a religious tradition'},
+    {label: 'VARIABLE', description: 'A variable'}
+  ];
 
   if (useLocation().pathname.includes("archamap")) {
     database = "ArchaMap"
     selectedcategory = archdomain
-    optionsForSelectedCategory = archoptions[age]
+    optionsForSelectedCategory = archoptions[advdomainDrop]
   } 
   
   const handleCheckboxChange = () => {
@@ -105,43 +112,55 @@ export default function Searchbar() {
     setSelectedCountry(countries[0].code)
   };
 
-  console.log(useLocation().pathname.includes("sociomap"))
-
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10; 
-  const totalPages = Math.ceil(infodata.length / itemsPerPage);
-
-  const handleNextPage = () => {
-    setCurrentPage((prevPage) => Math.min(prevPage + 1, totalPages));
-  };
-
-  const handlePrevPage = () => {
-    setCurrentPage((prevPage) => Math.max(prevPage - 1, 1));
-  };
-
   const tooltipContent = (
-    <div style={{ color: 'black', backgroundColor: 'white' }}>
-      {infodata
-        .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
-        .map((item, index) => (
-          <div key={index} style={{ marginBottom: '10px' }}><span style={{ marginRight: '10px' }}><strong>{item.label}:</strong></span>
-          <span>{item.description}</span></div>
-        ))}
-      <div>
-        Page {currentPage} of {totalPages}
-      </div>
-      <div>
-        <Button onClick={handlePrevPage} disabled={currentPage === 1}>Previous</Button>
-        <Button onClick={handleNextPage} disabled={currentPage === totalPages}>Next</Button>
-      </div>
+    <div style={{ maxWidth: '400px' }}>
+      <h4>Domain Descriptions</h4>
+      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+        <thead>
+          <tr>
+            <th style={{ borderBottom: '1px solid #ddd', textAlign: 'left', padding: '8px' }}>Label</th>
+            <th style={{ borderBottom: '1px solid #ddd', textAlign: 'left', padding: '8px' }}>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          {categories.map((category, index) => (
+            <tr key={index}>
+              <td style={{ borderBottom: '1px solid #ddd', padding: '8px' }}>{category.label}</td>
+              <td style={{ borderBottom: '1px solid #ddd', padding: '8px' }}>{category.description}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 
-  function handleClick(tvalue, age) {
-    fetch("https://catmapper.org/api/search?domain=" + age + "&property=" + selectedOption + "&term=" + tvalue + "&database=" +database+  "&query=false" + "&yearStart=" + yearStart + "&yearEnd=" + yearEnd + "&country=" + selectedcountry + "&context=" + contextID,
-    // fetch("http://127.0.0.1:5001/search?domain=" + age + "&property=" + selectedOption + "&term=" + tvalue + "&database=SocioMap"+  "&query=false" + "&yearStart=" + yearStart + "&yearEnd=" + yearEnd + "&country=" + selectedcountry + "&context=" + contextID,
-    // fetch("https://catmapper.org/api/count?label=" + age + "&options=" + selectedOption + "&value=" + tvalue,
-    // fetch("https://catmapper.org/api/search?domain=" + age + "&property=" + selectedOption + "&term=" + tvalue + "&database=SocioMap"+ "&query=false",
+  const tooltipContent2 = (
+    <div style={{ maxWidth: '400px' }}>
+      <h4>Domain Descriptions</h4>
+      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+        <thead>
+          <tr>
+            <th style={{ borderBottom: '1px solid #ddd', textAlign: 'left', padding: '8px' }}>Label</th>
+            <th style={{ borderBottom: '1px solid #ddd', textAlign: 'left', padding: '8px' }}>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          {infodata.filter(desc => selectedcategory[domainDrop].includes(desc.label)).map((category, index) => (
+            <tr key={index}>
+              <td style={{ borderBottom: '1px solid #ddd', padding: '8px' }}>{category.label}</td>
+              <td style={{ borderBottom: '1px solid #ddd', padding: '8px' }}>{category.description}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+
+  function handleClick(tvalue, domain) {
+    fetch("https://catmapper.org/api/search?domain=" + domain + "&property=" + selectedOption + "&term=" + tvalue + "&database=" +database+  "&query=false" + "&yearStart=" + yearStart + "&yearEnd=" + yearEnd + "&country=" + selectedcountry + "&context=" + contextID,
+    // fetch("http://127.0.0.1:5001/search?domain=" + domain + "&property=" + selectedOption + "&term=" + tvalue + "&database=SocioMap"+  "&query=false" + "&yearStart=" + yearStart + "&yearEnd=" + yearEnd + "&country=" + selectedcountry + "&context=" + contextID,
+    // fetch("https://catmapper.org/api/count?label=" + domain + "&options=" + selectedOption + "&value=" + tvalue,
+    // fetch("https://catmapper.org/api/search?domain=" + domain + "&property=" + selectedOption + "&term=" + tvalue + "&database=SocioMap"+ "&query=false",
       {
         method: "GET"
       })
@@ -163,69 +182,37 @@ export default function Searchbar() {
           <h6 id='[REDACTED]searchpagetext'>Select Category Domain</h6>
           <NativeSelect
             id="demo-customized-select-native"
-            value={age}
+            value={domainDrop}
             label=""
             style={{backgroundColor:"white"}}
-            onChange={handleChange}
+            onChange={(event) => { setdomainDrop(event.target.value);}}
             input={<BootstrapInput />}
           >
-            {selectedcategory.map((group, index) => (
-          <optgroup key={index} label={group.category}>
-            {group.values.map((value, valueIndex) => (
-              <option key={valueIndex} value={value}>
-                {value}
+            {Object.keys(selectedcategory).map((category, index) => (
+              <option key={index} value={category}>
+                {category}
               </option>
-            ))}
-          </optgroup>
-        ))}
+            )
+        )}
         
           </NativeSelect>
         </FormControl>
-        <Tooltip
-      title={tooltipContent}
-      arrow
-    >
-        <Button 
-      startIcon={<InfoIcon sx={{height: '28px', width : '28px'}} />}
-    >
-    </Button>
-    </Tooltip>
-      <FormControl sx={{ marginLeft: "1%", width: 250,height: 70 }} variant="standard">
-      <h6 id='[REDACTED]searchpagetext'>Property to search</h6>
-        <NativeSelect
-          id="dropdown"
-          value={selectedOption}
-          onChange={handleDropdownChange}
-          style={{backgroundColor:"white"}}
-          label=""
-          input={<BootstrapInput />}
-        >
-          {optionsForSelectedCategory &&
-            optionsForSelectedCategory.map((option, index) => (
-              <option key={index} value={option}>
-                {option}
-              </option>
-            ))}
-        </NativeSelect>
-      </FormControl >
-      <Button
-      startIcon={<InfoIcon sx={{height: '28px', width : '28px'}}/>}
-      onClick={() => {
-        console.log('Info button clicked');
-      }}
-    >
-    </Button>
+        <Tooltip title={tooltipContent} arrow>
+        <Button startIcon={<InfoIcon sx={{ height: '28px', width: '28px' }} />}>
+        </Button>
+      </Tooltip>
+
       <input
         type="text"
         id="myInput"
         value={tvalue}
-        style={{marginTop :22,marginLeft:"1%",width:450,height:45}}
+        style={{marginTop :22,marginLeft:"1%",width:700,height:45}}
         onChange={(event) => { settvalue(event.target.value) }}
-        onKeyDown={(event) => { if (event.key === 'Enter') {handleClick(tvalue, age)} }}
+        onKeyDown={(event) => { if (event.key === 'Enter') {isChecked ? handleClick(tvalue, advdomainDrop) : handleClick(tvalue, domainDrop) } }}
       />
         {/* <TextField onChange={(event) => { settvalue(event.target.value) }} sx={{ m: 1,height: 40, width: 450, backgroundColor: "white" }} variant="standard" /> */}
         <Tooltip title="Search" arrow sx={{ fontSize: '30px' }}>
-        <IconButton color="primary" aria-label="add to shopping cart"  onClick={() => { handleClick(tvalue, age) }} sx={{top:10}}>
+        <IconButton color="primary" aria-label="add to shopping cart"  onClick={() => { isChecked ? handleClick(tvalue, advdomainDrop) : handleClick(tvalue, domainDrop)  }} sx={{top:10}}>
           <SearchOutlinedIcon sx={{ fontSize: 33 }}/>
         </IconButton>
         </Tooltip>
@@ -253,7 +240,46 @@ export default function Searchbar() {
         ))}
         </NativeSelect>
       </FormControl >
-      <FormControl sx={{ marginLeft: "1%", width: 250,height: 80 }} variant="standard">
+      <FormControl sx={{ marginLeft: "1%" ,marginTop:"1%", width: 250,height: 70 }} variant="standard">
+          <h6 id='[REDACTED]searchpagetext'>Select Category Sub-Domain</h6>
+          <NativeSelect
+            id="demo-customized-select-native"
+            value={advdomainDrop}
+            label=""
+            style={{backgroundColor:"white"}}
+            onChange={(event) => { setadvdomainDrop(event.target.value)}}
+            input={<BootstrapInput />}
+          >
+            {selectedcategory[domainDrop].map((value, index) => (
+              <option key={index} value={value}>
+                {value}
+              </option>
+            ))}        
+          </NativeSelect>
+        </FormControl>
+        <Tooltip title={tooltipContent2} arrow>
+        <Button startIcon={<InfoIcon sx={{ height: '28px', width: '28px' }} />}>
+        </Button>
+      </Tooltip>
+        <FormControl sx={{ marginLeft: "1%",marginTop:"1%", width: 250,height: 70 }} variant="standard">
+      <h6 id='[REDACTED]searchpagetext'>Property to search</h6>
+        <NativeSelect
+          id="dropdown"
+          value={selectedOption}
+          onChange={(event) => {setSelectedOption(event.target.value);}}
+          style={{backgroundColor:"white"}}
+          label=""
+          input={<BootstrapInput />}
+        >
+          {optionsForSelectedCategory &&
+            optionsForSelectedCategory.map((option, index) => (
+              <option key={index} value={option}>
+                {option}
+              </option>
+            ))}
+        </NativeSelect>
+      </FormControl >
+      <FormControl sx={{ marginLeft: "1%",marginTop:".3%", width: 250,height: 80 }} variant="standard">
       <h6 id='[REDACTED]searchpagetext'>Time range</h6>
       <div style={{display:'flex'}}>
       <div>
@@ -294,7 +320,7 @@ export default function Searchbar() {
       </div>
       <div style={{ padding: 10, backgroundColor: "black" }}>
         <Box sx={{ width: '100%', color: 'black', backgroundColor: "white" }}>
-        {<DataTable users={users} label={age} />}
+        {<DataTable users={users} label={domainDrop} />}
         </Box>
       </div>
 

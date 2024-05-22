@@ -5,6 +5,11 @@ import {ExcelRenderer} from 'react-excel-renderer';
 import Button from '@mui/material/Button';
 import { Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow,  TablePagination } from '@mui/material';
 import { useLocation } from 'react-router-dom';
+import * as XLSX from 'xlsx';
+import { saveAs } from 'file-saver';
+import TranslateTable from './translate_Categories';
+import Backdrop from '@mui/material/Backdrop';
+import CircularProgress from '@mui/material/CircularProgress';
 import './sociotranslate.css'
 
 function Sociotranslate(){
@@ -13,20 +18,23 @@ function Sociotranslate(){
   const [zeroDropdownValue, setZeroDropdownValue] = useState([]);
   const [firstDropdownValue, setFirstDropdownValue] = useState(["ADM0"]);
   const [secondDropdownValue, setsecondDropdownValue] = useState([]);
-  const [thirdDropdownValue, setthirdDropdownValue] = useState([]);
-  const [fourthDropdownValue, setfourthDropdownValue] = useState([]);
-  const [fifthDropdownValue, setfifthDropdownValue] = useState([]);
+  const [thirdDropdownValue, setthirdDropdownValue] = useState([""]);
+  const [fourthDropdownValue, setfourthDropdownValue] = useState([""]);
+  const [fifthDropdownValue, setfifthDropdownValue] = useState([""]);
   const [svalues, setsvalues] = useState(["Name","SocioMapID"]);
   const [columns, setColumns] = useState([]);
   const [rows, setRows] = useState([]);
+  const [tcategories, setTcategories] = useState([]);
   const [isChecked, setIsChecked] = useState(false);
   const [isCheckedtwo, setIsCheckedtwo] = useState(false);
   const [isCheckedthree, setIsCheckedthree] = useState(false);
   const [isCheckedfour, setIsCheckedfour] = useState(false);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [loading, setLoading] = useState(false);
   let fileObj= ""
   let selectedColumnValues = ""
+  const [jsonData, setJsondata] = useState();
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
@@ -58,11 +66,11 @@ if (useLocation().pathname.includes("archamap")) {
   } 
 
 const handleClick = async () => {
+  setLoading(true);
   try {
     selectedColumnValues = rows.map((row) => row[columns.indexOf(zeroDropdownValue)]);
-    console.log(selectedColumnValues)
-    // const response = await fetch("http://127.0.0.1:5001/translate", {
-    const response = await fetch("https://catmapper.org/api/translate", {
+    // const response = await fetch("http://127.0.0.1:5001/translate2", {
+    const response = await fetch("https://catmapper.org/api/translate2", {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -72,8 +80,13 @@ const handleClick = async () => {
         property : secondDropdownValue,
         domain : firstDropdownValue,
         key : isCheckedfour,
-        query : false,
-        rows : selectedColumnValues.map(item => ({ term: item})),
+        term : zeroDropdownValue,
+        country : thirdDropdownValue,
+        context : fourthDropdownValue,
+        dataset : fifthDropdownValue,
+        yearStart : inputValue,
+        yearEnd : inputValuetwo,
+        table : jsonData,
       }),
     });
 
@@ -83,15 +96,45 @@ const handleClick = async () => {
 
     const responseData = await response.json();
     setData(responseData);
-    data.sort((a, b) => a.term.localeCompare(b.term));
-    console.log(data)
-    setColumns(Object.keys(data[0]))
-    setRows(data.map((row) => Object.values(row)))
+    // data.sort((a, b) => a.term.localeCompare(b.term));
+    setColumns(Object.keys(responseData[0]))
+    setRows(responseData.map((row) => Object.values(row)))
+
+    const matchTypeCounts = responseData.reduce((acc, row) => {
+      const matchType = row['matchType_Name']
+      acc[matchType] = acc[matchType] ? acc[matchType] + 1 : 1;
+      return acc;
+    }, {});
+
+    console.log(matchTypeCounts)
+
+    const total = responseData.length;
+    const matchTypePercentages = Object.keys(matchTypeCounts).reduce((acc, key) => {
+      acc[key] = (matchTypeCounts[key] / total * 100).toFixed(2) + '%';
+      return acc;
+    }, {});
+
+    setTcategories(matchTypePercentages);
+    
   } catch (error) {
     console.error('Error sending POST request:', error);
   }
+  finally {
+    setLoading(false);
+  }
 };
-const handleClicktwo = () => {alert('Button clicked!');};
+const handleClicktwo = () => {const worksheet = XLSX.utils.json_to_sheet(data);
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
+
+  const excelBuffer = XLSX.write(workbook, {
+    bookType: 'xlsx',
+    type: 'array',
+  });
+
+  const blob = new Blob([excelBuffer], { type: 'application/octet-stream' });
+
+  saveAs(blob, 'translatedata.xlsx');};
 
 const handleclear = () => {
   setSelectedFile(null);
@@ -100,8 +143,8 @@ const handleclear = () => {
   }}
 
 
-const [inputValue, setinputValue] = useState('');
-const [inputValuetwo, setinputValuetwo] = useState('');        
+const [inputValue, setinputValue] = useState(-4000);
+const [inputValuetwo, setinputValuetwo] = useState(2024);        
 
 const handleFileChange = (event) => {
       const fileType = event.target.files[0].type;
@@ -118,6 +161,15 @@ ExcelRenderer(fileObj, (err, resp) => {
     const columns = resp.rows[0]
     setColumns(resp.rows[0])
     setRows(resp.rows.slice(1))
+    const table = resp.rows.slice(1).map((row, index) => {
+      const rowData = {};
+      columns.forEach((column, columnIndex) => {
+        rowData[column] = row[columnIndex];
+      });
+      rowData['key'] = index + 1;
+      return rowData;
+    });
+    setJsondata(table)
   }
 });  
       } else {
@@ -128,13 +180,41 @@ ExcelRenderer(fileObj, (err, resp) => {
       }
   };
 
+  const getRowStyle = (row) => {
+    const statusIndex = columns.findIndex(col => col === 'matchType_Name');
+    const status = row[statusIndex];
+  
+    return getClassForStatus(status);
+  };
+
+  const getClassForStatus = (status) => {
+
+    if (status === undefined) {
+      return 'color-undefined';
+    }
+    status = status.trim();
+
+    switch (status) {
+      case 'exact match':
+        return 'exact-matches';
+      case 'fuzzy match':
+        return 'fuzzy-matches';
+      case 'one-to-many':
+        return 'one-to-many';
+      case 'many-to-one':
+        return 'many-to-one';
+      default:
+        return '';
+    }
+  };
+
   useEffect(() => {
     setsvalues(doptions[firstDropdownValue])
   }, [firstDropdownValue])
   
   return (
     <div style={{backgroundColor:"white"}} >
-    <div  style={{width:"25%",height:700, backgroundColor : '#e0e0e0', padding: '20px',border: '1px solid #ccc',borderRadius : '10px', margin: '10px', overflow:"auto",position:"absolute"}}>
+    <div  style={{width:"26%",height:"90%", backgroundColor : '#e0e0e0', padding: '20px',border: '1px solid #ccc',borderRadius : '10px', margin: '10px', overflow:"auto",position:"absolute"}}>
       <h3 style={{ color: 'black', fontWeight: "bold", marginLeft: 7, padding: "2px" }}> Choose file to import</h3>
       <input id="fileInput" style={{ color: 'black', fontWeight: "bold", marginLeft: 7, padding: "2px" }} type="file" accept=".csv, .xlsx" onChange={handleFileChange} />
       <Button variant="contained" color="primary" onClick={handleclear}>
@@ -198,7 +278,7 @@ ExcelRenderer(fileObj, (err, resp) => {
           <Select
           label="Third Dropdown"
           style={{height:40}}
-          value={zeroDropdownValue}
+          value={thirdDropdownValue}
           sx={{ m: 1, width: 300 }}
           onChange={(event) => setthirdDropdownValue(event.target.value)}>
           {columns.map((key) => (
@@ -222,7 +302,7 @@ ExcelRenderer(fileObj, (err, resp) => {
           <Select
           label="Fourth Dropdown"
           style={{height:40}}
-          value={zeroDropdownValue}
+          value={fourthDropdownValue}
           sx={{ m: 1, width: 300 }}
           onChange={(event) => setfourthDropdownValue(event.target.value)}>
           {columns.map((key) => (
@@ -246,7 +326,7 @@ ExcelRenderer(fileObj, (err, resp) => {
           <Select
           label="Fifth Dropdown"
           style={{height:40}}
-          value={zeroDropdownValue}
+          value={fifthDropdownValue}
           sx={{ m: 1, width: 300 }}
           onChange={(event) => setfifthDropdownValue(event.target.value)}>
           {columns.map((key) => (
@@ -255,6 +335,12 @@ ExcelRenderer(fileObj, (err, resp) => {
           </MenuItem>
         ))}
           </Select>
+          <br/>
+      <label>
+        <input type="checkbox" checked={isCheckedfour} onChange={handleCheckboxChangefour} />
+        Return Dataset Keys?
+      </label>
+      <br/>
         </div>
       )}
       <br/>
@@ -277,22 +363,22 @@ ExcelRenderer(fileObj, (err, resp) => {
       />
       <br/>
       <br/>
-      <label>
-        <input type="checkbox" checked={isCheckedfour} onChange={handleCheckboxChangefour} />
-        Return Dataset Keys?
-      </label>
-      <br/>
-      <br/>
-      <Button variant="contained" color="primary" onClick={handleClick}>
+      <Backdrop
+        sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}
+        open={loading}
+      >
+        <CircularProgress color="inherit" />
+      </Backdrop>      <Button variant="contained" color="primary" onClick={handleClick}>
         Search
       </Button>
       <br/>
+      <TranslateTable categories={tcategories} />
       <br/>
       <Button variant="contained" color="primary" onClick={handleClicktwo}>
         Download Data
       </Button>
     </div>
-    <div style={{top:100,width:"73%", height:700, backgroundColor:"white", padding: '20px',border: '1px solid #ccc',borderRadius : '10px', marginLeft: "27%",position:"absolute"}}>
+    <div style={{top:100,width:"72%", height:"90%", backgroundColor:"white", padding: '20px',border: '1px solid #ccc',borderRadius : '10px', marginLeft: "27%",position:"absolute"}}>
     {columns.length > 0 && rows.length > 0 && (
         <>
           <TableContainer component={Paper}>
@@ -309,7 +395,7 @@ ExcelRenderer(fileObj, (err, resp) => {
                   ? rows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                   : rows
                 ).map((row, rowIndex) => (
-                  <TableRow key={rowIndex}>
+                  <TableRow key={rowIndex} className={getRowStyle(row)}>
                     {row.map((cell, cellIndex) => (
                       <TableCell key={cellIndex}>{cell}</TableCell>
                     ))}

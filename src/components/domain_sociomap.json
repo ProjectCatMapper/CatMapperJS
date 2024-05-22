@@ -1,10 +1,9 @@
-[
-    {"category": "DISTRICT", "values": ["ADM0","ADM1","ADM2","ADM3","ADM4","ADMD","ADME","ADML","ADMX","DISTRICT","PPL"]},
-    {"category": "CATEGORY", "values": ["CATEGORY"]},
-    {"category": "DATASET", "values": ["DATASET"]},
-    {"category": "LANGUOID", "values": ["DIALECT","FAMILY","LANGUAGE","LANGUOID"]},
-    {"category": "ETHNICITY", "values": ["ETHNICITY"]},
-    {"category": "GENERIC", "values": ["GENERIC"]},
-    {"category": "RELIGION", "values": ["RELIGION"]},
-    {"category": "VARIABLE", "values": ["VARIABLE"]}
-]
+
+    {"DISTRICT" : ["ADM0","ADM1","ADM2","ADM3","ADM4","ADMD","ADME","ADML","ADMX","DISTRICT","PPL"],
+    "CATEGORY": ["CATEGORY"],
+    "DATASET": ["DATASET"],
+    "LANGUOID": ["DIALECT","FAMILY","LANGUAGE","LANGUOID"],
+    "ETHNICITY": ["ETHNICITY"],
+    "GENERIC": ["GENERIC"],
+    "RELIGION": ["RELIGION"],
+    "VARIABLE": ["VARIABLE"]}

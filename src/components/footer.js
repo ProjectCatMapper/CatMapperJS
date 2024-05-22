@@ -6,12 +6,15 @@ import Grid from '@mui/material/Grid';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import Typography from '@mui/material/Typography';
+import Button from '@mui/material/Button';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
 import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
+import * as XLSX from 'xlsx';
+import { saveAs } from 'file-saver';
 import './footer.css'
 
 const Item = styled(Paper)(({ theme }) => ({
@@ -38,6 +41,34 @@ const Item = styled(Paper)(({ theme }) => ({
     createData('104	VARIABLES','524,517	ENCODINGS',''),
   ];
   
+  const handleButtonClick = async () => {
+    try {
+      const response = await fetch('https://catmapper.org/api/allDatasets?database=sociomap', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      const data = await response.json();
+      const worksheet = XLSX.utils.json_to_sheet(data);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
+
+      const excelBuffer = XLSX.write(workbook, {
+        bookType: 'xlsx',
+        type: 'array',
+      });
+
+      const blob = new Blob([excelBuffer], { type: 'application/octet-stream' });
+
+      saveAs(blob, 'data.xlsx');
+    } catch (error) {
+      console.error('There was a problem with the fetch operation:', error);
+    }
+  };
 
 const footer = () => {
   return (
@@ -73,7 +104,15 @@ const footer = () => {
       <Card variant="outlined" style={{backgroundColor: 'black',border: '1px solid white',}}>
         <CardContent>
       <Typography id='sociomapfooter' sx={{ fontSize: 20 }} color="#fff" gutterBottom>
-        Dataset Progress
+        Dataset Progress  
+        <Button
+        variant="contained"
+        size="small"
+        color="primary"
+        sx={{ fontSize: '0.6rem', padding: '4px 8px' }}
+        onClick={handleButtonClick}
+      >
+Download all datasets      </Button>
       </Typography>
       <Typography variant="table" color="#000" component="div">
       <TableContainer component={Paper}>
