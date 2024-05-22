@@ -5,3 +5,22 @@
     border-radius: '10px';
     margin: '20px';
   }
+
+.exact-matches {
+    background-color: #FDEDEC;
+}
+.fuzzy-matches{
+    background-color: #E8DAEF;
+}
+.one-to-many {
+    background-color: #D4E6F1;
+}
+.many-to-one {
+    background-color: #D5F5E3;
+}
+.no-matches {
+    background-color: #FCF3CF;
+}
+.color-undefined {
+  background-color: #FFFFFF;
+}

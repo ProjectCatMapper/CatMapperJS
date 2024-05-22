@@ -29,7 +29,7 @@ const Navbar = () => {
                 <Link id='sociomapnavbar' to='/sociomap/translate'>Translate</Link>
             </li>
             <li >
-                <Link id='sociomapnavbar' style={{marginRight:10}} to='/merge'>Merge</Link>
+                <Link id='sociomapnavbar' style={{marginRight:10}} to='/sociomap/merge'>Merge</Link>
             </li>
             <li >
             <LoginButton></LoginButton>

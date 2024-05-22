@@ -10,6 +10,7 @@ import Profile from "./routes/Profile";
 import Sociomapclick from "./routes/Sociomapclick";
 import ArchaMapclick from "./routes/ArchaMapclick";
 import Archamapexplore from "./routes/Archamapexplore";
+import Merge from "./routes/Merge";
 
 function App() {
   useEffect(() => {
@@ -40,6 +41,7 @@ function App() {
         <Route path='/archamap/:cmid' element={<ArchaMapclick />} />
         <Route path='/sociomap/:cmid/:tabval' element={<Sociomapclick />} />
         <Route path='/archamap/:cmid/:tabval' element={<ArchaMapclick />} />
+        <Route path='/sociomap/merge' element={<Merge />} />
       </Routes>
   );
 }
