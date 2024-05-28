@@ -1,3 +1,35 @@
 h1,h4,p,a{
     color: black !important;
   }
+
+.legend {
+  background-color: white;
+  padding: 10px;
+  border-radius: 5px;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+}
+
+.legend h4 {
+  margin: 0;
+  padding: 0;
+  font-size: 14px;
+}
+
+.legend ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.legend li {
+  margin-bottom: 5px;
+}
+
+.legend span {
+  background-color: #ccc;
+  width: 12px;
+  height: 12px;
+  display: inline-block;
+  margin-right: 8px;
+}
+

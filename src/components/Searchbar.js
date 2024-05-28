@@ -54,9 +54,11 @@ const BootstrapInput = styled(InputBase)(({ theme }) => ({
 
 export default function Searchbar() {
 
-  const [domainDrop, setdomainDrop] = React.useState('DISTRICT');
+  const [domainDrop, setdomainDrop] = React.useState('ANY DOMAIN');
 
-  const [advdomainDrop, setadvdomainDrop] = React.useState('ADM0');
+  const [advdomainDrop, setadvdomainDrop] = React.useState('ANY DOMAIN');
+
+  const [advoptions, setadvoptions] = React.useState(['ANY DOMAIN']);
 
   const [selectedOption, setSelectedOption] = useState('Name');
 
@@ -88,10 +90,10 @@ export default function Searchbar() {
 
   let selectedcategory = sociodomain
 
-  let optionsForSelectedCategory = socioptions[advdomainDrop]
+  const [optionsForSelectedCategory,setoptionsForSelectedCategory] = useState(socioptions[advdomainDrop])
 
   const categories = [
-    { label: 'CATEGORY', description: 'Any category/domain. Excludes DATASETS.' },
+    { label: 'ANY DOMAIN', description: 'Any category/domain. Excludes DATASETS.' },
     { label: 'DATASET', description: 'A dataset for which SocioMap includes metadata on categories and/or variables' },
     { label: 'DISTRICT', description: 'A category defined by its geographical boundary' },
     { label: 'ETHNICITY', description: 'A category of people defined by a shared origin which is often socially constructed. This can include categories defined by ethnicity, race, caste, religion, or ecological zone (e.g., hill people). It can be internally or externally defined depending on the source.' },
@@ -177,7 +179,7 @@ export default function Searchbar() {
   return (
     <div style={{height:"auto"}}>
       <Box sx={{ backgroundColor: 'black', opacity: 1 }}>
-        <div style={{display:"flex"}}>
+        <div style={{display:"flex",flexWrap:"wrap"}}>
           <FormControl sx={{ marginLeft: "1%" , width: 250,height: 70 }} variant="standard">
           <h6 id='sociomappersearchpagetext'>Select Category Domain</h6>
           <NativeSelect
@@ -185,7 +187,7 @@ export default function Searchbar() {
             value={domainDrop}
             label=""
             style={{backgroundColor:"white"}}
-            onChange={(event) => { setdomainDrop(event.target.value);}}
+            onChange={(event) => { setdomainDrop(event.target.value);setadvoptions(selectedcategory[event.target.value]);setadvdomainDrop(selectedcategory[event.target.value][0]);setoptionsForSelectedCategory(socioptions[selectedcategory[event.target.value][0]])}}
             input={<BootstrapInput />}
           >
             {Object.keys(selectedcategory).map((category, index) => (
@@ -197,6 +199,7 @@ export default function Searchbar() {
         
           </NativeSelect>
         </FormControl>
+        {console.log(advdomainDrop)}
         <Tooltip title={tooltipContent} arrow>
         <Button startIcon={<InfoIcon sx={{ height: '28px', width: '28px' }} />}>
         </Button>
@@ -222,7 +225,7 @@ export default function Searchbar() {
       </Box>
       <div id="filters">
         {isChecked &&
-        <div style={{display:"flex"}}>
+        <div className="flex-container">
           <FormControl sx={{ marginLeft: "1%",marginTop:"1%", width: 250,height: 80 }} variant="standard">
       <h6 id='sociomappersearchpagetext'>Country</h6>
         <NativeSelect
@@ -247,10 +250,10 @@ export default function Searchbar() {
             value={advdomainDrop}
             label=""
             style={{backgroundColor:"white"}}
-            onChange={(event) => { setadvdomainDrop(event.target.value)}}
+            onChange={(event) => { setadvdomainDrop(event.target.value);setoptionsForSelectedCategory(socioptions[event.target.value])}}
             input={<BootstrapInput />}
           >
-            {selectedcategory[domainDrop].map((value, index) => (
+            {advoptions.map((value, index) => (
               <option key={index} value={value}>
                 {value}
               </option>
@@ -271,7 +274,7 @@ export default function Searchbar() {
           label=""
           input={<BootstrapInput />}
         >
-          {optionsForSelectedCategory &&
+          {
             optionsForSelectedCategory.map((option, index) => (
               <option key={index} value={option}>
                 {option}
