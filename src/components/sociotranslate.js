@@ -95,13 +95,14 @@ const handleClick = async () => {
     }
 
     const responseData = await response.json();
+    console.log(responseData)
     setData(responseData);
     // data.sort((a, b) => a.term.localeCompare(b.term));
     setColumns(Object.keys(responseData[0]))
     setRows(responseData.map((row) => Object.values(row)))
 
     const matchTypeCounts = responseData.reduce((acc, row) => {
-      const matchType = row['matchType_Name']
+      const matchType = row['matchType_PopName']
       acc[matchType] = acc[matchType] ? acc[matchType] + 1 : 1;
       return acc;
     }, {});

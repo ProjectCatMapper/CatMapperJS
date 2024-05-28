@@ -112,7 +112,7 @@ const footer = () => {
         sx={{ fontSize: '0.6rem', padding: '4px 8px' }}
         onClick={handleButtonClick}
       >
-Download all datasets      </Button>
+Download datasets list      </Button>
       </Typography>
       <Typography variant="table" color="#000" component="div">
       <TableContainer component={Paper}>

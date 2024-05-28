@@ -8,7 +8,7 @@
     "ADME" : ["Name","Key","CMID"],
     "ADML" : ["Name","Key","CMID"],
     "ADMX" : ["Name","Key","CMID"],
-    "CATEGORY" : ["Name","Key","CMID","glottocode","FIPS","ISO2","ISO3","ISONumeric"],
+    "ANY DOMAIN" : ["Name","Key","CMID","glottocode","FIPS","ISO2","ISO3","ISONumeric"],
     "DATASET" : ["Name","CMID","DatasetCitation","project","shortName"],
     "DIALECT" : ["Name","Key","CMID","glottocode","ISO3"],
     "DISTRICT" : ["Name","Key","CMID","glottocode","FIPS","ISO2","ISO3","ISONumeric"],

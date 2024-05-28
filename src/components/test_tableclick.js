@@ -16,6 +16,7 @@ import 'leaflet/dist/leaflet.css';
 import '@changey/react-leaflet-markercluster/dist/styles.min.css';
 import CategoriesTable from './categories_table';
 import { Info } from '@mui/icons-material';
+import Legend from './legend';
 
 function CustomTabPanel(props) {
   const { children, value, index, ...other } = props;
@@ -178,7 +179,7 @@ export default function Tableclick(props) {
                 setPoints(data.points)
                 setlabel(data.label)
                 setfdrop(data.relnames)
-                setsources(data.polysource)
+                // setsources(data.polysource)
             })
     },[])
 
@@ -249,7 +250,6 @@ export default function Tableclick(props) {
     };
 
     const onEachFeature = (feature, layer) => {
-      // Bind popup or tooltip here
       layer.bindTooltip(`Source: ${feature.source}`, { permanent: false, direction: 'top' });
     };
 
@@ -278,6 +278,7 @@ export default function Tableclick(props) {
     };
   };
 
+  {console.log(sources)}
   useEffect(() => {fetchData({target: { value: fdrop[0]}})},[fdrop])
 
   const [boxHeight, setBoxHeight] = useState('auto');
@@ -286,6 +287,11 @@ export default function Tableclick(props) {
     const contentHeight = document.getElementById('content').offsetHeight;
     setBoxHeight(contentHeight + 'px');
   }, [rev]);
+
+  useEffect(() => {
+    const uniqueSources = [...new Set([...points.map(point => point.source), ...mapt.map(feature => feature.source)])];
+    setsources(uniqueSources);
+  }, [points, mapt]);
 
   // const boxHeight = 100 + (Object.keys(rev).length * 14)
 
@@ -361,7 +367,7 @@ export default function Tableclick(props) {
               ))}
             </MarkerClusterGroup>
           ) : points}
-
+                <Legend sources={sources} />
               </MapContainer> : <p>No map</p>}
             </div>
           </CustomTabPanel>
