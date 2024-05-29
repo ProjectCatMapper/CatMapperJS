@@ -1,5 +1,5 @@
 import React from 'react';
-import { useState } from 'react'
+import { useState,useEffect } from 'react'
 import { styled } from '@mui/material/styles';
 import FormControl from '@mui/material/FormControl';
 import NativeSelect from '@mui/material/NativeSelect';
@@ -64,17 +64,7 @@ export default function Searchbar() {
 
   const [selectedcountry, setSelectedCountry] = useState(countries[0].code);
 
-  const getStoredDataFromLocalStorage = () => {
-    const storedData = sessionStorage.getItem('myData');
-    return storedData ? JSON.parse(storedData) : [];
-  };
-
-  const [users, setUsers] = useState(getStoredDataFromLocalStorage())
-
-   const saveDataToLocalStorage = () => {
-    sessionStorage.setItem('myData', JSON.stringify(users));
-  };
-
+  const [users, setUsers] = useState([]);
 
   const [tvalue, settvalue] = useState('');
 
@@ -107,7 +97,67 @@ export default function Searchbar() {
     database = "ArchaMap"
     selectedcategory = archdomain
     optionsForSelectedCategory = archoptions[advdomainDrop]
-  } 
+  }
+
+  useEffect(() => {
+    const storedState = sessionStorage.getItem('searchState');
+    if (storedState) {
+      const {
+        domainDrop,
+        advdomainDrop,
+        advoptions,
+        selectedOption,
+        selectedcountry,
+        tvalue,
+        yearStart,
+        yearEnd,
+        isChecked,
+        contextID,
+        optionsForSelectedCategory
+      } = JSON.parse(storedState);
+
+      setdomainDrop(domainDrop);
+      setadvdomainDrop(advdomainDrop);
+      setadvoptions(advoptions);
+      setSelectedOption(selectedOption);
+      setSelectedCountry(selectedcountry);
+      settvalue(tvalue);
+      setyearStart(yearStart);
+      setyearEnd(yearEnd);
+      setIsChecked(isChecked);
+      setcontextID(contextID);
+      setoptionsForSelectedCategory(optionsForSelectedCategory);
+    }
+  }, []);
+
+  // Save state to sessionStorage
+  useEffect(() => {
+    sessionStorage.setItem('searchState', JSON.stringify({
+      domainDrop,
+      advdomainDrop,
+      advoptions,
+      selectedOption,
+      selectedcountry,
+      tvalue,
+      yearStart,
+      yearEnd,
+      isChecked,
+      contextID,
+      optionsForSelectedCategory
+    }));
+  }, [domainDrop, advdomainDrop, advoptions, selectedOption, selectedcountry, tvalue, yearStart, yearEnd, isChecked, contextID, optionsForSelectedCategory]);
+
+  // Fetch and save users data to sessionStorage
+  useEffect(() => {
+    const storedUsers = sessionStorage.getItem('myData');
+    if (storedUsers) {
+      setUsers(JSON.parse(storedUsers));
+    }
+  }, []);
+
+  useEffect(() => {
+    sessionStorage.setItem('myData', JSON.stringify(users));
+  }, [users]);
   
   const handleCheckboxChange = () => {
     setIsChecked(!isChecked);
@@ -172,7 +222,6 @@ export default function Searchbar() {
       })
       .then(data => {
         setUsers(data)
-        saveDataToLocalStorage(data)
       })
   }
 
