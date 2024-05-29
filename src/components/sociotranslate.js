@@ -3,7 +3,7 @@ import doptions from "./dropdown.json";
 import {Select, MenuItem } from '@mui/material';
 import {ExcelRenderer} from 'react-excel-renderer';
 import Button from '@mui/material/Button';
-import { Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow,  TablePagination } from '@mui/material';
+import { Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow,  TablePagination, Typography } from '@mui/material';
 import { useLocation } from 'react-router-dom';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
@@ -102,7 +102,7 @@ const handleClick = async () => {
     setRows(responseData.map((row) => Object.values(row)))
 
     const matchTypeCounts = responseData.reduce((acc, row) => {
-      const matchType = row['matchType_PopName']
+      const matchType = row['matchType_'+zeroDropdownValue]
       acc[matchType] = acc[matchType] ? acc[matchType] + 1 : 1;
       return acc;
     }, {});
@@ -364,12 +364,15 @@ ExcelRenderer(fileObj, (err, resp) => {
       />
       <br/>
       <br/>
-      <Backdrop
-        sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}
-        open={loading}
-      >
-        <CircularProgress color="inherit" />
-      </Backdrop>      <Button variant="contained" color="primary" onClick={handleClick}>
+      <Backdrop style={{ color: '#fff', zIndex: 1300 }} open={loading}>
+        <div>
+          <CircularProgress color="inherit" />
+          <Typography variant="h6" align="center" style={{ marginTop: '10px' }}>
+            Translating...
+          </Typography>
+        </div>
+      </Backdrop>     
+      <Button variant="contained" color="primary" onClick={handleClick}>
         Search
       </Button>
       <br/>
@@ -403,7 +406,7 @@ ExcelRenderer(fileObj, (err, resp) => {
                   </TableRow>
                 ))}
                 {emptyRows > 0 && (
-                  <TableRow style={{ height: 53 * emptyRows }}>
+                  <TableRow style={{ height: 45 * emptyRows }}>
                     <TableCell colSpan={columns.length} />
                   </TableRow>
                 )}
