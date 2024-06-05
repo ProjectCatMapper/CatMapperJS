@@ -121,7 +121,7 @@ Download datasets list      </Button>
           <TableRow>
             <TableCell align="justify">Nodes</TableCell>
             <TableCell align="justify">Relations</TableCell>
-            <TableCell align="justify">Dataset Progress</TableCell>
+            <TableCell align="justify">Dataset Encodings for</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>

@@ -17,7 +17,6 @@ export default function ClickTable(props) {
   ];
   const [rows, setRows] = useState([]);
 
-  {console.log(props.usert)}
 
   //React.useEffect(() => {console.log(props.usert)},[])
   
