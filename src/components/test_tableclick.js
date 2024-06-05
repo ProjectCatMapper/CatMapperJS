@@ -12,6 +12,7 @@ import { useLocation } from 'react-router-dom';
 import './tableclick.css'
 import Neo4jVisualization from './visnet';
 import MarkerClusterGroup from '@changey/react-leaflet-markercluster';
+import Button from '@mui/material/Button';
 import 'leaflet/dist/leaflet.css';
 import '@changey/react-leaflet-markercluster/dist/styles.min.css';
 import CategoriesTable from './categories_table';
@@ -69,6 +70,12 @@ export default function Tableclick(props) {
   const [domains, setdomains] = useState([]);
   const [sources, setsources] = useState([]);
   const orderOfProperties = ['CONTAINS', 'DISTRICT_OF', 'LANGUAGE_OF', 'LANGUOID_OF', 'RELIGION_OF', 'USES'];
+  const [datasetdomainValue, setdatasetdomainValue] = useState('');
+  const datasetdropdown = ['CATEGORY', 'ADM2'];
+
+  const datasetDropdownChange = (event) => {
+    setdatasetdomainValue(event.target.value);
+  };
 
   let database = "SocioMap"
 
@@ -183,6 +190,30 @@ export default function Tableclick(props) {
             })
     },[])
 
+    const datasetButtonClick = async (event) => {
+      try{
+        const response = await fetch("https://catmapper.org/api/networks?cmid=" + props.cmid.cmid + "&database=" +database+ "&domain=" + event.target.value);
+        const result = await response.json();
+        const jsonString = JSON.stringify(result);
+    const blob = new Blob([jsonString], { type: 'application/json' });
+        console.log(blob)
+
+        
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.style.display = 'none';
+    a.href = url;
+    a.download = 'response_data';
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+
+      }
+      catch (error) {
+        console.error('Error fetching data:', error);
+      }
+    };
+
     const fetchData = async (event) => {
         try {
           // const response = await fetch("http://127.0.0.1:5001/network?cmid=" + props.cmid.cmid +"&relation=" + event.target.value + "&value="+ label);
@@ -278,7 +309,6 @@ export default function Tableclick(props) {
     };
   };
 
-  {console.log(sources)}
   useEffect(() => {fetchData({target: { value: fdrop[0]}})},[fdrop])
 
   const [boxHeight, setBoxHeight] = useState('auto');
@@ -289,7 +319,9 @@ export default function Tableclick(props) {
   }, [rev]);
 
   useEffect(() => {
-    const uniqueSources = [...new Set([...points.map(point => point.source), ...mapt.map(feature => feature.source)])];
+    const maptFeatures = mapt.features && mapt.features.length ? mapt.features : mapt;
+    console.log(maptFeatures)
+    const uniqueSources = [...new Set([...points.map(point => point.source), ...(maptFeatures.features ? maptFeatures.features.map(feature => feature.source): maptFeatures.map(feature => feature.source))])];
     setsources(uniqueSources);
   }, [points, mapt]);
 
@@ -310,7 +342,6 @@ export default function Tableclick(props) {
         )): rev}
       </ul>
         </Box> */}
-        {console.log(usert)}
         <Box sx={{ display: 'grid', gridTemplateRows: '40px auto 20px', width: '100%', backgroundImage: `linear-gradient(to right, #93a5cf, #e4efe9)`, backgroundSize: 'cover' }}>
   <h2 style={{ color: "black", gridColumn: "1", gridRow: "1" }}>Category Info</h2>
   <ul id='content' style={{ color: "black", gridColumn: "1", gridRow: "2", fontSize: "large" }}>
@@ -325,6 +356,24 @@ export default function Tableclick(props) {
         </li>
       )) : rev}
   </ul>
+  {props.cmid.cmid.startsWith('SD') && (
+        <Box sx={{ gridColumn: "1", gridRow: "2", display: 'flex', justifyContent: 'center', alignItems: 'center', flexDirection: 'column' }}>
+          <Select
+            value={datasetdomainValue}
+            onChange={datasetDropdownChange}
+            displayEmpty
+            sx={{ marginBottom: 2, minWidth: 120 }}
+          >
+            <MenuItem value="" disabled>Select an option</MenuItem>
+            {datasetdropdown.map((option, index) => (
+              <MenuItem key={index} value={option}>{option}</MenuItem>
+            ))}
+          </Select>
+          <Button variant="contained" color="primary" onClick={datasetButtonClick}>
+            Download Dataset Relationships
+          </Button>
+        </Box>
+      )}
 </Box>
         <Box sx={{ width: '100%', height: "auto" , position: "absolute", left: "10px", top: boxHeight + 100 }}>
           <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>

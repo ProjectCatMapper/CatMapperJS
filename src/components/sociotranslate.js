@@ -3,12 +3,13 @@ import doptions from "./dropdown.json";
 import {Select, MenuItem } from '@mui/material';
 import {ExcelRenderer} from 'react-excel-renderer';
 import Button from '@mui/material/Button';
-import { Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow,  TablePagination, Typography } from '@mui/material';
+import { Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow,  TablePagination, Typography,Box } from '@mui/material';
 import { useLocation } from 'react-router-dom';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import TranslateTable from './translate_Categories';
 import Backdrop from '@mui/material/Backdrop';
+import LinearProgress from '@mui/material/LinearProgress';
 import CircularProgress from '@mui/material/CircularProgress';
 import './sociotranslate.css'
 
@@ -32,6 +33,7 @@ function Sociotranslate(){
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [loading, setLoading] = useState(false);
+  const [progress, setProgress] = useState(0);
   let fileObj= ""
   let selectedColumnValues = ""
   const [jsonData, setJsondata] = useState();
@@ -67,8 +69,10 @@ if (useLocation().pathname.includes("archamap")) {
 
 const handleClick = async () => {
   setLoading(true);
+  setProgress(10);
   try {
     selectedColumnValues = rows.map((row) => row[columns.indexOf(zeroDropdownValue)]);
+    setProgress(20);
     // const response = await fetch("http://127.0.0.1:5001/translate2", {
     const response = await fetch("https://catmapper.org/api/translate2", {
       method: 'POST',
@@ -90,6 +94,8 @@ const handleClick = async () => {
       }),
     });
 
+    setProgress(50);
+
     if (!response.ok) {
       throw new Error('Network response was not ok');
     }
@@ -100,6 +106,8 @@ const handleClick = async () => {
     // data.sort((a, b) => a.term.localeCompare(b.term));
     setColumns(Object.keys(responseData[0]))
     setRows(responseData.map((row) => Object.values(row)))
+
+    setProgress(80);
 
     const matchTypeCounts = responseData.reduce((acc, row) => {
       const matchType = row['matchType_'+zeroDropdownValue]
@@ -116,14 +124,17 @@ const handleClick = async () => {
     }, {});
 
     setTcategories(matchTypePercentages);
+    setProgress(100)
     
   } catch (error) {
     console.error('Error sending POST request:', error);
   }
   finally {
     setLoading(false);
+    setProgress(0);
   }
 };
+
 const handleClicktwo = () => {const worksheet = XLSX.utils.json_to_sheet(data);
   const workbook = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
@@ -208,6 +219,17 @@ ExcelRenderer(fileObj, (err, resp) => {
         return '';
     }
   };
+
+  const ProgressBar = ({ progress }) => (
+    <Box display="flex" alignItems="right" width="15%" style={{ position: 'absolute', bottom: '10px', right: '10px', padding: '10px', background: '#f0f0f0', borderRadius: '5px' }}>
+      <Box width="80%" mr={1}>
+        <LinearProgress variant="determinate" value={progress} />
+      </Box>
+      <Box minWidth={35}>
+        <Typography variant="body2" color="textSecondary">{`translating ${progress}%`}</Typography>
+      </Box>
+    </Box>
+  );
 
   useEffect(() => {
     setsvalues(doptions[firstDropdownValue])
@@ -371,7 +393,8 @@ ExcelRenderer(fileObj, (err, resp) => {
             Translating...
           </Typography>
         </div>
-      </Backdrop>     
+        {loading && <ProgressBar progress={progress} />}
+      </Backdrop>
       <Button variant="contained" color="primary" onClick={handleClick}>
         Search
       </Button>
