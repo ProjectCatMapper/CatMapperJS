@@ -1,5 +1,8 @@
 import {React, useState} from 'react';
 import { Box, Tabs, Tab,  Button, Typography, TextField, Paper } from '@mui/material';
+import image from '../assets/white.png'
+import { Link } from 'react-router-dom'
+import Divider from '@mui/material/Divider';
 
 function TabPanel(props) {
   const { children, value, index, ...other } = props;
@@ -36,6 +39,7 @@ export default function VerticalTabs() {
   };
 
   return (
+    <Box sx={{ backgroundColor: 'black', opacity: 1 }}>
     <Box
       sx={{ flexGrow: 1, bgcolor: 'background.paper', display: 'flex', height: "800px" }}
     >
@@ -76,6 +80,20 @@ export default function VerticalTabs() {
       <TabPanel value={value} index={2}>
         Download merge template
       </TabPanel>
+    </Box>
+    <Divider sx={{ marginTop: 3, marginBottom: 7, marginLeft:1,marginRight:1, backgroundColor: 'white' }} />
+
+    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 2, mb:0 }}>
+      <img src={image} alt="CatMapper Logo" style={{ height: 80 }} />
+      <Box>
+        <Link  id="catmapperfooter" to="/people"  underline="none" style={{ color: 'white', textDecoration: 'none', margin: '0 8px' }}>People</Link>
+        <Link to="/news" id="catmapperfooter"  underline="none" style={{ color: 'white', textDecoration: 'none', margin: '0 8px' }}>News</Link>
+        <Link to="/funding" id="catmapperfooter"  underline="none" style={{ color: 'white', textDecoration: 'none', margin: '0 8px' }}>Funding</Link>
+        <Link to="/citation" id="catmapperfooter"  underline="none" style={{ color: 'white', textDecoration: 'none', margin: '0 8px' }}>Citation</Link>
+        <Link to="/terms" id="catmapperfooter"  underline="none" style={{ color: 'white', textDecoration: 'none', margin: '0 8px' }}>Terms</Link>
+        <Link to="/contact" id="catmapperfooter"  underline="none" style={{ color: 'white', textDecoration: 'none', margin: '0 8px' }}>Contact</Link>
+      </Box>
+    </Box>
     </Box>
   );
 }

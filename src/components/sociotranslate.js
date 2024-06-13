@@ -3,7 +3,7 @@ import doptions from "./dropdown.json";
 import {Select, MenuItem } from '@mui/material';
 import {ExcelRenderer} from 'react-excel-renderer';
 import Button from '@mui/material/Button';
-import { Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow,  TablePagination, Typography,Box } from '@mui/material';
+import { Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow,  TablePagination, Typography, Box } from '@mui/material';
 import { useLocation } from 'react-router-dom';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
@@ -12,6 +12,9 @@ import Backdrop from '@mui/material/Backdrop';
 import LinearProgress from '@mui/material/LinearProgress';
 import CircularProgress from '@mui/material/CircularProgress';
 import './sociotranslate.css'
+import Divider from '@mui/material/Divider';
+import image from '../assets/white.png'
+import { Link } from 'react-router-dom'
 
 function Sociotranslate(){
 
@@ -236,7 +239,7 @@ ExcelRenderer(fileObj, (err, resp) => {
   }, [firstDropdownValue])
   
   return (
-    <div style={{backgroundColor:"white"}} >
+    <Box sx={{ backgroundColor: 'black', opacity: 1,flexGrow: 1  }} >
     <div  style={{width:"26%",height:"90%", backgroundColor : '#e0e0e0', padding: '20px',border: '1px solid #ccc',borderRadius : '10px', margin: '10px', overflow:"auto",position:"absolute"}}>
       <h3 style={{ color: 'black', fontWeight: "bold", marginLeft: 7, padding: "2px" }}> Choose file to import</h3>
       <input id="fileInput" style={{ color: 'black', fontWeight: "bold", marginLeft: 7, padding: "2px" }} type="file" accept=".csv, .xlsx" onChange={handleFileChange} />
@@ -448,7 +451,22 @@ ExcelRenderer(fileObj, (err, resp) => {
         </>
       )}
       </div>
-    </div>
+      <div style={{top:1070,width:"100%", height:"10%", backgroundColor:"black", padding: '20px',position:"absolute"}}>
+      <Divider sx={{ marginLeft:1,marginRight:1, backgroundColor: 'white' }} />
+
+<Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 2, mb:0 }}>
+  <img src={image} alt="CatMapper Logo" style={{ height: 80 }} />
+  <Box>
+    <Link  id="catmapperfooter" to="/people"  underline="none" style={{ color: 'white', textDecoration: 'none', margin: '0 8px' }}>People</Link>
+    <Link to="/news" id="catmapperfooter"  underline="none" style={{ color: 'white', textDecoration: 'none', margin: '0 8px' }}>News</Link>
+    <Link to="/funding" id="catmapperfooter"  underline="none" style={{ color: 'white', textDecoration: 'none', margin: '0 8px' }}>Funding</Link>
+    <Link to="/citation" id="catmapperfooter"  underline="none" style={{ color: 'white', textDecoration: 'none', margin: '0 8px' }}>Citation</Link>
+    <Link to="/terms" id="catmapperfooter"  underline="none" style={{ color: 'white', textDecoration: 'none', margin: '0 8px' }}>Terms</Link>
+    <Link to="/contact" id="catmapperfooter"  underline="none" style={{ color: 'white', textDecoration: 'none', margin: '0 8px' }}>Contact</Link>
+  </Box>
+</Box>      </div>
+    </Box>
+    
   );
 };
 

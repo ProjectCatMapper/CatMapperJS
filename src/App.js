@@ -11,6 +11,13 @@ import Sociomapclick from "./routes/Sociomapclick";
 import ArchaMapclick from "./routes/ArchaMapclick";
 import Archamapexplore from "./routes/Archamapexplore";
 import Merge from "./routes/Merge";
+import People from "./routes/People"
+import News from "./routes/News"
+import Funding from "./routes/Funding"
+import Citation from "./routes/Citation"
+import Terms from "./routes/Terms"
+import Contact from "./routes/Contact"
+import Sociomap_ApiGuide from "./routes/Sociomap_ApiGuide"
 
 function App() {
   useEffect(() => {
@@ -42,6 +49,13 @@ function App() {
         <Route path='/sociomap/:cmid/:tabval' element={<Sociomapclick />} />
         <Route path='/archamap/:cmid/:tabval' element={<ArchaMapclick />} />
         <Route path='/sociomap/merge' element={<Merge />} />
+        <Route path='/sociomap/help/api-guide' element={<Sociomap_ApiGuide />} />
+        <Route path='/people' element={<People />} />
+        <Route path='/news' element={<News />} />
+        <Route path='/funding' element={<Funding />} />
+        <Route path='/citation' element={<Citation />} />
+        <Route path='/terms' element={<Terms />} />
+        <Route path='/contact' element={<Contact />} />
       </Routes>
   );
 }

@@ -19,6 +19,9 @@ import InfoIcon from '@mui/icons-material/Info';
 import { useLocation } from 'react-router-dom';
 import infodata from './infodata.json';
 import "./Searchbar.css";
+import image from '../assets/white.png'
+import { Link } from 'react-router-dom'
+import Divider from '@mui/material/Divider';
 
 const BootstrapInput = styled(InputBase)(({ theme }) => ({
   'label + &': {
@@ -374,6 +377,19 @@ export default function Searchbar() {
         <Box sx={{ width: '100%', color: 'black', backgroundColor: "white" }}>
         {<DataTable users={users} label={domainDrop} />}
         </Box>
+        <Divider sx={{ marginTop: 3, marginBottom: 7, marginLeft:1,marginRight:1, backgroundColor: 'white' }} />
+
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 2, mb:0 }}>
+        <img src={image} alt="CatMapper Logo" style={{ height: 80 }} />
+        <Box>
+          <Link  id="catmapperfooter" to="/people"  underline="none" style={{ color: 'white', textDecoration: 'none', margin: '0 8px' }}>People</Link>
+          <Link to="/news" id="catmapperfooter"  underline="none" style={{ color: 'white', textDecoration: 'none', margin: '0 8px' }}>News</Link>
+          <Link to="/funding" id="catmapperfooter"  underline="none" style={{ color: 'white', textDecoration: 'none', margin: '0 8px' }}>Funding</Link>
+          <Link to="/citation" id="catmapperfooter"  underline="none" style={{ color: 'white', textDecoration: 'none', margin: '0 8px' }}>Citation</Link>
+          <Link to="/terms" id="catmapperfooter"  underline="none" style={{ color: 'white', textDecoration: 'none', margin: '0 8px' }}>Terms</Link>
+          <Link to="/contact" id="catmapperfooter"  underline="none" style={{ color: 'white', textDecoration: 'none', margin: '0 8px' }}>Contact</Link>
+        </Box>
+      </Box>
       </div>
 
     </div>
