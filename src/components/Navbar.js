@@ -34,7 +34,6 @@ const Navbar = () => {
             <li className='dropdown'>
             <Link id='sociomapnavbar'>Help <span className="dropdown-arrow">&#x25BC;</span></Link>
         <div className='dropdown-content'>
-            <Link to='/sociomap/help/contact'>Contact Us</Link>
             <Link to='/sociomap/help/api-guide'>API Guide</Link>
         </div>
     </li>

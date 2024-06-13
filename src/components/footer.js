@@ -16,6 +16,9 @@ import TableRow from '@mui/material/TableRow';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import './footer.css'
+import image from '../assets/white.png'
+import { Link } from 'react-router-dom'
+import Divider from '@mui/material/Divider';
 
 const Item = styled(Paper)(({ theme }) => ({
     backgroundColor: '#000',
@@ -25,7 +28,6 @@ const Item = styled(Paper)(({ theme }) => ({
     textAlign: 'justify',
     color: '#fff',
   }));
-
 
   function createData(nodes, relations, DatasetProgress ) {
     return { nodes, relations, DatasetProgress };
@@ -93,7 +95,7 @@ const footer = () => {
                         Merge (in development): Registered users can develop, document and share plans for merging data across diverse external datasets by ethnicity, language, religion, or political district. Once a merge plan is developed and saved, SocioMap will be able to generate code in common formats (R, SPSS, Stata, SAS), that will allow users to merge external datasets they have stored on their own computer for their custom analysis needs.
                         <br/>
                         <br/>
-                        Share (in development): All userscan find and download all others users' past translations and merging plans to merge datasets they have stored on their own computer. 
+                        Share (in development): All users can find and download all others users' past translations and merging plans to merge datasets they have stored on their own computer. 
                     
       </Typography>
     </CardContent>
@@ -146,7 +148,7 @@ Download datasets list      </Button>
     </Card>
       </Grid>
 
-      <Grid item xs={6}>
+      {/* <Grid item xs={6}>
       <Card variant="outlined" style={{backgroundColor: 'black',border: '1px solid white',}}>
         <CardContent>
       <Typography id='sociomapfooter' sx={{ fontSize: 20 }} color="#fff" gutterBottom>
@@ -181,9 +183,22 @@ Download datasets list      </Button>
         </Typography>
     </CardContent>
     </Card>
-      </Grid>
+      </Grid> */}
       </Grid>        
     </Box>
+    <Divider sx={{ marginTop: 3, marginBottom: 7, marginLeft:1,marginRight:1, backgroundColor: 'white' }} />
+
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 2, mb:0 }}>
+        <img src={image} alt="CatMapper Logo" style={{ height: 80 }} />
+        <Box>
+          <Link  id="catmapperfooter" to="/people"  underline="none" style={{ color: 'white', textDecoration: 'none', margin: '0 8px' }}>People</Link>
+          <Link to="/news" id="catmapperfooter"  underline="none" style={{ color: 'white', textDecoration: 'none', margin: '0 8px' }}>News</Link>
+          <Link to="/funding" id="catmapperfooter"  underline="none" style={{ color: 'white', textDecoration: 'none', margin: '0 8px' }}>Funding</Link>
+          <Link to="/citation" id="catmapperfooter"  underline="none" style={{ color: 'white', textDecoration: 'none', margin: '0 8px' }}>Citation</Link>
+          <Link to="/terms" id="catmapperfooter"  underline="none" style={{ color: 'white', textDecoration: 'none', margin: '0 8px' }}>Terms</Link>
+          <Link to="/contact" id="catmapperfooter"  underline="none" style={{ color: 'white', textDecoration: 'none', margin: '0 8px' }}>Contact</Link>
+        </Box>
+      </Box>
         
     </div>
   )

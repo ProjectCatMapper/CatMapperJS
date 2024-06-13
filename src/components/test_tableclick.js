@@ -18,6 +18,9 @@ import '@changey/react-leaflet-markercluster/dist/styles.min.css';
 import CategoriesTable from './categories_table';
 import { Info } from '@mui/icons-material';
 import Legend from './legend';
+import image from '../assets/white.png'
+import { Link } from 'react-router-dom'
+import Divider from '@mui/material/Divider';
 
 function CustomTabPanel(props) {
   const { children, value, index, ...other } = props;
@@ -70,7 +73,7 @@ export default function Tableclick(props) {
   const [domains, setdomains] = useState([]);
   const [sources, setsources] = useState([]);
   const orderOfProperties = ['CONTAINS', 'DISTRICT_OF', 'LANGUAGE_OF', 'LANGUOID_OF', 'RELIGION_OF', 'USES'];
-  const [datasetdomainValue, setdatasetdomainValue] = useState('');
+  const [datasetdomainValue, setdatasetdomainValue] = useState([]);
   const datasetdropdown = ['CATEGORY', 'ADM2'];
 
   const datasetDropdownChange = (event) => {
@@ -192,7 +195,8 @@ export default function Tableclick(props) {
 
     const datasetButtonClick = async (event) => {
       try{
-        const response = await fetch("https://catmapper.org/api/networks?cmid=" + props.cmid.cmid + "&database=" +database+ "&domain=" + event.target.value);
+        // const response = await fetch("https://catmapper.org/api/dataset?cmid=" + props.cmid.cmid + "&database=" +database+ "&domain=" + event.target.value);
+        const response = await fetch("http://127.0.0.1:5001/dataset?cmid=" + props.cmid.cmid + "&database=" +database+ "&domain=" + event.target.value);
         const result = await response.json();
         const jsonString = JSON.stringify(result);
     const blob = new Blob([jsonString], { type: 'application/json' });
@@ -329,7 +333,7 @@ export default function Tableclick(props) {
 
   try {
     return (
-      <div style={{ backgroundColor: 'white', width: "100%", height: 1100, color: "black" }}>
+      <div style={{ backgroundColor: 'white', width: "100%", height: "auto", color: "black" }}>
         {/* <Box sx={{display:'flex',flexDirection:'column', width: '100%', backgroundImage: `linear-gradient(to right, #93a5cf, #e4efe9)`, backgroundSize:'cover' ,height: boxHeight}}>
         {console.log(mapt.coordinates[0][0][0])}
           <h2 style={{ color: "black", position: "absolute", left: "1%", top: "100px" }}>Category Info</h2>
@@ -359,6 +363,7 @@ export default function Tableclick(props) {
   {props.cmid.cmid.startsWith('SD') && (
         <Box sx={{ gridColumn: "1", gridRow: "2", display: 'flex', justifyContent: 'center', alignItems: 'center', flexDirection: 'column' }}>
           <Select
+            multiple
             value={datasetdomainValue}
             onChange={datasetDropdownChange}
             displayEmpty
@@ -375,10 +380,10 @@ export default function Tableclick(props) {
         </Box>
       )}
 </Box>
-        <Box sx={{ width: '100%', height: "auto" , position: "absolute", left: "10px", top: boxHeight + 100 }}>
+        <Box sx={{ width: '100%', height: "auto" , position: "relative", left: "10px", top: boxHeight + 100 }}>
           <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
             <Tabs sx={{ overflowY: "scroll", maxHeight: 700 }} value={value} onChange={handleChange} aria-label="basic tabs example">
-              <Tab label="Samples" {...a11yProps(0)} />
+              <Tab label="Datasets" {...a11yProps(0)} />
               <Tab label="Map" {...a11yProps(1)} />
               <Tab label="Network Explorer" {...a11yProps(2)} />
               {categories.length !== 0 ? <Tab label="Categories" {...a11yProps(3)} /> : null}
@@ -476,6 +481,20 @@ export default function Tableclick(props) {
           <CategoriesTable categories={categories} />
           </CustomTabPanel>
         </Box>
+        <div style={{width:"100%", backgroundColor:"black", padding: '20px',position:"relative"}}>
+      <Divider sx={{ marginLeft:1,marginRight:1, backgroundColor: 'white' }} />
+
+<Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 2, mb:0 }}>
+  <img src={image} alt="CatMapper Logo" style={{ height: 80 }} />
+  <Box>
+    <Link  id="catmapperfooter" to="/people"  underline="none" style={{ color: 'white', textDecoration: 'none', margin: '0 8px' }}>People</Link>
+    <Link to="/news" id="catmapperfooter"  underline="none" style={{ color: 'white', textDecoration: 'none', margin: '0 8px' }}>News</Link>
+    <Link to="/funding" id="catmapperfooter"  underline="none" style={{ color: 'white', textDecoration: 'none', margin: '0 8px' }}>Funding</Link>
+    <Link to="/citation" id="catmapperfooter"  underline="none" style={{ color: 'white', textDecoration: 'none', margin: '0 8px' }}>Citation</Link>
+    <Link to="/terms" id="catmapperfooter"  underline="none" style={{ color: 'white', textDecoration: 'none', margin: '0 8px' }}>Terms</Link>
+    <Link to="/contact" id="catmapperfooter"  underline="none" style={{ color: 'white', textDecoration: 'none', margin: '0 8px' }}>Contact</Link>
+  </Box>
+</Box>      </div>
       </div>
 
     )

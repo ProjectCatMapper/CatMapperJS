@@ -1,0 +1,12 @@
+.custom-list {
+    list-style-type: disc;
+    padding-left: 20px;
+    text-align: left;
+    display: inline-block;
+    margin: 0;
+  }
+  
+  .custom-list li {
+    margin-bottom: 10px;
+  }
+  
