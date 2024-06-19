@@ -1,24 +1,23 @@
 import React from 'react'
-import { styled } from '@mui/material/styles';
+// import { styled } from '@mui/material/styles';
 import Box from '@mui/material/Box';
-import Paper from '@mui/material/Paper';
+// import Paper from '@mui/material/Paper';
 import Grid from '@mui/material/Grid';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import Typography from '@mui/material/Typography';
-import Stack from '@mui/material/Stack';
 import image from '../assets/white.png'
 import { Link } from 'react-router-dom'
 import './cat_footer.css'
 import Divider from '@mui/material/Divider';
 
-const NPaper = styled(Paper)(({ theme }) => ({
-    backgroundColor: '#000',
-    padding: theme.spacing(2),
-    ...theme.typography.body2,
-    textAlign: 'justify',
-    color: '#fff',
-  }));
+// const NPaper = styled(Paper)(({ theme }) => ({
+//     backgroundColor: '#000',
+//     padding: theme.spacing(2),
+//     ...theme.typography.body2,
+//     textAlign: 'justify',
+//     color: '#fff',
+//   }));
   
 const footer = () => {
     return (

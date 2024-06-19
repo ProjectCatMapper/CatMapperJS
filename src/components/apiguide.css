@@ -1,0 +1,22 @@
+.link {
+    color: blue !important;
+}
+
+.codetext{
+    color: purple !important;
+}
+
+.outer {
+    margin-left: 20px;
+    list-style-type: disc;
+}
+
+.inner {
+    list-style-type: circle;
+    margin-left: 40px;
+}
+
+.inner1 {
+    list-style-type: square;
+    margin-left: 60px;
+}

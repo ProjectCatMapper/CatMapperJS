@@ -5,6 +5,7 @@ import {useNavigate} from 'react-router-dom'
 const Neo4jVisualization = ({ visData }) => {
   const navigate = useNavigate();
   const valuesToRemove = ['DISTRICT', 'CATEGORY'];
+  const nodes = visData["nodes"].length > 10 ? visData["nodes"].slice(0, 10) : visData["nodes"];
   const filteredData = new Set(visData["nodes"].map(item => ({ domain: item.domain, color: item.color })).map(item => {
       if (item.domain) {
         item.domain = item.domain.filter(value => !valuesToRemove.includes(value)).slice(-1)[0];
@@ -13,6 +14,7 @@ const Neo4jVisualization = ({ visData }) => {
     }))
   const uniqueMap = new Map();
   const tabval = 2
+  let tooltipText
 
   filteredData.forEach(obj => {
       uniqueMap.set(obj.color, obj);
@@ -23,7 +25,6 @@ const Neo4jVisualization = ({ visData }) => {
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
-    {console.log(visData)}
     const currentid = visData["nodes"][0].CMID
     const container = document.getElementById('network');
     const options = { nodes: {
@@ -43,7 +44,9 @@ const Neo4jVisualization = ({ visData }) => {
     },
    
   };
-    const network = new Network(container, visData, options);
+
+  const data = { nodes, edges: visData.edges };
+    const network = new Network(container, data, options);
 
     let singleClickTimer;
 
@@ -89,7 +92,30 @@ const Neo4jVisualization = ({ visData }) => {
     network.on("hoverEdge", function (params) {
       const edgeId = params.edge;
       const edge = visData["edges"].find(edge => edge["id"] === edgeId);
-      const tooltipText = `date: ${edge.eventDate} <br> type: ${edge.eventType} <br> refkey: ${edge.refkey}`; 
+      switch (edge.type) {
+        case 'CONTAINS':
+          tooltipText = `eventDate: ${edge.eventDate} <br> eventType: ${edge.eventType} <br> referenceKey: ${edge.referenceKey} <br> type: ${edge.type}`;
+          break;
+        case 'USES':
+          {
+            const { from, to, color, id, ...rest } = edge;
+            tooltipText = Object.entries(rest)
+              .map(([key, value]) => `${key}: ${value}`)
+              .join(' <br> ');
+            break;
+          }
+        case 'DISTRICT_OF':
+          tooltipText = `referenceKey: ${edge.referenceKey} <br> type: ${edge.type}`;
+          break;
+        case 'LANGUOID_OF':
+          tooltipText = `referenceKey: ${edge.referenceKey} <br> type: ${edge.type}`;
+          break;
+        default:
+          tooltipText = `eventDate: ${edge.eventDate} <br> eventType: ${edge.eventType} <br> referenceKey: ${edge.refkey}`;
+          break;
+      }
+
+      // const tooltipText = `eventDate: ${edge.eventDate} <br> eventType: ${edge.eventType} <br> referenceKey: ${edge.refkey}`; 
       const tooltipElement = document.getElementById('edge-tooltip');
       tooltipElement.innerHTML = tooltipText;
       tooltipElement.style.top = params.event.clientY + 'px';

@@ -5,9 +5,9 @@ import Box from '@mui/material/Box';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import ClickTable from './tableclickview';
-import { FormControl, Select, MenuItem, InputLabel } from '@mui/material';
+import { FormControl, Select, MenuItem, InputLabel, Checkbox,FormControlLabel, Divider } from '@mui/material';
 import L from 'leaflet';
-import { MapContainer, TileLayer, GeoJSON, Marker, Popup, useMap,CircleMarker } from "react-leaflet";
+import { MapContainer, TileLayer, GeoJSON, Tooltip, useMap,CircleMarker } from "react-leaflet";
 import { useLocation } from 'react-router-dom';
 import './tableclick.css'
 import Neo4jVisualization from './visnet';
@@ -16,11 +16,10 @@ import Button from '@mui/material/Button';
 import 'leaflet/dist/leaflet.css';
 import '@changey/react-leaflet-markercluster/dist/styles.min.css';
 import CategoriesTable from './categories_table';
-import { Info } from '@mui/icons-material';
 import Legend from './legend';
 import image from '../assets/white.png'
 import { Link } from 'react-router-dom'
-import Divider from '@mui/material/Divider';
+import * as XLSX from 'xlsx';
 
 function CustomTabPanel(props) {
   const { children, value, index, ...other } = props;
@@ -74,7 +73,8 @@ export default function Tableclick(props) {
   const [sources, setsources] = useState([]);
   const orderOfProperties = ['CONTAINS', 'DISTRICT_OF', 'LANGUAGE_OF', 'LANGUOID_OF', 'RELIGION_OF', 'USES'];
   const [datasetdomainValue, setdatasetdomainValue] = useState([]);
-  const datasetdropdown = ['CATEGORY', 'ADM2'];
+  const [datasetdropdown, setDatasetDropdown] = useState([]);
+  const [rememberChoice, setRememberChoice] = useState(false);
 
   const datasetDropdownChange = (event) => {
     setdatasetdomainValue(event.target.value);
@@ -193,21 +193,83 @@ export default function Tableclick(props) {
             })
     },[])
 
+    useEffect(() => {
+      const fetchData = async () => {
+        try {
+          const response = await fetch("https://catmapper.org/api/datasetDomains",{
+      // const response = await fetch("http://127.0.0.1:5001/datasetDomains", {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          cmid: props.cmid.cmid,
+          database: database,
+          children: rememberChoice
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+
+      const result = await response.json();
+      setDatasetDropdown(result.map(item => item.label))
+
+        } catch (error) {
+          console.error('Error fetching data:', error);
+        }
+      };
+  
+      fetchData();
+    }, [rememberChoice]);
+
+
     const datasetButtonClick = async (event) => {
       try{
-        // const response = await fetch("https://catmapper.org/api/dataset?cmid=" + props.cmid.cmid + "&database=" +database+ "&domain=" + event.target.value);
-        const response = await fetch("http://127.0.0.1:5001/dataset?cmid=" + props.cmid.cmid + "&database=" +database+ "&domain=" + event.target.value);
-        const result = await response.json();
-        const jsonString = JSON.stringify(result);
-    const blob = new Blob([jsonString], { type: 'application/json' });
-        console.log(blob)
+        console.log(datasetdomainValue)
+        let response;
+        if (Array.isArray(datasetdomainValue) && datasetdomainValue.length > 1) {
+          response = await fetch("https://catmapper.org/api/dataset", {
+            // response = await fetch("http://127.0.0.1:5001/dataset", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              cmid: props.cmid.cmid,
+              database: database,
+              domain: datasetdomainValue,
+              children: rememberChoice,
+            }),
+          });
+        } else {
+          // response = await fetch("http://127.0.0.1:5001/dataset?cmid=" + props.cmid.cmid + "&database=" +database+ "&domain=" + datasetdomainValue+ "&children=" + rememberChoice,{method: "GET"})
+          response = await fetch("https://catmapper.org/api/dataset?cmid=" + props.cmid.cmid + "&database=" +database+ "&domain=" + datasetdomainValue+ "&children=" + rememberChoice,{method: "GET"});
+        }
 
-        
+        // const response = await fetch("https://catmapper.org/api/dataset?cmid=" + props.cmid.cmid + "&database=" +database+ "&domain=" + datasetdomainValue+ "&children=" + rememberChoice);
+        // const response = await fetch("http://127.0.0.1:5001/dataset?cmid=" + props.cmid.cmid + "&database=" +database+ "&domain=" + datasetdomainValue+ "&children=" + rememberChoice);
+        const result = JSON.parse(await response.json())
+
+        const worksheet = XLSX.utils.json_to_sheet(result);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
+
+    const workbookBinaryString = XLSX.write(workbook, { bookType: 'xlsx', type: 'binary' });
+
+    const buffer = new ArrayBuffer(workbookBinaryString.length);
+    const view = new Uint8Array(buffer);
+    for (let i = 0; i < workbookBinaryString.length; i++) {
+        view[i] = workbookBinaryString.charCodeAt(i) & 0xFF;
+    }
+    const blob = new Blob([buffer], { type: 'application/octet-stream' });
+
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.style.display = 'none';
     a.href = url;
-    a.download = 'response_data';
+    a.download = 'response_data.xlsx';
     document.body.appendChild(a);
     a.click();
     window.URL.revokeObjectURL(url);
@@ -221,8 +283,8 @@ export default function Tableclick(props) {
     const fetchData = async (event) => {
         try {
           // const response = await fetch("http://127.0.0.1:5001/network?cmid=" + props.cmid.cmid +"&relation=" + event.target.value + "&value="+ label);
-          // const response = await fetch("http://127.0.0.1:5001/networks?cmid=" + props.cmid.cmid + "&database=" +database+ "&relation=" + event.target.value + "&response=records");
-          const response = await fetch("https://catmapper.org/api/networks?cmid=" + props.cmid.cmid + "&database=" +database+ "&relation=" + event.target.value + "&response=records");
+          // const response = await fetch("http://127.0.0.1:5001/networksjs?cmid=" + props.cmid.cmid + "&database=" +database+ "&relation=" + event.target.value + "&response=records");
+          const response = await fetch("https://catmapper.org/api/networksjs?cmid=" + props.cmid.cmid + "&database=" +database+ "&relation=" + event.target.value + "&response=records");
           const result = await response.json();
 
           const node = [...Object.entries(result["node"]),...Object.entries(result["relNodes"])].map((node) => ({
@@ -236,15 +298,37 @@ export default function Tableclick(props) {
 
           const nodes = Array.from(new Set(node.map(JSON.stringify))).map(JSON.parse);
 
-          const edges = Object.entries(result["relations"]).map(relationship => ({
+          console.log(result)
 
-            from: relationship["1"].start_node_id,
-            to: relationship["1"].end_node_id,
-            color : "black",
-            eventDate: relationship["1"].eventDate,
-            eventType: relationship["1"].eventType,
-            refkey: relationship["1"].referenceKey,
-          }));
+          // const edges = Object.entries(result["relations"]).map(relationship => ({
+
+          //   from: relationship["1"].start_node_id,
+          //   to: relationship["1"].end_node_id,
+          //   color : "black",
+          //   eventDate: relationship["1"].eventDate,
+          //   eventType: relationship["1"].eventType,
+          //   refkey: relationship["1"].referenceKey,
+          //   key : relationship["1"].Key,
+          //   name : relationship["1"].Name,
+          //   country : relationship["1"].country,
+          //   usesDomain : relationship["1"].label,
+          //   log : relationship["1"].log,
+          //   parent : relationship["1"].parent,
+          //   parentContext : relationship["1"].parentContext,
+          //   type : relationship["1"].type,
+          //   yearEnd : relationship["1"].yearEnd,
+          //   yearStart : relationship["1"].yearStart,
+          // }));
+
+          const edges = Object.entries(result["relations"]).map(relationship => {
+            const { start_node_id, end_node_id, ...rest } = relationship["1"];
+            return {
+              from: start_node_id,
+              to: end_node_id,
+              ...rest,
+              color: "black",
+            };
+          });
 
           let domains = nodes.map((object) => object.domain).slice(1)
           domains  =  Array.from(new Set(domains.flat())).filter((value) => value !== "CATEGORY")
@@ -252,7 +336,24 @@ export default function Tableclick(props) {
           setSelectedValues(domains)
           setdomains(domains)
 
-          let nodevalues = nodes.map((object) => object.label).slice(1)
+          // const response1 = await fetch("http://127.0.0.1:5001/networknodes", {
+          //   method: "POST",
+          //   headers: {
+          //     "Content-Type": "application/json",
+          //   },
+          //   body: JSON.stringify({
+          //     cmid: props.cmid.cmid,
+          //     database: database,
+          //     relation: firstDropdownValue,
+          //     domains: selectedValues,
+          //   }),
+          // })
+
+          // const result1 = await response1.json();
+
+          // console.log(result1)
+
+          let nodevalues = nodes.map((object) => object.label).slice(1).sort()
           nodevalues.unshift("All")
           setSelectedNodes([...nodevalues])
           
@@ -267,6 +368,9 @@ export default function Tableclick(props) {
     const updateData = (event) => {
       const nodes = originaldata["nodes"].filter((item,index) => {  if (index === 0) {return true;} return item.domain.some((tag) => event.target.value.includes(tag));});
       const edges = originaldata['edges']
+      let nodevalues = nodes.map((object) => object.label).slice(1).sort()
+      nodevalues.unshift("All")
+      setSelectedNodes([...nodevalues])
       setVisData({nodes, edges})
       setSelectedValues(event.target.value)
     };
@@ -292,19 +396,19 @@ export default function Tableclick(props) {
     setValue(newValue);
   };
 
+  const sourceColorMap = {};
+
+
   const getFeatureStyle = (feature) => {
     const category = feature.geometry.source;
 
-    const colorMap = {};
-
     sources.forEach((value, index) => {
-      const color = `#${(index * 100 + 255).toString(16).substring(0, 6)}`;
-      colorMap[value] = color;
+      sourceColorMap[value] = stringToColor(value);
     });
-    
+
   
     return {
-      fillColor: colorMap[category] || 'gray',
+      fillColor: sourceColorMap[category] || 'gray',
       weight: 2,
       opacity: 1,
       color: 'white',
@@ -324,12 +428,38 @@ export default function Tableclick(props) {
 
   useEffect(() => {
     const maptFeatures = mapt.features && mapt.features.length ? mapt.features : mapt;
-    console.log(maptFeatures)
     const uniqueSources = [...new Set([...points.map(point => point.source), ...(maptFeatures.features ? maptFeatures.features.map(feature => feature.source): maptFeatures.map(feature => feature.source))])];
     setsources(uniqueSources);
   }, [points, mapt]);
 
   // const boxHeight = 100 + (Object.keys(rev).length * 14)
+
+  const stringToColor = (str) => {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      hash = str.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    let color = '#';
+    for (let i = 0; i < 3; i++) {
+      const value = (hash >> (i * 8)) & 0xFF;
+      color += ('00' + value.toString(16)).substr(-2);
+    }
+    return color;
+  };
+
+  sources.forEach(source => {
+    if (!sourceColorMap[source]) {
+      sourceColorMap[source] = stringToColor(source);
+    }
+  });
+
+  const allsources = Object.keys(sourceColorMap);
+  const allcolors = allsources.map(source => sourceColorMap[source]);
+
+
+  const handleDatasetCheckbox = (event) => {
+    setRememberChoice(event.target.checked);
+  };
 
   try {
     return (
@@ -361,22 +491,23 @@ export default function Tableclick(props) {
       )) : rev}
   </ul>
   {props.cmid.cmid.startsWith('SD') && (
-        <Box sx={{ gridColumn: "1", gridRow: "2", display: 'flex', justifyContent: 'center', alignItems: 'center', flexDirection: 'column' }}>
+        <Box sx={{ gridColumn: "1", gridRow: "4", display: 'flex', justifyContent: 'left', alignItems: 'center', flexDirection: 'row', margin: "2 2" }}>
           <Select
             multiple
             value={datasetdomainValue}
             onChange={datasetDropdownChange}
             displayEmpty
-            sx={{ marginBottom: 2, minWidth: 120 }}
+            sx={{ minWidth: 120, marginBottom:2, marginLeft:2 }}
           >
             <MenuItem value="" disabled>Select an option</MenuItem>
             {datasetdropdown.map((option, index) => (
               <MenuItem key={index} value={option}>{option}</MenuItem>
             ))}
           </Select>
-          <Button variant="contained" color="primary" onClick={datasetButtonClick}>
+          <Button sx={{ marginLeft: 2, width: 250, fontSize:12, marginBottom:2 }} variant="contained" color="primary" onClick={datasetButtonClick}>
             Download Dataset Relationships
           </Button>
+          <FormControlLabel sx={{ marginLeft: 2, marginBottom:2 }} control={<Checkbox/>} onChange={handleDatasetCheckbox} label="Download connected datasets?" />
         </Box>
       )}
 </Box>
@@ -393,7 +524,7 @@ export default function Tableclick(props) {
             <ClickTable usert={usert} />
           </CustomTabPanel>
           <CustomTabPanel value={value} index={1}>
-            <div style={{ position: "absolute", top: "10", left: "200", width: "95%", height: "auto" }}>
+            <div style={{ position: "relative", top: "10", left: "200", width: "95%", height: "auto" }}>
               {mapt.length !== 0 || points.length!==0 ? 
               <MapContainer 
                 center={[0,0]}
@@ -411,17 +542,17 @@ export default function Tableclick(props) {
                 <CircleMarker
                 center={point.cood}
                 radius={10} 
-                color="red" 
-                fillColor="red" 
+                color={stringToColor(point.source)} 
+                fillColor={stringToColor(point.source)} 
                 fillOpacity={0.5} 
               >
-                <Popup>{point.source}</Popup>
+                <Tooltip>{point.source}</Tooltip>
               </CircleMarker>
                 
               ))}
             </MarkerClusterGroup>
           ) : points}
-                <Legend sources={sources} />
+                <Legend sources={allsources} colors={allcolors} />
               </MapContainer> : <p>No map</p>}
             </div>
           </CustomTabPanel>

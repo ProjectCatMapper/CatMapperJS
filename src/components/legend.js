@@ -2,15 +2,14 @@ import { useEffect } from 'react';
 import { useMap } from 'react-leaflet';
 import L from 'leaflet';
 
-const Legend = ({ sources }) => {
+const Legend = ({ sources, colors }) => {
   const map = useMap();
 
   useEffect(() => {
     const colorMap = {};
 
-    sources.forEach((value, index) => {
-      const color = `#${(index * 100 + 255).toString(16).substring(0, 6)}`;
-      colorMap[value] = color;
+    sources.forEach((source, index) => {
+      colorMap[source] = colors[index];
     });
 
     const legend = L.control({ position: 'bottomright' });
