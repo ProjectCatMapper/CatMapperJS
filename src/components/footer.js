@@ -1,5 +1,5 @@
 import React from 'react'
-import { styled } from '@mui/material/styles';
+// import { styled } from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import Paper from '@mui/material/Paper';
 import Grid from '@mui/material/Grid';
@@ -20,14 +20,14 @@ import image from '../assets/white.png'
 import { Link } from 'react-router-dom'
 import Divider from '@mui/material/Divider';
 
-const Item = styled(Paper)(({ theme }) => ({
-    backgroundColor: '#000',
-    opacity: "0.3",
-    ...theme.typography.body2,
-    padding: theme.spacing(1),
-    textAlign: 'justify',
-    color: '#fff',
-  }));
+// const Item = styled(Paper)(({ theme }) => ({
+//     backgroundColor: '#000',
+//     opacity: "0.3",
+//     ...theme.typography.body2,
+//     padding: theme.spacing(1),
+//     textAlign: 'justify',
+//     color: '#fff',
+//   }));
 
   function createData(nodes, relations, DatasetProgress ) {
     return { nodes, relations, DatasetProgress };

@@ -4,6 +4,11 @@ import './index.css';
 import App from './App';
 import { BrowserRouter } from 'react-router-dom';
 import { Auth0Provider } from '@auth0/auth0-react';
+import ReactGA from 'react-ga';
+
+ReactGA.initialize('G-H2ZNVXG1SE');
+
+ReactGA.pageview(window.location.pathname + window.location.search)
 
 ReactDOM.render(
   <BrowserRouter basename="/js">
