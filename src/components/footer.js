@@ -83,7 +83,7 @@ const Footer = () => {
   const [foci,setfoci] = useState([])
 
   useEffect(() => {
-    fetch("https:// catmapper.org/api/foci?database=sociomap",
+    fetch("https://catmapper.org/api/foci?database=sociomap",
         // fetch("http://127.0.0.1:5001/foci?database=sociomap",
             {
                 method: "GET"
