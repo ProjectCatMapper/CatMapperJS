@@ -19,7 +19,7 @@
     "SITE" : ["Name","Key","CMID"],
     "STONE" : ["Name","Key","CMID"],
     "CULTURE" : ["Name","Key","CMID"],
-    "CATEGORY" : ["Name","Key","CMID"],
+    "ANY DOMAIN" : ["Name","Key","CMID"],
     "CERAMIC" : ["Name","Key","CMID"],
     "CERAMIC_TYPE" : ["Name","Key","CMID"],
     "CERAMIC_WARE" : ["Name","Key","CMID"],

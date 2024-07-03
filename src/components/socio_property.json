@@ -1,0 +1,13 @@
+[
+    { "label": "CMID", "description": "unique ID for all databases and node types" },
+    { "label": "Name", "description": "name of node" },
+    { "label": "Key", "description": "Key used by a dataset to identify the entity" },
+    { "label": "ISO3", "description": "ISO 636-3 alpha-3 used for languages or ISO 3166-1 alpha-3 used for districts" },
+    { "label": "ISONumeric", "description": "ISO 3166-1 numeric code used for districts" },
+    { "label": "ISO2", "description": "ISO 3166-1 alpha-2 used for districts" },
+    { "label": "glottocode", "description": "Glottolog code used for languages" },
+    { "label": "FIPS", "description": "Federal Information Processing System identifer for geographic areas" },
+    { "label": "DatasetCitation", "description": "Citation" },
+    { "label": "project", "description": "name of project associated with dataset" },
+    { "label": "shortName", "description": "abbreviated nameto refer to dataset" }
+]

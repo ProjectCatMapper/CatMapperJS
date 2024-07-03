@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom';
 import './index.css';
 import App from './App';
 import { BrowserRouter } from 'react-router-dom';
-import { Auth0Provider } from '@auth0/auth0-react';
+import { AuthProvider } from './components/AuthContext';
 import ReactGA from 'react-ga';
 
 ReactGA.initialize('G-H2ZNVXG1SE');
@@ -11,16 +11,11 @@ ReactGA.initialize('G-H2ZNVXG1SE');
 ReactGA.pageview(window.location.pathname + window.location.search)
 
 ReactDOM.render(
+  <AuthProvider>
   <BrowserRouter basename="/js">
-      <Auth0Provider
-    domain="dev-onnldmkcx3jun1em.us.auth0.com"
-    clientId="2QWgZvzukTh348ToXR7RbvgiaulSmSfc"
-    authorizationParams={{
-      redirect_uri: 'http://localhost:3000/Profile/'
-    }}
-  >
       <App />
-  </Auth0Provider>
-   </BrowserRouter>,
+   </BrowserRouter>
+   </AuthProvider>
+,
   document.getElementById("root")
 );

@@ -4,6 +4,34 @@ import { Container, Typography, Box, Paper, Divider, Grid } from '@mui/material'
 
 const updates = [
     {
+      date: 'June 21, 2024',
+      content: 'Ethnicites in Politically Relevant Ethnic Groups linked to SocioMap.'
+    },
+    {
+      date: 'June 19, 2024',
+      content: 'Ethnicities from Atlas of Pre-Colonial Societies linked to SocioMap (2431 new links).'
+    },
+    {
+      date: 'June 2, 2024',
+      content: 'Countries from ISO 3166-1 alpha-2 and alpha-3 linked to SocioMap.'
+    },
+    {
+      date: 'May 23, 2024',
+      content: 'Ethnicities from GEnes and LAnguages Together databases linked to SocioMap.'
+    },
+    {
+      date: 'April, 2024',
+      content: 'Workshops hosted on SocioMap and ArchaMap at the European Human Behavior and Evolution Association and the Society for American Archaeology.'
+    },
+    {
+      date: 'February, 2024',
+      content: 'First CatMapper advisory board meeting hosted (Tempe, AZ and virtual).'
+    },
+    {
+      date: 'January, 2024',
+      content: 'First ArchaMap data synthesis workshop hosted, Tempe, AZ.'
+    },
+    {
       date: 'December 15, 2023',
       content: 'State-level lists of scheduled castes and tribes and social disadvantages classes from South India added to SocioMap (Andhra Pradesh, Goa, Karnataka, Kerala, Tamil Nadu, and Telangana).'
     },
@@ -28,8 +56,8 @@ const updates = [
       content: 'The NSF HNDS-I program has awarded a 2-year grant to improve and disseminate CatMapper.'
     },
     {
-      date: 'March 28, 2023',
-      content: 'CatMapper’s first three merging templates here and coming soon.'
+      date: 'March 28, 2023 : CatMapper’s first three merging templates here and coming soon.',
+      content: '1.a draft of the Bahrami-Rad et al. 2021 merging template is uploaded and we are reconciling with the original merged dataset, 2) Peeples et al. 2023 merging template is now available in ArchaMap under DatasetID 947, 3) Hruschka et al. 2015 merging template will be available by April 21. If you are interested in a tutorial on how to download and use a merging template, please contact dhruschk@asu.edu'
     },
     {
       date: 'June 3rd, 2023',
@@ -45,6 +73,10 @@ const updates = [
     },
     {
       date: 'March 7, 2023',
+      content: 'eHRAF World Culture categories added to SocioMap. '
+    },
+    {
+      date: 'Feb 24, 2023',
       content: 'Dan Hruschka gave talk on SocioMap at the Society for Cross-Cultural Research annual meeting.'
     },
     {

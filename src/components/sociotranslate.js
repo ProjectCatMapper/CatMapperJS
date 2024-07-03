@@ -40,6 +40,7 @@ function Sociotranslate(){
   let fileObj= ""
   let selectedColumnValues = ""
   const [jsonData, setJsondata] = useState();
+  let query = "false"
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
@@ -86,7 +87,7 @@ const handleClick = async () => {
         database : database,
         property : secondDropdownValue,
         domain : firstDropdownValue,
-        key : isCheckedfour,
+        key : String(isCheckedfour),
         term : zeroDropdownValue,
         country : thirdDropdownValue,
         context : fourthDropdownValue,
@@ -94,6 +95,7 @@ const handleClick = async () => {
         yearStart : inputValue,
         yearEnd : inputValuetwo,
         table : jsonData,
+        query : query
       }),
     });
 
@@ -175,8 +177,14 @@ ExcelRenderer(fileObj, (err, resp) => {
   else{
     const columns = resp.rows[0]
     setColumns(resp.rows[0])
-    setRows(resp.rows.slice(1))
-    const table = resp.rows.slice(1).map((row, index) => {
+
+    const filteredRows = resp.rows.slice(1).filter(row => {
+      return row.some(cell => cell !== null && cell !== '');
+    });
+
+    setRows(filteredRows);
+
+    const table = filteredRows.map((row, index) => {
       const rowData = {};
       columns.forEach((column, columnIndex) => {
         rowData[column] = row[columnIndex];
@@ -184,6 +192,7 @@ ExcelRenderer(fileObj, (err, resp) => {
       rowData['key'] = index + 1;
       return rowData;
     });
+    console.log(table)
     setJsondata(table)
   }
 });  
@@ -196,8 +205,10 @@ ExcelRenderer(fileObj, (err, resp) => {
   };
 
   const getRowStyle = (row) => {
-    const statusIndex = columns.findIndex(col => col === 'matchType_Name');
+    const statusIndex = columns.findIndex(col => col === 'matchType_'+zeroDropdownValue);
     const status = row[statusIndex];
+
+    console.log(status)
   
     return getClassForStatus(status);
   };
@@ -218,6 +229,8 @@ ExcelRenderer(fileObj, (err, resp) => {
         return 'one-to-many';
       case 'many-to-one':
         return 'many-to-one';
+      case "none":
+        return "none";
       default:
         return '';
     }
@@ -408,10 +421,10 @@ ExcelRenderer(fileObj, (err, resp) => {
         Download Data
       </Button>
     </div>
-    <div style={{top:100,width:"72%", height:"90%", backgroundColor:"white", padding: '20px',border: '1px solid #ccc',borderRadius : '10px', marginLeft: "27%",position:"absolute"}}>
+    <div style={{top:100,width:"72%", height:"90%", backgroundColor:"white", padding: '20px',border: '1px solid #ccc',borderRadius : '10px', marginLeft: "27%",position:"absolute",overflow: 'auto'}}>
     {columns.length > 0 && rows.length > 0 && (
         <>
-          <TableContainer component={Paper}>
+          <TableContainer component={Paper} sx={{ width: '100%', height: '100%', overflow: 'auto' }}>
             <Table id="myTable">
               <TableHead>
                 <TableRow>

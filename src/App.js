@@ -6,7 +6,6 @@ import Explore from './routes/Explore'
 import Translate from './routes/Translate'
 import Catmapper from "./routes/Catmapper";
 import Archamap from "./routes/Archamap"
-import Profile from "./routes/Profile";
 import Sociomapclick from "./routes/Sociomapclick";
 import ArchaMapclick from "./routes/ArchaMapclick";
 import Archamapexplore from "./routes/Archamapexplore";
@@ -18,6 +17,11 @@ import Citation from "./routes/Citation"
 import Terms from "./routes/Terms"
 import Contact from "./routes/Contact"
 import Sociomap_ApiGuide from "./routes/Sociomap_ApiGuide"
+import Logins from "./routes/Logins";
+import RegisterPage from './routes/RegisterPage';
+import AdvancedPage from './routes/Advanced';
+import AdminPage from './routes/Admin';
+import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
   useEffect(() => {
@@ -38,12 +42,13 @@ function App() {
   return (
       <Routes>
         <Route path='/' element={<Catmapper />} />
+        <Route path='/login' element={<Logins />} />
+        <Route path="/register" element={<RegisterPage />} />
         <Route path='/archamap' element={<Archamap />} />
         <Route path='/sociomap' element={<Home />} />
         <Route path='/sociomap/explore' element={<Explore />} />
         <Route path='/archamap/explore' element={<Archamapexplore />} />
         <Route path='/sociomap/translate' element={<Translate />} />
-        <Route path='/profile' element={<Profile />} />
         <Route path='/sociomap/:cmid' element={<Sociomapclick />} />
         <Route path='/archamap/:cmid' element={<ArchaMapclick />} />
         <Route path='/sociomap/:cmid/:tabval' element={<Sociomapclick />} />
@@ -56,6 +61,8 @@ function App() {
         <Route path='/citation' element={<Citation />} />
         <Route path='/terms' element={<Terms />} />
         <Route path='/contact' element={<Contact />} />
+        <Route path="/advanced" element={<ProtectedRoute requiredLevel={1}><AdvancedPage /></ProtectedRoute>}/>
+        <Route path="/admin" element={<ProtectedRoute requiredLevel={2}><AdminPage /></ProtectedRoute>}/>
       </Routes>
   );
 }

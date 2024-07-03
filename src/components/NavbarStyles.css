@@ -14,18 +14,53 @@
     z-index: 10;
 }
 
+.image, .image1 {
+    transition: transform 0.3s ease-in-out;
+  }
+  
+  .image img, .image1 img {
+    display: block;
+    transition: transform 0.3s ease-in-out;
+  }
+  
+  .image:hover img, .image1:hover img {
+    transform: scale(1.1);
+  }
+
 .nav-menu{
     display: flex;
 }
 
 .nav-menu li{
     padding: 0 1rem;
+    position: relative;
 }
 
 .nav-menu a{
     font-size: 1.2rem;
     font-weight: 500;
+    text-decoration: none;
+    color: white;
+    position: relative;
+    z-index: 1;
+    transition: color 0.3s ease;
 }
+
+.nav-menu a::before {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 2px;
+    bottom: -3px;
+    left: 50%;
+    background-color: white;
+    transition: width 0.3s ease, left 0.3s ease;
+  }
+  
+  .nav-menu a:hover::before {
+    width: 100%;
+    left: 0;
+  }
 
 .dropdown {
     position: relative;

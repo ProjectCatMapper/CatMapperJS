@@ -5,15 +5,14 @@ import './tableclickview.css'
 
 export default function ClickTable(props) {
   const columns = [
-    { field: 'id', headerName: 'ID', width: 30 },
     { field: 'name', headerName: 'Name', width: 300 },
-    { field: 'location', headerName: 'Location', width: 150, },
+    { field: 'location', headerName: 'Location', width: 100, },
     { field: 'timespan', headerName: 'Time span', width: 100 },
-    { field: 'popest', headerName: 'Population estimate', width: 150 },
+    { field: 'popest', headerName: 'Population est.', width: 150 },
     { field: 'samplesize', headerName: 'Sample size', width: 150 },
     { field: 'source', headerName: 'Source', width: 200, renderCell: (params1) =>{ return <a id='viewlink' href={params1.row.link2} target="_blank" rel="noopener noreferrer">{params1.row.source}</a>}, },
     { field: 'version', headerName: 'Version', width: 160, },
-    { field: 'link', headerName: 'Link', width: 80, renderCell: (params) =>{if (params.row.link) {return <a id='viewlink' href={params.row.link} target="_blank" rel="noopener noreferrer">{"View"}</a>;}}, },
+    { field: 'link', headerName: 'Link', flex: 1, renderCell: (params) =>{if (params.row.link) {return <a id='viewlink' href={params.row.link} target="_blank" rel="noopener noreferrer">{"View"}</a>;}}, },
   ];
   const [rows, setRows] = useState([]);
 
@@ -43,7 +42,7 @@ export default function ClickTable(props) {
 
 
   return (
-    <div style={{ height: 500, width: '100%' }}>
+    <div style={{ marginLeft:150,height: 600, width: '80%' }}>
       <DataGrid
         rows={rows}
         getRowHeight={() => 50}

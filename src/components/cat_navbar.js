@@ -3,8 +3,6 @@ import { Link } from 'react-router-dom'
 import { FaBars, FaTimes } from 'react-icons/fa'
 import image from '../assets/white.png'
 import './cat_navbar.css'
-import LoginButton from './LoginButton'
-import LogoutButton from './LogoutButton'
 
 const Navbar = () => {
   const [click, setClick] = useState(false)
@@ -16,9 +14,7 @@ const Navbar = () => {
         <Link to='/'><img src={image} width={100} height={70}></img></Link>
       </div>
       <ul className={click ? 'nav-menu active' : 'nav-menu'}>
-        <li>
-          <LoginButton></LoginButton>
-        </li>
+      
       </ul>
 
       <div className='hamburger' onClick={handleClick}>
