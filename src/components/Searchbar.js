@@ -18,6 +18,7 @@ import Tooltip from '@mui/material/Tooltip';
 import InfoIcon from '@mui/icons-material/Info';
 import { useLocation } from 'react-router-dom';
 import infodata from './infodata.json';
+import infodata2 from './socio_property.json';
 import "./Searchbar.css";
 import image from '../assets/white.png'
 import { Link } from 'react-router-dom'
@@ -95,12 +96,17 @@ export default function Searchbar() {
     {label: 'RELIGION', description: 'A category defined by a religious tradition'},
     {label: 'VARIABLE', description: 'A variable'}
   ];
-
+  
   if (useLocation().pathname.includes("archamap")) {
     database = "ArchaMap"
     selectedcategory = archdomain
-    optionsForSelectedCategory = archoptions[advdomainDrop]
   }
+
+  useEffect(() => {   
+    if (database === "ArchaMap") { 
+    setoptionsForSelectedCategory(archoptions[advdomainDrop])
+    }
+  },[])
 
   useEffect(() => {
     const storedState = sessionStorage.getItem('searchState');
@@ -211,6 +217,28 @@ export default function Searchbar() {
     </div>
   );
 
+  const tooltipContent3 = (
+    <div style={{ maxWidth: '400px' }}>
+      <h4>Property Descriptions</h4>
+      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+        <thead>
+          <tr>
+            <th style={{ borderBottom: '1px solid #ddd', textAlign: 'left', padding: '8px' }}>Label</th>
+            <th style={{ borderBottom: '1px solid #ddd', textAlign: 'left', padding: '8px' }}>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          {infodata2.filter(desc => socioptions[advdomainDrop].includes(desc.label)).map((category, index) => (
+            <tr key={index}>
+              <td style={{ borderBottom: '1px solid #ddd', padding: '8px' }}>{category.label}</td>
+              <td style={{ borderBottom: '1px solid #ddd', padding: '8px' }}>{category.description}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+
   function handleClick(tvalue, domain) {
     fetch("https://catmapper.org/api/search?domain=" + domain + "&property=" + selectedOption + "&term=" + tvalue + "&database=" +database+  "&query=false" + "&yearStart=" + yearStart + "&yearEnd=" + yearEnd + "&country=" + selectedcountry + "&context=" + contextID,
     // fetch("http://127.0.0.1:5001/search?domain=" + domain + "&property=" + selectedOption + "&term=" + tvalue + "&database=SocioMap"+  "&query=false" + "&yearStart=" + yearStart + "&yearEnd=" + yearEnd + "&country=" + selectedcountry + "&context=" + contextID,
@@ -251,7 +279,6 @@ export default function Searchbar() {
         
           </NativeSelect>
         </FormControl>
-        {console.log(advdomainDrop)}
         <Tooltip title={tooltipContent} arrow>
         <Button startIcon={<InfoIcon sx={{ height: '28px', width: '28px' }} />}>
         </Button>
@@ -334,6 +361,10 @@ export default function Searchbar() {
             ))}
         </NativeSelect>
       </FormControl >
+      <Tooltip title={tooltipContent3} arrow>
+        <Button startIcon={<InfoIcon sx={{ height: '28px', width: '28px' }} />}>
+        </Button>
+      </Tooltip>
       <FormControl sx={{ marginLeft: "1%",marginTop:".3%", width: 250,height: 80 }} variant="standard">
       <h6 id='[REDACTED]searchpagetext'>Time range</h6>
       <div style={{display:'flex'}}>

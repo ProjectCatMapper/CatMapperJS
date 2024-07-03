@@ -188,7 +188,7 @@ Download datasets list      </Button>
       <Grid item xs={6}>
       <Card variant="outlined" style={{backgroundColor: 'black',border: '1px solid white',}}>
         <CardContent>
-      <Typography id='sociomapfooter' sx={{ fontSize: 20 }} color="#fff" gutterBottom>Foci Status</Typography>
+      <Typography id='sociomapfooter' sx={{ fontSize: 20 }} color="#fff" gutterBottom>Dataset Coverage</Typography>
       <Typography variant="table" color="#000" component="div">
       <TableContainer component={Paper}>
       <Table sx={{ minWidth: 650 }} size="small" aria-label="a dense table">

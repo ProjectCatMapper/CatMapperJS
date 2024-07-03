@@ -8,7 +8,7 @@
     { "label": "ADME", "description": "A district defined as an ecological zone within a country" },
     { "label": "ADML", "description": "NA" },
     { "label": "ADMX", "description": "A district without a clear level" },
-    { "label": "CATEGORY", "description": "Any category this is the table content" },
+    { "label": "ANY DOMAIN", "description": "Any category this is the table content" },
     {
         "label": "DATASET",
         "description": "A dataset for which SocioMap includes metadata on categories and/or variables"

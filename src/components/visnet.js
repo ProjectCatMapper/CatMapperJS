@@ -61,7 +61,7 @@ const Neo4jVisualization = ({ visData }) => {
           setTooltipContent(tooltipContent.map((item, index) => <span key={index}>{item}<br /></span>));
           setTooltipPosition({ x: params.pointer.DOM.x, y: params.pointer.DOM.y });
          }
-         singleClickTimer = null;}, 300);
+         singleClickTimer = null;}, 200);
       } else {
         clearTimeout(singleClickTimer);
         singleClickTimer = null;

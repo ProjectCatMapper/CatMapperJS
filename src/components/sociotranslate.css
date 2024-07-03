@@ -7,19 +7,19 @@
   }
 
 .exact-matches {
-    background-color: #FDEDEC;
+    background-color: #FDEDEC !important;
 }
 .fuzzy-matches{
-    background-color: #E8DAEF;
+    background-color: #E8DAEF !important;
 }
 .one-to-many {
-    background-color: #D4E6F1;
+    background-color: #D4E6F1 !important;
 }
 .many-to-one {
-    background-color: #D5F5E3;
+    background-color: #D5F5E3 !important;
 }
-.no-matches {
-    background-color: #FCF3CF;
+.none {
+    background-color: #FCF3CF !important;
 }
 .color-undefined {
   background-color: #FFFFFF;
