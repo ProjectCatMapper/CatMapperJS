@@ -178,11 +178,21 @@ ExcelRenderer(fileObj, (err, resp) => {
     const columns = resp.rows[0]
     setColumns(resp.rows[0])
 
-    const filteredRows = resp.rows.slice(1).filter(row => {
+    const processedRows = resp.rows.slice(1).map(row => {
+      const fullRow = Array(columns.length).fill(null);
+      row.forEach((cell, index) => {
+        fullRow[index] = cell !== undefined ? cell : null;
+      });
+      return fullRow;
+    });
+
+    const filteredRows = processedRows.filter(row => {
       return row.some(cell => cell !== null && cell !== '');
     });
 
+
     setRows(filteredRows);
+    console.log(filteredRows)
 
     const table = filteredRows.map((row, index) => {
       const rowData = {};
@@ -192,7 +202,6 @@ ExcelRenderer(fileObj, (err, resp) => {
       rowData['key'] = index + 1;
       return rowData;
     });
-    console.log(table)
     setJsondata(table)
   }
 });  

@@ -1,5 +1,6 @@
 import {React, useEffect} from "react";
 import {Routes, Route} from "react-router-dom";
+import Map1 from './routes/Map1';
 
 import Home from './routes/Home'
 import Explore from './routes/Explore'
@@ -61,6 +62,7 @@ function App() {
         <Route path='/citation' element={<Citation />} />
         <Route path='/terms' element={<Terms />} />
         <Route path='/contact' element={<Contact />} />
+        <Route path='/map1' element={<Map1 />} />
         <Route path="/advanced" element={<ProtectedRoute requiredLevel={1}><AdvancedPage /></ProtectedRoute>}/>
         <Route path="/admin" element={<ProtectedRoute requiredLevel={2}><AdminPage /></ProtectedRoute>}/>
       </Routes>
