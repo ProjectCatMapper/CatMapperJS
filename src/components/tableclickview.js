@@ -5,13 +5,13 @@ import './tableclickview.css'
 
 export default function ClickTable(props) {
   const columns = [
-    { field: 'name', headerName: 'Name', width: 300 },
-    { field: 'location', headerName: 'Location', width: 100, },
-    { field: 'timespan', headerName: 'Time span', width: 100 },
-    { field: 'popest', headerName: 'Population est.', width: 120 },
-    { field: 'samplesize', headerName: 'Sample size', width: 100 },
-    { field: 'source', headerName: 'Source', width: 200, renderCell: (params1) =>{ return <a id='viewlink' href={params1.row.link2} target="_blank" rel="noopener noreferrer">{params1.row.source}</a>}, },
-    { field: 'version', headerName: 'Version', width: 160, },
+    { field: 'name', headerName: 'Name',flex: 1, width: "30vw" },
+    { field: 'location', headerName: 'Location',flex: 1, width: "10vw", },
+    { field: 'timespan', headerName: 'Time span',flex: 1, width: "10vw" },
+    { field: 'popest', headerName: 'Population est.',flex: 1, width: "12vw" },
+    { field: 'samplesize', headerName: 'Sample size',flex: 1, width: "1-vw" },
+    { field: 'source', headerName: 'Source',flex: 1, width: "20vw", renderCell: (params1) =>{ return <a id='viewlink' href={params1.row.link2} target="_blank" rel="noopener noreferrer">{params1.row.source}</a>}, },
+    { field: 'version', headerName: 'Version',flex: 1, width: "16vw", },
     { field: 'link', headerName: 'Link', flex: 1, renderCell: (params) =>{if (params.row.link) {return <a id='viewlink' href={params.row.link} target="_blank" rel="noopener noreferrer">{"View"}</a>;}}, },
   ];
   const [rows, setRows] = useState([]);
@@ -42,7 +42,7 @@ export default function ClickTable(props) {
 
 
   return (
-    <div style={{ marginLeft:150,height: 600, width: "70%" }}>
+    <div style={{ marginLeft:"2vw",height: 600, width: "90vw" }}>
       <DataGrid
         rows={rows}
         getRowHeight={() => 50}

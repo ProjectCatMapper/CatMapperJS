@@ -18,7 +18,7 @@
         "description": "A languoid defined by a linguistic dialect"
       },
       {
-        "label": "DISTRICT",
+        "label": "AREA",
         "description": "A category defined by its geographical boundary"
       },
       {

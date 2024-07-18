@@ -227,7 +227,6 @@ export default function Tableclick(props) {
 
     const datasetButtonClick = async (event) => {
       try{
-        console.log(datasetdomainValue)
         let response;
         if (Array.isArray(datasetdomainValue) && datasetdomainValue.length > 1) {
           response = await fetch("https://catmapper.org/api/dataset", {
@@ -250,7 +249,7 @@ export default function Tableclick(props) {
 
         // const response = await fetch("https://catmapper.org/api/dataset?cmid=" + props.cmid.cmid + "&database=" +database+ "&domain=" + datasetdomainValue+ "&children=" + rememberChoice);
         // const response = await fetch("http://127.0.0.1:5001/dataset?cmid=" + props.cmid.cmid + "&database=" +database+ "&domain=" + datasetdomainValue+ "&children=" + rememberChoice);
-        const result = JSON.parse(await response.json())
+        const result = await response.json()
 
         const worksheet = XLSX.utils.json_to_sheet(result);
     const workbook = XLSX.utils.book_new();
@@ -457,8 +456,8 @@ export default function Tableclick(props) {
   const allcolors = allsources.map(source => sourceColorMap[source]);
 
 
-  const handleDatasetCheckbox = (event) => {
-    setRememberChoice(event.target.checked);
+  const handleDatasetCheckbox = () => {
+    setRememberChoice((prev) => !prev)
   };
 
   try {
