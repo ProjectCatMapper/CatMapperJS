@@ -8,7 +8,7 @@
     { "label": "ADME", "description": "A district defined as an ecological zone within a country" },
     { "label": "ADML", "description": "NA" },
     { "label": "ADMX", "description": "A district without a clear level" },
-    { "label": "ANY DOMAIN", "description": "Any category this is the table content" },
+    { "label": "ANY DOMAIN", "description": "Any category/domain. Excludes DATASETS." },
     {
         "label": "DATASET",
         "description": "A dataset for which SocioMap includes metadata on categories and/or variables"
@@ -52,6 +52,106 @@
       {
         "label": "VARIABLE",
         "description": "A variable"
+      },
+      {
+        "label": "STONE",
+        "description": "Any stone artifact"
+      },
+      {
+        "label": "KINGDOM",
+        "description": "A kingdom is the second highest taxonomic rank, just below domain."
+      },
+      {
+        "label": "FAUNA",
+        "description": "Faunal remains."
+      },
+      {
+        "label": "PHYLUM",
+        "description": "A phylum is a level of classification or taxonomic rank below kingdom and above class."
+      },
+      {
+        "label": "CLASS",
+        "description": "A class is a level of classification or taxonomic rank below phylum and above order."
+      },
+      {
+        "label": "ORDER",
+        "description": "A order is a level of classification or taxonomic rank below class and above family."
+      },
+      {
+        "label": "FAMILY ",
+        "description": "A family is a level of classification or taxonomic rank below order and above genus."
+      },
+      {
+        "label": "GENUS",
+        "description": "A genus is a level of classification or taxonomic rank below family and above species."
+      },
+      {
+        "label": "SPECIES",
+        "description": "A species is a level of classification or taxonomic rank below genus."
+      },
+      {
+        "label": "SUBGENUS",
+        "description": "A subgenus is a level of classification or taxonomic rank below genus."
+      },
+      {
+        "label": "SUBSPECIES",
+        "description": "A subspecices is a level of classification or taxonomic rank below species."
+      },
+      {
+        "label": "CULTURE",
+        "description": "A recurring assemblage of types of artifacts, buildings and monuments from a specific period and region."
+      },
+      {
+        "label": "BOTANICAL",
+        "description": "Objects derived from plant material."
+      },
+      {
+        "label": "PHYTOLITH",
+        "description": "Microscopic particles of silica that form in plant tissues."
+      },
+      {
+        "label": "CERAMIC",
+        "description": "A category combining ceramic types and wares."
+      },
+      {
+        "label": "CERAMIC_TYPE",
+        "description": "A category of distinctive pottery traditions defined below the level of a ceramic ware."
+      },
+      {
+        "label": "CERAMIC_WARE",
+        "description": "A category of distinctive pottery traditions containing ceramic types."
+      },
+      {
+        "label": "DATASET ",
+        "description": "A dataset for which ArchaMap includes metadata on categories and/or variables."
+      },
+      {
+        "label": "FEATURE",
+        "description": "Physical features not represented by other labels."
+      },
+      {
+        "label": "REGION",
+        "description": "A district defined by a dataset that encompasses a variety of geographic areas not directly corresponding to modern country, state, or county-level boundaries."
+      },
+      {
+        "label": "SITE",
+        "description": "A district defined as an archaeology site."
+      },
+      {
+        "label": "PERIOD",
+        "description": "A defined period of time."
+      },
+      {
+        "label": "PROJECTILE_POINT",
+        "description": "A category combining projectile point types and clusters."
+      },
+      {
+        "label": "PROJECTILE_POINT_CLUSTER",
+        "description": "A category combining related groups of projectile point types."
+      },
+      {
+        "label": "PROJECTILE_POINT_TYPE",
+        "description": "A category of stone tools designed for use on an arrow or dart."
       }
   ]
   

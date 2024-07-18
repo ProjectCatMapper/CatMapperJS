@@ -18,7 +18,7 @@ const theme = createTheme({
   }));
   
   const Icon = styled('img')(({ theme }) => ({
-    width: 50,
+    width: 100,
     height: 50,
     marginRight: theme.spacing(1),
   }));
@@ -56,11 +56,11 @@ const Terms = () => {
           </Typography>
           <Grid direction={"column"} container spacing={2} alignItems="left">
             <Grid item>
-              <Icon src={lic} alt="CC BY-ND Icon" />
+              <Icon src={lic} alt="GNU License Icon" />
             </Grid>
             <Grid item xs>
               <Typography variant="body1">
-                <strong>CatMapper software</strong> is licensed under a Creative Commons Attribution-No Derivs 4.0 International License (CC BY-ND 4.0 Deed).
+                <strong>CatMapper software</strong> is licensed under a GNU General Public License.
               </Typography>
             </Grid>
           </Grid>

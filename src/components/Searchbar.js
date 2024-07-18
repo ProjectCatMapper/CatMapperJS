@@ -96,6 +96,8 @@ export default function Searchbar() {
     {label: 'RELIGION', description: 'A category defined by a religious tradition'},
     {label: 'VARIABLE', description: 'A variable'}
   ];
+
+  const options = useLocation().pathname.includes('archamap') ? archoptions : socioptions;
   
   if (useLocation().pathname.includes("archamap")) {
     database = "ArchaMap"
@@ -228,7 +230,7 @@ export default function Searchbar() {
           </tr>
         </thead>
         <tbody>
-          {infodata2.filter(desc => socioptions[advdomainDrop].includes(desc.label)).map((category, index) => (
+          {infodata2.filter(desc => options[advdomainDrop].includes(desc.label)).map((category, index) => (
             <tr key={index}>
               <td style={{ borderBottom: '1px solid #ddd', padding: '8px' }}>{category.label}</td>
               <td style={{ borderBottom: '1px solid #ddd', padding: '8px' }}>{category.description}</td>
@@ -267,7 +269,15 @@ export default function Searchbar() {
             value={domainDrop}
             label=""
             style={{backgroundColor:"white"}}
-            onChange={(event) => { setdomainDrop(event.target.value);setadvoptions(selectedcategory[event.target.value]);setadvdomainDrop(selectedcategory[event.target.value][0]);setoptionsForSelectedCategory(socioptions[selectedcategory[event.target.value][0]])}}
+            onChange={(event) => { setdomainDrop(event.target.value);setadvoptions(selectedcategory[event.target.value]);setadvdomainDrop(selectedcategory[event.target.value][0]);
+              
+              if (database === "ArchaMap") {
+                setoptionsForSelectedCategory(archoptions[selectedcategory[event.target.value][0]]);
+              } else {
+                setoptionsForSelectedCategory(socioptions[selectedcategory[event.target.value][0]]);
+              }
+            
+            }}
             input={<BootstrapInput />}
           >
             {Object.keys(selectedcategory).map((category, index) => (
@@ -290,11 +300,11 @@ export default function Searchbar() {
         value={tvalue}
         style={{marginTop :22,marginLeft:"1%",width:700,height:45}}
         onChange={(event) => { settvalue(event.target.value) }}
-        onKeyDown={(event) => { if (event.key === 'Enter') {isChecked ? handleClick(tvalue, advdomainDrop) : handleClick(tvalue, domainDrop) } }}
+        onKeyDown={(event) => { if (event.key === 'Enter') {isChecked ? handleClick(tvalue, advdomainDrop.trim()) : handleClick(tvalue, domainDrop.trim()) } }}
       />
         {/* <TextField onChange={(event) => { settvalue(event.target.value) }} sx={{ m: 1,height: 40, width: 450, backgroundColor: "white" }} variant="standard" /> */}
         <Tooltip title="Search" arrow sx={{ fontSize: '30px' }}>
-        <IconButton color="primary" aria-label="add to shopping cart"  onClick={() => { isChecked ? handleClick(tvalue, advdomainDrop) : handleClick(tvalue, domainDrop)  }} sx={{top:10}}>
+        <IconButton color="primary" aria-label="add to shopping cart"  onClick={() => { isChecked ? handleClick(tvalue, advdomainDrop.trim()) : handleClick(tvalue, domainDrop.trim())  }} sx={{top:10}}>
           <SearchOutlinedIcon sx={{ fontSize: 33 }}/>
         </IconButton>
         </Tooltip>
@@ -329,7 +339,14 @@ export default function Searchbar() {
             value={advdomainDrop}
             label=""
             style={{backgroundColor:"white"}}
-            onChange={(event) => { setadvdomainDrop(event.target.value);setoptionsForSelectedCategory(socioptions[event.target.value])}}
+            onChange={(event) => { setadvdomainDrop(event.target.value);
+              if (database === "ArchaMap") {
+                setoptionsForSelectedCategory(archoptions[event.target.value]);
+              } else {
+                setoptionsForSelectedCategory(socioptions[event.target.value]);
+              }
+
+            }}
             input={<BootstrapInput />}
           >
             {advoptions.map((value, index) => (

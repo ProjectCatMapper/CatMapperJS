@@ -20,6 +20,7 @@ import './footer.css'
 import image from '../assets/white.png'
 import { Link } from 'react-router-dom'
 import Divider from '@mui/material/Divider';
+import LiveMapCarousel from "./carousel"
 
 // const Item = styled(Paper)(({ theme }) => ({
 //     backgroundColor: '#000',
@@ -225,6 +226,14 @@ Download datasets list      </Button>
       </Typography>
     </CardContent>
     </Card>
+      </Grid>
+
+      <Grid item xs={6}>
+        <Card variant="outlined" style={{backgroundColor: 'black',border: '1px solid white'}}>
+        <CardContent>
+      <LiveMapCarousel />
+    </CardContent>
+    </Card >
       </Grid>
 
       {/* <Grid item xs={6}>
