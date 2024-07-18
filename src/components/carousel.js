@@ -1,11 +1,10 @@
 import React from 'react';
 import { Carousel } from 'react-responsive-carousel';
-import 'react-responsive-carousel/lib/styles/carousel.min.css'; // Import carousel styles
+import 'react-responsive-carousel/lib/styles/carousel.min.css';
 import { Link } from 'react-router-dom';
 import mapImage1 from '../assets/map1.png';
 
 const LiveMapCarousel = () => {
-  // Example URLs to map pages (replace with your actual URLs)
   const mapPages = [
     { id: 1, mapUrl: '/map1', imageUrl: mapImage1, altText: 'Live Map 1' },
     { id: 2, mapUrl: '/sociomap', imageUrl: require('../assets/map1.png'), altText: 'Live Map 2' },

@@ -71,7 +71,7 @@ const Terms = () => {
             </Grid>
             <Grid item xs>
               <Typography variant="body1">
-                <strong>CatMapper database data and metadata</strong> are licensed under a Creative Commons Attribution 4.0 International (CC BY 4.0 Deed).
+                <strong>CatMapper database data and metadata</strong> are licensed under a Creative Commons Attribution-Sharealike 4.0 International (CC BY-SA 4.0 Deed).
               </Typography>
             </Grid>
           </Grid>

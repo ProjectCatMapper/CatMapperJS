@@ -11,7 +11,7 @@
     "ANY DOMAIN" : ["Name","Key","CMID","glottocode","FIPS","ISO2","ISO3","ISONumeric"],
     "DATASET" : ["Name","CMID","DatasetCitation","project","shortName"],
     "DIALECT" : ["Name","Key","CMID","glottocode","ISO3"],
-    "DISTRICT" : ["Name","Key","CMID","glottocode","FIPS","ISO2","ISO3","ISONumeric"],
+    "AREA" : ["Name","Key","CMID","glottocode","FIPS","ISO2","ISO3","ISONumeric"],
     "ETHNICITY" : ["Name","Key","CMID"],
     "FAMILY" : ["Name","Key","CMID","glottocode","ISO3"],
     "GENERIC" : ["Name","Key","CMID"],
