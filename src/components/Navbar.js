@@ -27,8 +27,12 @@ const Navbar = () => {
             <li >
                 <Link id='sociomapnavbar' to='/sociomap/explore'>Explore</Link>
             </li>
-            <li >
-                <Link id='sociomapnavbar' to='/sociomap/translate'>Translate</Link>
+            <li className='dropdown' >
+            <Link id='sociomapnavbar' > Translate <span className="dropdown-arrow">&#x25BC;</span></Link>
+            <div className='dropdown-content' style={{ whiteSpace: 'nowrap' }} >
+                <Link to='/sociomap/translate'>Propose Translation</Link>
+                {authLevel > 0 &&<Link to='/sociomap/uploadtranslate'>Upload Translation</Link>}
+                </div>
             </li>
             <li >
                 <Link id='sociomapnavbar'  to='/sociomap/merge'>Merge</Link>

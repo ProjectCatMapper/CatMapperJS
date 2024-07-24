@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Circle, Popup } from 'react-leaflet';
-import L from 'leaflet';
 import map1 from '../data/m1.csv';
 
 const parseCsvData = (csvString) => {

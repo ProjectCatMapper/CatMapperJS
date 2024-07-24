@@ -1,10 +1,14 @@
 import {React, useEffect} from "react";
 import {Routes, Route} from "react-router-dom";
 import Map1 from './routes/Map1';
+import Map2 from './routes/Map2';
+import Map3 from './routes/Map3';
+import Map4 from './routes/Map4';
 
 import Home from './routes/Home'
 import Explore from './routes/Explore'
 import Translate from './routes/Translate'
+import UploadTranslate from './routes/UploadTranslate'
 import Catmapper from "./routes/Catmapper";
 import Archamap from "./routes/Archamap"
 import Sociomapclick from "./routes/Sociomapclick";
@@ -63,7 +67,11 @@ function App() {
         <Route path='/terms' element={<Terms />} />
         <Route path='/contact' element={<Contact />} />
         <Route path='/map1' element={<Map1 />} />
+        <Route path='/map2' element={<Map2 />} />
+        <Route path='/map3' element={<Map3 />} />
+        <Route path='/map4' element={<Map4 />} />
         <Route path="/advanced" element={<ProtectedRoute requiredLevel={1}><AdvancedPage /></ProtectedRoute>}/>
+        <Route path="sociomap/uploadtranslate" element={<ProtectedRoute requiredLevel={1}><UploadTranslate /></ProtectedRoute>}/>
         <Route path="/admin" element={<ProtectedRoute requiredLevel={2}><AdminPage /></ProtectedRoute>}/>
       </Routes>
   );

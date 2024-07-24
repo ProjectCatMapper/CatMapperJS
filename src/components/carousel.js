@@ -7,8 +7,9 @@ import mapImage1 from '../assets/map1.png';
 const LiveMapCarousel = () => {
   const mapPages = [
     { id: 1, mapUrl: '/map1', imageUrl: mapImage1, altText: 'Live Map 1' },
-    { id: 2, mapUrl: '/sociomap', imageUrl: require('../assets/map1.png'), altText: 'Live Map 2' },
-    { id: 3, mapUrl: '/sociomap', imageUrl: require('../assets/map1.png'), altText: 'Live Map 3' }
+    { id: 2, mapUrl: '/map2', imageUrl: require('../assets/map1.png'), altText: 'Live Map 2' },
+    { id: 3, mapUrl: '/map3', imageUrl: require('../assets/map1.png'), altText: 'Live Map 3' },
+    { id: 4, mapUrl: '/map4', imageUrl: require('../assets/map1.png'), altText: 'Live Map 4' }
   ];
 
   return (

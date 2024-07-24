@@ -3,6 +3,7 @@ import { Network } from 'vis-network/standalone';
 import {useNavigate} from 'react-router-dom'
 
 const Neo4jVisualization = ({ visData }) => {
+  console.log(visData)
   const navigate = useNavigate();
   const valuesToRemove = ['DISTRICT', 'CATEGORY'];
   const nodes = visData["nodes"].length > 10 ? visData["nodes"].slice(0, 10) : visData["nodes"];
@@ -31,6 +32,8 @@ const Neo4jVisualization = ({ visData }) => {
       shape: 'dot',
       // widthConstraint: 50,      
     },
+    physics: false
+    ,
     edges: {
       arrows: {
         to: {
