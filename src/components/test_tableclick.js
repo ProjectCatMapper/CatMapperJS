@@ -20,6 +20,7 @@ import Legend from './legend';
 import image from '../assets/white.png'
 import { Link } from 'react-router-dom'
 import * as XLSX from 'xlsx';
+import './LoadingSpinner.css';
 
 function CustomTabPanel(props) {
   const { children, value, index, ...other } = props;
@@ -75,6 +76,18 @@ export default function Tableclick(props) {
   const [datasetdomainValue, setdatasetdomainValue] = useState([]);
   const [datasetdropdown, setDatasetDropdown] = useState([]);
   const [rememberChoice, setRememberChoice] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const LoadingSpinner = () => {
+    return (
+      <div className="loading-overlay">
+        <div className="loading-spinner">
+          <div className="spinner"></div>
+          <p>Loading...</p>
+        </div>
+      </div>
+    );
+  };
 
   const datasetDropdownChange = (event) => {
     setdatasetdomainValue(event.target.value);
@@ -226,6 +239,7 @@ export default function Tableclick(props) {
 
 
     const datasetButtonClick = async (event) => {
+      setLoading(true);
       try{
         let response;
         if (Array.isArray(datasetdomainValue) && datasetdomainValue.length > 1) {
@@ -268,7 +282,9 @@ export default function Tableclick(props) {
     const a = document.createElement('a');
     a.style.display = 'none';
     a.href = url;
-    a.download = 'response_data.xlsx';
+    const today = new Date();
+    const formattedDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    a.download = rev.CMName+' '+ formattedDate+'.xlsx';
     document.body.appendChild(a);
     a.click();
     window.URL.revokeObjectURL(url);
@@ -276,6 +292,9 @@ export default function Tableclick(props) {
       }
       catch (error) {
         console.error('Error fetching data:', error);
+      }
+      finally {
+        setLoading(false);
       }
     };
 
@@ -506,6 +525,7 @@ export default function Tableclick(props) {
           <Button sx={{ marginLeft: 2, width: 250, fontSize:12, marginBottom:2 }} variant="contained" color="primary" onClick={datasetButtonClick}>
             Download Dataset Relationships
           </Button>
+          {loading && <LoadingSpinner />}
           <FormControlLabel sx={{ marginLeft: 2, marginBottom:2 }} control={<Checkbox/>} onChange={handleDatasetCheckbox} label="Download connected datasets?" />
         </Box>
       )}

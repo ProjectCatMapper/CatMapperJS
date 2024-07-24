@@ -22,15 +22,6 @@ import { Link } from 'react-router-dom'
 import Divider from '@mui/material/Divider';
 import LiveMapCarousel from "./carousel"
 
-// const Item = styled(Paper)(({ theme }) => ({
-//     backgroundColor: '#000',
-//     opacity: "0.3",
-//     ...theme.typography.body2,
-//     padding: theme.spacing(1),
-//     textAlign: 'justify',
-//     color: '#fff',
-//   }));
-
 
   function createData(nodes, relations, DatasetProgress ) {
     return { nodes, relations, DatasetProgress };
@@ -40,15 +31,6 @@ import LiveMapCarousel from "./carousel"
     return { Focus, Datasets, Areas, Ethnicities, Languages, Religions  };
   }
 
-    const rows = [
-    createData('2,194 DATASETS','258,573 CONTAINS','DISTRICTS 310,839'),
-    createData('205,536 DISTRICTS ','253,386 DISTRICT OF','ETHNICITIES 127,553'),
-    createData('11,955 ETHNICITIES ','','GENERICS 386'),
-    createData('25 GENERICS','6,862	LANGUAGE OF','LANGUAGES, DIALECTS, and FAMILIES	59,925'),
-    createData('26,572 LANGUAGES, DIALECTS, and FAMILIES','638	RELIGION OF','RELIGIONS	8,774'),
-    createData('2,561 RELIGIONS','','VARIABLES	17,108'),
-    createData('104	VARIABLES','524,517	ENCODINGS',''),
-  ];
  
   const handleButtonClick = async () => {
     try {
@@ -80,8 +62,32 @@ import LiveMapCarousel from "./carousel"
   };
 
 const Footer = () => {
+  const [rows, setrows] = useState([]);
+
 
   const [foci,setfoci] = useState([])
+
+  useEffect(() => {
+
+    fetch("https://catmapper.org/api/progress?database=sociomap",
+        // fetch("http://127.0.0.1:5001/progress?database=sociomap",
+            {
+                method: "GET"
+            })
+            .then(response => {
+                return response.json()
+            })
+            .then(data => {setrows([
+              createData(data.nodes[0].current.toLocaleString()+ " " + data.nodes[0].label,data.relations[0].current.toLocaleString()+ " " + data.relations[0].label,data.encodings[0].current.toLocaleString()+ " " + data.encodings[0].label),
+              createData(data.nodes[1].current.toLocaleString()+ " " + data.nodes[1].label,data.relations[1].current.toLocaleString()+ " " + data.relations[1].label,data.encodings[1].current.toLocaleString()+ " " + data.encodings[1].label),
+              createData(data.nodes[2].current.toLocaleString()+ " " + data.nodes[2].label,"",data.encodings[2].current.toLocaleString()+ " " + data.encodings[2].label),
+              createData(data.nodes[3].current.toLocaleString()+ " " + data.nodes[3].label,data.relations[2].current.toLocaleString()+ " " + data.relations[2].label,data.encodings[3].current.toLocaleString()+ " " + data.encodings[3].label),
+              createData(data.nodes[4].current.toLocaleString()+ " " + data.nodes[4].label,data.relations[3].current.toLocaleString()+ " " + data.relations[3].label,data.encodings[4].current.toLocaleString()+ " " + data.encodings[4].label),
+              createData(data.nodes[5].current.toLocaleString()+ " " + data.nodes[5].label,"",data.encodings[5].current.toLocaleString()+ " " + data.encodings[5].label),
+              createData(data.nodes[6].current.toLocaleString()+ " " + data.nodes[6].label,data.relations[4].current.toLocaleString()+ " " + data.relations[4].label,"")             
+            ])
+            })
+    },[])
 
   useEffect(() => {
     fetch("https://catmapper.org/api/foci?database=sociomap",
@@ -101,15 +107,6 @@ const Footer = () => {
             ]);
             })
     },[])
-
-    // const fociRows = [
-    //   createFoci(foci[0].Focus,foci[0].Datasets,foci[0].AREAS,foci[0].ETHNICITIES,foci[0]["LANGUAGES, DIALECTS, and FAMILIES"],foci[0].RELIGIONS),
-    //   createFoci(foci[1].Focus,foci[1].Datasets,foci[1].AREAS,foci[1].ETHNICITIES,foci[1]["LANGUAGES, DIALECTS, and FAMILIES"],foci[1].RELIGIONS),
-    //   createFoci(foci[2].Focus,foci[2].Datasets,foci[2].AREAS,foci[2].ETHNICITIES,foci[2]["LANGUAGES, DIALECTS, and FAMILIES"],foci[2].RELIGIONS),
-    //   createFoci(foci[3].Focus,foci[3].Datasets,foci[3].AREAS,foci[3].ETHNICITIES,foci[3]["LANGUAGES, DIALECTS, and FAMILIES"],foci[3].RELIGIONS),
-    //   createFoci(foci[4].Focus,foci[4].Datasets,foci[4].AREAS,foci[4].ETHNICITIES,foci[4]["LANGUAGES, DIALECTS, and FAMILIES"],foci[4].RELIGIONS),
-    // ];
-  
   
   return (
     <div className='footer'>
@@ -122,8 +119,7 @@ const Footer = () => {
       <Typography id='sociomapfooter' sx={{ fontSize: 20 }} color="#fff" gutterBottom>
         Description
       </Typography>
-      <Typography variant="p" color="#fff" component="div">
-     
+      <Typography variant="p" color="#fff" component="div">    
                         Explore: All users can search for basic contextual information—geographical location, population size, alternative names, and language—on categories of interest (e.g., Aymara ethnicity, Balochi language, Rajshahi district). They can also identify all datasets that contain specific social, demographic, cultural and economic data for categories of interest.
                         <br/>
                         <br/>
@@ -133,8 +129,7 @@ const Footer = () => {
                         Merge (in development): Registered users can develop, document and share plans for merging data across diverse external datasets by ethnicity, language, religion, or political district. Once a merge plan is developed and saved, SocioMap will be able to generate code in common formats (R, SPSS, Stata, SAS), that will allow users to merge external datasets they have stored on their own computer for their custom analysis needs.
                         <br/>
                         <br/>
-                        Share (in development): All users can find and download all others users' past translations and merging plans to merge datasets they have stored on their own computer. 
-                    
+                        Share (in development): All users can find and download all others users' past translations and merging plans to merge datasets they have stored on their own computer.                     
       </Typography>
     </CardContent>
     </Card >
@@ -180,7 +175,6 @@ Download datasets list      </Button>
         </TableBody>
       </Table>
     </TableContainer>
-
       </Typography>
     </CardContent>
     </Card>
@@ -222,7 +216,6 @@ Download datasets list      </Button>
         </TableBody>
       </Table>
     </TableContainer>
-
       </Typography>
     </CardContent>
     </Card>
@@ -236,42 +229,6 @@ Download datasets list      </Button>
     </Card >
       </Grid>
 
-      {/* <Grid item xs={6}>
-      <Card variant="outlined" style={{backgroundColor: 'black',border: '1px solid white',}}>
-        <CardContent>
-      <Typography id='sociomapfooter' sx={{ fontSize: 20 }} color="#fff" gutterBottom>
-        Citation
-      </Typography>
-      <Typography variant="p" color="#fff" component="div">
-      More information can be found in the following citation. You may also use this citation to reference CatMapper and CatMapper applications.
-                        <br/>
-                        <br/>
-                        Hruschka, Daniel J., Robert Bischoff, Matt Peeples, Sharon Hsiao, and Mohamed Sarwat <br/>2022 CatMapper: A User-Friendly Tool for Integrating Data across Complex Categories. SocArXiv Papers.<br/>https://osf.io/preprints/socarxiv/n6rty/      
-      </Typography>
-    </CardContent>
-    </Card>
-      </Grid>
-
-      <Grid item xs={6}>
-      <Card variant="outlined" style={{backgroundColor: 'black',border: '1px solid white',paddingLeft:10,}}>
-        <CardContent>
-      <Typography id='sociomapfooter' sx={{ fontSize: 20 }} color="#fff" gutterBottom>
-        Funding
-      </Typography>
-      <Typography variant="p" color="#fff" component="div">
-
-      Early development of CatMapper has been supported by:<br/><br/>
-                    <ol>
-                        <li>ASU’s Institute for Social Science Research seed grant</li>
-                        <li>School for Human Evolution and Social Change interdisciplinary research grant</li>
-                        <li>National Science Foundation (BCS-2051369) through the Human Networks and Data Science and Cultural Anthropology programs.</li>
-                        <li>Arizona State University's Center for Archaeology and Society</li>
-                    </ol>
-
-        </Typography>
-    </CardContent>
-    </Card>
-      </Grid> */}
       </Grid>        
     </Box>
     <Divider sx={{ marginTop: 3, marginBottom: 7, marginLeft:1,marginRight:1, backgroundColor: 'white' }} />
