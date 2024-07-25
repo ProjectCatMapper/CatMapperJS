@@ -32,8 +32,8 @@ const Neo4jVisualization = ({ visData }) => {
       shape: 'dot',
       // widthConstraint: 50,      
     },
-    physics: false
-    ,
+    // physics: false
+    
     edges: {
       arrows: {
         to: {

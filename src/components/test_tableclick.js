@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import React,{ useState, useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
@@ -531,8 +531,109 @@ export default function Tableclick(props) {
       )}
 </Box>
         <Box sx={{ width: '100%', height: "auto" , position: "relative", left: "10px", top: boxHeight + 100 }}>
+        {props.cmid.cmid.startsWith('SD') ?
+        <React.Fragment>
           <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-            <Tabs sx={{ overflowY: "scroll", maxHeight: 700 }} value={value} onChange={handleChange} aria-label="basic tabs example">
+            <Tabs sx={{ maxHeight: 700 }} value={value} onChange={handleChange} aria-label="basic tabs example">
+              <Tab label="Map" {...a11yProps(0)} />
+              <Tab label="Network Explorer" {...a11yProps(1)} />
+              {categories.length !== 0 ? <Tab label="Categories" {...a11yProps(2)} /> : null}
+            </Tabs>
+          </Box>
+          
+          <CustomTabPanel value={value} index={0}>
+            <div style={{ position: "relative", top: "10", left: "200", width: "95%", height: "auto" }}>
+              {mapt.length !== 0 || points.length!==0 ? 
+              <MapContainer 
+                center={[0,0]}
+                zoom="5"
+                scrollWheelZoom={true}
+                style={{ height: 600 }}
+                ref = {mapRef}>
+                <SetViewToDataBounds points={points} polygons={mapt} />
+                <GeoJSON  data={mapt} style={getFeatureStyle} onEachFeature={onEachFeature} />
+                <TileLayer url='https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png'
+                  attribution='&copy; <a href="https://carto.com/">CARTO</a> contributors' />
+                  {points.length !== 0 ? (
+            <MarkerClusterGroup>
+              {points.map((point, index) => (
+                <CircleMarker
+                center={point.cood}
+                radius={10} 
+                color={stringToColor(point.source)} 
+                fillColor={stringToColor(point.source)} 
+                fillOpacity={0.5} 
+              >
+                <Tooltip>{point.source}</Tooltip>
+              </CircleMarker>
+                
+              ))}
+            </MarkerClusterGroup>
+          ) : points}
+                <Legend sources={allsources} colors={allcolors} />
+              </MapContainer> : <p>No map</p>}
+            </div>
+          </CustomTabPanel>
+          <CustomTabPanel value={value} index={1}>
+            <div>
+              <FormControl sx={{ m: 1, width: 300 }}>
+                <InputLabel htmlFor="first-dropdown">Relationship</InputLabel>
+                <Select
+                  label="First Dropdown"
+                  value={firstDropdownValue}
+                  onChange={fetchData}
+                >
+                  {orderOfProperties.map((property) => (
+        fdrop.includes(property) && (
+          <MenuItem key={property} value={property}>
+            {property}
+          </MenuItem>
+        )
+      ))}
+                </Select>
+              </FormControl>
+              <FormControl sx={{ m: 1, width: 300 }}>
+                <InputLabel htmlFor="second-dropdown">Domain</InputLabel>
+                <Select
+                  multiple
+                  value={selectedValues}
+                  onChange={updateData}
+                  label="Select Multiple Items"
+                >
+                  {domains && domains.map((option) => (
+                    <MenuItem value={option}>
+                      {option}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              <FormControl sx={{ m: 1, width: 300 }}>
+                <InputLabel htmlFor="third-dropdown">Nodes</InputLabel>
+                <Select
+                  label="Third Dropdown"
+                  value={thirdDropdownValue}
+                  onChange={updateNodeData}
+                >
+                  {selectedNodes.map((option) => (
+                    <MenuItem value={option}>
+                      {option}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              <div style={{ width: '100%', height: '600px' }}>
+              {visData && <Neo4jVisualization visData={visData}  />}
+              </div>
+            </div>
+          </CustomTabPanel>
+          <CustomTabPanel value={value} index={2}>
+          <CategoriesTable categories={categories} />
+          </CustomTabPanel>
+          </React.Fragment> : 
+
+          <React.Fragment>
+          <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+            <Tabs sx={{ maxHeight: 700 }} value={value} onChange={handleChange} aria-label="basic tabs example">
               <Tab label="Datasets" {...a11yProps(0)} />
               <Tab label="Map" {...a11yProps(1)} />
               <Tab label="Network Explorer" {...a11yProps(2)} />
@@ -630,6 +731,8 @@ export default function Tableclick(props) {
           <CustomTabPanel value={value} index={3}>
           <CategoriesTable categories={categories} />
           </CustomTabPanel>
+          </React.Fragment>
+        }
         </Box>
         <div style={{width:"100%", backgroundColor:"black", padding: '20px',position:"relative"}}>
       <Divider sx={{ marginLeft:1,marginRight:1, backgroundColor: 'white' }} />
