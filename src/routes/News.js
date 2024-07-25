@@ -3,6 +3,10 @@ import Navbar from '../components/footer_navbar'
 import { Container, Typography, Box, Paper, Divider, Grid } from '@mui/material';
 
 const updates = [
+  {
+    date: 'July 16, 2024',
+    content: 'Ethnicities from Fearon linked to SocioMap.'
+  },
     {
       date: 'June 21, 2024',
       content: 'Ethnicites in Politically Relevant Ethnic Groups linked to SocioMap.'
@@ -18,6 +22,10 @@ const updates = [
     {
       date: 'May 23, 2024',
       content: 'Ethnicities from GEnes and LAnguages Together databases linked to SocioMap.'
+    },
+    {
+      date: 'April 25, 2024',
+      content: 'Languages from kinbank linked to SocioMap.'
     },
     {
       date: 'April, 2024',
