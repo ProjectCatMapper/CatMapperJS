@@ -1,26 +1,24 @@
-import * as React from 'react';
-import { useState } from 'react'
+import React from 'react';
+import { useState,useEffect } from 'react'
 import { DataGrid } from '@mui/x-data-grid';
 import './tableclickview.css'
 
 export default function ClickTable(props) {
   const ccolumns = [
-    { field: 'name', headerName: 'Name',flex: 1.5},
+    { field: 'name', headerName: 'Name',flex: 2},
     { field: 'location', headerName: 'Location',flex: 1 },
     { field: 'timespan', headerName: 'Time span',flex: 0.5 },
     { field: 'popest', headerName: 'Population est.',flex: 0.5 },
     { field: 'samplesize', headerName: 'Sample size',flex: 0.5},
-    { field: 'source', headerName: 'Source',flex: 1,  renderCell: (params1) =>{ return <a id='viewlink' href={params1.row.link2} target="_blank" rel="noopener noreferrer">{params1.row.source}</a>}, },
-    { field: 'version', headerName: 'Version',flex: 1, },
+    { field: 'source', headerName: 'Source',flex: 0.5,  renderCell: (params1) =>{ return <a id='viewlink' href={params1.row.link2} target="_blank" rel="noopener noreferrer">{params1.row.source}</a>}, },
+    { field: 'version', headerName: 'Version',flex: 0.5, },
     { field: 'link', headerName: 'Link', flex: 0.4, renderCell: (params) =>{if (params.row.link) {return <a id='viewlink' href={params.row.link} target="_blank" rel="noopener noreferrer">{"View"}</a>;}}, },
   ];
   const [rows, setRows] = useState([]);
-  const [columns, setColumns] = useState([]);
-
 
   //React.useEffect(() => {console.log(props.usert)},[])
   
-  React.useEffect(() => {
+  useEffect(() => {
     setRows(props.usert.map((value, key) => {
       return {
         id: key + 1,
@@ -35,28 +33,22 @@ export default function ClickTable(props) {
         link2:value.link2
       }
     }))
+  },[props.usert])
 
-    const nonEmptyColumns = ccolumns.filter((col) => 
-      rows.every((row) => row[col.field] !== undefined && row[col.field] !== '' && row[col.field] !== null && row[col.field] !== "null"),console.log(rows)
-    );
+  const nonEmptyColumns = ccolumns.filter((col) => 
+    rows.some((row) => (row[col.field] !== null) && (row[col.field] !== "null"))
+  );
 
-    console.log(nonEmptyColumns)
-  
-    setColumns(nonEmptyColumns);
-  }, [props.usert])
-
-  // React.useEffect(() => {
-  //   console.log(rows)
-  // }, [rows])
-
-  
+//  useEffect(() => {
+//   setColumns(nonEmptyColumns);
+//   }, [])
 
   return (
     <div style={{ marginLeft:"2vw",height: 600, width: "90vw" }}>
       <DataGrid
         rows={rows}
         getRowHeight={() => 50}
-        columns={columns}
+        columns={nonEmptyColumns}
         initialState={{
           pagination: {
             paginationModel: { page: 0, pageSize: 10 },
