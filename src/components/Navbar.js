@@ -37,7 +37,7 @@ const Navbar = () => {
             <li >
                 <Link id='sociomapnavbar'  to='/sociomap/merge'>Merge</Link>
             </li>
-            {authLevel > 0 && <Link id='sociomapnavbar' to="/advanced" style={{marginLeft:20}}>Advanced</Link>}
+            {/* {authLevel > 0 && <Link id='sociomapnavbar' to="/advanced" style={{marginLeft:20}}>Advanced</Link>} */}
 
             {authLevel > 1 && <Link id='sociomapnavbar'  to="/admin" style={{marginLeft:20}}>Admin</Link>}
             <li className='dropdown'>

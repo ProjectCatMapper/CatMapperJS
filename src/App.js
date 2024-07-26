@@ -24,7 +24,7 @@ import Contact from "./routes/Contact"
 import Sociomap_ApiGuide from "./routes/Sociomap_ApiGuide"
 import Logins from "./routes/Logins";
 import RegisterPage from './routes/RegisterPage';
-import AdvancedPage from './routes/Advanced';
+// import AdvancedPage from './routes/Advanced';
 import AdminPage from './routes/Admin';
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -70,7 +70,7 @@ function App() {
         <Route path='/map2' element={<Map2 />} />
         <Route path='/map3' element={<Map3 />} />
         <Route path='/map4' element={<Map4 />} />
-        <Route path="/advanced" element={<ProtectedRoute requiredLevel={1}><AdvancedPage /></ProtectedRoute>}/>
+        {/* <Route path="/advanced" element={<ProtectedRoute requiredLevel={1}><AdvancedPage /></ProtectedRoute>}/> */}
         <Route path="sociomap/uploadtranslate" element={<ProtectedRoute requiredLevel={1}><UploadTranslate /></ProtectedRoute>}/>
         <Route path="/admin" element={<ProtectedRoute requiredLevel={2}><AdminPage /></ProtectedRoute>}/>
       </Routes>

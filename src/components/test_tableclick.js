@@ -205,6 +205,7 @@ export default function Tableclick(props) {
                 // setsources(data.polysource)
             })
     },[])
+    
 
     useEffect(() => {
       const fetchData = async () => {
@@ -645,7 +646,7 @@ export default function Tableclick(props) {
           </CustomTabPanel>
           <CustomTabPanel value={value} index={1}>
             <div style={{ position: "relative", top: "10", left: "200", width: "95%", height: "auto" }}>
-              {mapt.length !== 0 || points.length!==0 ? 
+              {mapt.length !== 0 || points.length !== 0  ? 
               <MapContainer 
                 center={[0,0]}
                 zoom="5"
