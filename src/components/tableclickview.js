@@ -15,6 +15,7 @@ export default function ClickTable(props) {
     { field: 'link', headerName: 'Link', flex: 0.4, renderCell: (params) =>{if (params.row.link) {return <a id='viewlink' href={params.row.link} target="_blank" rel="noopener noreferrer">{"View"}</a>;}}, },
   ];
   const [rows, setRows] = useState([]);
+  let nonEmptyColumns = []
 
   //React.useEffect(() => {console.log(props.usert)},[])
   
@@ -35,7 +36,7 @@ export default function ClickTable(props) {
     }))
   },[props.usert])
 
-  const nonEmptyColumns = ccolumns.filter((col) => 
+  nonEmptyColumns = ccolumns.filter((col) => 
     rows.some((row) => (row[col.field] !== null) && (row[col.field] !== "null"))
   );
 
