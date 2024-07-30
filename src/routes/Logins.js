@@ -4,7 +4,7 @@ import LoginPage from '../components/LoginPage'
 
 const Logins = () => {
    return (
-     <div style={{backgroundColor:"white"}}>
+     <div style={{backgroundColor:"white",height:"50vh"}}>
          <Navbar />
          <LoginPage />
      </div>

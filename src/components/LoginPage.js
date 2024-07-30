@@ -37,8 +37,20 @@ const LoginPage = () => {
                 onChange={(e) => setPassword(e.target.value)}
                 sx={{ mb: 2 }}
             />
-            <Button variant="contained" onClick={handleLogin}>Login</Button>
-            <Button variant="outlined" onClick={handleNavigateToRegister} sx={{ mt: 2 }}>Register</Button>
+            <Button variant="contained" sx={{
+        backgroundColor: 'black',
+        color: 'white', 
+        '&:hover': {
+          backgroundColor: 'green', 
+        },
+      }} onClick={handleLogin}>Login</Button>
+            <Button variant="contained" sx={{
+        backgroundColor: 'black',
+        color: 'white', 
+        '&:hover': {
+          backgroundColor: 'green', 
+        }, mt:2
+      }} onClick={handleNavigateToRegister}>Register</Button>
         </Box>
     );
 };
