@@ -143,8 +143,13 @@ const Footer = () => {
         <Button
         variant="contained"
         size="small"
-        color="primary"
-        sx={{ fontSize: '0.6rem', padding: '4px 8px' }}
+        sx={{
+          backgroundColor: 'blue',
+          color: 'white', 
+          '&:hover': {
+            backgroundColor: 'green', 
+          },fontSize: '0.6rem', padding: '4px 8px'
+        }}
         onClick={handleButtonClick}
       >
 Download datasets list      </Button>

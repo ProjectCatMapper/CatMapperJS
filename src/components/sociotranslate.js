@@ -265,7 +265,13 @@ ExcelRenderer(fileObj, (err, resp) => {
     <div  style={{width:"26%",height:"90%", backgroundColor : '#e0e0e0', padding: '20px',border: '1px solid #ccc',borderRadius : '10px', margin: '10px', overflow:"auto",position:"absolute"}}>
       <h3 style={{ color: 'black', fontWeight: "bold", marginLeft: 7, padding: "2px" }}> Choose file to import</h3>
       <input id="fileInput" style={{ color: 'black', fontWeight: "bold", marginLeft: 7, padding: "2px" }} type="file" accept=".csv, .xlsx" onChange={handleFileChange} />
-      <Button variant="contained" color="primary" onClick={handleclear}>
+      <Button variant="contained" sx={{
+        backgroundColor: 'black',
+        color: 'white', 
+        '&:hover': {
+          backgroundColor: 'green', 
+        },
+      }} onClick={handleclear}>
         Reset imported file
       </Button>
       <br/>
@@ -420,13 +426,25 @@ ExcelRenderer(fileObj, (err, resp) => {
         </div>
         {loading && <ProgressBar progress={progress} />}
       </Backdrop>
-      <Button variant="contained" color="primary" onClick={handleClick}>
+      <Button variant="contained" sx={{
+        backgroundColor: 'black',
+        color: 'white', 
+        '&:hover': {
+          backgroundColor: 'green', 
+        },
+      }} onClick={handleClick}>
         Search
       </Button>
       <br/>
       <TranslateTable categories={tcategories} />
       <br/>
-      <Button variant="contained" color="primary" onClick={handleClicktwo}>
+      <Button variant="contained" sx={{
+        backgroundColor: 'black',
+        color: 'white', 
+        '&:hover': {
+          backgroundColor: 'green', 
+        },
+      }} onClick={handleClicktwo}>
         Download Data
       </Button>
     </div>

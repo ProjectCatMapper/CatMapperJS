@@ -523,7 +523,13 @@ export default function Tableclick(props) {
               <MenuItem key={index} value={option}>{option}</MenuItem>
             ))}
           </Select>
-          <Button sx={{ marginLeft: 2, width: 250, fontSize:12, marginBottom:2 }} variant="contained" color="primary" onClick={datasetButtonClick}>
+          <Button variant="contained" sx={{
+        backgroundColor: 'black',
+        color: 'white', 
+        '&:hover': {
+          backgroundColor: 'green', 
+        },marginLeft: 2, width: 250, fontSize:12, marginBottom:2
+      }} onClick={datasetButtonClick}>
             Download Dataset Relationships
           </Button>
           {loading && <LoadingSpinner />}
