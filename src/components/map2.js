@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Tooltip } from 'react-leaflet';
 import MarkerClusterGroup from '@changey/react-leaflet-markercluster';
 import map1 from '../data/all_coords.csv';
 
@@ -16,11 +16,11 @@ import map1 from '../data/all_coords.csv';
           },
         }}
       >
-        <Popup>
-          <div>
-            <strong>{point.CMName}</strong><br />
-          </div>
-        </Popup>
+        <Tooltip direction="top" offset={[0, -20]} opacity={1}>
+            <div>
+              <strong>{point.CMName}</strong><br />
+            </div>
+          </Tooltip>
       </Marker>
     ))}
     </MarkerClusterGroup>

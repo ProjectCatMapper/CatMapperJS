@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { MapContainer, TileLayer, Circle, Popup } from 'react-leaflet';
+import { MapContainer, TileLayer, Circle, Tooltip  } from 'react-leaflet';
 import map1 from '../data/m1.csv';
 
 const parseCsvData = (csvString) => {
@@ -38,12 +38,12 @@ const Sociomap_1 = () => {
             color="red"
             fillOpacity={0.5}
           >
-            <Popup>
-              <div>
-                <strong>{point.country}</strong><br />
-                Count: {point.count}
-              </div>
-            </Popup>
+           <Tooltip direction="top" offset={[0, -20]} opacity={1}>
+            <div>
+              <strong>{point.country}</strong><br />
+              Count: {point.count}
+            </div>
+          </Tooltip>
           </Circle>
         ))}
    </MapContainer>

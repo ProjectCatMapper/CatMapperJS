@@ -18,9 +18,21 @@ import { Link } from 'react-router-dom'
 
 function Sociotranslate(){
 
+  const sections = [
+    { label: 'ANY DOMAIN', keys: ['ANY DOMAIN'] },
+    { label: 'AREA to PPL', keys: ['AREA', 'ADM0', 'ADM1', 'ADM2', 'ADM3', 'ADM4', 'ADMD', 'ADME', 'ADML', 'ADMX', 'PPL'] },
+    { label: 'DATASET', keys: ['DATASET'] },
+    { label: 'LANGUOID to FAMILY', keys: ['LANGUOID', 'LANGUAGE', 'DIALECT', 'FAMILY'] },
+    { label: 'ETHNICITY', keys: ['ETHNICITY'] },
+    { label: 'GENERIC', keys: ['GENERIC'] },
+    { label: 'RELIGION', keys: ['RELIGION'] },
+    { label: 'VARIABLE', keys: ['VARIABLE'] }
+  ];
+
+
   const [selectedFile, setSelectedFile] = useState(null);
   const [zeroDropdownValue, setZeroDropdownValue] = useState([]);
-  const [firstDropdownValue, setFirstDropdownValue] = useState(["ADM0"]);
+  const [firstDropdownValue, setFirstDropdownValue] = useState("ANY DOMAIN");
   const [secondDropdownValue, setsecondDropdownValue] = useState([]);
   const [thirdDropdownValue, setthirdDropdownValue] = useState([""]);
   const [fourthDropdownValue, setfourthDropdownValue] = useState([""]);
@@ -256,6 +268,19 @@ ExcelRenderer(fileObj, (err, resp) => {
     </Box>
   );
 
+  const menuItems = sections.flatMap((section, index) => [
+    index > 0 ? <Divider key={`divider-${section.label}`} /> : null,
+    ...section.keys.map((key, idx) => (
+      <MenuItem
+        key={key}
+        value={key}
+        sx={idx === 0 ? { fontWeight: 'bold', backgroundColor: '#f0f0f0' } : {}}
+      >
+        {key}
+      </MenuItem>
+    ))
+  ]).filter(Boolean);
+
   useEffect(() => {
     setsvalues(doptions[firstDropdownValue])
   }, [firstDropdownValue])
@@ -300,11 +325,12 @@ ExcelRenderer(fileObj, (err, resp) => {
           style={{height:40}}
           sx={{ m: 1, width: 300 }}
           onChange={(event) => setFirstDropdownValue(event.target.value)}>
-         {Object.keys(doptions).map((key) => (
+         {/* {Object.keys(doptions).map((key) => (
           <MenuItem key={key} value={key}>
             {key}
           </MenuItem>
-        ))}
+        ))} */}
+             {menuItems}
         </Select>
         <br/>
         <p style={{ color: 'White', fontWeight: "bold", marginLeft: 7, padding: "2px" }}>Property to search</p>     

@@ -4,6 +4,10 @@ import { Container, Typography, Box, Paper, Divider, Grid } from '@mui/material'
 
 const updates = [
   {
+    date: 'July 28, 2024',
+    content: 'Reconciled Ukraine’s 2020 administrative re-organization with GADM and Geonames divisions (136 Raion, 1469 Hromada).'
+  },
+  {
     date: 'July 16, 2024',
     content: 'Ethnicities from Fearon linked to SocioMap.'
   },
