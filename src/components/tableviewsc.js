@@ -7,12 +7,12 @@ import { useLocation } from 'react-router-dom';
 
 export default function DataTable(props) {
   const columns = [
-    { field: 'id', headerName: 'Index', width: 70 },
-    { field: 'cmid', headerName: 'CMID', width: 150 },
-    { field: 'name', headerName: 'CMName', width: 200 },
-    { field: 'label', headerName: 'Label', width: 160, },
-    { field: 'country', headerName: 'Country', width: 300, },
-    { field: 'match', headerName: 'Matching', width: 300, },
+    { field: 'id', headerName: 'Index', flex: 0.3 },
+    { field: 'cmid', headerName: 'CMID',  flex: 0.5 },
+    { field: 'name', headerName: 'CMName', flex: 2 },
+    { field: 'label', headerName: 'Label', flex: 1 },
+    { field: 'country', headerName: 'Country', flex: 2 },
+    { field: 'match', headerName: 'Matching', flex: 1 },
   ];
   const [rows, setRows] = useState([]);
   const navigate = useNavigate();
