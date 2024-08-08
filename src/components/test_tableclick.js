@@ -549,7 +549,7 @@ export default function Tableclick(props) {
           </Box>
           
           <CustomTabPanel value={value} index={0}>
-            <div style={{ position: "relative", top: "10", left: "200", width: "95%", height: "auto" }}>
+            <div style={{ position: "relative", top: "10", left: "200", width: "95%", height: "55vh" }}>
               {mapt.length !== 0 || points.length!==0 ? 
               <MapContainer 
                 center={[0,0]}
@@ -628,7 +628,7 @@ export default function Tableclick(props) {
                   ))}
                 </Select>
               </FormControl>
-              <div style={{ width: '100%', height: '600px' }}>
+              <div style={{ width: '100%', height: '500px' }}>
               {visData && <Neo4jVisualization visData={visData}  />}
               </div>
             </div>
@@ -651,7 +651,7 @@ export default function Tableclick(props) {
             <ClickTable usert={usert} />
           </CustomTabPanel>
           <CustomTabPanel value={value} index={1}>
-            <div style={{ position: "relative", top: "10", left: "200", width: "95%", height: "auto" }}>
+            <div style={{ position: "relative", top: "10", left: "200", width: "95%", height: "55vh" }}>
               {mapt.length !== 0 || points.length !== 0  ? 
               <MapContainer 
                 center={[0,0]}
@@ -730,7 +730,7 @@ export default function Tableclick(props) {
                   ))}
                 </Select>
               </FormControl>
-              <div style={{ width: '100%', height: '600px' }}>
+              <div style={{ width: '100%', height: '500px' }}>
               {visData && <Neo4jVisualization visData={visData}  />}
               </div>
             </div>

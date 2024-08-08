@@ -24,3 +24,34 @@
 .color-undefined {
   background-color: #FFFFFF;
 }
+
+@media screen and (max-width: 1400px) {
+    #myTable .MuiTableRow-root {
+      height: 25px; /* Adjust the height as needed */
+    }
+  
+    #myTable .MuiTableCell-root {
+      padding: 4px 8px; /* Adjust padding to make rows more compact */
+    }
+  
+    /* Adjust pagination controls if needed */
+    #pagination .MuiTablePagination-toolbar {
+      min-height: 35px; /* Adjust the height of the pagination controls */
+    }
+  }
+  
+  @media screen and (max-width: 1024px) {
+    #myTable .MuiTableRow-root {
+      height: 20px; /* Further decrease row height for smaller screens */
+    }
+  
+    #myTable .MuiTableCell-root {
+      padding: 2px 4px; /* Further adjust padding */
+    }
+  
+    /* Adjust pagination controls if needed */
+    #pagination .MuiTablePagination-toolbar {
+      min-height: 30px; /* Adjust the height of the pagination controls */
+    }
+  }
+  

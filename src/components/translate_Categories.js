@@ -52,7 +52,7 @@ export default function TranslateTable(props) {
   };
 
   return (
-    <div style={{ height: 410, width: '100%' }}>
+    <div style={{ height: 300, width: '100%' }}>
       <DataGrid
         rows={rows}
         columns={columns}
@@ -63,7 +63,8 @@ export default function TranslateTable(props) {
           },
         }}
         pageSizeOptions={[10, 30, 50]}
-        localeText={{ noRowsLabel: "No results to display" }} />
+        localeText={{ noRowsLabel: "No results to display" }}
+        rowHeight={30}  />
     </div>
   );
 }

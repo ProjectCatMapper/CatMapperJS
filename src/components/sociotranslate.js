@@ -491,7 +491,7 @@ ExcelRenderer(fileObj, (err, resp) => {
                   ? rows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                   : rows
                 ).map((row, rowIndex) => (
-                  <TableRow key={rowIndex} className={getRowStyle(row)}>
+                  <TableRow key={rowIndex} sx={{height:"10px"}} className={getRowStyle(row)} >
                     {row.map((cell, cellIndex) => (
                       <TableCell key={cellIndex}>{cell}</TableCell>
                     ))}
