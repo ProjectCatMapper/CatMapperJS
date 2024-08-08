@@ -8,7 +8,7 @@ import { useLocation } from 'react-router-dom';
 export default function DataTable(props) {
   const columns = [
     { field: 'id', headerName: 'Index', flex: 0.3 },
-    { field: 'cmid', headerName: 'CMID',  flex: 0.5 },
+    { field: 'cmid', headerName: 'CMID',  flex: 0.9 },
     { field: 'name', headerName: 'CMName', flex: 2 },
     { field: 'label', headerName: 'Label', flex: 1 },
     { field: 'country', headerName: 'Country', flex: 2 },
