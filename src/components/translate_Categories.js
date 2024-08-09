@@ -5,7 +5,7 @@ import "./translate_Categories.css"
 
 export default function TranslateTable(props) {
   const columns = [
-    { field: 'Type', headerName: 'Type', width: 200 },
+    { field: 'Type', headerName: 'Type', width: 150 },
     { field: 'Count', headerName: 'Count', width: 100 },
   ];
   const [rows, setRows] = useState([]);
@@ -52,7 +52,7 @@ export default function TranslateTable(props) {
   };
 
   return (
-    <div style={{ height: 300, width: '100%' }}>
+    <div style={{ height: 300, width: '80%' }}>
       <DataGrid
         rows={rows}
         columns={columns}

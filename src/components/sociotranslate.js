@@ -187,8 +187,15 @@ ExcelRenderer(fileObj, (err, resp) => {
     console.log(err);            
   }
   else{
-    const columns = resp.rows[0]
-    setColumns(resp.rows[0])
+    const firstRow = resp.rows[0];
+        const columns = [];
+
+        for (let i = 0; i < firstRow.length; i++) {
+          const column = firstRow[i] === undefined || firstRow[i].trim() === '' ? `...${i + 1}` : firstRow[i];
+          columns.push(column);
+        }
+
+    setColumns(columns);
 
     const processedRows = resp.rows.slice(1).map(row => {
       const fullRow = Array(columns.length).fill(null);
@@ -204,7 +211,6 @@ ExcelRenderer(fileObj, (err, resp) => {
 
 
     setRows(filteredRows);
-    console.log(filteredRows)
 
     const table = filteredRows.map((row, index) => {
       const rowData = {};
@@ -228,8 +234,6 @@ ExcelRenderer(fileObj, (err, resp) => {
   const getRowStyle = (row) => {
     const statusIndex = columns.findIndex(col => col === 'matchType_'+zeroDropdownValue);
     const status = row[statusIndex];
-
-    console.log(status)
   
     return getClassForStatus(status);
   };
@@ -491,7 +495,7 @@ ExcelRenderer(fileObj, (err, resp) => {
                   ? rows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                   : rows
                 ).map((row, rowIndex) => (
-                  <TableRow key={rowIndex} sx={{height:"10px"}} className={getRowStyle(row)} >
+                  <TableRow key={rowIndex}  className={getRowStyle(row)} >
                     {row.map((cell, cellIndex) => (
                       <TableCell key={cellIndex}>{cell}</TableCell>
                     ))}

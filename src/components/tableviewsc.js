@@ -48,7 +48,7 @@ export default function DataTable(props) {
   // }, [rows])
 
   return (
-    <div style={{ height: 700, width: '100%' }}>
+    <div style={{ height: 650, width: '100%' }}>
       <DataGrid
         style={{ Color: "pink" }}
         rows={rows}
