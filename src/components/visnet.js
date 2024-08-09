@@ -140,7 +140,7 @@ const Neo4jVisualization = ({ visData }) => {
     setTooltipContent(null);
   };
 
-  return (<div style={{display: "Flex"}}><div id="network" style={{ height: '600px', width: "1000px" }}></div>
+  return (<div style={{display: "Flex"}}><div id="network" style={{ height: '400px', width: "1000px" }}></div>
               <div id="edge-tooltip" style={{ position: 'fixed', display: 'none', padding: '5px', backgroundColor: '#ffffff', border: '1px solid #ccc', borderRadius: '5px' }}></div>
 
               {tooltipContent && (
