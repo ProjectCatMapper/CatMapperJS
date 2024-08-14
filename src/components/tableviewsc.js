@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { DataGrid } from '@mui/x-data-grid';
 import {useNavigate} from 'react-router-dom'
 import { useLocation } from 'react-router-dom';
-
+import "./tableviewsc.css"
 
 export default function DataTable(props) {
   const columns = [
