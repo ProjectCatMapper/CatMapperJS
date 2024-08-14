@@ -312,7 +312,7 @@ ExcelRenderer(fileObj, (err, resp) => {
           label="Zero Dropdown"
           style={{height:40}}
           value={zeroDropdownValue}
-          sx={{ m: 1, width: 300 }}
+          sx={{ m: 1, width: "12vw" }}
           onChange={(event) => setZeroDropdownValue(event.target.value)}>
          {columns.map((key) => (
           <MenuItem key={key} value={key}>
@@ -327,7 +327,7 @@ ExcelRenderer(fileObj, (err, resp) => {
           label="First Dropdown"
           value={firstDropdownValue}
           style={{height:40}}
-          sx={{ m: 1, width: 300 }}
+          sx={{ m: 1, width: "12vw" }}
           onChange={(event) => setFirstDropdownValue(event.target.value)}>
          {/* {Object.keys(doptions).map((key) => (
           <MenuItem key={key} value={key}>
@@ -342,7 +342,7 @@ ExcelRenderer(fileObj, (err, resp) => {
           label="Second Dropdown"
           value={secondDropdownValue}
           style={{height:40}}
-          sx={{ m: 1, width: 300 }}
+          sx={{ m: 1, width: "12vw" }}
           onChange={(event) => setsecondDropdownValue(event.target.value)}>
           {svalues.map((key) => (
           <MenuItem key={key} value={key}>
@@ -363,7 +363,7 @@ ExcelRenderer(fileObj, (err, resp) => {
           label="Third Dropdown"
           style={{height:40}}
           value={thirdDropdownValue}
-          sx={{ m: 1, width: 300 }}
+          sx={{ m: 1, width: "12vw" }}
           onChange={(event) => setthirdDropdownValue(event.target.value)}>
           {columns.map((key) => (
           <MenuItem key={key} value={key}>
@@ -387,7 +387,7 @@ ExcelRenderer(fileObj, (err, resp) => {
           label="Fourth Dropdown"
           style={{height:40}}
           value={fourthDropdownValue}
-          sx={{ m: 1, width: 300 }}
+          sx={{ m: 1, width: "12vw" }}
           onChange={(event) => setfourthDropdownValue(event.target.value)}>
           {columns.map((key) => (
           <MenuItem key={key} value={key}>
@@ -411,7 +411,7 @@ ExcelRenderer(fileObj, (err, resp) => {
           label="Fifth Dropdown"
           style={{height:40}}
           value={fifthDropdownValue}
-          sx={{ m: 1, width: 300 }}
+          sx={{ m: 1, width: "12vw" }}
           onChange={(event) => setfifthDropdownValue(event.target.value)}>
           {columns.map((key) => (
           <MenuItem key={key} value={key}>

@@ -52,17 +52,11 @@ export default function TranslateTable(props) {
   };
 
   return (
-    <div style={{ height: 300, width: '80%' }}>
+    <div style={{ height: "30vh", width: '15vw'}}>
       <DataGrid
         rows={rows}
         columns={columns}
         getRowClassName={getRowClassName}
-        initialState={{
-          pagination: {
-            paginationModel: { page: 0, pageSize: 10 },
-          },
-        }}
-        pageSizeOptions={[10, 30, 50]}
         localeText={{ noRowsLabel: "No results to display" }}
         rowHeight={30}  />
     </div>
