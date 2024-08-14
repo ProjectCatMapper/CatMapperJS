@@ -52,13 +52,16 @@ export default function TranslateTable(props) {
   };
 
   return (
-    <div style={{ height: "30vh", width: '15vw'}}>
+    <div className="translate-table-container">
       <DataGrid
         rows={rows}
         columns={columns}
         getRowClassName={getRowClassName}
         localeText={{ noRowsLabel: "No results to display" }}
-        rowHeight={30}  />
+        rowHeight={30}
+        pagination={false}
+        hideFooter={true} 
+        />
     </div>
   );
 }

@@ -13,3 +13,41 @@
 .row-color-6 {
     background-color: #FFFFCC;
 }
+
+.translate-table-container {
+    height: 25vh;
+    width: 15vw;
+  }
+  
+  @media screen and (max-width: 1536px) {
+    .translate-table-container {
+      height: 35vh;
+      width: 20vw;
+    }
+  }
+  
+  @media screen and (max-width: 1366px) {
+    .translate-table-container {
+      height: 35vh;
+      width: 25vw;
+    }
+  }
+  
+  .MuiDataGrid-root {
+    border: none !important;
+  }
+  
+  .MuiDataGrid-main {
+    overflow: hidden !important;
+  }
+  
+  .MuiDataGrid-columnHeaders {
+    overflow: hidden !important;
+  }
+  
+  .MuiDataGrid-cell {
+    overflow: hidden !important;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  
