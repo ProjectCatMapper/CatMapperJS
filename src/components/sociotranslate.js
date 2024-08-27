@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import doptions from "./dropdown.json";
+import aoptions from "./dropdown_archamap.json";
 import {Select, MenuItem } from '@mui/material';
 import {ExcelRenderer} from 'react-excel-renderer';
 import Button from '@mui/material/Button';
@@ -18,7 +19,7 @@ import { Link } from 'react-router-dom'
 
 function Sociotranslate(){
 
-  const sections = [
+  let sections = [
     { label: 'ANY DOMAIN', keys: ['ANY DOMAIN'] },
     { label: 'AREA to PPL', keys: ['AREA', 'ADM0', 'ADM1', 'ADM2', 'ADM3', 'ADM4', 'ADMD', 'ADME', 'ADML', 'ADMX', 'PPL'] },
     { label: 'DATASET', keys: ['DATASET'] },
@@ -81,6 +82,19 @@ const [data, setData] = useState({});
 let database = "SocioMap"
 if (useLocation().pathname.includes("archamap")) {
     database = "ArchaMap"
+    sections = [
+      { label: 'ANY DOMAIN', keys: ['ANY DOMAIN'] },
+      { label: 'KINGDOM to SUBSPECIES', keys: ['KINGDOM', 'FAUNA', 'PHYLUM', 'CLASS', 'ORDER', 'FAMILY', 'GENUS', 'SPECIES', 'SUBGENUS', 'SUBSPECIES'] },
+      { label: 'FEATURE to SITE', keys: ['FEATURE', 'ADM0', 'ADM1', 'ADM2', 'ADM3', 'AREA', 'REGION', 'SITE'] },
+      { label: 'STONE', keys: ['STONE'] },
+      { label: 'CULTURE', keys: ['CULTURE'] },
+      { label: 'BOTANICAL to PHYTOLITH', keys: ['BOTANICAL', 'PHYTOLITH'] },
+      { label: 'CERAMIC to CERAMIC_WARE', keys: ['CERAMIC', 'CERAMIC_TYPE','CERAMIC_WARE'] },
+      { label: 'DATASET', keys: ['DATASET'] },
+      { label: 'PERIOD', keys: ['PERIOD'] },
+      { label: 'PROJECTILE_POINT TO PROJECTILE_POINT_TYPE', keys: ['PROJECTILE_POINT','PROJECTILE_POINT_CLUSTER','PROJECTILE_POINT_TYPE'] },
+      { label: 'VARIABLE', keys: ['VARIABLE'] }
+    ];
   } 
 
 const handleClick = async () => {
@@ -286,9 +300,15 @@ ExcelRenderer(fileObj, (err, resp) => {
   ]).filter(Boolean);
 
   useEffect(() => {
+    if (database === "SocioMap") {
     setsvalues(doptions[firstDropdownValue])
+  }
+    else{
+      setsvalues(aoptions[firstDropdownValue])
+    }
   }, [firstDropdownValue])
-  
+
+
   return (
     <Box sx={{ backgroundColor: 'black', opacity: 1,flexGrow: 1  }} >
     <div  style={{width:"26%",height:"90%", backgroundColor : '#e0e0e0', padding: '20px',border: '1px solid #ccc',borderRadius : '10px', margin: '10px', overflow:"auto",position:"absolute"}}>
