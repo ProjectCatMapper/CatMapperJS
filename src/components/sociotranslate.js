@@ -481,7 +481,7 @@ ExcelRenderer(fileObj, (err, resp) => {
     <div style={{top:100,width:"72%", height:"90%", backgroundColor:"white", padding: '20px',border: '1px solid #ccc',borderRadius : '10px', marginLeft: "27%",position:"absolute",overflow: 'auto'}}>
     {columns.length > 0 && rows.length > 0 && (
         <>
-          <TableContainer component={Paper} sx={{ width: '100%', height: '100%', overflow: 'auto' }}>
+          <TableContainer component={Paper} sx={{ width: '100%', overflow: 'auto' }}>
             <Table id="myTable">
               <TableHead>
                 <TableRow>

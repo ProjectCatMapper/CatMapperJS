@@ -1,11 +1,11 @@
 @media (max-width: 1366px) {
     .custom-row-height .MuiDataGrid-row {
-      max-height: 30px !important;
-      min-height: 30px !important; 
+      max-height: 25px !important;
+      min-height: 25px !important; 
     }
     
     .custom-row-height .MuiDataGrid-cell {
-      line-height: 30px !important; 
+      line-height: 25px !important; 
       padding: 0 !important; 
     }
   }
