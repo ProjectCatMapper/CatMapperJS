@@ -14,7 +14,7 @@
     "ADM1" : ["Name","Key","CMID"],
     "ADM2" : ["Name","Key","CMID"],
     "ADM3" : ["Name","Key","CMID"],
-    "DISTRICT" : ["Name","Key","CMID"],
+    "AREA" : ["Name","Key","CMID"],
     "REGION" : ["Name","Key","CMID"],
     "SITE" : ["Name","Key","CMID"],
     "STONE" : ["Name","Key","CMID"],

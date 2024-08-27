@@ -8,13 +8,16 @@ import Map4 from './routes/Map4';
 import Home from './routes/Home'
 import Explore from './routes/Explore'
 import Translate from './routes/Translate'
+import Archamap_Translate from './routes/Archamap_Translate'
 import UploadTranslate from './routes/UploadTranslate'
+import Archamap_UploadTranslate from './routes/Archamap_UploadTranslate'
 import Catmapper from "./routes/Catmapper";
 import Archamap from "./routes/Archamap"
 import Sociomapclick from "./routes/Sociomapclick";
 import ArchaMapclick from "./routes/ArchaMapclick";
 import Archamapexplore from "./routes/Archamapexplore";
 import Merge from "./routes/Merge";
+import Archamap_Merge from "./routes/Archamap_Merge";
 import People from "./routes/People"
 import News from "./routes/News"
 import Funding from "./routes/Funding"
@@ -54,11 +57,13 @@ function App() {
         <Route path='/sociomap/explore' element={<Explore />} />
         <Route path='/archamap/explore' element={<Archamapexplore />} />
         <Route path='/sociomap/translate' element={<Translate />} />
+        <Route path='/archamap/translate' element={<Archamap_Translate />} />
         <Route path='/sociomap/:cmid' element={<Sociomapclick />} />
         <Route path='/archamap/:cmid' element={<ArchaMapclick />} />
         <Route path='/sociomap/:cmid/:tabval' element={<Sociomapclick />} />
         <Route path='/archamap/:cmid/:tabval' element={<ArchaMapclick />} />
         <Route path='/sociomap/merge' element={<Merge />} />
+        <Route path='/archamap/merge' element={<Archamap_Merge />} />
         <Route path='/sociomap/help/api-guide' element={<Sociomap_ApiGuide />} />
         <Route path='/people' element={<People />} />
         <Route path='/news' element={<News />} />
@@ -72,6 +77,7 @@ function App() {
         <Route path='/map4' element={<Map4 />} />
         {/* <Route path="/advanced" element={<ProtectedRoute requiredLevel={1}><AdvancedPage /></ProtectedRoute>}/> */}
         <Route path="sociomap/uploadtranslate" element={<ProtectedRoute requiredLevel={1}><UploadTranslate /></ProtectedRoute>}/>
+        <Route path="archamap/uploadtranslate" element={<ProtectedRoute requiredLevel={1}><Archamap_UploadTranslate /></ProtectedRoute>}/>
         <Route path="/admin" element={<ProtectedRoute requiredLevel={2}><AdminPage /></ProtectedRoute>}/>
       </Routes>
   );

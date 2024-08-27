@@ -15,7 +15,7 @@ const video = () => {
        <p id='sociomapvideo'>ArchaMap organizes categories of material objects used in archaeology, including sites, ceramic types, lithic and projectile point types, and faunal types. Our hope in the future is to extend CatMapper’s capabilities to other classes of complex, dynamic categories.</p>
     <div>
        <Link id='sociomapvideo' to='/archamap/explore' className='btn'>Explore</Link>
-      <Link id='sociomapvideo' to='/merge' className='btn'>Translate</Link>
+      <Link id='sociomapvideo' to='/archamap/translate' className='btn'>Translate</Link>
     </div>
     </div>
     </div>
