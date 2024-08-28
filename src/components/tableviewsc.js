@@ -11,7 +11,7 @@ export default function DataTable(props) {
     { field: 'cmid', headerName: 'CMID',  flex: 0.9 },
     { field: 'name', headerName: 'CMName', flex: 2 },
     { field: 'label', headerName: 'Label', flex: 1 },
-    { field: 'country', headerName: 'Country', flex: 2 },
+    { field: 'country', headerName: 'Country', flex: 2,cellClassName: 'wrap-text-3-lines' },
     { field: 'match', headerName: 'Matching', flex: 1 },
   ];
   const [rows, setRows] = useState([]);
@@ -47,12 +47,27 @@ export default function DataTable(props) {
   //   console.log(rows)
   // }, [rows])
 
+
+  const getRowHeight = (params) => {
+    console.log(params)
+    if (!params.model) return 40; 
+    const largeTextColumns = ['label', 'country'];
+    const hasLargeText = largeTextColumns.some(column => {
+      console.log(column)
+      const text = params.model[column];
+      return text && text.toString().length > 50;
+    });
+
+    return hasLargeText ? 70 : 40;
+  };
+
   return (
     <div style={{ height: 650, width: '100%' }}>
       <DataGrid
         style={{ Color: "pink" }}
         rows={rows}
         columns={columns}
+        getRowHeight={getRowHeight}
         initialState={{
           pagination: {
             paginationModel: { page: 0, pageSize: 10 },
