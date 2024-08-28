@@ -3,6 +3,8 @@ import { Box, Tabs, Tab,  Button, Typography, TextField } from '@mui/material';
 import image from '../assets/white.png'
 import { Link } from 'react-router-dom'
 import Divider from '@mui/material/Divider';
+import Propose_Merge from "./propose_merge"
+import Download_Merge from "./download_merge_template"
 
 function TabPanel(props) {
   const { children, value, index, ...other } = props;
@@ -41,7 +43,7 @@ export default function VerticalTabs() {
   return (
     <Box sx={{ backgroundColor: 'black', opacity: 1 }}>
     <Box
-      sx={{ flexGrow: 1, bgcolor: 'background.paper', display: 'flex', height: "800px" }}
+      sx={{ flexGrow: 1, bgcolor: 'background.paper', display: 'flex', height: "85vh" }}
     >
       <Tabs
         orientation="vertical"
@@ -51,7 +53,7 @@ export default function VerticalTabs() {
         aria-label="Vertical tabs example"
         sx={{ borderRight: 1, borderColor: 'divider' }}
       >
-        <Tab label="Build Stack" {...a11yProps(0)} sx={{ alignItems: 'flex-end', justifyContent: 'center', textAlign: 'right' }} />
+        <Tab label="Build and Store Merge" {...a11yProps(0)} sx={{ alignItems: 'flex-end', justifyContent: 'center', textAlign: 'right' }} />
         <Tab label="Propose merge" {...a11yProps(1)} sx={{ alignItems: 'flex-end', justifyContent: 'center', textAlign: 'right' }} />
         <Tab label="Download merge template" {...a11yProps(2)} sx={{ alignItems: 'flex-end', justifyContent: 'center', textAlign: 'right' }} />
       </Tabs>
@@ -75,10 +77,10 @@ export default function VerticalTabs() {
       />
       </TabPanel>
       <TabPanel value={value} index={1}>
-        Propose merge
+        <Propose_Merge />
       </TabPanel>
       <TabPanel value={value} index={2}>
-        Download merge template
+      <Download_Merge />    
       </TabPanel>
     </Box>
     <Divider sx={{ marginTop: 3, marginBottom: 7, marginLeft:1,marginRight:1, backgroundColor: 'white' }} />
