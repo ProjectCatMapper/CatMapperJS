@@ -7,12 +7,30 @@ import "./tableviewsc.css"
 
 export default function DataTable(props) {
   const columns = [
+    {
+      field: 'spacer', // Dummy field for space
+      headerName: '',
+      width: 50, // Set desired width for the space
+      sortable: false,
+      filterable: false,
+      disableColumnMenu: true,
+      renderCell: () => null, // Renders an empty cell
+    },
     { field: 'id', headerName: 'Index', flex: 0.3 },
     { field: 'cmid', headerName: 'CMID',  flex: 0.9 },
     { field: 'name', headerName: 'CMName', flex: 2 },
     { field: 'label', headerName: 'Label', flex: 1 },
     { field: 'country', headerName: 'Country', flex: 2,cellClassName: (params) => params.row.hasLargeText ? 'wrap-text-3-lines_ex' : '' },
-    { field: 'match', headerName: 'Matching', flex: 1 },
+    {
+      field: 'spacer', // Dummy field for space
+      headerName: '',
+      width: 50, // Set desired width for the space
+      sortable: false,
+      filterable: false,
+      disableColumnMenu: true,
+      renderCell: () => null, // Renders an empty cell
+    },
+    { field: 'match', headerName: 'Matching', flex: 1},
   ];
   const [rows, setRows] = useState([]);
   const navigate = useNavigate();
@@ -55,7 +73,7 @@ export default function DataTable(props) {
 
 
   const getRowHeight = (params) => {
-    return params.model.hasLargeText ? 70 : 40;  };
+    return params.model.hasLargeText ? 63 : 40;  };
 
   return (
     <div style={{ height: 650, width: '100%' }}>
