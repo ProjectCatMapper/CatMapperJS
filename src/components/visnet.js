@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Network } from 'vis-network/standalone';
 import {useNavigate} from 'react-router-dom'
 
@@ -24,6 +24,7 @@ const Neo4jVisualization = ({ visData }) => {
   const uniqueArray = Array.from(uniqueMap.values());
   const [tooltipContent, setTooltipContent] = useState(null);
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
+  const tooltipRef = useRef(null);
 
   useEffect(() => {
     const currentid = visData["nodes"][0].CMID
@@ -137,7 +138,16 @@ const Neo4jVisualization = ({ visData }) => {
       tooltipElement.style.display = 'none';
   });
 
+  const handleClickOutside = (event) => {
+    if (tooltipRef.current && !tooltipRef.current.contains(event.target)) {
+      setTooltipContent(null); // Close tooltip if clicked outside
+    }
+  };
+
+  document.addEventListener('mousedown', handleClickOutside);
+
     return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
       network.destroy();
     };
   }, [visData]);
@@ -151,6 +161,7 @@ const Neo4jVisualization = ({ visData }) => {
 
               {tooltipContent && (
         <div
+        ref={tooltipRef}
           style={{
             position: 'absolute',
             left: tooltipPosition.x,
