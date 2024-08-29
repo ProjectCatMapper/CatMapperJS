@@ -11,7 +11,7 @@ export default function DataTable(props) {
     { field: 'cmid', headerName: 'CMID',  flex: 0.9 },
     { field: 'name', headerName: 'CMName', flex: 2 },
     { field: 'label', headerName: 'Label', flex: 1 },
-    { field: 'country', headerName: 'Country', flex: 2,cellClassName: 'wrap-text-3-lines' },
+    { field: 'country', headerName: 'Country', flex: 2,cellClassName: (params) => params.row.hasLargeText ? 'wrap-text-3-lines_ex' : '' },
     { field: 'match', headerName: 'Matching', flex: 1 },
   ];
   const [rows, setRows] = useState([]);
@@ -32,13 +32,19 @@ export default function DataTable(props) {
 
   React.useEffect(() => {
     setRows(props.users.map((value, key) => {
+      const hasLargeText = ['country'].some(column => {
+        const text = value[column];
+        return text && text.toString().length > 50;
+      });
+
       return {
         id: key + 1,
         cmid: value.CMID,
         name: value.CMName,
         label: value.domain,
         country: value.country,
-        match: value.matching
+        match: value.matching,
+        hasLargeText
       }
     }))
   }, [props.users])
@@ -49,22 +55,12 @@ export default function DataTable(props) {
 
 
   const getRowHeight = (params) => {
-    console.log(params)
-    if (!params.model) return 40; 
-    const largeTextColumns = ['label', 'country'];
-    const hasLargeText = largeTextColumns.some(column => {
-      console.log(column)
-      const text = params.model[column];
-      return text && text.toString().length > 50;
-    });
-
-    return hasLargeText ? 70 : 40;
-  };
+    return params.model.hasLargeText ? 70 : 40;  };
 
   return (
     <div style={{ height: 650, width: '100%' }}>
       <DataGrid
-        style={{ Color: "pink" }}
+        className="custom-row-height"
         rows={rows}
         columns={columns}
         getRowHeight={getRowHeight}
