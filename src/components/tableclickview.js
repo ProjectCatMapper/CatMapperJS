@@ -5,13 +5,13 @@ import './tableclickview.css'
 
 export default function ClickTable(props) {
   const ccolumns = [
-    { field: 'name', headerName: 'Name',flex: 2,cellClassName: 'wrap-text-3-lines'},
-    { field: 'location', headerName: 'Location',flex: 1,cellClassName: 'wrap-text-3-lines' },
+    { field: 'name', headerName: 'Name',flex: 2,cellClassName: (params) => params.row.hasLarge ? 'wrap-text-3-lines_dt' : ''},
+    { field: 'location', headerName: 'Location',flex: 1,cellClassName: (params) => params.row.hasLarge ? 'wrap-text-3-lines_dt' : ''},
     { field: 'timespan', headerName: 'Time span',flex: 0.3 },
-    { field: 'popest', headerName: 'Population est.',flex: 0.3 },
+    { field: 'popest', headerName: 'Population est.',flex: 0.35 },
     { field: 'samplesize', headerName: 'Sample size',flex: 0.3},
     { field: 'source', headerName: 'Source',flex: 0.8,  renderCell: (params1) =>{ return <a id='viewlink' href={params1.row.link2} target="_blank" rel="noopener noreferrer">{params1.row.source}</a>}, },
-    { field: 'version', headerName: 'Version',flex: 0.5, },
+    { field: 'version', headerName: 'Version',flex: 0.7,cellClassName: (params) => params.row.hasLarge ? 'wrap-text-3-lines_dt' : '' },
     { field: 'link', headerName: 'Link', flex: 0.4, renderCell: (params) =>{if (params.row.link) {return <a id='viewlink' href={params.row.link} target="_blank" rel="noopener noreferrer">{"View"}</a>;}}, },
   ];
   const [rows, setRows] = useState([]);
@@ -21,6 +21,13 @@ export default function ClickTable(props) {
   
   useEffect(() => {
     setRows(props.usert.map((value, key) => {
+      const hasLarge = ['Name','Location','Version'].some(column => {
+        console.log(value)
+        const text = value[column];
+        return text && text.toString().length > 30;
+      });
+      console.log(hasLarge)
+
       return {
         id: key + 1,
         name: value.Name,
@@ -31,7 +38,8 @@ export default function ClickTable(props) {
         source: value.Source,
         version: value.Version,
         link: value.Link,
-        link2:value.link2
+        link2:value.link2,
+        hasLarge
       }
     }))
   },[props.usert])
@@ -45,21 +53,14 @@ export default function ClickTable(props) {
 //   }, [])
 
 const getRowHeight = (params) => {
-  console.log(params)
-  if (!params.model) return 40; 
-  const largeTextColumns = ['label', 'country'];
-  const hasLargeText = largeTextColumns.some(column => {
-    console.log(column)
-    const text = params.model[column];
-    return text && text.toString().length > 50;
-  });
+  return params.model.hasLarge ? 70 : 40;
 
-  return hasLargeText ? 70 : 40;
 };
 
   return (
     <div style={{ marginLeft:"2vw",height: 600, width: "90vw" }}>
       <DataGrid
+        className="custom-row-height"
         rows={rows}
         getRowHeight={getRowHeight}
         columns={nonEmptyColumns}
