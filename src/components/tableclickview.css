@@ -15,6 +15,14 @@ max-height: 4.5em !important; /* Limits the max height of the cell to 3 lines */
 line-height: 1.5em !important; 
 }
 
+.timespan_text {
+  word-wrap: break-word !important; /* Breaks long words */
+  word-break: break-word !important; /* Breaks text at any point if needed */
+  white-space: normal !important; /* Allows wrapping */
+  overflow-wrap: break-word !important; /* Prevents overflow */
+}
+
+
 .custom-row-height .MuiDataGrid-cell {
   display: flex;
   align-items: center;

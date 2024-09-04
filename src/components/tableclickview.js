@@ -5,23 +5,23 @@ import './tableclickview.css'
 
 export default function ClickTable(props) {
   const ccolumns = [
-    { field: 'name', headerName: 'Name',flex: 2,cellClassName: (params) => params.row.hasLarge ? 'wrap-text-3-lines_dt' : ''},
+    { field: 'name', headerName: 'Name',flex: 1.3,cellClassName: (params) => params.row.hasLarge ? 'wrap-text-3-lines_dt' : ''},
     {
       field: 'spacer', // Dummy field for space
       headerName: '',
-      width: 50, // Set desired width for the space
+      width: 20, // Set desired width for the space
       sortable: false,
       filterable: false,
       disableColumnMenu: true,
       renderCell: () => null, // Renders an empty cell
     },
-    { field: 'location', headerName: 'Location',flex: 1,cellClassName: (params) => params.row.hasLarge ? 'wrap-text-3-lines_dt' : ''},
-    { field: 'timespan', headerName: 'Time span',flex: 0.3,headerClassName: 'wrap-header_data' },
-    { field: 'popest', headerName: 'Population est.',flex: 0.35,headerClassName: 'wrap-header_data' },
-    { field: 'samplesize', headerName: 'Sample size',flex: 0.3,headerClassName: 'wrap-header_data'},
-    { field: 'source', headerName: 'Source',flex: 0.8,  renderCell: (params1) =>{ return <a id='viewlink' href={params1.row.link2} target="_blank" rel="noopener noreferrer">{params1.row.source}</a>}, },
-    { field: 'version', headerName: 'Version',flex: 0.7,cellClassName: (params) => params.row.hasLarge ? 'wrap-text-3-lines_dt' : '' },
-    { field: 'link', headerName: 'Link', flex: 0.4, renderCell: (params) =>{if (params.row.link) {return <a id='viewlink' href={params.row.link} target="_blank" rel="noopener noreferrer">{"View"}</a>;}}, },
+    { field: 'location', headerName: 'Location',flex: 1.3,cellClassName: (params) => params.row.hasLarge ? 'wrap-text-3-lines_dt' : ''},
+    { field: 'timespan', headerName: 'Time span',flex: 0.45,headerClassName: 'wrap-header_data',cellClassName: 'timespan_text',renderCell: (params) => (<div style={{ paddingLeft: '5px' }}>{params.value}</div>), },
+    { field: 'popest', headerName: 'Pop. est.',flex: 0.4,headerClassName: 'wrap-header_data',renderCell: (params) => (<div style={{ paddingLeft: '5px' }}>{params.value}</div>), },
+    { field: 'samplesize', headerName: 'Sample size',flex: 0.37,headerClassName: 'wrap-header_data',renderCell: (params) => (<div style={{ paddingLeft: '5px' }}>{params.value}</div>),},
+    { field: 'source', headerName: 'Source',flex: 0.83,  renderCell: (params1) =>{ return <a id='viewlink' href={params1.row.link2} target="_blank" rel="noopener noreferrer">{params1.row.source}</a>}, },
+    { field: 'version', headerName: 'Version',flex: 0.7,cellClassName: (params) => params.value && params.value.length > 10 ? 'wrap-text-3-lines_dt' : '',renderCell: (params) => (<div style={{ paddingLeft: '10px' }}>{params.value}</div>), },
+    { field: 'link', headerName: 'Link', flex: 0.4, renderCell: (params) =>{if (params.row.link) {return <a id='viewlink' href={params.row.link} target="_blank" style={{ paddingLeft: '10px' }} rel="noopener noreferrer">{"View"}</a>;}}, },
   ];
   const [rows, setRows] = useState([]);
   let nonEmptyColumns = []
@@ -33,7 +33,7 @@ export default function ClickTable(props) {
       const hasLarge = ['Name','Location','Version'].some(column => {
         console.log(value)
         const text = value[column];
-        return text && text.toString().length > 30;
+        return text && text.toString().length > 35;
       });
       console.log(hasLarge)
 
@@ -73,6 +73,7 @@ const getRowHeight = (params) => {
           .wrap-header_data .MuiDataGrid-columnHeaderTitle {
             white-space: normal; /* Allow wrapping of the header text */
             overflow-wrap: break-word; /* Ensures long words break properly */
+            word-break: normal !important; /* Breaks text at any point if needed */
             line-height: 1; /* Reduces spacing between lines */
             transition: none; /* Prevents any animation or transition effects */
           }
