@@ -58,7 +58,7 @@ export default function TranslateTable(props) {
         columns={columns}
         getRowClassName={getRowClassName}
         localeText={{ noRowsLabel: "No results to display" }}
-        rowHeight={30}
+        rowHeight={25}
         pagination={false}
         hideFooter={true} 
         />
