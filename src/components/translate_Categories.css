@@ -17,19 +17,22 @@
 .translate-table-container {
     height: 25vh;
     width: 15vw;
+    overflow: hidden;
   }
   
   @media screen and (max-width: 1536px) {
     .translate-table-container {
-      height: 35vh;
-      width: 20vw;
+      height: 25vh;
+      width: 15vw;
+      overflow: hidden;
     }
   }
   
   @media screen and (max-width: 1366px) {
     .translate-table-container {
-      height: 35vh;
+      height: 40vh;
       width: 25vw;
+      overflow: hidden
     }
   }
   

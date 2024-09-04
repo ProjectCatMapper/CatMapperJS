@@ -298,7 +298,7 @@ export default function Searchbar() {
         type="text"
         id="myInput"
         value={tvalue}
-        style={{marginTop :22,marginLeft:"1%",width:700,height:45}}
+        style={{marginTop :22,marginLeft:"1%",width:"30vw",height:45}}
         onChange={(event) => { settvalue(event.target.value) }}
         onKeyDown={(event) => { if (event.key === 'Enter') {isChecked ? handleClick(tvalue, advdomainDrop.trim()) : handleClick(tvalue, domainDrop.trim()) } }}
       />
