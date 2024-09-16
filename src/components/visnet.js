@@ -61,7 +61,16 @@ const Neo4jVisualization = ({ visData }) => {
         singleClickTimer = setTimeout(() => {
            if (params.nodes.length > 0 && params.nodes[0].length > -1) {
           let tooltipContent = visData.nodes.find(obj => obj.id === params.nodes[0]).tooltipcon.filter(item => item !== 'SocioMapID' && item !== 'SocioMapName');
-          tooltipContent = tooltipContent.filter(item => !['SocioMapID', 'SocioMapName'].includes(item.split(':')[0].trim()));
+          const cmItems = tooltipContent.filter(item => ['CMID', 'CMName'].includes(item.split(':')[0].trim()));
+          const logItems = tooltipContent
+            .filter(item => item.toLowerCase().includes('log'))
+              .slice(0, 3);
+              tooltipContent = tooltipContent.filter(item =>
+                  !['CMID', 'CMName'].includes(item.split(':')[0].trim()) &&  !item.toLowerCase().includes('log'));
+                  
+          tooltipContent = [...cmItems, ...tooltipContent, ...logItems];
+
+          // tooltipContent = tooltipContent.filter(item => !['SocioMapID', 'SocioMapName'].includes(item.split(':')[0].trim()));
           console.log(tooltipContent)
           setTooltipContent(tooltipContent.map((item, index) => <span key={index}>{item}<br /></span>));
           setTooltipPosition({ x: params.pointer.DOM.x, y: params.pointer.DOM.y });
@@ -110,8 +119,20 @@ const Neo4jVisualization = ({ visData }) => {
           {
             const { from, to, color, id, ...rest } = edge;
             tooltipText = Object.entries(rest)
-              .map(([key, value]) => `${key}: ${value}`)
-              .join(' <br> ');
+  .reduce((acc, [key, value]) => {
+    if (key === 'Name' || key === 'Key') {
+      acc.top.push(`${key}: ${value}`);
+    }
+    else if (key.toLowerCase().includes('log')) {
+      if (acc.bottom.length < 3) acc.bottom.push(`${key}: ${value}`);
+    }
+    else {
+      acc.middle.push(`${key}: ${value}`);
+    }
+    return acc;
+  }, { top: [], middle: [], bottom: [] });
+
+tooltipText = [...tooltipText.top, ...tooltipText.middle, ...tooltipText.bottom].join(' <br> ');
             break;
           }
         case 'DISTRICT_OF':
@@ -140,7 +161,7 @@ const Neo4jVisualization = ({ visData }) => {
 
   const handleClickOutside = (event) => {
     if (tooltipRef.current && !tooltipRef.current.contains(event.target)) {
-      setTooltipContent(null); // Close tooltip if clicked outside
+      setTooltipContent(null);
     }
   };
 
