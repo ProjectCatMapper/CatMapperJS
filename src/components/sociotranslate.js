@@ -132,7 +132,6 @@ const handleClick = async () => {
     }
 
     const responseData = await response.json();
-    console.log(responseData)
     setData(responseData);
     // data.sort((a, b) => a.term.localeCompare(b.term));
     setColumns(Object.keys(responseData[0]))
@@ -247,7 +246,7 @@ ExcelRenderer(fileObj, (err, resp) => {
 
   const getRowStyle = (row) => {
     const statusIndex = columns.findIndex(col => col === 'matchType_'+zeroDropdownValue);
-    const status = row[statusIndex];
+    const status = row['matchType_'+zeroDropdownValue];
   
     return getClassForStatus(status);
   };
@@ -257,6 +256,7 @@ ExcelRenderer(fileObj, (err, resp) => {
     if (status === undefined) {
       return 'color-undefined';
     }
+    console.log(status)
     status = status.trim();
 
     switch (status) {
