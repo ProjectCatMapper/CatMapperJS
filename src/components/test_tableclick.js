@@ -186,8 +186,8 @@ export default function Tableclick(props) {
   }
   
   useEffect(() => {
-    // fetch("https://catmapper.org/api/category?cmid=" + props.cmid.cmid + "&database="+ database,
-        fetch("http://127.0.0.1:5001/category?cmid=" + props.cmid.cmid + "&database="+ database,
+    fetch("https://catmapper.org/api/category?cmid=" + props.cmid.cmid + "&database="+ database,
+        // fetch("http://127.0.0.1:5001/category?cmid=" + props.cmid.cmid + "&database="+ database,
             {
                 method: "GET"
             })
