@@ -6,6 +6,7 @@ import doptions from "./dropdown.json";
 import Tooltip from '@mui/material/Tooltip';
 import InfoIcon from '@mui/icons-material/Info';
 import { useAuth } from './AuthContext';
+import { Dialog, DialogContent } from '@mui/material';
 
 const UploadTranslat = () => {
 
@@ -19,9 +20,10 @@ const UploadTranslat = () => {
   const [viewUploadedData, setViewUploadedData] = useState(false);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10); 
+  const [jsonData, setJsondata] = useState();
   const [formData, setFormData] = useState({
     domain: '',
-    datasetCMID: '',
+    datasetID: '',
     cmNameColumn: '',
     categoryNamesColumn: '',
     alternateCategoryNamesColumn: '',
@@ -53,6 +55,15 @@ ExcelRenderer(fileObj, (err, resp) => {
     setNodeCount(resp.rows.length)
     setColumns(resp.rows[0])
     setRows(resp.rows.slice(1));
+    const table = rows.map((row, index) => {
+      const rowData = {};
+      columns.forEach((column, columnIndex) => {
+        rowData[column] = row[columnIndex];
+      });
+      rowData['key'] = index + 1;
+      return rowData;
+    });
+    setJsondata(table)
     setViewUploadedData(true);
     setShowFields(true);
   }
@@ -65,7 +76,9 @@ ExcelRenderer(fileObj, (err, resp) => {
   };
 
   const handleChange = (e) => {
+    console.log(e.target)
     const { name, value } = e.target;
+    console.log(name)
     setFormData((prevState) => ({
       ...prevState,
       [name]: value,
@@ -74,19 +87,36 @@ ExcelRenderer(fileObj, (err, resp) => {
 
   const handleSubmit = async () => {
     try {
-      const response = await fetch('YOUR_API_ENDPOINT', {
+      // const response = await fetch("https://catmapper.org/api/uploadInputNodes",{
+        const response = await fetch("http://127.0.0.1:5001/uploadInputNodes", {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          formData : formData,
+          database : "sociomap",
+          df : jsonData,
+          so : selectedOption,
+          ao: advselectedOption,
+          addoptions: addiColumns,
+          user : localStorage.getItem("userid")
+        }),
       });
 
       const result = await response.json();
-      setCMIDText("The new and created CMID is 007. Save it for further reference.");
+      setCMIDText(result);
+      setPopen(true);
+
     } catch (error) {
       console.error('Error submitting form:', error);
     }
+  };
+
+  const [popen, setPopen] = useState(false);
+
+  const handlePclose = () => {
+    setPopen(false);
   };
 
   const handleclear = () => {
@@ -142,6 +172,7 @@ ExcelRenderer(fileObj, (err, resp) => {
     label: false,
     datasetID: false,
   });
+  
 
   const [missingColumns, setMissingColumns] = useState([]);
 
@@ -301,8 +332,8 @@ ExcelRenderer(fileObj, (err, resp) => {
           <Box sx={{ mb: 2 }}>
           <InputLabel id="domain-label" style={{color:"black "}}>Enter the <strong>Dataset CMID</strong></InputLabel>
           <TextField
-            name="datasetCMID"
-            value={formData.datasetCMID}
+            name="datasetID"
+            value={formData.datasetID}
             onChange={handleChange}
             sx={{width: 300,height:40 }}
             variant="outlined"
@@ -316,8 +347,8 @@ ExcelRenderer(fileObj, (err, resp) => {
           <Select
             labelId="domain-label"
             id="domain"
-            name="domain"
-            value={formData.domain}
+            name="cmNameColumn"
+            value={formData.cmNameColumn}
             onChange={handleChange}
             sx={{width: 300,height:40 }}
             margin="normal"
@@ -336,8 +367,8 @@ ExcelRenderer(fileObj, (err, resp) => {
           <Select
             labelId="domain-label"
             id="domain"
-            name="domain"
-            value={formData.domain}
+            name="categoryNamesColumn"
+            value={formData.categoryNamesColumn}
             onChange={handleChange}
             sx={{width: 300,height:40 }}
             margin="normal"
@@ -356,8 +387,8 @@ ExcelRenderer(fileObj, (err, resp) => {
           <Select
             labelId="domain-label"
             id="domain"
-            name="domain"
-            value={formData.domain}
+            name="alternateCategoryNamesColumn"
+            value={formData.alternateCategoryNamesColumn}
             onChange={handleChange}
             sx={{width: 300,height:40 }}
             margin="normal"
@@ -376,8 +407,8 @@ ExcelRenderer(fileObj, (err, resp) => {
           <Select
             labelId="domain-label"
             id="domain"
-            name="domain"
-            value={formData.domain}
+            name="cmidColumn"
+            value={formData.cmidColumn}
             onChange={handleChange}
             sx={{width: 300,height:40 }}
             margin="normal"
@@ -396,8 +427,8 @@ ExcelRenderer(fileObj, (err, resp) => {
           <Select
             labelId="domain-label"
             id="domain"
-            name="domain"
-            value={formData.domain}
+            name="keyColumn"
+            value={formData.keyColumn}
             onChange={handleChange}
             sx={{width: 300,height:40 }}
             margin="normal"
@@ -452,12 +483,12 @@ ExcelRenderer(fileObj, (err, resp) => {
       <FormGroup>
         <FormControlLabel
           value="district"
-          control={<Checkbox checked={selectedColumns.CMName} onChange={handleCheckboxChange} name="district" />}
+          control={<Checkbox checked={addiColumns.district} onChange={handleCheckboxChange} name="district" />}
           label="area"
         />
         <FormControlLabel
           value="recordyear"
-          control={<Checkbox checked={selectedColumns.Name} onChange={handleCheckboxChange} name="recodyear" />}
+          control={<Checkbox checked={addiColumns.recordyear} onChange={handleCheckboxChange} name="recordyear" />}
           label="record year"
         />
       </FormGroup>
@@ -475,6 +506,11 @@ ExcelRenderer(fileObj, (err, resp) => {
         UPLOAD
       </Button>
       <DatasetForm open={open} handleClose={handleClose} />
+      <Dialog open={popen} onClose={handlePclose}>
+        <DialogContent>
+          <p>{CMIDText}</p>
+        </DialogContent>
+      </Dialog>
     </Box>
   );
 }
