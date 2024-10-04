@@ -167,18 +167,11 @@ ExcelRenderer(fileObj, (err, resp) => {
     </div>
   );
 
-  const [selectedColumns, setSelectedColumns] = useState({
-    CMName: false,
-    Name: false,
-    Key: false,
-    label: false,
-    datasetID: false,
-  });
-  
+  const [selectedColumns, setSelectedColumns] = useState({});
   const [missingColumns, setMissingColumns] = useState([]);
   const [extraColumns, setExtraColumns] = useState([]);
-  const [requiredColumns, setRequiredColumns] = useState([]);
   const [selectedExtraColumn, setSelectedExtraColumn] = useState('');
+  const [allRequiredColumnsFound, setAllRequiredColumnsFound] = useState(false);
 
   const allowedExtraColumns = [
     'altName', 'ApplicableYears', 'categoryType', 'CMID', 'CMName', 'country', 
@@ -195,6 +188,11 @@ ExcelRenderer(fileObj, (err, resp) => {
   ];
 
   useEffect(() => {
+    setSelectedColumns({});
+    setMissingColumns([]);
+    setExtraColumns([]);
+    setAllRequiredColumnsFound(false);
+
     let required = [];
 
   switch (advselectedOption) {
@@ -212,12 +210,11 @@ ExcelRenderer(fileObj, (err, resp) => {
       required = [];
   }
 
-  setRequiredColumns(required);
 
   const foundColumns = [];
   const notFoundColumns = [];
 
-  requiredColumns.forEach((column) => {
+  required.forEach((column) => {
     if (columns.includes(column)) {
       foundColumns.push(column);
     } else {
@@ -225,7 +222,10 @@ ExcelRenderer(fileObj, (err, resp) => {
     }
   });
 
-  if (['add_uses', 'update_add','update_replace'].includes(advselectedOption)) {
+  setMissingColumns(notFoundColumns);
+  setAllRequiredColumnsFound(notFoundColumns.length === 0);
+
+  if (['add_node','add_uses', 'update_add','update_replace'].includes(advselectedOption)) {
     const extraCols = columns
       .filter((col) => !required.includes(col))
       .filter((col) => allowedExtraColumns.includes(col)); 
@@ -234,14 +234,12 @@ ExcelRenderer(fileObj, (err, resp) => {
     setExtraColumns([]);
   }
 
-
   const selectedColumns = required.reduce((acc, column) => {
     acc[column] = foundColumns.includes(column);
     return acc;
   }, {});
 
   setSelectedColumns(selectedColumns);
-  setMissingColumns(notFoundColumns);
 }, [columns, advselectedOption]);
 
   const [addiColumns, setaddiColumns] = useState({
@@ -533,7 +531,7 @@ ExcelRenderer(fileObj, (err, resp) => {
       </FormGroup>
     </FormControl>
     <br />
-    {['add_uses', 'update_add'].includes(advselectedOption) && extraColumns.length > 0 && (
+    {["add_node",'add_uses', 'update_add'].includes(advselectedOption) && extraColumns.length > 0 && allRequiredColumnsFound && (
       <div>
       <h4 style={{ color: 'black', padding: "2px" }}>Choose columns to enter as properties:</h4>
         <Select
@@ -551,7 +549,7 @@ ExcelRenderer(fileObj, (err, resp) => {
         </div>
       )}
     <br />
-    {advselectedOption === 'update_replace' && extraColumns.length > 0 && (
+    {advselectedOption === 'update_replace' && extraColumns.length > 0 && allRequiredColumnsFound && (
       <div>
         <h4 style={{ color: 'black', padding: "2px" }}>Choose column to replace property:</h4>
         <br />
@@ -569,7 +567,6 @@ ExcelRenderer(fileObj, (err, resp) => {
         </div>
       )}
       <br />
-    {console.log(extraColumns)}
     <FormControl component="fieldset" sx={{ mb: 2 }}>
     <h4 style={{ color: 'black', padding: "2px" }}>Add from Dataset Properties:</h4>
       <FormGroup>
