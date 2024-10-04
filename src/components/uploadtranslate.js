@@ -21,6 +21,7 @@ const UploadTranslat = () => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10); 
   const [jsonData, setJsondata] = useState();
+  const [linkContext, setLinkContext] = useState([]);
   const [formData, setFormData] = useState({
     domain: '',
     datasetID: '',
@@ -100,7 +101,8 @@ ExcelRenderer(fileObj, (err, resp) => {
           so : selectedOption,
           ao: advselectedOption,
           addoptions: addiColumns,
-          user : localStorage.getItem("userid")
+          user : localStorage.getItem("userid"),
+          linkContext : linkContext
         }),
       });
 
@@ -173,31 +175,74 @@ ExcelRenderer(fileObj, (err, resp) => {
     datasetID: false,
   });
   
-
   const [missingColumns, setMissingColumns] = useState([]);
+  const [extraColumns, setExtraColumns] = useState([]);
+  const [requiredColumns, setRequiredColumns] = useState([]);
+  const [selectedExtraColumn, setSelectedExtraColumn] = useState('');
+
+  const allowedExtraColumns = [
+    'altName', 'ApplicableYears', 'categoryType', 'CMID', 'CMName', 'country', 
+    'Dataset', 'DatasetCitation', 'DatasetLocation', 'DatasetScope', 
+    'DatasetVersion', 'dateEnd', 'dateStart', 'descriptor', 'district', 
+    'District', 'eventDate', 'eventType', 'FIPS', 'geoCoords', 'geoPolygon', 
+    'glottocode', 'ignoreNames', 'ISO2', 'ISO3', 'ISONumeric', 'Key', 'label', 
+    'language', 'latitude', 'log', 'longitude', 'Name', 'Note', 'parent', 
+    'parentContext', 'populationEstimate', 'project', 'propertyValues', 
+    'rawDate', 'recordEnd', 'recordStart', 'religion', 'Rfunction', 'role', 
+    'Rtransform', 'sampleSize', 'shortName', 'Subdistrict', 'Subnational', 
+    'text', 'transform', 'Unit', 'url', 'variableDescription', 'yearEnd', 
+    'yearStart'
+  ];
 
   useEffect(() => {
-    const requiredColumns = ['CMName', 'Name', 'Key', 'label', 'datasetID'];
-    const foundColumns = [];
-    const notFoundColumns = [];
+    let required = [];
 
-    requiredColumns.forEach((column) => {
-      if (columns.includes(column)) {
-        foundColumns.push(column);
-      } else {
-        notFoundColumns.push(column);
-      }
-    });
+  switch (advselectedOption) {
+    case 'add_node':
+      required = ['CMName', 'Name', 'Key', 'label', 'datasetID'];
+      break;
+    case 'add_uses':
+      required = ['CMID', 'Name', 'Key', 'label', 'datasetID'];
+      break;
+    case 'update_add':
+    case 'update_replace':
+      required = ['CMID', 'Key', 'datasetID'];
+      break;
+    default:
+      required = [];
+  }
 
-    setSelectedColumns({
-      CMName: foundColumns.includes('CMName'),
-      Name: foundColumns.includes('Name'),
-      Key: foundColumns.includes('Key'),
-      label: foundColumns.includes('label'),
-      datasetID: foundColumns.includes('datasetID'),
-    });
-    setMissingColumns(notFoundColumns);
-  }, [columns]);
+  setRequiredColumns(required);
+
+  const foundColumns = [];
+  const notFoundColumns = [];
+
+  requiredColumns.forEach((column) => {
+    if (columns.includes(column)) {
+      foundColumns.push(column);
+    } else {
+      notFoundColumns.push(column);
+    }
+  });
+
+  if (['add_uses', 'update_add','update_replace'].includes(advselectedOption)) {
+    const extraCols = columns
+      .filter((col) => !required.includes(col))
+      .filter((col) => allowedExtraColumns.includes(col)); 
+    setExtraColumns(extraCols);
+  } else {
+    setExtraColumns([]);
+  }
+
+
+  const selectedColumns = required.reduce((acc, column) => {
+    acc[column] = foundColumns.includes(column);
+    return acc;
+  }, {});
+
+  setSelectedColumns(selectedColumns);
+  setMissingColumns(notFoundColumns);
+}, [columns, advselectedOption]);
 
   const [addiColumns, setaddiColumns] = useState({
     district: false,
@@ -222,6 +267,16 @@ ExcelRenderer(fileObj, (err, resp) => {
     const handleChangeRowsPerPage = (event) => {
       setRowsPerPage(parseInt(event.target.value, 10));
       setPage(0);
+    };
+
+    const handleExtraColumnsChange = (event) => {
+      setExtraColumns(event.target.value);
+      setLinkContext(extraColumns)
+    };
+
+    const handleSingleExtraColumnChange = (event) => {
+      setSelectedExtraColumn(event.target.value);
+      setLinkContext(selectedExtraColumn)
     };
 
   return (
@@ -478,6 +533,43 @@ ExcelRenderer(fileObj, (err, resp) => {
       </FormGroup>
     </FormControl>
     <br />
+    {['add_uses', 'update_add'].includes(advselectedOption) && extraColumns.length > 0 && (
+      <div>
+      <h4 style={{ color: 'black', padding: "2px" }}>Choose columns to enter as properties:</h4>
+        <Select
+          multiple
+          value={extraColumns}
+          onChange={handleExtraColumnsChange}
+          renderValue={(selected) => selected.join(', ')}
+        >
+          {extraColumns.map((col) => (
+            <MenuItem key={col} value={col}>
+              {col}
+            </MenuItem>
+          ))}
+        </Select>
+        </div>
+      )}
+    <br />
+    {advselectedOption === 'update_replace' && extraColumns.length > 0 && (
+      <div>
+        <h4 style={{ color: 'black', padding: "2px" }}>Choose column to replace property:</h4>
+        <br />
+        <Select
+          value={selectedExtraColumn}
+          onChange={handleSingleExtraColumnChange}
+          style={{width:"7vw"}}
+        >
+          {extraColumns.map((col) => (
+            <MenuItem key={col} value={col}>
+              {col}
+            </MenuItem>
+          ))}
+        </Select>
+        </div>
+      )}
+      <br />
+    {console.log(extraColumns)}
     <FormControl component="fieldset" sx={{ mb: 2 }}>
     <h4 style={{ color: 'black', padding: "2px" }}>Add from Dataset Properties:</h4>
       <FormGroup>
