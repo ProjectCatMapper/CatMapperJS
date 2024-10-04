@@ -195,6 +195,7 @@ export default function Tableclick(props) {
                 return response.json()
             })
             .then(data => {
+              console.log(data)
                 setUsert(data.samples)
                 setCategories(data.categories)
                 setMapt(data.polygons)
