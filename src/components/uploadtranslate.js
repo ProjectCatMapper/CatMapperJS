@@ -20,7 +20,7 @@ const UploadTranslat = () => {
   const [viewUploadedData, setViewUploadedData] = useState(false);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10); 
-  const [jsonData, setJsondata] = useState();
+  const [jsonData, setJsondata] = useState([]);
   const [linkContext, setLinkContext] = useState([]);
   const [formData, setFormData] = useState({
     domain: '',
@@ -42,39 +42,95 @@ const UploadTranslat = () => {
     setOpen(false);
   };
 
-  const handleFileChange = (e) => {
-    const fileType = e.target.files[0].type;
-      if (fileType === 'application/vnd.ms-excel' || fileType === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') {
-        setFile(e.target.files[0]);
-        fileObj = e.target.files[0];
+//   const handleFileChange = (e) => {
+//     const fileType = e.target.files[0].type;
+//       if (fileType === 'application/vnd.ms-excel' || fileType === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') {
+//         setFile(e.target.files[0]);
+//         fileObj = e.target.files[0];
 
-ExcelRenderer(fileObj, (err, resp) => {
-  if(err){
-    console.log(err);            
-  }
-  else{
-    setNodeCount(resp.rows.length)
-    setColumns(resp.rows[0])
-    setRows(resp.rows.slice(1));
-    const table = rows.map((row, index) => {
-      const rowData = {};
-      columns.forEach((column, columnIndex) => {
-        rowData[column] = row[columnIndex];
-      });
-      rowData['key'] = index + 1;
-      return rowData;
-    });
-    setJsondata(table)
-    setViewUploadedData(true);
-    setShowFields(true);
-  }
-});  
-      } else {
-        alert('Please upload a valid CSV or XLSX file.');
-        e.target.value = null;
-        setFile(null);
+// ExcelRenderer(fileObj, (err, resp) => {
+//   if(err){
+//     console.log(err);            
+//   }
+//   else{
+//     setNodeCount(resp.rows.length)
+//     setColumns(resp.rows[0])
+//     setRows(resp.rows.slice(1));
+//     const table = rows.map((row, index) => {
+//       const rowData = {};
+//       columns.forEach((column, columnIndex) => {
+//         rowData[column] = row[columnIndex];
+//       });
+//       rowData['key'] = index + 1;
+//       return rowData;
+//     });
+//     console.log(table)
+//     setJsondata(table)
+//     setViewUploadedData(true);
+//     setShowFields(true);
+//   }
+// });  
+//       } else {
+//         alert('Please upload a valid CSV or XLSX file.');
+//         e.target.value = null;
+//         setFile(null);
+//       }
+//   };
+
+const handleFileChange = async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const fileType = file.type;
+  if (
+      fileType === 'application/vnd.ms-excel' || 
+      fileType === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+  ) {
+      setFile(file);
+      const fileObj = file;
+
+      try {
+          const resp = await new Promise((resolve, reject) => {
+              ExcelRenderer(fileObj, (err, resp) => {
+                  if (err) {
+                      reject(err);
+                  } else {
+                      resolve(resp);
+                  }
+              });
+          });
+
+          setNodeCount(resp.rows.length);
+          setColumns(resp.rows[0]);
+          setRows(resp.rows.slice(1));
+
+          const table = resp.rows.slice(1).map((row, index) => {
+              const rowData = {};
+              resp.rows[0].forEach((column, columnIndex) => {
+                  rowData[column] = row[columnIndex];
+              });
+              rowData['key'] = index + 1;
+              return rowData;
+          });
+
+          console.log(table);
+
+          await new Promise((resolve) => {
+              setJsondata(table);
+              setViewUploadedData(true);
+              setShowFields(true);
+              resolve();
+          });
+      } catch (error) {
+          console.error(error);
+          alert('Error processing file: ' + error.message);
       }
-  };
+  } else {
+      alert('Please upload a valid Excel file (CSV or XLSX).');
+      e.target.value = null;
+      setFile(null);
+  }
+};
 
   const handleChange = (e) => {
     console.log(e.target)
@@ -88,8 +144,9 @@ ExcelRenderer(fileObj, (err, resp) => {
 
   const handleSubmit = async () => {
     try {
+      console.log(jsonData)
       const response = await fetch("https://catmapper.org/api/uploadInputNodes",{
-        //const response = await fetch("http://127.0.0.1:5001/uploadInputNodes", {
+      //const response = await fetch("http://127.0.0.1:5001/uploadInputNodes", {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -106,7 +163,7 @@ ExcelRenderer(fileObj, (err, resp) => {
         }),
       });
 
-      const result = await response.json();
+      const result = await response.text();
       setCMIDText(result);
       setPopen(true);
 
