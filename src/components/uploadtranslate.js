@@ -11,7 +11,7 @@ import { Dialog, DialogContent } from '@mui/material';
 const UploadTranslat = () => {
 
   const [file, setFile] = useState(null);
-  const { authLevel} = useAuth();
+  const { user,authLevel} = useAuth();
   const [open, setOpen] = useState(false);
   const [showFields, setShowFields] = useState(false);
   const [nodecount, setNodeCount] = useState(null);
@@ -145,8 +145,8 @@ const handleFileChange = async (e) => {
   const handleSubmit = async () => {
     try {
       console.log(jsonData)
-      const response = await fetch("https://catmapper.org/api/uploadInputNodes",{
-      //const response = await fetch("http://127.0.0.1:5001/uploadInputNodes", {
+      //const response = await fetch("https://catmapper.org/api/uploadInputNodes",{
+      const response = await fetch("http://127.0.0.1:5001/uploadInputNodes", {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -158,7 +158,7 @@ const handleFileChange = async (e) => {
           so : selectedOption,
           ao: advselectedOption,
           addoptions: addiColumns,
-          user : localStorage.getItem("userid"),
+          user : user,
           linkContext : linkContext
         }),
       });
@@ -287,6 +287,7 @@ const handleFileChange = async (e) => {
       .filter((col) => !required.includes(col))
       .filter((col) => allowedExtraColumns.includes(col)); 
     setExtraColumns(extraCols);
+    setLinkContext(extraCols)
   } else {
     setExtraColumns([]);
   }

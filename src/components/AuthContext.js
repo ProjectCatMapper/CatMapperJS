@@ -7,17 +7,26 @@ export const useAuth = () => {
 };
 
 export const AuthProvider = ({ children }) => {
+    const [user, setUser] = useState(() => {
+        return localStorage.getItem('userId') || null;
+    });
+
     const [authLevel, setAuthLevel] = useState(() => {
         const storedAuthLevel = localStorage.getItem('authLevel');
         return storedAuthLevel ? parseInt(storedAuthLevel, 10) : 0;
     });; // 0: Unauthenticated, 1: Advanced, 2: Admin
 
+
     useEffect(() => {
+        if (user) {
+            localStorage.setItem('userId', user); 
+        } else {
+            localStorage.removeItem('userId');
+        }
         localStorage.setItem('authLevel', authLevel);
-    }, [authLevel]);
+    }, [authLevel,user]);
 
     const login = async (username, password) => {
-        // Replace with your actual API endpoint
         const response = await fetch('https://catmapper.org/api/login', {
         //const response = await fetch("http://127.0.0.1:5001/login", {
             method: 'POST',
@@ -32,7 +41,7 @@ export const AuthProvider = ({ children }) => {
 
         if (response.ok) {
             const data = await response.json();
-            localStorage.setItem('userId', data.userid);
+            setUser(data.userid)
             if (data.role === "user")
                 {
                     setAuthLevel(1)
@@ -41,7 +50,6 @@ export const AuthProvider = ({ children }) => {
                 {
                 setAuthLevel(2)
                 }
-            // setAuthLevel(data.authLevel); // Assuming the API response contains authLevel
         } else {
             // Handle login error
             alert('Login failed');
@@ -49,12 +57,14 @@ export const AuthProvider = ({ children }) => {
     };
 
     const logout = () => {
+        setUser(null); 
         setAuthLevel(0);
         localStorage.removeItem('authLevel');
+        localStorage.removeItem('userId');
     };
 
     return (
-        <AuthContext.Provider value={{ authLevel, login, logout }}>
+        <AuthContext.Provider value={{ authLevel,user, login, logout }}>
             {children}
         </AuthContext.Provider>
     );
