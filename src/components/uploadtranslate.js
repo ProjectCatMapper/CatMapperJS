@@ -145,8 +145,8 @@ const handleFileChange = async (e) => {
   const handleSubmit = async () => {
     try {
       console.log(jsonData)
-      const response = await fetch("https://catmapper.org/api/uploadInputNodes",{
-      //const response = await fetch("http://127.0.0.1:5001/uploadInputNodes", {
+      // const response = await fetch("https://catmapper.org/api/uploadInputNodes",{
+      const response = await fetch("http://127.0.0.1:5001/uploadInputNodes", {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -227,22 +227,25 @@ const handleFileChange = async (e) => {
   const [selectedColumns, setSelectedColumns] = useState({});
   const [missingColumns, setMissingColumns] = useState([]);
   const [extraColumns, setExtraColumns] = useState([]);
+  const [selectedExtraColumns, setSelectedExtraColumns] = useState([]);
   const [selectedExtraColumn, setSelectedExtraColumn] = useState('');
   const [allRequiredColumnsFound, setAllRequiredColumnsFound] = useState(false);
 
-  const allowedExtraColumns = [
-    'altName', 'ApplicableYears', 'categoryType', 'CMID', 'CMName', 'country', 
-    'Dataset', 'DatasetCitation', 'DatasetLocation', 'DatasetScope', 
-    'DatasetVersion', 'dateEnd', 'dateStart', 'descriptor', 'district', 
-    'District', 'eventDate', 'eventType', 'FIPS', 'geoCoords', 'geoPolygon', 
-    'glottocode', 'ignoreNames', 'ISO2', 'ISO3', 'ISONumeric', 'Key', 'label', 
-    'language', 'latitude', 'log', 'longitude', 'Name', 'Note', 'parent', 
-    'parentContext', 'populationEstimate', 'project', 'propertyValues', 
-    'rawDate', 'recordEnd', 'recordStart', 'religion', 'Rfunction', 'role', 
-    'Rtransform', 'sampleSize', 'shortName', 'Subdistrict', 'Subnational', 
-    'text', 'transform', 'Unit', 'url', 'variableDescription', 'yearEnd', 
-    'yearStart'
-  ];
+  // const allowedExtraColumns = [
+  //   'altName', 'ApplicableYears', 'categoryType', 'CMID', 'CMName', 'country', 
+  //   'Dataset', 'DatasetCitation', 'DatasetLocation', 'DatasetScope', 
+  //   'DatasetVersion', 'dateEnd', 'dateStart', 'descriptor', 'district', 
+  //   'District', 'eventDate', 'eventType', 'FIPS', 'geoCoords', 'geoPolygon', 
+  //   'glottocode', 'ignoreNames', 'ISO2', 'ISO3', 'ISONumeric', 'Key', 'label', 
+  //   'language', 'latitude', 'log', 'longitude', 'Name', 'Note', 'parent', 
+  //   'parentContext', 'populationEstimate', 'project', 'propertyValues', 
+  //   'rawDate', 'recordEnd', 'recordStart', 'religion', 'Rfunction', 'role', 
+  //   'Rtransform', 'sampleSize', 'shortName', 'Subdistrict', 'Subnational', 
+  //   'text', 'transform', 'Unit', 'url', 'variableDescription', 'yearEnd', 
+  //   'yearStart'
+  // ];
+
+  const allowedExtraColumns = ["descriptor", "Dataset", "log", "country", "dateEnd", "dateStart", "district", "eventDate", "eventType", "geoCoords", "Key", "label", "latitude", "longitude", "ignoreNames", "Name", "parent", "parentContext", "propertyValues", "rawDate", "Rfunction", "Rtransform", "recordEnd", "recordStart", "sampleSize", "transform", "categoryType", "url", "variableDescription", "yearEnd", "yearStart", "language", "populationEstimate", "religion", "geoPolygon"]
 
   useEffect(() => {
     setSelectedColumns({});
@@ -287,6 +290,7 @@ const handleFileChange = async (e) => {
       .filter((col) => !required.includes(col))
       .filter((col) => allowedExtraColumns.includes(col)); 
     setExtraColumns(extraCols);
+    setSelectedExtraColumns(extraCols)
     setLinkContext(extraCols)
   } else {
     setExtraColumns([]);
@@ -326,8 +330,8 @@ const handleFileChange = async (e) => {
     };
 
     const handleExtraColumnsChange = (event) => {
-      setExtraColumns(event.target.value);
-      setLinkContext(extraColumns)
+      setSelectedExtraColumns(event.target.value);
+      setLinkContext(selectedExtraColumns)
     };
 
     const handleSingleExtraColumnChange = (event) => {
@@ -594,7 +598,7 @@ const handleFileChange = async (e) => {
       <h4 style={{ color: 'black', padding: "2px" }}>Choose columns to enter as properties:</h4>
         <Select
           multiple
-          value={extraColumns}
+          value={selectedExtraColumns}
           onChange={handleExtraColumnsChange}
           renderValue={(selected) => selected.join(', ')}
         >
