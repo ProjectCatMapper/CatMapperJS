@@ -11,6 +11,10 @@ export const AuthProvider = ({ children }) => {
         return localStorage.getItem('userId') || null;
     });
 
+    const [cred, setCred] = useState(() => {
+        return JSON.parse(localStorage.getItem('cred')) || null;
+    });
+
     const [authLevel, setAuthLevel] = useState(() => {
         const storedAuthLevel = localStorage.getItem('authLevel');
         return storedAuthLevel ? parseInt(storedAuthLevel, 10) : 0;
@@ -19,12 +23,17 @@ export const AuthProvider = ({ children }) => {
 
     useEffect(() => {
         if (user) {
-            localStorage.setItem('userId', user); 
+            localStorage.setItem('userId', user);
         } else {
             localStorage.removeItem('userId');
         }
+        if (cred) {
+            localStorage.setItem('cred',JSON.stringify(cred));
+        } else {
+            localStorage.removeItem('cred');
+        }
         localStorage.setItem('authLevel', authLevel);
-    }, [authLevel,user]);
+    }, [authLevel,user,cred]);
 
     const login = async (username, password) => {
         const response = await fetch('https://catmapper.org/api/login', {
@@ -39,11 +48,10 @@ export const AuthProvider = ({ children }) => {
                 password : password}),
         });
 
-        console.log(response)
-
         if (response.ok) {
             const data = await response.json();
             setUser(data.userid)
+            setCred(data)
             if (data.role === "user")
                 {
                     setAuthLevel(1)
@@ -62,10 +70,11 @@ export const AuthProvider = ({ children }) => {
         setAuthLevel(0);
         localStorage.removeItem('authLevel');
         localStorage.removeItem('userId');
+        localStorage.removeItem('cred');
     };
 
     return (
-        <AuthContext.Provider value={{ authLevel,user, login, logout }}>
+        <AuthContext.Provider value={{ authLevel,user,cred, login, logout }}>
             {children}
         </AuthContext.Provider>
     );

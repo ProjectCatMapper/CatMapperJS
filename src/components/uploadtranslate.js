@@ -144,7 +144,7 @@ const handleFileChange = async (e) => {
 
   const handleSubmit = async () => {
     try {
-      console.log(jsonData)
+      console.log(linkContext)
       const response = await fetch("https://catmapper.org/api/uploadInputNodes",{
       //const response = await fetch("http://127.0.0.1:5001/uploadInputNodes", {
         method: 'POST',
@@ -336,7 +336,8 @@ const handleFileChange = async (e) => {
 
     const handleSingleExtraColumnChange = (event) => {
       setSelectedExtraColumn(event.target.value);
-      setLinkContext(selectedExtraColumn)
+      setLinkContext([event.target.value])
+      console.log(event.target.value)
     };
 
   return (

@@ -12,14 +12,24 @@ import {
   MenuItem,
   InputLabel,
   Paper,
+  Dialog,
+  DialogContent,
   ListSubheader,
   FormControlLabel,
 } from "@mui/material";
+import { useAuth } from './AuthContext';
+import { DataGrid } from '@mui/x-data-grid';
+
 
 const Admin = () => {
   const [firstDropdownValue, setFirstDropdownValue] = useState(
     "add/edit/delete USES property"
   );
+  const { user,cred,authLevel} = useAuth();
+  const [users, setUsers] = useState([]);
+  const [selectedUserIds, setSelectedUserIds] = useState([]);
+  const [CMIDText, setCMIDText] = useState('');
+
 
   const sections = [
     {
@@ -95,18 +105,59 @@ const Admin = () => {
 
   const handleCheck = async () => {
     try {
-      const response = await fetch("YOUR_API_ENDPOINT", {
+      console.log(cred)
+      const response = await fetch("https://catmapper.org/api/updateNewUsers",{
+      //const response = await fetch("http://127.0.0.1:5001/updateNewUsers", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(firstDropdownValue),
+        body: JSON.stringify({
+          userid : "none",
+          database : "sociomap",
+          credentials: cred,
+          process : "None",
+        }),
       });
 
       const result = await response.json();
+      setUsers(result)
     } catch (error) {
       console.error("Error:", error);
     }
+  };
+
+  const handleApprove = async () => {
+    try {
+      const response = await fetch("https://catmapper.org/api/updateNewUsers",{
+      //const response = await fetch("http://127.0.0.1:5001/updateNewUsers", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userid : selectedUserIds,
+          database : "sociomap",
+          credentials: cred,
+          process : "approve",
+        }),
+      });
+
+      const result = await response.json();
+      if (result)
+      {
+      setCMIDText("Approved");
+      setPopen(true);
+      }      
+    } catch (error) {
+      console.error("Error:", error);
+    }
+  };
+
+  const [popen, setPopen] = useState(false);
+
+  const handlePclose = () => {
+    setPopen(false);
   };
 
   const [formData, setFormData] = useState({
@@ -118,6 +169,19 @@ const Admin = () => {
     s1_6: "",          //textfield
     s1_7: ""           //dropdown
   });
+
+  const columns = [
+    { field: 'userid', headerName: 'User ID', width: 150 },
+    { field: 'first', headerName: 'First Name', width: 150 },
+    { field: 'last', headerName: 'Last Name', width: 150 },
+    { field: 'email', headerName: 'Email', width: 200 },
+    { field: 'intendedUse', headerName: 'Intended Use', width: 200 },
+  ];
+
+  const handleSelectionChange = (newSelectionModel) => {
+    setSelectedUserIds(newSelectionModel);
+    console.log(selectedUserIds)
+  };
 
   const handleRadioChange = (event) => {
     setFormData(prevFormData => ({
@@ -681,6 +745,38 @@ password   </InputLabel>
       >
         Check for new users{" "}
       </Button>
+      {users.length > 0 && <DataGrid
+        rows={users}
+        columns={columns}
+        pageSize={5}
+        rowsPerPageOptions={[5, 10, 20]}
+        checkboxSelection
+        onRowSelectionModelChange={(newSelectionModel) => {
+          handleSelectionChange(newSelectionModel);
+        }}
+        getRowId={(row) => row.userid}
+      />
+      }
+      {
+        selectedUserIds.length > 0 && <Button
+        variant="contained"
+        sx={{
+          backgroundColor: "black",
+          color: "white",
+          "&:hover": {
+            backgroundColor: "green",
+          },
+        }}
+        onClick={handleApprove}
+      >
+        Approve users{" "}
+      </Button>
+      }
+      <Dialog open={popen} onClose={handlePclose}>
+        <DialogContent>
+          <p>{CMIDText}</p>
+        </DialogContent>
+      </Dialog>
     </Box>
   );
 };
