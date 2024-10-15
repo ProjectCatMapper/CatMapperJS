@@ -1,8 +1,7 @@
 // RegisterPage.js
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Box from '@mui/material/Box';
-import TextField from '@mui/material/TextField';
+import { Box, MenuItem, Select, TextField,Typography,Alert } from '@mui/material';
 import Button from '@mui/material/Button';
 
 const RegisterPage = () => {
@@ -13,29 +12,41 @@ const RegisterPage = () => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+    const [database, setDatabase] = useState('');
+    const [intendedUse, setintendedUse] = useState('');
+    const [errorMessage, setErrorMessage] = useState('');
 
     const handleRegister = async () => {
-        // Implement your registration logic here, e.g., using a fetch API call
         try {
-            // Replace with your actual API endpoint for registration
+            if (!firstName || !lastName || !email || !username || !password || !confirmPassword || !database || !intendedUse) {
+                setErrorMessage('Please fill in all the fields.');
+                return;
+              }
+          
+              if (password !== confirmPassword) {
+                setErrorMessage('Passwords do not match.');
+                return;
+              }
+          
+              setErrorMessage('');
             const response = await fetch('https://catmapper.org/api/newuser', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ database : "sociomap",
+                body: JSON.stringify({ database : database,
                     firstName : firstName,
                     lastName : lastName,
                     email : email,
                     username : username, 
-                    password : password }),
+                    password : password,
+                intendedUse: intendedUse }),
             });
 
             if (response.ok) {
                 alert('Please wait while we verify your registration. You will receive an email when your account has been enabled. Contact support@catmapper.org for any questions.');
-                navigate('/login'); // Redirect to login page after successful registration
+                navigate('/login');
             } else {
-                // Handle registration error
                 alert('Registration failed');
             }
         } catch (error) {
@@ -46,6 +57,7 @@ const RegisterPage = () => {
 
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mt: 4 }}>
+            {errorMessage && <Alert severity="error" sx={{ mb: 2 }}>{errorMessage}</Alert>}
             <TextField
                 label="First Name"
                 variant="outlined"
@@ -90,6 +102,34 @@ const RegisterPage = () => {
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 sx={{ mb: 2 }}
             />
+            <Typography variant="9" style={{fontWeight:"bolder"}}>
+        Select database
+        </Typography>
+            <Select
+        value={database}
+        onChange={(event) => {
+            setDatabase(event.target.value);
+          }}
+        displayEmpty
+        sx={{ mb: 2 }}
+      >
+        <MenuItem value="" disabled>Select an option</MenuItem>
+        <MenuItem value="sociomap">SocioMap</MenuItem>
+        <MenuItem value="archamap">Archamap</MenuItem>
+      </Select>
+      <Typography variant="p" style={{fontWeight:"bolder"}}>
+      Intended use for CatMapper applications:
+        </Typography>
+      <TextField
+        multiline
+        rows={5}
+        value={intendedUse}
+        onChange={(event) => {
+            setintendedUse(event.target.value);
+          }}
+        variant="outlined"
+        sx={{ mt: 2,mb:2, resize: "horizontal", overflow: 'auto',width:"24vw" }}
+      />
             <Button variant="contained" onClick={handleRegister}>Register</Button>
         </Box>
     );

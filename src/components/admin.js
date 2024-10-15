@@ -93,6 +93,22 @@ const Admin = () => {
     }
   };
 
+  const handleCheck = async () => {
+    try {
+      const response = await fetch("YOUR_API_ENDPOINT", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(firstDropdownValue),
+      });
+
+      const result = await response.json();
+    } catch (error) {
+      console.error("Error:", error);
+    }
+  };
+
   const [formData, setFormData] = useState({
     s1_1: "standard",  // radio
     s1_2: "",          // textfield
@@ -647,6 +663,23 @@ password   </InputLabel>
         onClick={handleSubmit}
       >
         Submit{" "}
+      </Button>
+      <Divider sx={{ my: 1 }} />
+      <Typography variant="p">Check for new users and approve them:</Typography>
+      <br/>
+      <br/>
+      <Button
+        variant="contained"
+        sx={{
+          backgroundColor: "black",
+          color: "white",
+          "&:hover": {
+            backgroundColor: "green",
+          },
+        }}
+        onClick={handleCheck}
+      >
+        Check for new users{" "}
       </Button>
     </Box>
   );

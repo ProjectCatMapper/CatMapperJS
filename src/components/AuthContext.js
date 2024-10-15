@@ -39,6 +39,8 @@ export const AuthProvider = ({ children }) => {
                 password : password}),
         });
 
+        console.log(response)
+
         if (response.ok) {
             const data = await response.json();
             setUser(data.userid)
@@ -51,7 +53,6 @@ export const AuthProvider = ({ children }) => {
                 setAuthLevel(2)
                 }
         } else {
-            // Handle login error
             alert('Login failed');
         }
     };
