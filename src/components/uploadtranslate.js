@@ -246,8 +246,12 @@ const handleFileChange = async (e) => {
   // ];
 
   const allowedExtraColumns = ["descriptor", "Dataset", "log", "country", "dateEnd", "dateStart", "district", "eventDate", "eventType", "geoCoords", "Key", "label", "latitude", "longitude", "ignoreNames", "Name", "parent", "parentContext", "propertyValues", "rawDate", "Rfunction", "Rtransform", "recordEnd", "recordStart", "sampleSize", "transform", "categoryType", "url", "variableDescription", "yearEnd", "yearStart", "language", "populationEstimate", "religion", "geoPolygon"]
+  let allowedDatasetColumns = []
 
   useEffect(() => {
+    if (columns.length === 0 || rows.length === 0) return;
+
+
     setSelectedColumns({});
     setMissingColumns([]);
     setExtraColumns([]);
@@ -258,6 +262,16 @@ const handleFileChange = async (e) => {
   switch (advselectedOption) {
     case 'add_node':
       required = ['CMName', 'Name', 'Key', 'label', 'datasetID'];
+      const labelIndex = columns.indexOf('label');
+      console.log(labelIndex)
+      if (labelIndex !== -1) {
+        const datasetValueFound = rows.some(row => row[labelIndex] === 'DATASET');
+        if (datasetValueFound) {
+          required = ['CMName', 'label', 'shortName', 'DatasetCitation'];
+          allowedDatasetColumns = ["ApplicableYears", "CMID", "CMName", "DatasetCitation", "DatasetLocation", "DatasetScope", "DatasetVersion", "District", "log", "Note", "parent", "project", "shortName", "Subdistrict", "Subnational", "Unit"]
+
+        }
+      }
       break;
     case 'add_uses':
       required = ['CMID', 'Name', 'Key', 'label', 'datasetID'];
@@ -286,9 +300,17 @@ const handleFileChange = async (e) => {
   setAllRequiredColumnsFound(notFoundColumns.length === 0);
 
   if (['add_node','add_uses', 'update_add','update_replace'].includes(advselectedOption)) {
-    const extraCols = columns
-      .filter((col) => !required.includes(col))
-      .filter((col) => allowedExtraColumns.includes(col)); 
+    // const extraCols = columns
+    //   .filter((col) => !required.includes(col))
+    //   .filter((col) => allowedExtraColumns.includes(col)); 
+    let extraCols = columns.filter((col) => !required.includes(col));
+
+    if (allowedDatasetColumns.length > 0) {
+      extraCols = extraCols.filter((col) => allowedDatasetColumns.includes(col));
+    } else {
+      extraCols = extraCols.filter((col) => allowedExtraColumns.includes(col)); 
+    }
+
     setExtraColumns(extraCols);
     setSelectedExtraColumns(extraCols)
     setLinkContext(extraCols)
@@ -302,7 +324,7 @@ const handleFileChange = async (e) => {
   }, {});
 
   setSelectedColumns(selectedColumns);
-}, [columns, advselectedOption]);
+}, [columns,rows, advselectedOption]);
 
   const [addiColumns, setaddiColumns] = useState({
     district: false,
@@ -331,7 +353,7 @@ const handleFileChange = async (e) => {
 
     const handleExtraColumnsChange = (event) => {
       setSelectedExtraColumns(event.target.value);
-      setLinkContext(selectedExtraColumns)
+      setLinkContext(event.target.value)
     };
 
     const handleSingleExtraColumnChange = (event) => {
