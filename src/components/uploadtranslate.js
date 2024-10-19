@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Box, Button, FormControlLabel, Radio, RadioGroup, Checkbox, Typography, Divider,Select,TextField,MenuItem,InputLabel,FormControl, FormGroup,Table, TableBody, TableCell, TableContainer, TableHead, TableRow,TablePagination, Paper } from '@mui/material';
+import { Box, Button, FormControlLabel, Radio, RadioGroup, Checkbox, Typography, Divider,Select,TextField,MenuItem,InputLabel,FormControl, FormGroup,Table, TableBody, TableCell, TableContainer, TableHead, TableRow,TablePagination, Paper, Snackbar, Alert  } from '@mui/material';
 import DatasetForm from './uploadtranslateform';
 import {ExcelRenderer} from 'react-excel-renderer';
 import doptions from "./dropdown.json";
@@ -40,6 +40,14 @@ const UploadTranslat = () => {
 
   const handleClose = () => {
     setOpen(false);
+  };
+
+  const [openSnackbar, setOpenSnackbar] = useState(false);
+  const handleOpen1 = () => {
+    setOpenSnackbar(true);  // Open the snackbar on button click
+  };
+  const handleClose1 = () => {
+    setOpenSnackbar(false); // Close the snackbar after user interaction
   };
 
 //   const handleFileChange = (e) => {
@@ -359,7 +367,6 @@ const handleFileChange = async (e) => {
     const handleSingleExtraColumnChange = (event) => {
       setSelectedExtraColumn(event.target.value);
       setLinkContext([event.target.value])
-      console.log(event.target.value)
     };
 
   return (
@@ -373,12 +380,22 @@ const handleFileChange = async (e) => {
         '&:hover': {
           backgroundColor: 'green', 
         },
-      }}  onClick={handleOpen}>
+      }}  onClick={handleOpen1}>
           CREATE NEW DATASET
         </Button>
         <Typography variant="body2" color="textSecondary" sx={{backgroundColor: 'lightblue', padding: '1em',borderRadius: '4px',display: 'inline-block',marginLeft:"10px"}}>
           {CMIDText}
         </Typography>
+        <Snackbar
+        open={openSnackbar}
+        autoHideDuration={3000}
+        onClose={handleClose1}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert onClose={handleClose1} severity="info" sx={{ width: '100%' }}>
+          Under Construction
+        </Alert>
+      </Snackbar>
       </Box>
       <Typography variant="h6" style={{fontWeight:"bolder"}}>
         Use translated file or import file to upload
