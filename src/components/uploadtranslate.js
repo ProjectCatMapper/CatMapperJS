@@ -22,6 +22,8 @@ const UploadTranslat = () => {
   const [rowsPerPage, setRowsPerPage] = useState(10); 
   const [jsonData, setJsondata] = useState([]);
   const [linkContext, setLinkContext] = useState([]);
+  const [download, setDownload] = useState(null);
+  const [error, setError] = useState(null);
   const [formData, setFormData] = useState({
     domain: '',
     datasetID: '',
@@ -171,8 +173,9 @@ const handleFileChange = async (e) => {
         }),
       });
 
-      const result = await response.text();
-      setCMIDText(result);
+      const result = await response.json();
+      setDownload(result.file)      
+      setCMIDText(result.message);
       setPopen(true);
 
     } catch (error) {
@@ -368,6 +371,39 @@ const handleFileChange = async (e) => {
       setSelectedExtraColumn(event.target.value);
       setLinkContext([event.target.value])
     };
+
+    const convertToCSV = (data) => {
+      const csvRows = [];
+      const headers = Object.keys(data[0]);
+      csvRows.push(headers.join(','));
+
+      for (const row of data) {
+          const values = headers.map(header => {
+              const escaped = ('' + row[header]).replace(/"/g, '\\"');
+              return `"${escaped}"`;
+          });
+          csvRows.push(values.join(','));
+      }
+      return csvRows.join('\n');
+  };
+  
+    const handleDownload = () => {
+      if (!download) {
+          setError('No file data available for download.');
+          return;
+      }
+
+      const csvData = convertToCSV(download);
+      const blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'uploaded_Dataset.csv';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+  };
 
   return (
     <Box sx={{ p: 4 }}>
@@ -696,6 +732,19 @@ const handleFileChange = async (e) => {
       }}  onClick={handleSubmit}>
         UPLOAD
       </Button>
+      {error && <p style={{ color: 'red' }}>{error}</p>}
+
+      <Button variant="contained" disabled={!download} sx={{
+        backgroundColor: 'black',
+        ml:"1vw",
+        color: 'white', 
+        '&:hover': {
+          backgroundColor: 'green', 
+        },
+      }}  onClick={handleDownload}>
+        Download
+      </Button>
+
       <DatasetForm open={open} handleClose={handleClose} />
       <Dialog open={popen} onClose={handlePclose}>
         <DialogContent>
