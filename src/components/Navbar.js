@@ -44,6 +44,7 @@ const Navbar = () => {
             <Link id='sociomapnavbar'>Help <span className="dropdown-arrow">&#x25BC;</span></Link>
         <div className='dropdown-content'>
             <Link to='/sociomap/help/api-guide'>API Guide</Link>
+            <Link to='/sociomap/help/user-guide'>User Guide</Link>
         </div>
     </li>
             {authLevel === 0 && <Link to="/login"><Button variant="outlined">Login</Button></Link>}

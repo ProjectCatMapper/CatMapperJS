@@ -25,6 +25,7 @@ import Citation from "./routes/Citation"
 import Terms from "./routes/Terms"
 import Contact from "./routes/Contact"
 import Sociomap_ApiGuide from "./routes/Sociomap_ApiGuide"
+import Sociomap_UserGuide from "./routes/Sociomap_UserGuide"
 import Logins from "./routes/Logins";
 import RegisterPage from './routes/RegisterPage';
 // import AdvancedPage from './routes/Advanced';
@@ -65,6 +66,7 @@ function App() {
         <Route path='/sociomap/merge' element={<Merge />} />
         <Route path='/archamap/merge' element={<Archamap_Merge />} />
         <Route path='/sociomap/help/api-guide' element={<Sociomap_ApiGuide />} />
+        <Route path='/sociomap/help/user-guide' element={<Sociomap_UserGuide />} />
         <Route path='/people' element={<People />} />
         <Route path='/news' element={<News />} />
         <Route path='/funding' element={<Funding />} />
