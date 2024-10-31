@@ -41,11 +41,19 @@ const Navbar = () => {
 
             {authLevel > 1 && <Link id='sociomapnavbar'  to="/admin" style={{marginLeft:20}}>Admin</Link>}
             <li className='dropdown'>
-            <Link id='sociomapnavbar'>Help <span className="dropdown-arrow">&#x25BC;</span></Link>
+            {/* <Link id='sociomapnavbar'>Help <span className="dropdown-arrow">&#x25BC;</span></Link>
         <div className='dropdown-content'>
             <Link to='/sociomap/help/api-guide'>API Guide</Link>
             <Link to='/sociomap/help/user-guide'>User Guide</Link>
-        </div>
+        </div> */}
+         <a
+    id="sociomapnavbar"
+    href="https://catmapper.org/help/"
+    target="_blank"
+    rel="noopener noreferrer"
+  >
+    Help
+  </a>
     </li>
             {authLevel === 0 && <Link to="/login"><Button variant="outlined">Login</Button></Link>}
             {authLevel > 0 && <Button variant="outlined" onClick={logout}>Logout</Button>}

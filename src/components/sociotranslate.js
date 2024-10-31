@@ -51,6 +51,7 @@ function Sociotranslate(){
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
   let fileObj= ""
+  let filename=""
   let selectedColumnValues = ""
   const [jsonData, setJsondata] = useState();
   let query = "false"
@@ -176,7 +177,10 @@ const handleClicktwo = () => {const worksheet = XLSX.utils.json_to_sheet(data);
 
   const blob = new Blob([excelBuffer], { type: 'application/octet-stream' });
 
-  saveAs(blob, 'translatedata.xlsx');};
+  const date = new Date().toISOString().split('T')[0];
+  const customFileName = `${filename}_Matched_${date}.xlsx`;
+
+  saveAs(blob, customFileName);};
 
 const handleclear = () => {
   setSelectedFile(null);
@@ -190,6 +194,8 @@ const [inputValuetwo, setinputValuetwo] = useState(2024);
 
 const handleFileChange = (event) => {
       const fileType = event.target.files[0].type;
+      filename = event.target.files[0].name.split('.').slice(0, -1).join('.');
+      console.log(filename)
       if (fileType === 'application/vnd.ms-excel' || fileType === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') {
         // File is either CSV or XLSX
         setSelectedFile(event.target.files[0]);
