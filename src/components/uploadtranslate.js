@@ -6,6 +6,7 @@ import doptions from "./dropdown.json";
 import Tooltip from '@mui/material/Tooltip';
 import InfoIcon from '@mui/icons-material/Info';
 import { useAuth } from './AuthContext';
+import { LinearProgress } from '@mui/material';
 import { Dialog, DialogContent } from '@mui/material';
 
 const UploadTranslat = () => {
@@ -24,6 +25,9 @@ const UploadTranslat = () => {
   const [linkContext, setLinkContext] = useState([]);
   const [download, setDownload] = useState(null);
   const [error, setError] = useState(null);
+  const [fileDownload, setfileDownload] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [progress, setProgress] = useState(0);
   const [formData, setFormData] = useState({
     domain: '',
     datasetID: '',
@@ -50,6 +54,28 @@ const UploadTranslat = () => {
   };
   const handleClose1 = () => {
     setOpenSnackbar(false); // Close the snackbar after user interaction
+  };
+
+  const handlefileDownload = (event) => {
+    const value = event.target.value;
+    setfileDownload(value);
+
+    switch (value) {
+      case 'dataset':
+        window.open('https://catmapper.org/data/templates/dataset.xlsx', '_blank');
+        break;
+      case 'nodes':
+        window.open('https://catmapper.org/data/templates/nodes.xlsx', '_blank');
+        break;
+      case 'update_uses':
+        window.open('https://catmapper.org/data/templates/update_uses.xlsx', '_blank');
+        break;
+      case 'uses':
+        window.open('https://catmapper.org/data/templates/uses.xlsx', '_blank');
+        break;
+      default:
+        break;
+    }
   };
 
 //   const handleFileChange = (e) => {
@@ -153,8 +179,11 @@ const handleFileChange = async (e) => {
   };
 
   const handleSubmit = async () => {
+    setLoading(true);
+    setProgress(0);
     try {
-      console.log(linkContext)
+      setProgress(30); 
+      console.log(jsonData)
       const response = await fetch("https://catmapper.org/api/uploadInputNodes",{
       //const response = await fetch("http://127.0.0.1:5001/uploadInputNodes", {
         method: 'POST',
@@ -172,14 +201,20 @@ const handleFileChange = async (e) => {
           linkContext : linkContext
         }),
       });
+      setProgress(50); 
 
       const result = await response.json();
+      setProgress(70);
       setDownload(result.file)      
       setCMIDText(result.message);
       setPopen(true);
+      setProgress(100);
 
     } catch (error) {
       console.error('Error submitting form:', error);
+    }
+    finally{
+      setLoading(false);
     }
   };
 
@@ -408,20 +443,36 @@ const handleFileChange = async (e) => {
   return (
     <Box sx={{ p: 4 }}>
       <Box sx={{ mb: 3 }} style={{marginBottom:"50px"}}>
-      <h4 style={{ color: 'black', padding: "2px" }}>Create new dataset if necessary</h4>
+      <h4 style={{ color: 'black', padding: "2px" }}>Find Dataset download templates here:</h4>
       <br />
-        <Button variant="contained" sx={{
+      <FormControl sx={{width: "12vw", mr:"1vw" }}  variant="outlined">
+      <InputLabel id="dropdown-label">Download:</InputLabel>
+      <Select
+        labelId="dropdown-label"
+        id="dropdown-select"
+        value={fileDownload}
+        onChange={handlefileDownload}
+        label="Select Option"
+      >
+        <MenuItem value="dataset">New Dataset Nodes</MenuItem>
+        <MenuItem value="nodes">New Category Nodes</MenuItem>
+        <MenuItem value="uses">New Uses Ties</MenuItem>
+        <MenuItem value="update_uses">Update Uses Ties</MenuItem>
+      </Select>
+    </FormControl>
+
+        {/* <Button variant="contained" sx={{
         backgroundColor: 'black',
         color: 'white', 
         '&:hover': {
           backgroundColor: 'green', 
         },
       }}  onClick={handleOpen1}>
-          CREATE NEW DATASET
-        </Button>
-        <Typography variant="body2" color="textSecondary" sx={{backgroundColor: 'lightblue', padding: '1em',borderRadius: '4px',display: 'inline-block',marginLeft:"10px"}}>
+          Download Template
+        </Button> */}
+        {/* <Typography variant="body2" color="textSecondary" sx={{backgroundColor: 'lightblue', padding: '1em',borderRadius: '4px',display: 'inline-block',marginLeft:"10px"}}>
           {CMIDText}
-        </Typography>
+        </Typography> */}
         <Snackbar
         open={openSnackbar}
         autoHideDuration={3000}
@@ -643,7 +694,7 @@ const handleFileChange = async (e) => {
         <FormControlLabel value="add_node" control={<Radio />} label="Adding new node for every row" />
         <FormControlLabel value="add_uses" control={<Radio />} label="Adding new uses ties (with old or new nodes)" />
         <FormControlLabel value="update_add" control={<Radio />} label="Updating existing USES only--add or add to properties" />
-        <FormControlLabel value="update_replace" control={<Radio />} label="Updating existing USES only--replace one property" />
+        {authLevel === 2 &&<FormControlLabel value="update_replace" control={<Radio />} label="Updating existing USES only--replace one property" />}
       </RadioGroup>
 
       <FormControl component="fieldset" sx={{ mb: 2 }}>
@@ -732,6 +783,24 @@ const handleFileChange = async (e) => {
       }}  onClick={handleSubmit}>
         UPLOAD
       </Button>
+      {loading && (
+        <Box
+          sx={{
+            position: 'fixed',
+            bottom: 16,
+            right: 16,
+            width: 200,
+            backgroundColor: 'white',
+            boxShadow: 3,
+            padding: 1,
+            borderRadius: 2,
+            textAlign: 'center'
+          }}
+        >
+          <Typography variant="body2">{`Progress: ${progress}%`}</Typography>
+          <LinearProgress variant="determinate" value={progress} />
+        </Box>
+      )}
       {error && <p style={{ color: 'red' }}>{error}</p>}
 
       <Button variant="contained" disabled={!download} sx={{
