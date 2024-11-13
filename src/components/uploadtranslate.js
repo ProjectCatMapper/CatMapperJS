@@ -8,6 +8,7 @@ import InfoIcon from '@mui/icons-material/Info';
 import { useAuth } from './AuthContext';
 import { LinearProgress } from '@mui/material';
 import { Dialog, DialogContent } from '@mui/material';
+import * as XLSX from 'xlsx';
 
 const UploadTranslat = () => {
 
@@ -114,6 +115,7 @@ const UploadTranslat = () => {
 //   };
 
 const handleFileChange = async (e) => {
+  setError("")
   const file = e.target.files[0];
   if (!file) return;
 
@@ -136,7 +138,7 @@ const handleFileChange = async (e) => {
               });
           });
 
-          setNodeCount(resp.rows.length);
+          
           setColumns(resp.rows[0]);
           setRows(resp.rows.slice(1));
 
@@ -149,7 +151,9 @@ const handleFileChange = async (e) => {
               return rowData;
           });
 
-          console.log(table);
+          setNodeCount(table.length);
+
+          console.log(table.length);
 
           await new Promise((resolve) => {
               setJsondata(table);
@@ -178,14 +182,108 @@ const handleFileChange = async (e) => {
     }));
   };
 
+  const validateColumns = () => {
+
+    if (columns.includes('datasetID')) {
+      const datasetIDIndex = columns.indexOf('datasetID');
+      const missingValues = rows.some(row => !row[datasetIDIndex]);
+      if (missingValues) {
+        setError('datasetID column contains missing values.');
+        return false;
+      }
+    }
+
+    if (columns.includes('CMID')) {
+      const CMIDIndex = columns.indexOf('CMID');
+      const missingValues = rows.some(row => !row[CMIDIndex]);
+      if (missingValues) {
+        setError('CMID column contains missing values.');
+        return false;
+      }
+    }
+
+    if (columns.includes('Key')) {
+      const KeyIndex = columns.indexOf('Key');
+      const missingValues = rows.some(row => !row[KeyIndex]);
+      if (missingValues) {
+        setError('Key column contains missing values.');
+        return false;
+      }
+    }
+
+    const numericColumns = ['yearStart', 'yearEnd', 'populationEstimate', 'sampleSize'];
+
+    numericColumns.forEach((column) => {
+      if (columns.includes(column)) {
+        const columnIndex = columns.indexOf(column);
+
+        rows.forEach((row, rowIndex) => {
+          const value = row[columnIndex];
+          if (value === '' || value === null || isNaN(Number(value))) {
+            setError(`${column} not a number at row ${rowIndex + 1}.`);
+            return false;
+          }
+        });
+      }
+    });
+
+    if (advselectedOption === 'update_replace') {
+      if (selectedExtraColumn === 'longitude' && !columns.includes('latitude')) {
+        setError('Longitude requires Latitude to be present.');
+        return false;
+      }
+      if (selectedExtraColumn === 'latitude' && !columns.includes('longitude')) {
+        setError('Latitude requires Longitude to be present.');
+        return false;
+      }
+      if (selectedExtraColumn === 'eventType' && !columns.includes('parent')) {
+        setError('eventType requires parent to be present.');
+        return false;
+      }
+      if (selectedExtraColumn === 'eventDate') {
+        if (!columns.includes('parent') || !columns.includes('eventType')) {
+          setError('eventDate requires both parent and eventType to be present.');
+          return false;
+        }
+      }
+    }
+
+    if (columns.includes('latitude') && columns.includes('longitude')) {
+      const latitudeIndex = columns.indexOf('latitude');
+      const longitudeIndex = columns.indexOf('longitude');
+      const datasetIDIndex = columns.indexOf('datasetID');
+
+      rows.forEach(row => {
+        const latitude = row[latitudeIndex];
+        const longitude = row[longitudeIndex];
+        const cmid = row[datasetIDIndex];
+
+        if (latitude < -90 || latitude > 90) {
+          setError(`Latitude for CMID ${cmid} illogical.`);
+          return false;
+        }
+        if (longitude < -180 || longitude > 180) {
+          setError(`Longitude for CMID ${cmid} illogical.`);
+          return false;
+        }
+      });
+    }
+
+    setError('');
+    return true;
+  };
+
   const handleSubmit = async () => {
+    if (!validateColumns()) {
+      return;
+    }
     setLoading(true);
     setProgress(0);
     try {
       setProgress(30); 
       console.log(jsonData)
-      const response = await fetch("https://catmapper.org/api/uploadInputNodes",{
-      //const response = await fetch("http://127.0.0.1:5001/uploadInputNodes", {
+      //const response = await fetch("https://catmapper.org/api/uploadInputNodes",{
+      const response = await fetch("http://127.0.0.1:5001/uploadInputNodes", {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -428,12 +526,25 @@ const handleFileChange = async (e) => {
           return;
       }
 
-      const csvData = convertToCSV(download);
-      const blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' });
+      const worksheet = XLSX.utils.json_to_sheet(download);
+    
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Dataset');
+      
+      const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+      const blob = new Blob([excelBuffer], { type: 'application/octet-stream' });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'uploaded_Dataset.csv';
+      a.download = 'uploaded_Dataset.xlsx';
+
+      // const csvData = convertToCSV(download);
+      // const blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' });
+      // const url = window.URL.createObjectURL(blob);
+      // const a = document.createElement('a');
+      // a.href = url;
+      // a.download = 'uploaded_Dataset.csv';
+
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -774,6 +885,11 @@ const handleFileChange = async (e) => {
    
       </Box>
       )}
+      {error && (
+        <Typography sx={{ mb: 2,color:"red !important"}}>
+          {error}
+        </Typography>
+      )}
       <Button variant="contained" sx={{
         backgroundColor: 'black',
         color: 'white', 
@@ -801,8 +917,7 @@ const handleFileChange = async (e) => {
           <LinearProgress variant="determinate" value={progress} />
         </Box>
       )}
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-
+      
       <Button variant="contained" disabled={!download} sx={{
         backgroundColor: 'black',
         ml:"1vw",

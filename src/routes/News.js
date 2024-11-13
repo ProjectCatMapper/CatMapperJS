@@ -4,6 +4,10 @@ import { Container, Typography, Box, Paper, Divider, Grid } from '@mui/material'
 
 const updates = [
   {
+    date: 'November 12, 2024',
+    content: ' All ethnicities, districts, and languages from Afrobarometer versions 1-9 have been linked and harmonized in SocioMap.'
+  },
+  {
     date: 'July 28, 2024',
     content: 'Reconciled Ukraine’s 2020 administrative re-organization with GADM and Geonames divisions (136 Raion, 1469 Hromada).'
   },
