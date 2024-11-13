@@ -16,7 +16,7 @@ const Propose_Merge = () => {
     const [rows1, setRows1] = useState([]);
     const [firstDropdownValue, setFirstDropdownValue] = useState("ANY DOMAIN");
     let fileObj= ""
-    const [selectedValue, setSelectedValue] = useState('');
+    const [selectedValue, setSelectedValue] = useState([]);
     let sections = [
       { label: 'ANY DOMAIN', keys: ['ANY DOMAIN'] },
       { label: 'AREA to PPL', keys: ['AREA', 'ADM0', 'ADM1', 'ADM2', 'ADM3', 'ADM4', 'ADMD', 'ADME', 'ADML', 'ADMX', 'PPL'] },
@@ -133,20 +133,53 @@ const Propose_Merge = () => {
     
     const handleSubmit = async () => {
     try {
-      const response = await fetch('YOUR_API_ENDPOINT', {
+      const response = await fetch("https://catmapper.org/api/proposeMergeSubmit",{
+        //const response = await fetch("http://127.0.0.1:5001/proposeMergeSubmit", {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(),
+        body: JSON.stringify({
+          "datasetChoices" : selectedValue,
+          "categoryLabel" : firstDropdownValue,
+          "intersection"  : returnAllCategories,
+          "database" : database,
+          "equivalence" : selectedOption
+        }),
       });
 
       const result = await response.json();
+      console.log(result)
     } catch (error) {
       console.error('Error submitting form:', error);
     }
   };
 
+  const downloadMerge = async () => {
+    try {
+      const response = await fetch("https://catmapper.org/api/proposeMergeDownload",{
+        //const response = await fetch("http://127.0.0.1:5001/proposeMergeDownload", {
+        method: 'GET',
+      });
+  
+      if (!response.ok) {
+        throw new Error('Failed to download file');
+      }
+  
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'merge.xlsx'; // Default filename
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error downloading file:', error);
+      alert('Failed to download the file. Please try again.');
+    }
+  };
 
     return(
     <Box >
@@ -244,9 +277,13 @@ const Propose_Merge = () => {
       <Select
         labelId="dynamic-select-label"
         id="dynamic-select"
+        multiple
         value={selectedValue}
         label="Choose an option"
         onChange={handleChange}
+        renderValue={(selected) => 
+          Array.isArray(selected) ? selected.join(', ') : ''
+        } 
       >
         {options.map((option) => (
           <MenuItem key={option.id} value={option.CMID}>
@@ -255,7 +292,7 @@ const Propose_Merge = () => {
         ))}
       </Select>
     </FormControl>
-    <Button variant="contained" sx={{
+    {/* <Button variant="contained" sx={{
         backgroundColor: 'black',
         color: 'white', 
         '&:hover': {
@@ -264,7 +301,7 @@ const Propose_Merge = () => {
         ml:3,my:1
       }}  onClick={handleSubmit}>
         Confirm Selection
-      </Button>
+      </Button> */}
       <Divider sx={{ my: 2 }} />
       <h4 style={{ color: 'black', padding: "1px" }}>Choose Domain</h4>
       <h5 style={{ color: 'black', padding: "1px" }}>Select Category Domain</h5>
@@ -337,7 +374,7 @@ const Propose_Merge = () => {
         '&:hover': {
           backgroundColor: 'green', 
         },
-      }}  onClick={handleSubmit}>
+      }}  onClick={downloadMerge}>
         Download Results
       </Button>
 
