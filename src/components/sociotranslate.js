@@ -51,7 +51,7 @@ function Sociotranslate(){
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
   let fileObj= ""
-  let filename=""
+  const [filename, setFilename] = useState("");
   let selectedColumnValues = ""
   const [jsonData, setJsondata] = useState();
   let query = "false"
@@ -101,6 +101,7 @@ if (useLocation().pathname.includes("archamap")) {
 const handleClick = async () => {
   setLoading(true);
   setProgress(10);
+  console.log(jsonData)
   try {
     selectedColumnValues = rows.map((row) => row[columns.indexOf(zeroDropdownValue)]);
     setProgress(20);
@@ -194,8 +195,7 @@ const [inputValuetwo, setinputValuetwo] = useState(2024);
 
 const handleFileChange = (event) => {
       const fileType = event.target.files[0].type;
-      filename = event.target.files[0].name.split('.').slice(0, -1).join('.');
-      console.log(filename)
+      setFilename(event.target.files[0].name.split('.').slice(0, -1).join('.'));
       if (fileType === 'application/vnd.ms-excel' || fileType === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') {
         // File is either CSV or XLSX
         setSelectedFile(event.target.files[0]);
@@ -236,7 +236,7 @@ ExcelRenderer(fileObj, (err, resp) => {
       columns.forEach((column, columnIndex) => {
         rowData[column] = row[columnIndex];
       });
-      rowData['key'] = index + 1;
+      //rowData['key'] = index + 1;
       return rowData;
     });
     setJsondata(table)
@@ -252,7 +252,9 @@ ExcelRenderer(fileObj, (err, resp) => {
 
   const getRowStyle = (row) => {
     const statusIndex = columns.findIndex(col => col === 'matchType_'+zeroDropdownValue);
-    const status = row['matchType_'+zeroDropdownValue];
+    const status = row[statusIndex];
+
+    console.log(status)
   
     return getClassForStatus(status);
   };

@@ -5,15 +5,20 @@ import { useAuth } from './AuthContext';
 import options from './merge_dropdown.json'
 import doptions from "./dropdown.json";
 import { useLocation } from 'react-router-dom';
+import * as XLSX from 'xlsx';
+import CircularProgress from '@mui/material/CircularProgress';
+import Backdrop from '@mui/material/Backdrop';
 
 const Propose_Merge = () => {
     const [file, setFile] = useState(null);
     const [file1, setFile1] = useState(null);
     const { authLevel} = useAuth();
-    const [columns, setColumns] = useState();
-    const [rows, setRows] = useState([]);
-    const [columns1, setColumns1] = useState();
-    const [rows1, setRows1] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [data, setData] = useState();
+    // const [columns, setColumns] = useState();
+    // const [rows, setRows] = useState([]);
+    // const [columns1, setColumns1] = useState();
+    // const [rows1, setRows1] = useState([]);
     const [firstDropdownValue, setFirstDropdownValue] = useState("ANY DOMAIN");
     let fileObj= ""
     const [selectedValue, setSelectedValue] = useState([]);
@@ -78,7 +83,6 @@ const Propose_Merge = () => {
     const handleFileChange = (e) => {
         const fileType = e.target.files[0].type;
           if (fileType === 'application/vnd.ms-excel' || fileType === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') {
-            setFile(e.target.files[0]);
             fileObj = e.target.files[0];
     
     ExcelRenderer(fileObj, (err, resp) => {
@@ -86,8 +90,21 @@ const Propose_Merge = () => {
         console.log(err);            
       }
       else{
-        setColumns(resp.rows[0])
-        setRows(resp.rows.slice(1));
+        const c = resp.rows[0];
+        const r = resp.rows.slice(1);
+
+        // setColumns(c);
+        // setRows(r);
+        
+
+        const table = r.map((row, index) => {
+          const rowData = {};
+          c.forEach((column, columnIndex) => {
+            rowData[column] = row[columnIndex];
+          });
+          return rowData;
+        });
+        setFile(table)
       }
     });  
           } else {
@@ -100,7 +117,6 @@ const Propose_Merge = () => {
       const handleFileChange1 = (e) => {
         const fileType = e.target.files[0].type;
           if (fileType === 'application/vnd.ms-excel' || fileType === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') {
-            setFile1(e.target.files[0]);
             fileObj = e.target.files[0];
     
     ExcelRenderer(fileObj, (err, resp) => {
@@ -108,8 +124,20 @@ const Propose_Merge = () => {
         console.log(err);            
       }
       else{
-        setColumns1(resp.rows[0])
-        setRows1(resp.rows.slice(1));
+        const c = resp.rows[0];
+        const r = resp.rows.slice(1);
+
+        // setColumns(c);
+        // setRows(r);
+        
+        const table = r.map((row, index) => {
+          const rowData = {};
+          c.forEach((column, columnIndex) => {
+            rowData[column] = row[columnIndex];
+          });
+          return rowData;
+        });
+        setFile1(table)
       }
     });  
           } else {
@@ -130,6 +158,48 @@ const Propose_Merge = () => {
             if (document.getElementById('fileInput')) {
               document.getElementById('fileInput').value = '';
             }}
+
+    const handleMergeSubmit = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch("https://catmapper.org/api/joinDatasets",{
+        //const response = await fetch("http://127.0.0.1:5001/joinDatasets", {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          "joinLeft" : file,
+          "joinRight" : file1,
+          "database" : database,
+        }),
+      });
+
+      const result = await response.json();
+      setData(result)
+    } catch (error) {
+      console.error('Error submitting form:', error);
+    }
+    finally {
+      setLoading(false);
+    }
+  };
+
+  const handleJoinDownload = async () => {
+    const worksheet = XLSX.utils.json_to_sheet(data);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
+      const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+      const blob = new Blob([excelBuffer], { type: 'application/octet-stream' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'joined_data.xlsx';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+  };
     
     const handleSubmit = async () => {
     try {
@@ -149,41 +219,34 @@ const Propose_Merge = () => {
       });
 
       const result = await response.json();
-      console.log(result)
+      setData(result)
     } catch (error) {
       console.error('Error submitting form:', error);
     }
   };
 
   const downloadMerge = async () => {
-    try {
-      const response = await fetch("https://catmapper.org/api/proposeMergeDownload",{
-        //const response = await fetch("http://127.0.0.1:5001/proposeMergeDownload", {
-        method: 'GET',
-      });
-  
-      if (!response.ok) {
-        throw new Error('Failed to download file');
-      }
-  
-      const blob = await response.blob();
+    const worksheet = XLSX.utils.json_to_sheet(data);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
+      const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+      const blob = new Blob([excelBuffer], { type: 'application/octet-stream' });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'merge.xlsx'; // Default filename
+      a.download = 'merged_dataset.xlsx';
       document.body.appendChild(a);
       a.click();
-      a.remove();
+      document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error('Error downloading file:', error);
-      alert('Failed to download the file. Please try again.');
-    }
   };
 
     return(
-    <Box >
-      <Box sx={{ mb: 3 }} style={{marginBottom:"50px"}}>
+
+      <Box sx={{ height: '100%',              
+        maxHeight: 'calc(100vh - 100px)',
+        overflow: 'auto',            
+        padding: '16px',}}>
       <h2 style={{ color: 'black', padding: "2px" }}>Join Datasets</h2>
       <Divider sx={{ my: 1 }} />
       <Typography variant="p">Upload two datasets to merge. Both datasets must have a `datasetID` column with a valid CMID for each row. Both datasets must have the original `Key` columns specified in the database translation that was previously uploaded to the dataset with the matching CMID. If you have not yet translated and uploaded your dataset, please do so now.</Typography>
@@ -257,16 +320,23 @@ const Propose_Merge = () => {
           backgroundColor: 'green', 
         },
         mr:4
-      }}  onClick={handleSubmit}>
+      }}  onClick={handleMergeSubmit}>
         Merge Datasets
       </Button>
+      <Backdrop
+        open={loading}
+        style={{ color: '#fff', zIndex: 1200 }}
+      >
+        <CircularProgress color="inherit" />
+        <span style={{ marginLeft: 16 }}>Processing...</span>
+      </Backdrop>
 <Button variant="contained" sx={{
         backgroundColor: 'black',
         color: 'white', 
         '&:hover': {
           backgroundColor: 'green', 
         },
-      }}  onClick={handleSubmit}>
+      }}  onClick={handleJoinDownload}>
         Download Results
       </Button>
       <Divider sx={{ my: 2 }} />
@@ -279,6 +349,7 @@ const Propose_Merge = () => {
         id="dynamic-select"
         multiple
         value={selectedValue}
+        style={{width:"33vw"}}
         label="Choose an option"
         onChange={handleChange}
         renderValue={(selected) => 
@@ -380,7 +451,6 @@ const Propose_Merge = () => {
 
 
       </Box>
-    </Box>
     )
 }
 

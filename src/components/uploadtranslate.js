@@ -302,11 +302,26 @@ const handleFileChange = async (e) => {
       setProgress(50); 
 
       const result = await response.json();
+
+      if (result.error) {
+      setProgress(70);
+      setCMIDText(result.error);
+      setPopen(true);
+      setProgress(100);
+      } else {
       setProgress(70);
       setDownload(result.file)      
       setCMIDText(result.message);
       setPopen(true);
       setProgress(100);
+      }
+      
+      // console.log(result)
+      // setProgress(70);
+      // setDownload(result.file)      
+      // setCMIDText(result.message);
+      // setPopen(true);
+      // setProgress(100);
 
     } catch (error) {
       console.error('Error submitting form:', error);
