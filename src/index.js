@@ -12,7 +12,7 @@ ReactGA.pageview(window.location.pathname + window.location.search)
 
 ReactDOM.render(
   <AuthProvider>
-  <BrowserRouter basename="/js">
+  <BrowserRouter>
       <App />
    </BrowserRouter>
    </AuthProvider>
