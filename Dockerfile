@@ -5,7 +5,7 @@ RUN npm ci
 RUN npm run build
 
 FROM nginx
-COPY --from=builder /js /js
+COPY --from=builder /js /usr/share/nginx/html
 
 RUN apt update 
 RUN apt install -y apt-utils php7.4-fpm 
@@ -18,3 +18,7 @@ RUN service php7.4-fpm start
 # docker-compose up -d --build nginx
 # docker exec -it nginx bash
 # ln -s /js /usr/share/nginx/html/js
+
+# renew cert commands
+# docker exec -it nginx bash
+# certbot renew
