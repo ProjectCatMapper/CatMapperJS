@@ -4,6 +4,7 @@ import image from '../assets/white.png'
 import { Link } from 'react-router-dom'
 import Divider from '@mui/material/Divider';
 import Propose_Merge from "./propose_merge"
+import JoinDatasets_Merge from "./joindatasets_merge"
 import Download_Merge from "./download_merge_template"
 
 function TabPanel(props) {
@@ -53,11 +54,11 @@ export default function VerticalTabs() {
         aria-label="Vertical tabs example"
         sx={{ borderRight: 1, borderColor: 'divider' }}
       >
-        <Tab label="Build and Store Merge" {...a11yProps(0)} sx={{ alignItems: 'flex-end', justifyContent: 'center', textAlign: 'right' }} />
-        <Tab label="Propose merge" {...a11yProps(1)} sx={{ alignItems: 'flex-end', justifyContent: 'center', textAlign: 'right' }} />
+        <Tab label="Propose merge" {...a11yProps(0)} sx={{ alignItems: 'flex-end', justifyContent: 'center', textAlign: 'right' }} />
+        <Tab label="Join Datasets" {...a11yProps(1)} sx={{ alignItems: 'flex-end', justifyContent: 'center', textAlign: 'right' }} />
         <Tab label="Download merge template" {...a11yProps(2)} sx={{ alignItems: 'flex-end', justifyContent: 'center', textAlign: 'right' }} />
       </Tabs>
-      <TabPanel value={value} index={0}>
+      {/* <TabPanel value={value} index={0}>
       <Typography variant="h6" gutterBottom>
         Build Dataset Stack
       </Typography>
@@ -75,9 +76,12 @@ export default function VerticalTabs() {
         placeholder="Enter dataset names or IDs"
         variant="outlined"
       />
+      </TabPanel> */}
+      <TabPanel value={value} index={0}>
+        <Propose_Merge />
       </TabPanel>
       <TabPanel value={value} index={1}>
-        <Propose_Merge />
+        <JoinDatasets_Merge />
       </TabPanel>
       <TabPanel value={value} index={2}>
       <Download_Merge />    

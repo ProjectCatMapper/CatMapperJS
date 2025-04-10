@@ -3,9 +3,20 @@ import { useState } from 'react'
 import { DataGrid } from '@mui/x-data-grid';
 import {useNavigate} from 'react-router-dom'
 import { useLocation } from 'react-router-dom';
+import { Snackbar, Alert } from "@mui/material";
 import "./tableviewsc.css"
 
-export default function DataTable(props) {
+export default function DataTable({ users, snackbarOpen, setSnackbarOpen }) {
+  const [rows, setRows] = useState([]);
+  const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 10 });
+  const navigate = useNavigate();
+
+  let path = "sociomap"
+
+  if (useLocation().pathname.includes("archamap")) {
+    path = "archamap"
+  }
+
   const columns = [
     {
       field: 'spacer', // Dummy field for space
@@ -22,7 +33,7 @@ export default function DataTable(props) {
     { field: 'label', headerName: 'Label', flex: 1 },
     { field: 'country', headerName: 'Country', flex: 2,cellClassName: (params) => params.row.hasLargeText ? 'wrap-text-3-lines_ex' : '' },
     {
-      field: 'spacer', // Dummy field for space
+      field: 'spacer1', // Dummy field for space
       headerName: '',
       width: 50, // Set desired width for the space
       sortable: false,
@@ -32,15 +43,7 @@ export default function DataTable(props) {
     },
     { field: 'match', headerName: 'Matching', flex: 1},
   ];
-  const [rows, setRows] = useState([]);
-  const navigate = useNavigate();
-  const tabval = ""
-
-  let path = "sociomap"
-
-  if (useLocation().pathname.includes("archamap")) {
-    path = "archamap"
-  } 
+  
   
   const handleRowClick = (
     params,
@@ -49,7 +52,7 @@ export default function DataTable(props) {
   };
 
   React.useEffect(() => {
-    setRows(props.users.map((value, key) => {
+    setRows(users.map((value, key) => {
       const hasLargeText = ['country'].some(column => {
         const text = value[column];
         return text && text.toString().length > 50;
@@ -65,7 +68,8 @@ export default function DataTable(props) {
         hasLargeText
       }
     }))
-  }, [props.users])
+    setPaginationModel((prev) => ({ ...prev, page: 0 }));
+  }, [users])
 
   // React.useEffect(() => {
   //   console.log(rows)
@@ -82,6 +86,8 @@ export default function DataTable(props) {
         rows={rows}
         columns={columns}
         getRowHeight={getRowHeight}
+        paginationModel={paginationModel}
+        onPaginationModelChange={setPaginationModel}
         initialState={{
           pagination: {
             paginationModel: { page: 0, pageSize: 10 },
@@ -90,6 +96,26 @@ export default function DataTable(props) {
         pageSizeOptions={[10, 30, 50]}
         onRowClick={handleRowClick}
         localeText={{ noRowsLabel: "No results to display" }} />
+    <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={5000}
+        onClose={() => setSnackbarOpen(false)}
+        message="No results found"
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+        >
+        <Alert
+          onClose={() => setSnackbarOpen(false)}
+          severity="error" // Makes it red and adds an error icon
+          sx={{ 
+            fontSize: "1.2rem",  // Bigger text
+            padding: "1rem",  // More padding
+            width: "100%", // Make it wider
+            fontWeight: "bold" // Bold text
+          }}
+        >
+          No results found
+        </Alert>
+      </Snackbar>   
     </div>
   );
 }

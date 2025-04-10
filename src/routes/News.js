@@ -4,8 +4,52 @@ import { Container, Typography, Box, Paper, Divider, Grid } from '@mui/material'
 
 const updates = [
   {
+    date: 'March 31, 2025',
+    content: '1258 ethnic categories from Lomax and Arensberg’s 1977 subsistence paper linked to SocioMap.'
+  },
+  {
+    date: 'March 20, 2025',
+    content: '1073 ethnic categories from the Global Jukebox.'
+  },
+  {
+    date: 'March 15, 2025',
+    content: '2802 ethnic categories from the Library of congress authority records linked to SocioMap.'
+  },
+  {
+    date: 'March 6, 2025',
+    content: '2896 languoids from ECAI Digital Language Atlas of the Pacific Area linked to SocioMap.'
+  },
+  {
+    date: 'March 3, 2025',
+    content: 'Library of Congress Demographic Group Terms for ethnicities, nationalities and religions linked with SocioMap.'
+  },
+  {
+    date: 'January 20, 2025',
+    content: 'Library of Congress Classification (2024) for ethnicities (6500 unique ids and 3893 unique categories) linked to SocioMap.'
+  },
+  {
+    date: 'January 15, 2025',
+    content: 'Database of Religious History entries (up to Jan 1, 2025) linked to SocioMap.'
+  },
+  {
+    date: 'January 15, 2025',
+    content: 'Library of Congress MARC language categories added to SocioMap.'
+  },
+  {
+    date: 'December 17, 2024',
+    content: 'Administrative divisions from level-0 (i.e., countries/nations) through level-2 (e.g., U.S. counties) from Getty Thesaurus of Geographic Names linked to SocioMap.'
+  },
+  {
     date: 'November 12, 2024',
-    content: ' All ethnicities, districts, and languages from Afrobarometer versions 1-9 have been linked and harmonized in SocioMap.'
+    content: 'All ethnicities, districts, and languages from Afrobarometer versions 1-9 have been linked and harmonized in SocioMap.'
+  },
+  {
+    date: 'October 15, 2024',
+    content: 'Library of Congress MARC Code list of geographic areas linked to SocioMap.'
+  },
+  {
+    date: 'October 15, 2024',
+    content: 'Library of Congress MARC Code List for Countries linked to SocioMap.'
   },
   {
     date: 'July 28, 2024',

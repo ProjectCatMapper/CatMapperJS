@@ -1,10 +1,11 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { Network } from 'vis-network/standalone';
-import {useNavigate} from 'react-router-dom'
+import {useNavigate,useLocation} from 'react-router-dom'
 
 const Neo4jVisualization = ({ visData }) => {
   console.log(visData)
   const navigate = useNavigate();
+  const loc = useLocation();
   const valuesToRemove = ['DISTRICT', 'CATEGORY'];
   const nodes = visData["nodes"].length > 10 ? visData["nodes"].slice(0, 10) : visData["nodes"];
   const filteredData = new Set(visData["nodes"].map(item => ({ domain: item.domain, color: item.color })).map(item => {
@@ -14,7 +15,6 @@ const Neo4jVisualization = ({ visData }) => {
       return item;
     }))
   const uniqueMap = new Map();
-  const tabval = 2
   let tooltipText
 
   filteredData.forEach(obj => {
@@ -34,6 +34,17 @@ const Neo4jVisualization = ({ visData }) => {
       // widthConstraint: 50,      
     },
     // physics: false
+    physics: {
+      enabled: true,
+      solver: "forceAtlas2Based",
+      forceAtlas2Based: {
+        springLength: 100,
+        avoidOverlap: 1, 
+      },
+      stabilization: {
+        iterations: 7,
+      }
+    },
     
     edges: {
       arrows: {
@@ -48,9 +59,23 @@ const Neo4jVisualization = ({ visData }) => {
     },
    
   };
+  let path = "sociomap"
+  if (loc.pathname.includes("archamap")) {
+      path = "archamap"
+  }
 
   const data = { nodes, edges: visData.edges };
     const network = new Network(container, data, options);
+
+    network.once("stabilizationIterationsDone", function () {
+      if (network.layoutEngine) {
+      setTimeout(() => {
+        network.setOptions({ physics: false });
+      }, 1000);}
+      else {
+        console.warn("layoutEngine does not exist. Skipping setOptions.");
+      }
+    });
 
     let singleClickTimer = null;
     let lastClickedNode = null;
@@ -62,13 +87,15 @@ const Neo4jVisualization = ({ visData }) => {
            if (params.nodes.length > 0 && params.nodes[0].length > -1) {
           let tooltipContent = visData.nodes.find(obj => obj.id === params.nodes[0]).tooltipcon.filter(item => item !== 'SocioMapID' && item !== 'SocioMapName');
           const cmItems = tooltipContent.filter(item => ['CMID', 'CMName'].includes(item.split(':')[0].trim()));
+          const glottoItems = tooltipContent.filter(item => item.split(':')[0].trim().toLowerCase() === 'glottocode');
+          const ISOItems = tooltipContent.filter(item => item.split(':')[0].trim() === 'ISO3');
+          const FIPSItems = tooltipContent.filter(item => item.split(':')[0].trim() === 'FIPS');
           const logItems = tooltipContent
             .filter(item => item.toLowerCase().includes('log'))
               .slice(0, 3);
-              tooltipContent = tooltipContent.filter(item =>
-                  !['CMID', 'CMName'].includes(item.split(':')[0].trim()) &&  !item.toLowerCase().includes('log'));
+          tooltipContent = tooltipContent.filter(item =>!['CMID', 'CMName','glottocode','ISO3','FIPS'].includes(item.split(':')[0].trim()) &&  !item.toLowerCase().includes('log'));
                   
-          tooltipContent = [...cmItems, ...tooltipContent, ...logItems];
+          tooltipContent = [...cmItems, ...glottoItems, ...ISOItems, ...FIPSItems, ...tooltipContent, ...logItems];
 
           // tooltipContent = tooltipContent.filter(item => !['SocioMapID', 'SocioMapName'].includes(item.split(':')[0].trim()));
           console.log(tooltipContent)
@@ -87,7 +114,8 @@ const Neo4jVisualization = ({ visData }) => {
           var clickedNodeData = visData["nodes"].find(obj => obj["id"] === clickedNodeId)
           if (clickedNodeData["CMID"] !== currentid)
       {
-      navigate({pathname:`/sociomap/${clickedNodeData["CMID"]}/${tabval}`,});
+      const tabval = clickedNodeData["CMID"].startsWith("SD") || clickedNodeData["CMID"].startsWith("AD") ? 1 : 2;
+      navigate({pathname:`/${path}/${clickedNodeData["CMID"]}/${tabval}`,});
       window.location.reload();
       }
         }
@@ -142,7 +170,7 @@ tooltipText = [...tooltipText.top, ...tooltipText.middle, ...tooltipText.bottom]
           tooltipText = `referenceKey: ${edge.referenceKey} <br> type: ${edge.type}`;
           break;
         default:
-          tooltipText = `eventDate: ${edge.eventDate} <br> eventType: ${edge.eventType} <br> referenceKey: ${edge.refkey}`;
+          tooltipText = `eventDate: ${edge.eventDate} <br> eventType: ${edge.eventType} <br> referenceKey: ${edge.referenceKey}`;
           break;
       }
 

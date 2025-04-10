@@ -9,10 +9,10 @@ import './LiveMapCarousel.css';
 
 const LiveMapCarousel = () => {
   const mapPages = [
-    { id: 1, mapUrl: '/map1', imageUrl: mapImage1, altText: 'Live Map 1', title: 'All datasets by region' },
+    //{ id: 1, mapUrl: '/map1', imageUrl: mapImage1, altText: 'Live Map 1', title: 'All datasets by region' },
+    { id: 1, mapUrl: '/map4', imageUrl: mapImage3, altText: 'Live Map 4', title: 'All ethnicities' },
     { id: 2, mapUrl: '/map2', imageUrl: mapImage2, altText: 'Live Map 2', title: 'All languages' },
-    // { id: 3, mapUrl: '/map3', imageUrl: require('../assets/map1.png'), altText: 'Live Map 3' },
-    { id: 4, mapUrl: '/map4', imageUrl: mapImage3, altText: 'Live Map 4', title: 'All ethnicities' }
+    // { id: 3, mapUrl: '/map3', imageUrl: require('../assets/map1.png'), altText: 'Live Map 3' }
   ];
 
   return (

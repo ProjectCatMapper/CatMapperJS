@@ -7,15 +7,18 @@ import Tooltip from '@mui/material/Tooltip';
 import InfoIcon from '@mui/icons-material/Info';
 import { useAuth } from './AuthContext';
 import { LinearProgress } from '@mui/material';
-import { Dialog, DialogContent } from '@mui/material';
+import { Dialog, DialogContent,DialogActions, DialogContentText, DialogTitle } from '@mui/material';
 import * as XLSX from 'xlsx';
+import { useLocation } from 'react-router-dom';
 
 const UploadTranslat = () => {
 
   const [file, setFile] = useState(null);
   const { user,authLevel} = useAuth();
   const [open, setOpen] = useState(false);
+  const [node_open, setNodeOpen] = useState(false);
   const [showFields, setShowFields] = useState(false);
+  const [IsDataset, setIsDataset] = useState(false);
   const [nodecount, setNodeCount] = useState(null);
   const [columns, setColumns] = useState(['dummy']);
   const [rows, setRows] = useState([]);
@@ -28,6 +31,8 @@ const UploadTranslat = () => {
   const [error, setError] = useState(null);
   const [fileDownload, setfileDownload] = useState('');
   const [loading, setLoading] = useState(false);
+  const [missingCount, setMissingCount] = useState(0);
+  const [openDialog, setOpenDialog] = useState(false);
   const [progress, setProgress] = useState(0);
   const [formData, setFormData] = useState({
     domain: '',
@@ -40,6 +45,11 @@ const UploadTranslat = () => {
   });
   let fileObj= ""
   const [CMIDText, setCMIDText] = useState('The new dataset CMID is pending.');
+  let required = [];
+  let finalProduct = [];
+  const foundColumns = [];
+  const notFoundColumns = [];
+
 
   const handleOpen = () => {
     setOpen(true);
@@ -63,16 +73,16 @@ const UploadTranslat = () => {
 
     switch (value) {
       case 'dataset':
-        window.open('https://catmapper.org/data/templates/dataset.xlsx', '_blank');
+        window.open('https://catmapper.org/templates/dataset.xlsx', '_blank');
         break;
       case 'nodes':
-        window.open('https://catmapper.org/data/templates/nodes.xlsx', '_blank');
+        window.open('https://catmapper.org/templates/nodes.xlsx', '_blank');
         break;
       case 'update_uses':
-        window.open('https://catmapper.org/data/templates/update_uses.xlsx', '_blank');
+        window.open('https://catmapper.org/templates/update_uses.xlsx', '_blank');
         break;
       case 'uses':
-        window.open('https://catmapper.org/data/templates/uses.xlsx', '_blank');
+        window.open('https://catmapper.org/templates/uses.xlsx', '_blank');
         break;
       default:
         break;
@@ -140,7 +150,10 @@ const handleFileChange = async (e) => {
 
           
           setColumns(resp.rows[0]);
-          setRows(resp.rows.slice(1));
+          const filteredRows = resp.rows.slice(1).filter(row => 
+            row.some(value => value !== null && value !== undefined && value !== "")
+          );
+          setRows(filteredRows);
 
           const table = resp.rows.slice(1).map((row, index) => {
               const rowData = {};
@@ -195,11 +208,22 @@ const handleFileChange = async (e) => {
 
     if (columns.includes('CMID')) {
       const CMIDIndex = columns.indexOf('CMID');
-      const missingValues = rows.some(row => !row[CMIDIndex]);
-      if (missingValues) {
+      const count = rows.filter(row => !row[CMIDIndex]).length;
+
+      if (advselectedOption === "add_uses") {
+        return count;
+      }
+
+      if (count > 0) {
         setError('CMID column contains missing values.');
         return false;
       }
+
+      // const missingValues = rows.some(row => !row[CMIDIndex]);
+      // if (missingValues) {
+      //   setError('CMID column contains missing values.');
+      //   return false;
+      // }
     }
 
     if (columns.includes('Key')) {
@@ -273,15 +297,63 @@ const handleFileChange = async (e) => {
     return true;
   };
 
+  const handleConfirm = (proceed) => {
+    setOpenDialog(false);
+    if (proceed) {
+      continueWithSubmit();
+    }
+  };
+
+  let database = "SocioMap"
+  if (useLocation().pathname.includes("archamap")) {
+      database = "ArchaMap"
+    } 
+
   const handleSubmit = async () => {
-    if (!validateColumns()) {
+    const validationResult = validateColumns();
+
+    if (validationResult === false) {
       return;
     }
+
+    if (typeof validationResult === 'number' && validationResult > 0) {
+      setMissingCount(validationResult);
+      setOpenDialog(true);
+      return;
+    }
+    continueWithSubmit();
+  }
+
+
+  const continueWithSubmit = async () => {
     setLoading(true);
     setProgress(0);
     try {
       setProgress(30); 
-      console.log(jsonData)
+
+      const columnsToUse =
+  advselectedOption === 'update_replace' || advselectedOption === 'node_replace' ? [selectedExtraColumn] : selectedExtraColumns;
+
+      const allowedColumns = new Set([
+        ...Object.keys(selectedColumns).filter(col => selectedColumns[col]),
+        ...columnsToUse,
+      ]);
+      
+      const finalProduct = selectedOption === "advanced" 
+      ?jsonData.map(item => {
+        const filteredItem = {};
+      
+        allowedColumns.forEach(col => {
+          if (item[col] !== undefined) {
+            filteredItem[col] = item[col];
+          }
+        });
+      
+        return filteredItem;
+      }):jsonData;
+      
+      console.log(selectedOption)
+
       const response = await fetch("https://catmapper.org/api/uploadInputNodes",{
       //const response = await fetch("http://127.0.0.1:5001/uploadInputNodes", {
         method: 'POST',
@@ -290,13 +362,13 @@ const handleFileChange = async (e) => {
         },
         body: JSON.stringify({
           formData : formData,
-          database : "sociomap",
-          df : jsonData,
+          database : database,
+          df : finalProduct,
           so : selectedOption,
           ao: advselectedOption,
           addoptions: addiColumns,
           user : user,
-          linkContext : linkContext
+          linkContext : columnsToUse
         }),
       });
       setProgress(50); 
@@ -315,7 +387,16 @@ const handleFileChange = async (e) => {
       setPopen(true);
       setProgress(100);
       }
-      
+
+      //await fetch("http://127.0.0.1:5001/updateWaitingUSES", {
+      await fetch("https://catmapper.org/api/updateWaitingUSES", {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ database : "sociomap" }),
+      })
+
       // console.log(result)
       // setProgress(70);
       // setDownload(result.file)      
@@ -359,6 +440,8 @@ const handleFileChange = async (e) => {
     { option: 'Adding new uses ties', description: 'Use this if you are adding new uses ties with existing nodes or if you have a mix of new nodes and existing nodes or if you have new nodes that have multiple rows of data that represent each node. This function will aggregate rows by dataset, SocioMapID or ArchaMapID (if present), and Key.' },
     { option: 'Updating existing USES only--add or add to properties ', description: 'Use this if you are updating properties for existing uses ties but not replacing any information.' },
     { option: 'Updating existing USES only--replace one property ', description: 'Use this if you are replacing or removing data from a property. This is only valid for a single property.' },
+    { option: 'Updating existing Node properties--add or add to properties ', description: 'Tbf.' },
+    { option: 'Updating existing Node properties--replace one property ', description: 'Tbf.' },
   ];
 
   const tooltipContent = (
@@ -404,19 +487,25 @@ const handleFileChange = async (e) => {
   //   'yearStart'
   // ];
 
-  const allowedExtraColumns = ["descriptor", "Dataset", "log", "country", "dateEnd", "dateStart", "district", "eventDate", "eventType", "geoCoords", "Key", "label", "latitude", "longitude", "ignoreNames", "Name", "parent", "parentContext", "propertyValues", "rawDate", "Rfunction", "Rtransform", "recordEnd", "recordStart", "sampleSize", "transform", "categoryType", "url", "variableDescription", "yearEnd", "yearStart", "language", "populationEstimate", "religion", "geoPolygon"]
+  let allowedExtraColumns = ["descriptor", "Dataset", "log", "country", "dateEnd", "dateStart", "district", "eventDate", "eventType", 
+    "geoCoords", "Key", "label", "latitude", "longitude", "ignoreNames", "Name", "parent","period", "parentContext", "propertyValues", 
+    "rawDate", "Rfunction", "Rtransform", "recordEnd", "recordStart", "sampleSize", "transform", "categoryType", "url", "variableDescription", 
+    "yearEnd", "yearStart", "language", "populationEstimate", "religion", "geoPolygon","glottocode","FIPS","ISO2","ISO3","ISONumeric"]
   let allowedDatasetColumns = []
 
   useEffect(() => {
     if (columns.length === 0 || rows.length === 0) return;
 
+    const cmidColumn = columns.indexOf('CMID');
+    if (cmidColumn !== -1) {
+        const firstRowCMID = rows[0][cmidColumn];
+        setIsDataset(firstRowCMID?.startsWith("SD") || firstRowCMID?.startsWith("AD"));
+    }
 
     setSelectedColumns({});
     setMissingColumns([]);
     setExtraColumns([]);
     setAllRequiredColumnsFound(false);
-
-    let required = [];
 
   switch (advselectedOption) {
     case 'add_node':
@@ -427,7 +516,8 @@ const handleFileChange = async (e) => {
         const datasetValueFound = rows.some(row => row[labelIndex] === 'DATASET');
         if (datasetValueFound) {
           required = ['CMName', 'label', 'shortName', 'DatasetCitation'];
-          allowedDatasetColumns = ["ApplicableYears", "CMID", "CMName", "DatasetCitation", "DatasetLocation", "DatasetScope", "DatasetVersion", "District", "log", "Note", "parent", "project", "shortName", "Subdistrict", "Subnational", "Unit"]
+          allowedDatasetColumns = ["ApplicableYears", "CMID", "CMName", "DatasetCitation", "DatasetLocation", "DatasetScope", "DatasetVersion",
+             "District", "log", "Note", "parent", "project", "shortName", "Subdistrict", "Subnational", "Unit"]
 
         }
       }
@@ -439,13 +529,27 @@ const handleFileChange = async (e) => {
     case 'update_replace':
       required = ['CMID', 'Key', 'datasetID'];
       break;
+    case 'node_add':
+      required=['CMID']
+      if (IsDataset){
+      allowedExtraColumns = ['parent','District']
+      }
+      else{
+        setNodeOpen(true)
+      }
+      break;
+    case 'node_replace':
+      required=['CMID'];
+      if (IsDataset){
+        allowedDatasetColumns = ["CMName","parent","District","shortName","ApplicableYears","DatasetCitation","DatasetLocation","DatasetScope","project"]
+      }
+      else{
+        allowedExtraColumns = ["CMName","glottocode","FIPS","ISO2","ISO3","ISONumeric"]
+      }
+      break;
     default:
       required = [];
   }
-
-
-  const foundColumns = [];
-  const notFoundColumns = [];
 
   required.forEach((column) => {
     if (columns.includes(column)) {
@@ -458,7 +562,7 @@ const handleFileChange = async (e) => {
   setMissingColumns(notFoundColumns);
   setAllRequiredColumnsFound(notFoundColumns.length === 0);
 
-  if (['add_node','add_uses', 'update_add','update_replace'].includes(advselectedOption)) {
+  if (['add_node','add_uses', 'update_add','update_replace','node_add','node_replace'].includes(advselectedOption)) {
     // const extraCols = columns
     //   .filter((col) => !required.includes(col))
     //   .filter((col) => allowedExtraColumns.includes(col)); 
@@ -469,6 +573,10 @@ const handleFileChange = async (e) => {
     } else {
       extraCols = extraCols.filter((col) => allowedExtraColumns.includes(col)); 
     }
+
+    if (advselectedOption === 'update_add') {
+      extraCols = extraCols.filter((col) => col !== 'label');
+  }
 
     setExtraColumns(extraCols);
     setSelectedExtraColumns(extraCols)
@@ -569,7 +677,7 @@ const handleFileChange = async (e) => {
   return (
     <Box sx={{ p: 4 }}>
       <Box sx={{ mb: 3 }} style={{marginBottom:"50px"}}>
-      <h4 style={{ color: 'black', padding: "2px" }}>Find Dataset download templates here:</h4>
+      <h4 style={{ color: 'black', padding: "2px" }}>Find upload templates here:</h4>
       <br />
       <FormControl sx={{width: "12vw", mr:"1vw" }}  variant="outlined">
       <InputLabel id="dropdown-label">Download:</InputLabel>
@@ -650,9 +758,16 @@ const handleFileChange = async (e) => {
                 .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                 .map((row, rowIndex) => (
                   <TableRow key={rowIndex}>
-                    {row.map((cell, cellIndex) => (
+                    {/*{row.map((cell, cellIndex) => (
                       <TableCell key={cellIndex}>{cell}</TableCell>
-                    ))}
+                    ))}*/}
+                    {columns.map((column, columnIndex) => (
+              <TableCell key={columnIndex}>
+                {row[columnIndex] !== undefined && row[columnIndex] !== null
+                  ? row[columnIndex]
+                  : ""}
+              </TableCell>
+            ))}
                   </TableRow>
                 ))}
             </TableBody>
@@ -819,8 +934,10 @@ const handleFileChange = async (e) => {
       <RadioGroup defaultValue="add_node" name="advuploadOption" sx={{ mb: 2 }} onChange={handleadvOptionChange}>
         <FormControlLabel value="add_node" control={<Radio />} label="Adding new node for every row" />
         <FormControlLabel value="add_uses" control={<Radio />} label="Adding new uses ties (with old or new nodes)" />
-        <FormControlLabel value="update_add" control={<Radio />} label="Updating existing USES only--add or add to properties" />
+        {authLevel === 2 &&<FormControlLabel value="update_add" control={<Radio />} label="Updating existing USES only--add or add to properties" />}
         {authLevel === 2 &&<FormControlLabel value="update_replace" control={<Radio />} label="Updating existing USES only--replace one property" />}
+        {authLevel === 2 &&<FormControlLabel value="node_add" control={<Radio />} label="Updating existing Node properties--add or add to properties" />}
+        {authLevel === 2 &&<FormControlLabel value="node_replace" control={<Radio />} label="Updating existing Node properties--replace one property" />}
       </RadioGroup>
 
       <FormControl component="fieldset" sx={{ mb: 2 }}>
@@ -845,6 +962,32 @@ const handleFileChange = async (e) => {
         ))}
       </FormGroup>
     </FormControl>
+    <Snackbar
+      open={node_open}
+      autoHideDuration={7000}
+      onClose={() => setNodeOpen(false)}
+      anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+    >
+      <Alert onClose={() => setNodeOpen(false)} severity="error" sx={{ width: "100%" }}>
+        You cannot add property data for Category Nodes.
+      </Alert>
+    </Snackbar>
+
+    {error && <p style={{ color: 'red' }}>{error}</p>}
+
+      <Dialog open={openDialog} onClose={() => handleConfirm(false)}>
+        <DialogTitle>Missing CMID Values</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            CMID column contains {missingCount} missing values, hence {missingCount} new nodes will be created. Do you want to proceed?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => handleConfirm(false)} color="error">No</Button>
+          <Button onClick={() => handleConfirm(true)} color="primary">Yes</Button>
+        </DialogActions>
+      </Dialog>
+
     <br />
     {["add_node",'add_uses', 'update_add'].includes(advselectedOption) && extraColumns.length > 0 && allRequiredColumnsFound && (
       <div>
@@ -863,7 +1006,6 @@ const handleFileChange = async (e) => {
         </Select>
         </div>
       )}
-    <br />
     {advselectedOption === 'update_replace' && extraColumns.length > 0 && allRequiredColumnsFound && (
       <div>
         <h4 style={{ color: 'black', padding: "2px" }}>Choose column to replace property:</h4>
@@ -880,6 +1022,40 @@ const handleFileChange = async (e) => {
           ))}
         </Select>
         </div>
+      )}
+      {advselectedOption === 'node_add' && extraColumns.length > 0 && IsDataset && allRequiredColumnsFound && (
+      <div>
+      <h4 style={{ color: 'black', padding: "2px" }}>Choose columns to enter as properties:</h4>
+        <Select
+          multiple
+          value={selectedExtraColumns}
+          onChange={handleExtraColumnsChange}
+          renderValue={(selected) => selected.join(', ')}
+        >
+          {extraColumns.map((col) => (
+            <MenuItem key={col} value={col}>
+              {col}
+            </MenuItem>
+          ))}
+        </Select>
+        </div>
+      )}
+      {advselectedOption === 'node_replace' && extraColumns.length > 0 && allRequiredColumnsFound && (
+      <div>
+      <h4 style={{ color: 'black', padding: "2px" }}>Choose column to replace property:</h4>
+      <br />
+      <Select
+        value={selectedExtraColumn}
+        onChange={handleSingleExtraColumnChange}
+        style={{width:"7vw"}}
+      >
+        {extraColumns.map((col) => (
+          <MenuItem key={col} value={col}>
+            {col}
+          </MenuItem>
+        ))}
+      </Select>
+      </div>
       )}
       <br />
     <FormControl component="fieldset" sx={{ mb: 2 }}>

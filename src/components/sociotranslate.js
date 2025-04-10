@@ -4,7 +4,7 @@ import aoptions from "./dropdown_archamap.json";
 import {Select, MenuItem } from '@mui/material';
 import {ExcelRenderer} from 'react-excel-renderer';
 import Button from '@mui/material/Button';
-import { Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow,  TablePagination, Typography, Box } from '@mui/material';
+import { Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow,  TablePagination, Typography, Box,FormControlLabel,Checkbox } from '@mui/material';
 import { useLocation } from 'react-router-dom';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
@@ -16,12 +16,15 @@ import './sociotranslate.css'
 import Divider from '@mui/material/Divider';
 import image from '../assets/white.png'
 import { Link } from 'react-router-dom'
+import Tooltip from '@mui/material/Tooltip';
+import InfoIcon from '@mui/icons-material/Info';
+import { Dialog, DialogTitle, DialogContent, DialogActions} from "@mui/material";
 
 function Sociotranslate(){
 
   let sections = [
     { label: 'ANY DOMAIN', keys: ['ANY DOMAIN'] },
-    { label: 'AREA to PPL', keys: ['AREA', 'ADM0', 'ADM1', 'ADM2', 'ADM3', 'ADM4', 'ADMD', 'ADME', 'ADML', 'ADMX', 'PPL'] },
+    { label: 'AREA to PPL', keys: ['AREA', 'ADM0', 'ADM1', 'ADM2', 'ADM3', 'ADM4', 'ADMD', 'ADME', 'ADML', 'ADMX', 'PPL','NATURAL'] },
     { label: 'DATASET', keys: ['DATASET'] },
     { label: 'LANGUOID to FAMILY', keys: ['LANGUOID', 'LANGUAGE', 'DIALECT', 'FAMILY'] },
     { label: 'ETHNICITY', keys: ['ETHNICITY'] },
@@ -32,6 +35,7 @@ function Sociotranslate(){
 
 
   const [selectedFile, setSelectedFile] = useState(null);
+  const [error, setError] = useState(null);
   const [zeroDropdownValue, setZeroDropdownValue] = useState([]);
   const [firstDropdownValue, setFirstDropdownValue] = useState("ANY DOMAIN");
   const [secondDropdownValue, setsecondDropdownValue] = useState([]);
@@ -55,6 +59,12 @@ function Sociotranslate(){
   let selectedColumnValues = ""
   const [jsonData, setJsondata] = useState();
   let query = "false"
+
+  const [isRowsChecked, setIsRowsChecked] = useState(false);
+
+  const handleRowsChange = (event) => {
+    setIsRowsChecked(event.target.checked);
+  };
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
@@ -105,7 +115,7 @@ const handleClick = async () => {
   try {
     selectedColumnValues = rows.map((row) => row[columns.indexOf(zeroDropdownValue)]);
     setProgress(20);
-    // const response = await fetch("http://127.0.0.1:5001/translate2", {
+    //const response = await fetch("http://127.0.0.1:5001/translate2", {
     const response = await fetch("https://catmapper.org/api/translate2", {
       method: 'POST',
       headers: {
@@ -123,7 +133,8 @@ const handleClick = async () => {
         yearStart : inputValue,
         yearEnd : inputValuetwo,
         table : jsonData,
-        query : query
+        query : query,
+        uniqueRows: isRowsChecked
       }),
     });
 
@@ -132,6 +143,7 @@ const handleClick = async () => {
     if (!response.ok) {
       throw new Error('Network response was not ok');
     }
+    console.log(zeroDropdownValue)
 
     const responseData = await response.json();
     setData(responseData);
@@ -157,6 +169,7 @@ const handleClick = async () => {
 
     setTcategories(matchTypePercentages);
     setProgress(100)
+    console.log("its over")
     
   } catch (error) {
     console.error('Error sending POST request:', error);
@@ -207,18 +220,29 @@ ExcelRenderer(fileObj, (err, resp) => {
   }
   else{
     const firstRow = resp.rows[0];
-        const columns = [];
+        const column_check = [];
 
-        for (let i = 0; i < firstRow.length; i++) {
-          const column = firstRow[i] === undefined || firstRow[i].trim() === '' ? `...${i + 1}` : firstRow[i];
-          columns.push(column);
+        try {
+          for (let i = 0; i < firstRow.length; i++) {
+            if (firstRow[i] === undefined || firstRow[i].trim() === "") {
+              throw new Error(`Missing column name at index ${i}`);
+            }
+            column_check.push(firstRow[i]);
+          }
+        } catch (err) {
+          setError(err.message);
         }
 
-    setColumns(columns);
+
+    setColumns(column_check);
+
 
     const processedRows = resp.rows.slice(1).map(row => {
-      const fullRow = Array(columns.length).fill(null);
+      const fullRow = Array(column_check.length).fill(null);
       row.forEach((cell, index) => {
+        if (typeof cell === 'string') {
+          cell = cell.replace(/^['"]|['"]$/g, '');
+        }
         fullRow[index] = cell !== undefined ? cell : null;
       });
       return fullRow;
@@ -233,7 +257,7 @@ ExcelRenderer(fileObj, (err, resp) => {
 
     const table = filteredRows.map((row, index) => {
       const rowData = {};
-      columns.forEach((column, columnIndex) => {
+      column_check.forEach((column, columnIndex) => {
         rowData[column] = row[columnIndex];
       });
       //rowData['key'] = index + 1;
@@ -254,7 +278,7 @@ ExcelRenderer(fileObj, (err, resp) => {
     const statusIndex = columns.findIndex(col => col === 'matchType_'+zeroDropdownValue);
     const status = row[statusIndex];
 
-    console.log(status)
+    console.log(row)
   
     return getClassForStatus(status);
   };
@@ -265,7 +289,7 @@ ExcelRenderer(fileObj, (err, resp) => {
       return 'color-undefined';
     }
     console.log(status)
-    status = status.trim();
+    status = (status && typeof status === "string") ? status.trim() : status;
 
     switch (status) {
       case 'exact match':
@@ -316,6 +340,37 @@ ExcelRenderer(fileObj, (err, resp) => {
     }
   }, [firstDropdownValue])
 
+  const Terminology = [
+    { label: 'Choose column to match', description: 'Which column in the input dataset do you want to find matches for in CatMapper' },
+    { label: 'Select category domain', description: 'From which category domain do you want to find matches?' },
+    { label: 'Property to match', description: 'For the column you are matching, is it a Name, a CMID, a Key, or some other property? For beginners this will be Name.' },
+    { label: 'Limit by Country', description: 'This permits limiting matches to categories associated with a specific country.  This requires a column with the CMID for the country.' },
+    { label: 'Limit by Contex', description: 'This permits limiting matches to categories that are contained by specific contexts (e.g. only counties in Ohio).  This requires a column with the CMID for the context (e.g. Ohio).' },
+    { label: 'Limit by Dataset', description: 'This permits limiting matches to categories used by a specific dataset.  This requires a column with the CMID for the datasetID.' },
+  ];
+
+  const tooltipContent = (
+    <div style={{ maxWidth: '400px' }}>
+      <h4>Terminology Descriptions</h4>
+      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+        <thead>
+          <tr>
+            <th style={{ borderBottom: '1px solid #ddd', textAlign: 'left', padding: '8px' }}>Label</th>
+            <th style={{ borderBottom: '1px solid #ddd', textAlign: 'left', padding: '8px' }}>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          {Terminology.map((category, index) => (
+            <tr key={index}>
+              <td style={{ borderBottom: '1px solid #ddd', padding: '8px' }}>{category.label}</td>
+              <td style={{ borderBottom: '1px solid #ddd', padding: '8px' }}>{category.description}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+
 
   return (
     <Box sx={{ backgroundColor: 'black', opacity: 1,flexGrow: 1  }} >
@@ -350,7 +405,14 @@ ExcelRenderer(fileObj, (err, resp) => {
         </Select>
         </div>
       )}
-      <p style={{ color: 'White', fontWeight: "bold", marginLeft: 7, padding: "2px" }}>Select category domain</p>     
+      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+  <p style={{ color: 'White', fontWeight: "bold", marginLeft: 7, padding: "2px" }}>
+    Select category domain
+  </p>
+  <Tooltip title={tooltipContent} arrow>
+    <Button startIcon={<InfoIcon sx={{ height: '28px', width: '28px' }} />} />
+  </Tooltip>
+</Box> 
       <Select
           label="First Dropdown"
           value={firstDropdownValue}
@@ -484,6 +546,25 @@ ExcelRenderer(fileObj, (err, resp) => {
         </div>
         {loading && <ProgressBar progress={progress} />}
       </Backdrop>
+      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+      {/* Title next to the checkbox */}
+      <Typography variant="body1" sx={{ marginRight: 2, color: 'black', fontWeight: 500 }}>
+        Unique Rows?
+      </Typography>
+
+      <FormControlLabel
+        control={
+          <Checkbox
+            checked={isRowsChecked}
+            onChange={handleRowsChange}
+            name="checkboxButton"
+            color="default"  // Optional: color can be changed
+            sx={{ '& .MuiSvgIcon-root': { fontSize: 28 } }}  // Adjust checkbox size
+          />
+        }
+        label=""
+      />
+    </Box>
       <Button variant="contained" sx={{
         backgroundColor: 'black',
         color: 'white', 
@@ -505,6 +586,15 @@ ExcelRenderer(fileObj, (err, resp) => {
       }} onClick={handleClicktwo}>
         Download Data
       </Button>
+      <Dialog open={Boolean(error)} onClose={() => setError(null)}>
+        <DialogTitle>Error</DialogTitle>
+        <DialogContent>{error}</DialogContent>
+        <DialogActions>
+          <Button onClick={() => setError(null)} color="primary">
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
     </div>
     <div style={{top:100,width:"72%", height:"90%", backgroundColor:"white", padding: '20px',border: '1px solid #ccc',borderRadius : '10px', marginLeft: "27%",position:"absolute",overflow: 'auto'}}>
     {columns.length > 0 && rows.length > 0 && (

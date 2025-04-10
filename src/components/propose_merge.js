@@ -1,9 +1,6 @@
-import React, { useState, useEffect } from 'react'
-import { Box, Button, FormControlLabel, Radio, RadioGroup, Checkbox, Typography, Divider,Select,TextField,MenuItem,InputLabel,FormControl, FormGroup,Table, TableBody, TableCell, TableContainer, TableHead, TableRow,TablePagination, Paper } from '@mui/material';
+import React, { useState} from 'react'
+import { Box, Button, FormControlLabel, Radio, RadioGroup, Checkbox, Typography, Divider,Select,TextField,MenuItem,FormControl,FormGroup,Snackbar,Alert } from '@mui/material';
 import {ExcelRenderer} from 'react-excel-renderer';
-import { useAuth } from './AuthContext';
-import options from './merge_dropdown.json'
-import doptions from "./dropdown.json";
 import { useLocation } from 'react-router-dom';
 import * as XLSX from 'xlsx';
 import CircularProgress from '@mui/material/CircularProgress';
@@ -12,19 +9,17 @@ import Backdrop from '@mui/material/Backdrop';
 const Propose_Merge = () => {
     const [file, setFile] = useState(null);
     const [file1, setFile1] = useState(null);
-    const { authLevel} = useAuth();
     const [loading, setLoading] = useState(false);
+    const [inputValue, setInputValue] = useState('');
+    const [open, setOpen] = useState(false);
     const [data, setData] = useState();
-    // const [columns, setColumns] = useState();
-    // const [rows, setRows] = useState([]);
-    // const [columns1, setColumns1] = useState();
-    // const [rows1, setRows1] = useState([]);
+    const [isValid, setIsValid] = useState(false);
+    const [mergeLevel, setMergeLevel] = useState(1);
     const [firstDropdownValue, setFirstDropdownValue] = useState("ANY DOMAIN");
     let fileObj= ""
-    const [selectedValue, setSelectedValue] = useState([]);
     let sections = [
       { label: 'ANY DOMAIN', keys: ['ANY DOMAIN'] },
-      { label: 'AREA to PPL', keys: ['AREA', 'ADM0', 'ADM1', 'ADM2', 'ADM3', 'ADM4', 'ADMD', 'ADME', 'ADML', 'ADMX', 'PPL'] },
+      { label: 'AREA to PPL', keys: ['AREA', 'ADM0', 'ADM1', 'ADM2', 'ADM3', 'ADM4', 'ADMD', 'ADME', 'ADML', 'ADMX', 'PPL','NATURAL'] },
       { label: 'DATASET', keys: ['DATASET'] },
       { label: 'LANGUOID to FAMILY', keys: ['LANGUOID', 'LANGUAGE', 'DIALECT', 'FAMILY'] },
       { label: 'ETHNICITY', keys: ['ETHNICITY'] },
@@ -64,10 +59,6 @@ const Propose_Merge = () => {
     ))
   ]).filter(Boolean);
 
-  const handleChange = (event) => {
-    setSelectedValue(event.target.value);
-  };
-
   const [selectedOption, setSelectedOption] = useState('Standard');
 
   const handleRadioChange = (event) => {
@@ -91,11 +82,7 @@ const Propose_Merge = () => {
       }
       else{
         const c = resp.rows[0];
-        const r = resp.rows.slice(1);
-
-        // setColumns(c);
-        // setRows(r);
-        
+        const r = resp.rows.slice(1);       
 
         const table = r.map((row, index) => {
           const rowData = {};
@@ -126,9 +113,6 @@ const Propose_Merge = () => {
       else{
         const c = resp.rows[0];
         const r = resp.rows.slice(1);
-
-        // setColumns(c);
-        // setRows(r);
         
         const table = r.map((row, index) => {
           const rowData = {};
@@ -185,6 +169,35 @@ const Propose_Merge = () => {
     }
   };
 
+  const handleValidate = async () => {
+    try {
+      const response = await fetch("https://catmapper.org/api/validateDatasets",{
+        //const response = await fetch("http://127.0.0.1:5001/validateDatasets", {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          "names" : inputValue,
+          "database" : database,
+        }),
+      });
+
+      const result = await response.json();
+      console.log(result)
+      if (result.success === true) {
+        alert(`Validation successful: ${result.message || "All nodes exist."}`);
+        setIsValid(true);
+      } else {
+        alert(`Validation failed: ${result.message || "Some nodes are missing."}`);
+      }
+    } catch (error) {
+      alert('Validation failed. Please try again.');
+    }
+  };
+
+
+
   const handleJoinDownload = async () => {
     const worksheet = XLSX.utils.json_to_sheet(data);
       const workbook = XLSX.utils.book_new();
@@ -202,6 +215,10 @@ const Propose_Merge = () => {
   };
     
     const handleSubmit = async () => {
+      if (!isValid) {
+        alert('Please validate successfully before submitting.');
+        return;
+      } 
     try {
       const response = await fetch("https://catmapper.org/api/proposeMergeSubmit",{
         //const response = await fetch("http://127.0.0.1:5001/proposeMergeSubmit", {
@@ -210,16 +227,18 @@ const Propose_Merge = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          "datasetChoices" : selectedValue,
+          "datasetChoices" : inputValue,
           "categoryLabel" : firstDropdownValue,
           "intersection"  : returnAllCategories,
           "database" : database,
+          "mergelevel": mergeLevel,
           "equivalence" : selectedOption
         }),
       });
 
       const result = await response.json();
       setData(result)
+      setOpen(true);
     } catch (error) {
       console.error('Error submitting form:', error);
     }
@@ -247,7 +266,7 @@ const Propose_Merge = () => {
         maxHeight: 'calc(100vh - 100px)',
         overflow: 'auto',            
         padding: '16px',}}>
-      <h2 style={{ color: 'black', padding: "2px" }}>Join Datasets</h2>
+      {/* <h2 style={{ color: 'black', padding: "2px" }}>Join Datasets</h2>
       <Divider sx={{ my: 1 }} />
       <Typography variant="p">Upload two datasets to merge. Both datasets must have a `datasetID` column with a valid CMID for each row. Both datasets must have the original `Key` columns specified in the database translation that was previously uploaded to the dataset with the matching CMID. If you have not yet translated and uploaded your dataset, please do so now.</Typography>
       <br/>
@@ -263,7 +282,7 @@ const Propose_Merge = () => {
         boxShadow: 1,
   }}
 >
-  <Box>
+<Box>
     <h3 style={{ color: 'black', fontWeight: "bold", padding: "2px" }}>Upload first Dataset</h3>
     <input
       id="fileInput"
@@ -305,7 +324,7 @@ const Propose_Merge = () => {
         '&:hover': {
           backgroundColor: 'green',
         },
-        mt: 1, // Add some margin-top to align button properly
+        mt: 1,
       }}
       onClick={handleclear1}
     >
@@ -339,52 +358,67 @@ const Propose_Merge = () => {
       }}  onClick={handleJoinDownload}>
         Download Results
       </Button>
-      <Divider sx={{ my: 2 }} />
+      <Divider sx={{ my: 2 }} /> */}
       <h2 style={{ color: 'black', padding: "1px" }}>Propose Merges</h2>
       <h4 style={{ color: 'black', padding: "1px" }}>Select Datasets for Merging</h4>
-      <FormControl sx={{width:"10vw"}} >
-      <InputLabel id="dynamic-select-label">Choose an option</InputLabel>
-      <Select
-        labelId="dynamic-select-label"
-        id="dynamic-select"
-        multiple
-        value={selectedValue}
-        style={{width:"33vw"}}
-        label="Choose an option"
-        onChange={handleChange}
-        renderValue={(selected) => 
-          Array.isArray(selected) ? selected.join(', ') : ''
-        } 
-      >
-        {options.map((option) => (
-          <MenuItem key={option.id} value={option.CMID}>
-            {option.CMID}
-          </MenuItem>
-        ))}
-      </Select>
-    </FormControl>
-    {/* <Button variant="contained" sx={{
-        backgroundColor: 'black',
-        color: 'white', 
-        '&:hover': {
-          backgroundColor: 'green', 
-        },
-        ml:3,my:1
-      }}  onClick={handleSubmit}>
-        Confirm Selection
-      </Button> */}
+    <Box sx={{ display: 'flex', alignItems: 'center', mt: 2 }}>
+        <TextField
+          label="Enter DatasetIDs seperated by commas"
+          variant="outlined"
+          value={inputValue}
+          onChange={(e) => setInputValue(e.target.value)}
+          sx={{ mr: 2,width: '34vw'  }}
+        />
+        <Button variant="contained" onClick={handleValidate}>
+          Validate
+        </Button>
+      </Box>
+
+    <Snackbar
+      open={open}
+      autoHideDuration={3000}
+      onClose={() => setOpen(false)}
+      anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+    >
+      <Alert onClose={() => setOpen(false)} severity="success" sx={{ width: "100%" }}>
+        Merge proposal complete!
+      </Alert>
+    </Snackbar>
       <Divider sx={{ my: 2 }} />
       <h4 style={{ color: 'black', padding: "1px" }}>Choose Domain</h4>
-      <h5 style={{ color: 'black', padding: "1px" }}>Select Category Domain</h5>
-      <Select
+      <Box display="flex" alignItems="center" gap={2}>
+      <Box>
+        <Typography variant="h7" style={{ color: 'black', padding: '1px' }}>
+          Select Category Domain
+        </Typography>
+        <Select
           label="First Dropdown"
           value={firstDropdownValue}
-          style={{height:40}}
-          sx={{ m: 1, width: "12vw" }}
-          onChange={(event) => setFirstDropdownValue(event.target.value)}>
-             {menuItems}
+          style={{ height: 40 }}
+          sx={{ m: 1, width: '12vw' }}
+          onChange={(event) => setFirstDropdownValue(event.target.value)}
+        >
+          {menuItems}
         </Select>
-        <br/>
+      </Box>
+
+      <Box>
+        <Typography variant="h7" style={{ color: 'black', padding: '1px' }}>
+          Choose Merge Level for Extended Merge
+        </Typography>
+        <Select
+          label="Merge Level"
+          value={mergeLevel}
+          style={{ height: 40 }}
+          sx={{ m: 1, width: '12vw' }}
+          onChange={(event) => setMergeLevel(event.target.value)}
+        >
+          {[1, 2, 3, 4].map((level) => (
+            <MenuItem key={level} value={level}>{level}</MenuItem>
+          ))}
+        </Select>
+      </Box>
+    </Box>
       <h5 style={{ color: 'black', padding: "1px" }}>Choose Equivalence Criteria</h5>
       <FormControl component="fieldset">
       <RadioGroup
@@ -396,7 +430,7 @@ const Propose_Merge = () => {
         <FormControlLabel
           value="Standard"
           control={<Radio />}
-          label="Standard: Categories are only equivalent if they point to the same node"
+          label="Exact: Categories are only equivalent if they point to the same node"
         />
         <FormControlLabel
           value="Extended"
@@ -406,12 +440,14 @@ const Propose_Merge = () => {
         <FormControlLabel
           value="Extended-languages"
           control={<Radio />}
-          label="Extended-languages: Categories can be equivalent if they have languages that are connected via contains ties"
+          label="TBD - Extended-languages: Categories can be equivalent if they have languages that are connected via contains ties"
+          disabled
         />
         <FormControlLabel
           value="Refined"
           control={<Radio />}
-          label="Refined: Categories are only equivalent if they point to the same node and are within a specified window of time and distance"
+          label="TBD - Refined: Categories are only equivalent if they point to the same node and are within a specified window of time and distance"
+          disabled
         />
       </RadioGroup>
     </FormControl>
@@ -425,7 +461,7 @@ const Propose_Merge = () => {
             color="primary"
           />
         }
-        label={`Return ${returnAllCategories ? "all categories from all datasets" : "only categories present in each dataset"}`}
+        label={`Return only categories matched across all datasets`}
       />
     </FormGroup>
 

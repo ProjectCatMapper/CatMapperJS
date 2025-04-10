@@ -80,6 +80,10 @@ export default function Searchbar() {
 
   const [contextID, setcontextID] = useState(null);
 
+  const [datasetID, setdatasetID] = useState(null);
+
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+
   let database = "SocioMap"
 
   let selectedcategory = sociodomain
@@ -137,6 +141,7 @@ export default function Searchbar() {
       setyearEnd(yearEnd);
       setIsChecked(isChecked);
       setcontextID(contextID);
+      setdatasetID(datasetID);
       setoptionsForSelectedCategory(optionsForSelectedCategory);
     }
   }, []);
@@ -242,19 +247,25 @@ export default function Searchbar() {
   );
 
   function handleClick(tvalue, domain) {
-    fetch("https://catmapper.org/api/search?domain=" + domain + "&property=" + selectedOption + "&term=" + tvalue + "&database=" +database+  "&query=false" + "&yearStart=" + yearStart + "&yearEnd=" + yearEnd + "&country=" + selectedcountry + "&context=" + contextID,
-    // fetch("http://127.0.0.1:5001/search?domain=" + domain + "&property=" + selectedOption + "&term=" + tvalue + "&database=SocioMap"+  "&query=false" + "&yearStart=" + yearStart + "&yearEnd=" + yearEnd + "&country=" + selectedcountry + "&context=" + contextID,
+    console.log(database)
+    fetch("https://catmapper.org/api/search?domain=" + domain + "&property=" + selectedOption + "&term=" + encodeURIComponent(tvalue) + "&database=" +database+  "&query=false" + "&yearStart=" + yearStart + "&yearEnd=" + yearEnd + "&country=" + selectedcountry + "&context=" + contextID,
+    //fetch("http://127.0.0.1:5001/search?domain=" + domain + "&property=" + selectedOption + "&term=" + encodeURIComponent(tvalue) + "&database=ArchaMap"+  "&query=false" + "&yearStart=" + yearStart + "&yearEnd=" + yearEnd + "&country=" + selectedcountry + "&context=" + contextID,
     // fetch("https://catmapper.org/api/count?label=" + domain + "&options=" + selectedOption + "&value=" + tvalue,
     // fetch("https://catmapper.org/api/search?domain=" + domain + "&property=" + selectedOption + "&term=" + tvalue + "&database=SocioMap"+ "&query=false",
       {
         method: "GET"
       })
       .then(response => {
-        // console.log(response.json)
+        //console.log(response.json)
         return response.json()
       })
       .then(data => {
-        setUsers(data)
+        if (data.length === 0) {
+          setUsers([]);
+          setSnackbarOpen(true);
+        } else {
+          setUsers(data);
+        }
       })
   }
 
@@ -273,10 +284,11 @@ export default function Searchbar() {
               
               if (database === "ArchaMap") {
                 setoptionsForSelectedCategory(archoptions[selectedcategory[event.target.value][0]]);
+                selectedOption(archoptions[selectedcategory[event.target.value][0]][0])
               } else {
                 setoptionsForSelectedCategory(socioptions[selectedcategory[event.target.value][0]]);
-              }
-            
+                setSelectedOption(socioptions[selectedcategory[event.target.value][0]][0])
+              }            
             }}
             input={<BootstrapInput />}
           >
@@ -345,7 +357,6 @@ export default function Searchbar() {
               } else {
                 setoptionsForSelectedCategory(socioptions[event.target.value]);
               }
-
             }}
             input={<BootstrapInput />}
           >
@@ -417,13 +428,24 @@ export default function Searchbar() {
         onChange={(event) => { setcontextID(event.target.value) }}
       />     
       </FormControl >
+      <FormControl sx={{ marginLeft: "3%",marginTop:"1%", width: 250,height: 70 }} variant="standard">
+      <h6 id='[REDACTED]searchpagetext'>Dataset ID</h6>
+      <input
+        type="text"
+        id="myInput"
+        value={datasetID}
+        style={{marginLeft:"1%",width:250,height:70}}
+        onChange={(event) => { setdatasetID(event.target.value) }}
+      />     
+      </FormControl >
+      
 
         </div>
         }
       </div>
       <div style={{ padding: 10, backgroundColor: "black" }}>
         <Box sx={{ width: '100%', color: 'black', backgroundColor: "white" }}>
-        {<DataTable users={users} label={domainDrop} />}
+        {<DataTable users={users} label={domainDrop} snackbarOpen={snackbarOpen} setSnackbarOpen={setSnackbarOpen} />}
         </Box>
         <Divider sx={{ marginTop: 3, marginBottom: 7, marginLeft:1,marginRight:1, backgroundColor: 'white' }} />
 

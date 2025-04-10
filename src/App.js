@@ -35,7 +35,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 function App() {
   useEffect(() => {
     const handlePopState = () => {
-      if (/\/js\/sociomap\/SM\d+/.test(window.location.pathname)) {
+      if (/\/sociomap\/SM\d+/.test(window.location.pathname)) {
         window.location.reload();
       }
     };

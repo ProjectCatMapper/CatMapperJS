@@ -35,11 +35,6 @@ const People = () => {
             <p className="name">Harsha Kasi</p>
             <p className="position">Santa Clara University</p>
           </div>
-          <div className="team-member">
-            <h2 className="role">Graduate Student</h2>
-            <p className="name">Cindy Huang</p>
-            <p className="position">Arizona State University</p>
-          </div>
         </div>
       </section>
       <section className="advisory-section">

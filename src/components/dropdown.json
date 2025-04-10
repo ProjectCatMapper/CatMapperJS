@@ -11,6 +11,7 @@
     "ADML" : ["Name","Key","CMID"],
     "ADMX" : ["Name","Key","CMID"],
     "PPL" : ["Name","Key","CMID"],
+    "NATURAL" : ["Name","Key","CMID"],
     "DATASET" : ["Name","CMID","DatasetCitation","project","shortName"],
     "LANGUOID" : ["Name","Key","CMID","glottocode","ISO3"],
     "LANGUAGE" : ["Name","Key","CMID","glottocode","ISO3"],
