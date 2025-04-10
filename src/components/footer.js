@@ -23,8 +23,8 @@ import Divider from '@mui/material/Divider';
 import LiveMapCarousel from "./carousel"
 
 
-  function createData(nodes, relations, DatasetProgress ) {
-    return { nodes, relations, DatasetProgress };
+  function createData(names,nodes, encodings, contains,context ) {
+    return { names, nodes, encodings, contains, context };
   }
 
   function createFoci(Focus, Datasets, Areas, Ethnicities, Languages, Religions) {
@@ -78,13 +78,16 @@ const Footer = () => {
                 return response.json()
             })
             .then(data => {setrows([
-              createData(data.nodes[0].current.toLocaleString()+ " " + data.nodes[0].label,data.relations[0].current.toLocaleString()+ " " + data.relations[0].label,data.encodings[0].current.toLocaleString()+ " " + data.encodings[0].label),
-              createData(data.nodes[1].current.toLocaleString()+ " " + data.nodes[1].label,data.relations[1].current.toLocaleString()+ " " + data.relations[1].label,data.encodings[1].current.toLocaleString()+ " " + data.encodings[1].label),
-              createData(data.nodes[2].current.toLocaleString()+ " " + data.nodes[2].label,"",data.encodings[2].current.toLocaleString()+ " " + data.encodings[2].label),
-              createData(data.nodes[3].current.toLocaleString()+ " " + data.nodes[3].label,data.relations[2].current.toLocaleString()+ " " + data.relations[2].label,data.encodings[3].current.toLocaleString()+ " " + data.encodings[3].label),
-              createData(data.nodes[4].current.toLocaleString()+ " " + data.nodes[4].label,data.relations[3].current.toLocaleString()+ " " + data.relations[3].label,data.encodings[4].current.toLocaleString()+ " " + data.encodings[4].label),
-              createData(data.nodes[5].current.toLocaleString()+ " " + data.nodes[5].label,"",data.encodings[5].current.toLocaleString()+ " " + data.encodings[5].label),
-              createData(data.nodes[6].current.toLocaleString()+ " " + data.nodes[6].label,data.relations[4].current.toLocaleString()+ " " + data.relations[4].label,"")             
+              createData(data.nodes[0].current),
+              createData("Ethnicities",data.nodes[2].current,(data.encodings[1].current/data.nodes[2].current).toFixed(2),"x",""),
+              createData("Areas",data.nodes[1].current,(data.encodings[0].current/data.nodes[1].current).toFixed(2),"x",data.relations[1].current),
+              createData("Languages(incl.Dialects,Families)",data.nodes[3].current,(data.encodings[2].current/data.nodes[3].current).toFixed(2),"x",data.relations[2].current),
+              createData("Religions",data.nodes[4].current,(data.encodings[3].current/data.nodes[4].current).toFixed(2),"x",data.relations[3].current),
+              createData("Variables",data.nodes[5].current,(data.encodings[4].current/data.nodes[5].current).toFixed(2),"x",""),
+              createData("Total",data.nodes[1].current+ data.nodes[2].current +data.nodes[3].current+data.nodes[4].current+data.nodes[5].current,
+                (data.relations[4].current/(data.nodes[1].current+ data.nodes[2].current +data.nodes[3].current+data.nodes[4].current+data.nodes[5].current)).toFixed(2),
+                data.relations[0].current,data.relations[1].current+data.relations[2].current+data.relations[3].current
+               ),
             ])
             })
     },[])
@@ -138,56 +141,6 @@ const Footer = () => {
       <Grid item xs={6}>
       <Card variant="outlined" style={{backgroundColor: 'black',border: '1px solid white',}}>
         <CardContent>
-      <Typography id='sociomapfooter' sx={{ fontSize: 20 }} color="#fff" gutterBottom>
-        Dataset Progress  
-        <Button
-        variant="contained"
-        size="small"
-        sx={{
-          backgroundColor: 'blue',
-          color: 'white', 
-          '&:hover': {
-            backgroundColor: 'green', 
-          },fontSize: '0.6rem', padding: '4px 8px'
-        }}
-        onClick={handleButtonClick}
-      >
-Download datasets list      </Button>
-      </Typography>
-      <Typography variant="table" color="#000" component="div">
-      <TableContainer component={Paper}>
-      <Table sx={{ minWidth: 650 }} size="small" aria-label="a dense table">
-        <TableHead>
-          <TableRow>
-            <TableCell align="justify">Nodes</TableCell>
-            <TableCell align="justify">Relations</TableCell>
-            <TableCell align="justify">Dataset Encodings for</TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {rows.map((row) => (
-            <TableRow
-              key={row.name}
-              sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
-            >
-              <TableCell component="th" scope="row">
-                {row.nodes}
-              </TableCell>
-              <TableCell align="left">{row.relations}</TableCell>
-              <TableCell align="left">{row.DatasetProgress}</TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </TableContainer>
-      </Typography>
-    </CardContent>
-    </Card>
-      </Grid>
-
-      <Grid item xs={6}>
-      <Card variant="outlined" style={{backgroundColor: 'black',border: '1px solid white',}}>
-        <CardContent>
       <Typography id='sociomapfooter' sx={{ fontSize: 20 }} color="#fff" gutterBottom>Dataset Coverage</Typography>
       <Typography variant="table" color="#000" component="div">
       <TableContainer component={Paper}>
@@ -216,6 +169,65 @@ Download datasets list      </Button>
               <TableCell align="left">{row.Ethnicities}</TableCell>
               <TableCell align="left">{row.Languages}</TableCell>
               <TableCell align="left">{row.Religions}</TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </TableContainer>
+      </Typography>
+    </CardContent>
+    </Card>
+      </Grid>
+
+      <Grid item xs={6}>
+      <Card variant="outlined" style={{backgroundColor: 'black',border: '1px solid white',}}>
+        <CardContent>
+      <Typography id='sociomapfooter' sx={{ fontSize: 20 }} color="#fff" gutterBottom>
+        Dataset Progress &nbsp; 
+        <Button
+        variant="contained"
+        size="small"
+        sx={{
+          backgroundColor: 'blue',
+          color: 'white', 
+          '&:hover': {
+            backgroundColor: 'green', 
+          },fontSize: '0.6rem', padding: '4px 8px'
+        }}
+        onClick={handleButtonClick}
+      >
+Download datasets list      </Button>&nbsp;
+
+
+      DATASETS: {rows[0]?.names}
+   
+
+      </Typography>
+      <Typography variant="table" color="#000" component="div">
+      <TableContainer component={Paper}>
+      <Table sx={{ minWidth: 650 }} size="small" aria-label="a dense table">
+        <TableHead>
+          <TableRow>
+            <TableCell align="justify"></TableCell>
+            <TableCell align="justify">Nodes</TableCell>
+            <TableCell >Datasets per node</TableCell>
+            {/* <TableCell align="justify" >Contains ties</TableCell> */}
+            <TableCell align="justify">Context ties</TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {rows.filter((_, index) => index !== 0).map((row) => (
+            <TableRow
+              key={row.name}
+              sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+            >
+              <TableCell component="th" scope="row">
+                {row.names}
+              </TableCell>
+              <TableCell align="left">{row.nodes}</TableCell>
+              <TableCell align="left">{row.encodings}</TableCell>
+              {/* <TableCell align="left">{row.contains}</TableCell> */}
+              <TableCell align="left">{row.context}</TableCell>
             </TableRow>
           ))}
         </TableBody>

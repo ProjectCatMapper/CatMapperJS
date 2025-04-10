@@ -2,7 +2,7 @@
   "name": "sociomapper",
   "version": "0.1.0",
   "private": true,
-  "homepage": "/js",
+  "homepage": "/",
   "proxy": "http://catmapper.org/api",
   "dependencies": {
     "@auth0/auth0-react": "^2.2.1",

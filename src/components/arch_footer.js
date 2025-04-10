@@ -21,9 +21,9 @@ import { Link } from 'react-router-dom'
 import Divider from '@mui/material/Divider';
 
 
-  function createData(nodes, relations, DatasetProgress ) {
-    return { nodes, relations, DatasetProgress };
-  }
+function createData(names,nodes, encodings, contains,context ) {
+  return { names, nodes, encodings, contains, context };
+}
 
   // function createFoci(Focus, Datasets, Areas, Ethnicities, Languages, Religions) {
   //   return { Focus, Datasets, Areas, Ethnicities, Languages, Religions  };
@@ -95,16 +95,20 @@ const Footer = () => {
                 return response.json()
             })
             .then(data => {setrows([
-              createData(data.nodes[0].current.toLocaleString()+ " " + data.nodes[0].label,data.relations[0].current.toLocaleString()+ " " + data.relations[0].label,data.encodings[0].current.toLocaleString()+ " " + data.encodings[0].label),
-              createData(data.nodes[1].current.toLocaleString()+ " " + data.nodes[1].label,"",data.encodings[1].current.toLocaleString()+ " " + data.encodings[1].label),
-              createData(data.nodes[2].current.toLocaleString()+ " " + data.nodes[2].label,"",data.encodings[2].current.toLocaleString()+ " " + data.encodings[2].label),
-              createData(data.nodes[3].current.toLocaleString()+ " " + data.nodes[3].label,data.relations[1].current.toLocaleString()+ " " + data.relations[1].label,data.encodings[3].current.toLocaleString()+ " " + data.encodings[3].label),
-              createData(data.nodes[4].current.toLocaleString()+ " " + data.nodes[4].label,"",data.encodings[4].current.toLocaleString()+ " " + data.encodings[4].label),
-              createData(data.nodes[5].current.toLocaleString()+ " " + data.nodes[5].label,"",data.encodings[5].current.toLocaleString()+ " " + data.encodings[5].label),
-              createData(data.nodes[6].current.toLocaleString()+ " " + data.nodes[6].label,data.relations[2].current.toLocaleString()+ " " + data.relations[2].label,data.encodings[6].current.toLocaleString()+ " " + data.encodings[6].label),
-              createData(data.nodes[7].current.toLocaleString()+ " " + data.nodes[7].label,"",data.encodings[7].current.toLocaleString()+ " " + data.encodings[7].label),
-              createData(data.nodes[8].current.toLocaleString()+ " " + data.nodes[8].label,"",data.encodings[8].current.toLocaleString()+ " " + data.encodings[8].label),
-              createData(data.nodes[9].current.toLocaleString()+ " " + data.nodes[9].label,data.relations[3].current.toLocaleString()+ " " + data.relations[3].label,""),            
+              createData(data.nodes[3].current),
+              createData("Botanicals",data.nodes[0].current,(data.encodings[0].current/data.nodes[0].current).toFixed(2),"x",""),
+              createData("Ceramics",data.nodes[1].current,(data.encodings[1].current/data.nodes[1].current).toFixed(2),"x",""),
+              createData("Cultures",data.nodes[2].current,(data.encodings[2].current/data.nodes[2].current).toFixed(2),"x",""),
+              createData("Areas",data.nodes[4].current,(data.encodings[3].current/data.nodes[4].current).toFixed(2),"x",data.relations[1].current),
+              createData("Fauna",data.nodes[5].current,(data.encodings[4].current/data.nodes[5].current).toFixed(2),"x",""),
+              createData("Periods",data.nodes[6].current,(data.encodings[5].current/data.nodes[6].current).toFixed(2),"x",data.relations[2].current),
+              createData("Projectile points",data.nodes[7].current,(data.encodings[6].current/data.nodes[7].current).toFixed(2),"x",""),
+              createData("Stone",data.nodes[8].current,(data.encodings[7].current/data.nodes[8].current).toFixed(2),"x",""),
+              createData("Variables",data.nodes[9].current,(data.encodings[8].current/data.nodes[9].current).toFixed(2),"x",""),
+              createData("Total",data.nodes[0].current+ data.nodes[1].current +data.nodes[2].current+data.nodes[4].current+data.nodes[5].current+data.nodes[6].current+data.nodes[7].current+data.nodes[8].current+data.nodes[9].current,
+                (data.relations[3].current/(data.nodes[0].current+ data.nodes[1].current +data.nodes[2].current+data.nodes[4].current+data.nodes[5].current+data.nodes[6].current+data.nodes[7].current+data.nodes[8].current+data.nodes[9].current)).toFixed(2),
+                data.relations[0].current,data.relations[1].current+data.relations[2].current
+               ),
             ])
             })
     },[])
@@ -132,37 +136,50 @@ const Footer = () => {
       <Card variant="outlined" style={{backgroundColor: 'black',border: '1px solid white',}}>
         <CardContent>
       <Typography id="sociomapfooter" sx={{ fontSize: 20 }} color="#fff" gutterBottom>
-        Dataset Progress
+        Dataset Progress &nbsp; 
         <Button
         variant="contained"
         size="small"
         color="primary"
-        sx={{ fontSize: '0.6rem', padding: '4px 8px' }}
+        sx={{
+          backgroundColor: 'blue',
+          color: 'white', 
+          '&:hover': {
+            backgroundColor: 'green', 
+          },fontSize: '0.6rem', padding: '4px 8px'
+        }}
         onClick={handleButtonClick}
       >
-Download datasets list      </Button>
+Download datasets list      </Button>&nbsp;
+
+
+DATASETS: {rows[0]?.names}
       </Typography>
       <Typography variant="table" color="#000" component="div">
       <TableContainer component={Paper}>
       <Table sx={{ minWidth: 650 }} size="small" aria-label="a dense table">
         <TableHead>
           <TableRow>
+            <TableCell align="justify"></TableCell>
             <TableCell align="justify">Nodes</TableCell>
-            <TableCell align="justify">Relations</TableCell>
-            <TableCell align="justify">Dataset Progress</TableCell>
+            <TableCell >Dataset Encodings per node</TableCell>
+            <TableCell align="justify" >Contains ties</TableCell>
+            <TableCell align="justify">Context ties</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
-          {rows.map((row) => (
+        {rows.filter((_, index) => index !== 0).map((row) => (
             <TableRow
               key={row.name}
               sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
             >
               <TableCell component="th" scope="row">
-                {row.nodes}
+                {row.names}
               </TableCell>
-              <TableCell align="left">{row.relations}</TableCell>
-              <TableCell align="left">{row.DatasetProgress}</TableCell>
+              <TableCell align="left">{row.nodes}</TableCell>
+              <TableCell align="left">{row.encodings}</TableCell>
+              <TableCell align="left">{row.contains}</TableCell>
+              <TableCell align="left">{row.context}</TableCell>
             </TableRow>
           ))}
         </TableBody>

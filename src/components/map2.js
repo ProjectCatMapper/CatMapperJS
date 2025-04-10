@@ -12,8 +12,7 @@ import map1 from '../data/all_coords.csv';
         position={[parseFloat(point.lat), parseFloat(point.long)]}
         eventHandlers={{
           click: () => {
-            window.location.href = "https://catmapper.org/js/sociomap/"+point.CMID; 
-          },
+            window.location.replace("https://catmapper.org/sociomap/" + point.CMID);          },
         }}
       >
         <Tooltip direction="top" offset={[0, -20]} opacity={1}>
@@ -40,7 +39,7 @@ import map1 from '../data/all_coords.csv';
   return (
     <MapContainer center={[20, 0]} zoom={2} style={{ height: "80vh", width: "90vw", marginLeft:"5vw", marginTop:"5vh" }}>
       <TileLayer
-        url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+        url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
       />
             <CanvasMarkers data={data} />

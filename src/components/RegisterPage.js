@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Box, MenuItem, Select, TextField,Typography,Alert } from '@mui/material';
 import Button from '@mui/material/Button';
+import { data } from 'vis-network';
 
 const RegisterPage = () => {
     const navigate = useNavigate();
@@ -47,7 +48,8 @@ const RegisterPage = () => {
                 alert('Please wait while we verify your registration. You will receive an email when your account has been enabled. Contact support@catmapper.org for any questions.');
                 navigate('/login');
             } else {
-                alert('Registration failed');
+            const data = await response.json();
+            alert(data.error);
             }
         } catch (error) {
             console.error('Error during registration:', error);

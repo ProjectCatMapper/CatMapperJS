@@ -4,7 +4,7 @@ import Admin from '../components/admin';
 
  const AdminPage = () => {
    return (
-    <div style={{backgroundColor:"white",height:"100vh"}}>
+    <div style={{backgroundColor:"white",height:"120vh"}}>
     <Navbar />
     <Admin />
   </div>

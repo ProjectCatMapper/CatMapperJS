@@ -19,6 +19,8 @@ import {
 } from "@mui/material";
 import { useAuth } from './AuthContext';
 import { DataGrid } from '@mui/x-data-grid';
+import image from '../assets/white.png'
+import { Link } from 'react-router-dom'
 
 
 const Admin = () => {
@@ -180,7 +182,6 @@ const Admin = () => {
 
   const handleSelectionChange = (newSelectionModel) => {
     setSelectedUserIds(newSelectionModel);
-    console.log(selectedUserIds)
   };
 
   const handleRadioChange = (event) => {
@@ -199,7 +200,8 @@ const Admin = () => {
   };
 
   return (
-    <Box sx={{ p: 4 }}>
+    <div>
+    <Box sx={{ p: 4,height: '110vh', display: 'flex',flexDirection: 'column', overflow: 'auto' }}>
       <Box sx={{ mb: 1 }}>
         <h4 style={{ color: "black", padding: "2px", fontSize: "larger" }}>
           Admin panel: these functions are intended for admin users to identify
@@ -714,7 +716,13 @@ password   </InputLabel>
  </Box>
 )
 }
-
+<Box 
+  sx={{ 
+    display: 'flex', 
+    justifyContent: 'flex-start',
+    padding: 2 
+  }}
+>
       <Button
         variant="contained"
         sx={{
@@ -728,10 +736,18 @@ password   </InputLabel>
       >
         Submit{" "}
       </Button>
+      </Box>
       <Divider sx={{ my: 1 }} />
       <Typography variant="p">Check for new users and approve them:</Typography>
       <br/>
       <br/>
+      <Box 
+  sx={{ 
+    display: 'flex', 
+    justifyContent: 'flex-start',
+    padding: 2 
+  }}
+>
       <Button
         variant="contained"
         sx={{
@@ -745,7 +761,16 @@ password   </InputLabel>
       >
         Check for new users{" "}
       </Button>
+      </Box>
+
+      <Box sx={{ 
+    display: 'flex', 
+    flexDirection: 'column',
+  }}>
       {users.length > 0 && <DataGrid
+      sx={{ flexGrow: 1, 
+        maxHeight: '100%',
+        overflow: 'auto'}}
         rows={users}
         columns={columns}
         pageSize={5}
@@ -757,8 +782,17 @@ password   </InputLabel>
         getRowId={(row) => row.userid}
       />
       }
+      </Box>
       {
-        selectedUserIds.length > 0 && <Button
+        selectedUserIds.length > 0 && 
+        <Box 
+  sx={{ 
+    display: 'flex', 
+    justifyContent: 'flex-start',
+    padding: 2 
+  }}
+>
+        <Button
         variant="contained"
         sx={{
           backgroundColor: "black",
@@ -771,13 +805,30 @@ password   </InputLabel>
       >
         Approve users{" "}
       </Button>
+      </Box>
       }
       <Dialog open={popen} onClose={handlePclose}>
         <DialogContent>
           <p>{CMIDText}</p>
         </DialogContent>
       </Dialog>
-    </Box>
+      </Box>
+
+      <div style={{ padding: 10, backgroundColor: "black" }}>
+
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 2, mb:0 }}>
+              <img src={image} alt="CatMapper Logo" style={{ height: 80 }} />
+              <Box>
+                <Link  id="catmapperfooter" to="/people"  underline="none" style={{ color: 'white', textDecoration: 'none', margin: '0 8px' }}>People</Link>
+                <Link to="/news" id="catmapperfooter"  underline="none" style={{ color: 'white', textDecoration: 'none', margin: '0 8px' }}>News</Link>
+                <Link to="/funding" id="catmapperfooter"  underline="none" style={{ color: 'white', textDecoration: 'none', margin: '0 8px' }}>Funding</Link>
+                <Link to="/citation" id="catmapperfooter"  underline="none" style={{ color: 'white', textDecoration: 'none', margin: '0 8px' }}>Citation</Link>
+                <Link to="/terms" id="catmapperfooter"  underline="none" style={{ color: 'white', textDecoration: 'none', margin: '0 8px' }}>Terms</Link>
+                <Link to="/contact" id="catmapperfooter"  underline="none" style={{ color: 'white', textDecoration: 'none', margin: '0 8px' }}>Contact</Link>
+              </Box>
+            </Box>
+            </div>
+            </div>
   );
 };
 

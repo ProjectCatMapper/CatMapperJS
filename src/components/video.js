@@ -12,7 +12,7 @@ const video = () => {
         </video>
     <div className='content'>
        <h1 id='sociomapvideo'>Ethnicities.Religions.Languages</h1>
-       <p id='sociomapvideo'>SocioMap organizes dynamic and complex category systems commonly used by social scientists and policymakers, including ethnicities, languages, religions, and political districts. Each of these systems includes thousands of categories encoded in diverse, dynamic and incompatible ways across a growing corpus of thousands of datasets. This creates a bottleneck for social scientists trying to merge diverse datasets to conduct novel analyses.</p>
+       <p id='sociomapvideo'>SocioMap organizes dynamic and complex category systems commonly used by social scientists and policymakers, including ethnicities, languages, religions, and political districts. Each of these systems includes thousands of categories encoded in diverse, dynamic and incompatible ways across a growing corpus of thousands of datasets. SocioMap helps organize these categories so that users can merge diverse datasets for novel analyses.</p>
     <div>
        <Link id='sociomapvideo' to='/sociomap/explore' className='btn'>Explore</Link>
       <Link id='sociomapvideo' to='/sociomap/translate' className='btn'>Translate</Link>

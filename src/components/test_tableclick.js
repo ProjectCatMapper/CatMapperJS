@@ -9,7 +9,7 @@ import { FormControl, Select, MenuItem, InputLabel, Checkbox,FormControlLabel, D
 import L from 'leaflet';
 import { MapContainer, TileLayer, GeoJSON, Tooltip, useMap,CircleMarker } from "react-leaflet";
 import { useLocation } from 'react-router-dom';
-import './tableclick.css'
+import './tableclick.css';
 import Neo4jVisualization from './visnet';
 import MarkerClusterGroup from '@changey/react-leaflet-markercluster';
 import Button from '@mui/material/Button';
@@ -17,10 +17,13 @@ import 'leaflet/dist/leaflet.css';
 import '@changey/react-leaflet-markercluster/dist/styles.min.css';
 import CategoriesTable from './categories_table';
 import Legend from './legend';
-import image from '../assets/white.png'
-import { Link } from 'react-router-dom'
+import image from '../assets/white.png';
+import { Link } from 'react-router-dom';
 import * as XLSX from 'xlsx';
 import './LoadingSpinner.css';
+import { Dialog, DialogActions, DialogContent, DialogTitle} from '@mui/material';
+import MuiTool from "@mui/material/Tooltip";
+import InfoIcon from "@mui/icons-material/Info";
 
 function CustomTabPanel(props) {
   const { children, value, index, ...other } = props;
@@ -66,17 +69,40 @@ export default function Tableclick(props) {
   const [fdrop, setfdrop] = useState(["CONTAINS"]);
   const [firstDropdownValue, setFirstDropdownValue] = useState('');
   const [thirdDropdownValue, setThirdDropdownValue] = useState('All');
+  const [fourthDropdownValue, setFourthDropdownValue] = useState('All');
   const [selectedValues, setSelectedValues] = useState([]);
   const [selectedNodes, setSelectedNodes] = useState([]);
+  const [selectedDatasets, setSelectedDatasets] = useState([]);
   const [originaldata, setoriginaldata] = useState(null);
   const [visData, setVisData] = useState(null);
   const [domains, setdomains] = useState([]);
   const [sources, setsources] = useState([]);
   const orderOfProperties = ['CONTAINS', 'DISTRICT_OF', 'LANGUAGE_OF', 'LANGUOID_OF', 'RELIGION_OF', 'USES'];
   const [datasetdomainValue, setdatasetdomainValue] = useState([]);
-  const [datasetdropdown, setDatasetDropdown] = useState([]);
+  const [datasetdropdown, setDatasetDropdown] = useState(["ANY DOMAIN"]);
   const [rememberChoice, setRememberChoice] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [badsources, setbadsources] = useState([]);
+
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    if (badsources && badsources.length > 0) {
+      setOpen(true);
+    } else {
+      setOpen(false);
+    }
+  }, [badsources]);
+
+  const handleClose = () => {
+    setOpen(false);
+  };
+
+  useEffect(() => {
+    if (datasetdropdown.length > 0) {
+      setdatasetdomainValue([datasetdropdown[0]]);
+    }
+  }, [datasetdropdown]);
 
   const LoadingSpinner = () => {
     return (
@@ -187,7 +213,7 @@ export default function Tableclick(props) {
   
   useEffect(() => {
     fetch("https://catmapper.org/api/category?cmid=" + props.cmid.cmid + "&database="+ database,
-        //fetch("http://127.0.0.1:5001/category?cmid=" + props.cmid.cmid + "&database="+ database,
+      //fetch("http://127.0.0.1:5001/category?cmid=" + props.cmid.cmid + "&database="+ database,
             {
                 method: "GET"
             })
@@ -203,16 +229,19 @@ export default function Tableclick(props) {
                 setPoints(data.points)
                 setlabel(data.label)
                 setfdrop(data.relnames)
+                setbadsources(data.badsources)
                 // setsources(data.polysource)
             })
     },[])
+
+    console.log(badsources)
     
 
     useEffect(() => {
       const fetchData = async () => {
         try {
-          const response = await fetch("https://catmapper.org/api/datasetDomains",{
-      // const response = await fetch("http://127.0.0.1:5001/datasetDomains", {
+    const response = await fetch("https://catmapper.org/api/datasetDomains",{
+      //const response = await fetch("http://127.0.0.1:5001/datasetDomains", {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -229,7 +258,7 @@ export default function Tableclick(props) {
       }
 
       const result = await response.json();
-      setDatasetDropdown(result.map(item => item.label))
+      setDatasetDropdown(["ANY DOMAIN",...result.map(item => item.label)])
 
         } catch (error) {
           console.error('Error fetching data:', error);
@@ -242,6 +271,7 @@ export default function Tableclick(props) {
 
     const datasetButtonClick = async (event) => {
       setLoading(true);
+      const adjustedDomain = datasetdomainValue.includes("ANY DOMAIN") ? ["CATEGORY"] : datasetdomainValue;
       try{
         let response;
         if (Array.isArray(datasetdomainValue) && datasetdomainValue.length > 1) {
@@ -254,13 +284,13 @@ export default function Tableclick(props) {
             body: JSON.stringify({
               cmid: props.cmid.cmid,
               database: database,
-              domain: datasetdomainValue,
+              domain: adjustedDomain,
               children: rememberChoice,
             }),
           });
         } else {
           // response = await fetch("http://127.0.0.1:5001/dataset?cmid=" + props.cmid.cmid + "&database=" +database+ "&domain=" + datasetdomainValue+ "&children=" + rememberChoice,{method: "GET"})
-          response = await fetch("https://catmapper.org/api/dataset?cmid=" + props.cmid.cmid + "&database=" +database+ "&domain=" + datasetdomainValue+ "&children=" + rememberChoice,{method: "GET"});
+          response = await fetch("https://catmapper.org/api/dataset?cmid=" + props.cmid.cmid + "&database=" +database+ "&domain=" + adjustedDomain+ "&children=" + rememberChoice,{method: "GET"});
         }
 
         // const response = await fetch("https://catmapper.org/api/dataset?cmid=" + props.cmid.cmid + "&database=" +database+ "&domain=" + datasetdomainValue+ "&children=" + rememberChoice);
@@ -303,9 +333,11 @@ export default function Tableclick(props) {
     const fetchData = async (event) => {
         try {
           // const response = await fetch("http://127.0.0.1:5001/network?cmid=" + props.cmid.cmid +"&relation=" + event.target.value + "&value="+ label);
-          // const response = await fetch("http://127.0.0.1:5001/networksjs?cmid=" + props.cmid.cmid + "&database=" +database+ "&relation=" + event.target.value + "&response=records");
+          //const response = await fetch("http://127.0.0.1:5001/networksjs?cmid=" + props.cmid.cmid + "&database=" +database+ "&relation=" + event.target.value + "&response=records");
           const response = await fetch("https://catmapper.org/api/networksjs?cmid=" + props.cmid.cmid + "&database=" +database+ "&relation=" + event.target.value + "&response=records");
           const result = await response.json();
+
+          console.log(result)
 
           const node = [...Object.entries(result["node"]),...Object.entries(result["relNodes"])].map((node) => ({
             id: node["1"].id,  // Adjust this based on your node structure
@@ -317,8 +349,6 @@ export default function Tableclick(props) {
           }));
 
           const nodes = Array.from(new Set(node.map(JSON.stringify))).map(JSON.parse);
-
-          console.log(result)
 
           // const edges = Object.entries(result["relations"]).map(relationship => ({
 
@@ -371,12 +401,28 @@ export default function Tableclick(props) {
 
           // const result1 = await response1.json();
 
-          // console.log(result1)
-
           let nodevalues = nodes.map((object) => object.label).slice(1).sort()
           nodevalues.unshift("All")
           setSelectedNodes([...nodevalues])
-          
+
+          console.log(props.cmid.cmid)
+
+          if (event.target.value !== "USES" && !props.cmid.cmid.startsWith("SD") && !props.cmid.cmid.startsWith("AD")) {
+            let datasetvalues = new Set();
+            edges.forEach((object) => {
+              if (object.referenceKey) {
+                object.referenceKey.forEach((key) => {
+                  let datasetName = key.split(" Key:")[0].trim();
+                  datasetvalues.add(datasetName);
+                });
+              }
+            });
+            
+            datasetvalues = Array.from(datasetvalues).sort();
+            datasetvalues.unshift("All");
+            setSelectedDatasets(datasetvalues);
+        }
+
           setFirstDropdownValue(event.target.value)
           setoriginaldata({nodes,edges})
           setVisData({ nodes, edges, })
@@ -406,6 +452,27 @@ export default function Tableclick(props) {
       setVisData({nodes, edges})
       }
       setThirdDropdownValue(event.target.value)
+    };
+
+    const updateDatasetNodeData = (event) => {
+      if (event.target.value === "All")
+      {
+        setVisData(originaldata)
+      }
+      else{
+        const edges = originaldata["edges"].filter(
+          (edge) =>
+            edge.referenceKey?.some((key) => key.includes(event.target.value))
+        );
+    
+        const nodeIds = new Set(edges.flatMap((edge) => [edge.from, edge.to]));
+    
+        const nodes = originaldata["nodes"].filter(
+          (node, index) => index === 0 || nodeIds.has(node.id)
+        );
+      setVisData({nodes, edges})
+      }
+      setFourthDropdownValue(event.target.value)
     };
 
     const onEachFeature = (feature, layer) => {
@@ -481,6 +548,7 @@ export default function Tableclick(props) {
     setRememberChoice((prev) => !prev)
   };
 
+
   try {
     return (
       <div style={{ backgroundColor: 'white', width: "100%", height: "auto", color: "black" }}>
@@ -497,7 +565,23 @@ export default function Tableclick(props) {
       </ul>
         </Box> */}
         <Box sx={{ display: 'grid', gridTemplateRows: '40px auto 20px', width: '100%', backgroundImage: `linear-gradient(to right, #93a5cf, #e4efe9)`, backgroundSize: 'cover' }}>
-  <h2 style={{ color: "black", gridColumn: "1", gridRow: "1" }}>Category Info</h2>
+        <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: "8px", // Adds spacing between the heading and the icon
+      }}
+    >
+      <h2 style={{ color: "black", margin: 0 }}>Category Info</h2>
+      <MuiTool  title={
+          <Typography sx={{ fontSize: "1rem", fontWeight: "bold" }}>
+            Here, you can toggle between viewing sample info, maps, and the network of contextual ties to this category.
+          </Typography>
+        }
+        arrow
+      ><InfoIcon style={{ color: "blue", cursor: "pointer" }} />
+      </MuiTool>
+    </div>
   <ul id='content' style={{ color: "black", gridColumn: "1", gridRow: "2", fontSize: "large" }}>
     {(rev.length !== 0) ?
       Object.entries(rev).map(([key, value]) => value && (
@@ -510,7 +594,7 @@ export default function Tableclick(props) {
         </li>
       )) : rev}
   </ul>
-  {props.cmid.cmid.startsWith('SD') && (
+  {(props.cmid.cmid.startsWith('SD') || props.cmid.cmid.startsWith('AD')) && (
         <Box sx={{ gridColumn: "1", gridRow: "4", display: 'flex', justifyContent: 'left', alignItems: 'center', flexDirection: 'row', margin: "2 2" }}>
           <Select
             multiple
@@ -666,7 +750,17 @@ export default function Tableclick(props) {
                   attribution='&copy; <a href="https://carto.com/">CARTO</a> contributors' />
                   {points.length !== 0 ? (
             <MarkerClusterGroup>
-              {points.map((point, index) => (
+              {points.filter(
+            (point) =>
+              Array.isArray(point.cood) &&
+              point.cood.length === 2 &&
+              !isNaN(point.cood[0]) &&
+              !isNaN(point.cood[1]) &&
+              point.cood[0] >= -90 &&
+              point.cood[0] <= 90 &&
+              point.cood[1] >= -180 &&
+              point.cood[1] <= 180
+          ).map((point, index) => (
                 <CircleMarker
                 center={point.cood}
                 radius={10} 
@@ -682,6 +776,28 @@ export default function Tableclick(props) {
           ) : points}
                 <Legend sources={allsources} colors={allcolors} />
               </MapContainer> : <p>No map</p>}
+              <Dialog open={open} onClose={handleClose}>
+        <DialogTitle>Alert</DialogTitle>
+        <DialogContent>
+          {badsources && badsources.length > 0 ? (
+            <ul>
+              {badsources.map((source, index) => (
+                <li key={index}>
+                  <strong>Source:</strong> {source.source}<br />
+                  <strong>Error:</strong> {source.error}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p>No bad sources</p>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleClose} color="primary">
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
             </div>
           </CustomTabPanel>
           <CustomTabPanel value={value} index={2}>
@@ -731,6 +847,22 @@ export default function Tableclick(props) {
                   ))}
                 </Select>
               </FormControl>
+              {firstDropdownValue !== "USES" && (
+              <FormControl sx={{ m: 1, width: 300 }}>
+                <InputLabel htmlFor="fourth-dropdown">Dataset Filter</InputLabel>
+                <Select
+                  label="Fourth Dropdown"
+                  value={fourthDropdownValue}
+                  onChange={updateDatasetNodeData}
+                >
+                  {selectedDatasets.map((option) => (
+                    <MenuItem value={option}>
+                      {option}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              )}
               <div style={{ width: '100%', height: '500px' }}>
               {visData && <Neo4jVisualization visData={visData}  />}
               </div>
