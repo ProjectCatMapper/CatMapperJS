@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import doptions from "./dropdown.json";
 import aoptions from "./dropdown_archamap.json";
 import {Select, MenuItem } from '@mui/material';
 import {ExcelRenderer} from 'react-excel-renderer';
+import Papa from 'papaparse';
 import Button from '@mui/material/Button';
 import { Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow,  TablePagination, Typography, Box,FormControlLabel,Checkbox } from '@mui/material';
 import { useLocation } from 'react-router-dom';
@@ -24,13 +25,15 @@ function Sociotranslate(){
 
   let sections = [
     { label: 'ANY DOMAIN', keys: ['ANY DOMAIN'] },
-    { label: 'AREA to PPL', keys: ['AREA', 'ADM0', 'ADM1', 'ADM2', 'ADM3', 'ADM4', 'ADMD', 'ADME', 'ADML', 'ADMX', 'PPL','NATURAL'] },
     { label: 'DATASET', keys: ['DATASET'] },
-    { label: 'LANGUOID to FAMILY', keys: ['LANGUOID', 'LANGUAGE', 'DIALECT', 'FAMILY'] },
+    { label: 'AREA to PPL', keys: ['AREA', 'ADM0', 'ADM1', 'ADM2', 'ADM3','NATURAL'] },
     { label: 'ETHNICITY', keys: ['ETHNICITY'] },
-    { label: 'GENERIC', keys: ['GENERIC'] },
+    { label: 'POLITY', keys: ['POLITY'] },
+    { label: 'LANGUOID to FAMILY', keys: ['LANGUOID', 'LANGUAGE', 'DIALECT', 'FAMILY'] },
     { label: 'RELIGION', keys: ['RELIGION'] },
-    { label: 'VARIABLE', keys: ['VARIABLE'] }
+    { label: 'OCCUPATION', keys: ['OCCUPATION'] },
+    { label: 'VARIABLE', keys: ['VARIABLE'] },
+    { label: 'GENERIC', keys: ['GENERIC'] }
   ];
 
 
@@ -143,14 +146,39 @@ const handleClick = async () => {
     if (!response.ok) {
       throw new Error('Network response was not ok');
     }
-    console.log(zeroDropdownValue)
 
     const responseData = await response.json();
+
+    const allKeys = Object.keys(responseData[0]);
+
+    const matchedColumn = zeroDropdownValue;
+
+    const patternPrefixes = [
+      'matching_',
+      'matchingDistance_',
+      'matchType_',
+      'CMName_',
+      'CMID_',
+      'label_',
+      'country_'
+    ];
+
+    const suffixColumns = patternPrefixes.map(prefix => prefix + zeroDropdownValue).filter(col => allKeys.includes(col));
+
+    const usedColumns = new Set([matchedColumn, 'CMuniqueRowID', ...suffixColumns]);
+    const remainingColumns = allKeys.filter(key => !usedColumns.has(key));
+    
+    const reorderedColumns = [
+      matchedColumn,
+      ...suffixColumns,
+      'CMuniqueRowID',
+      ...remainingColumns
+    ];
+
     setData(responseData);
     // data.sort((a, b) => a.term.localeCompare(b.term));
-    setColumns(Object.keys(responseData[0]))
-    setRows(responseData.map((row) => Object.values(row)))
-
+    setColumns(reorderedColumns)
+    setRows(responseData.map(row => reorderedColumns.map(key => row[key])));
     setProgress(80);
 
     const matchTypeCounts = responseData.reduce((acc, row) => {
@@ -158,8 +186,6 @@ const handleClick = async () => {
       acc[matchType] = acc[matchType] ? acc[matchType] + 1 : 1;
       return acc;
     }, {});
-
-    console.log(matchTypeCounts)
 
     const total = responseData.length;
     const matchTypePercentages = Object.keys(matchTypeCounts).reduce((acc, key) => {
@@ -169,7 +195,6 @@ const handleClick = async () => {
 
     setTcategories(matchTypePercentages);
     setProgress(100)
-    console.log("its over")
     
   } catch (error) {
     console.error('Error sending POST request:', error);
@@ -180,7 +205,7 @@ const handleClick = async () => {
   }
 };
 
-const handleClicktwo = () => {const worksheet = XLSX.utils.json_to_sheet(data);
+const handleClicktwo = () => {const worksheet = XLSX.utils.json_to_sheet(data,{header:columns});
   const workbook = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
 
@@ -206,38 +231,108 @@ const handleclear = () => {
 const [inputValue, setinputValue] = useState(-4000);
 const [inputValuetwo, setinputValuetwo] = useState(2024);        
 
+// const handleFileChange = (event) => {
+//       const fileType = event.target.files[0].type;
+//       setFilename(event.target.files[0].name.split('.').slice(0, -1).join('.'));
+//       if (fileType === 'application/vnd.ms-excel' || fileType === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') {
+//         // File is either CSV or XLSX
+//         setSelectedFile(event.target.files[0]);
+//         fileObj = event.target.files[0];
+
+// ExcelRenderer(fileObj, (err, resp) => {
+//   if(err){
+//     console.log(err);            
+//   }
+//   else{
+//     const firstRow = resp.rows[0];
+//         const column_check = [];
+
+//         try {
+//           for (let i = 0; i < firstRow.length; i++) {
+//             if (firstRow[i] === undefined || firstRow[i].trim() === "") {
+//               throw new Error(`Missing column name at index ${i}`);
+//             }
+//             column_check.push(firstRow[i]);
+//           }
+//         } catch (err) {
+//           setError(err.message);
+//         }
+
+
+//     setColumns(column_check);
+
+
+//     const processedRows = resp.rows.slice(1).map(row => {
+//       const fullRow = Array(column_check.length).fill(null);
+//       row.forEach((cell, index) => {
+//         if (typeof cell === 'string') {
+//           cell = cell.replace(/^['"]|['"]$/g, '');
+//         }
+//         fullRow[index] = cell !== undefined ? cell : null;
+//       });
+//       return fullRow;
+//     });
+
+//     const filteredRows = processedRows.filter(row => {
+//       return row.some(cell => cell !== null && cell !== '');
+//     });
+
+
+//     setRows(filteredRows);
+
+//     const table = filteredRows.map((row, index) => {
+//       const rowData = {};
+//       column_check.forEach((column, columnIndex) => {
+//         rowData[column] = row[columnIndex];
+//       });
+//       //rowData['key'] = index + 1;
+//       return rowData;
+//     });
+//     setJsondata(table)
+//   }
+// });  
+//       } else {
+//         // Invalid file type
+//         alert('Please upload a valid CSV or XLSX file.');
+//         event.target.value = null; // Clear the file input
+//         setSelectedFile(null);
+//       }
+//   };
+
 const handleFileChange = (event) => {
-      const fileType = event.target.files[0].type;
-      setFilename(event.target.files[0].name.split('.').slice(0, -1).join('.'));
-      if (fileType === 'application/vnd.ms-excel' || fileType === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') {
-        // File is either CSV or XLSX
-        setSelectedFile(event.target.files[0]);
-        fileObj = event.target.files[0];
+  const file = event.target.files[0];
+  if (!file) return;
 
-ExcelRenderer(fileObj, (err, resp) => {
-  if(err){
-    console.log(err);            
-  }
-  else{
-    const firstRow = resp.rows[0];
-        const column_check = [];
+  const fileName = file.name;
+  const fileExtension = fileName.split('.').pop().toLowerCase();
+  const baseFileName = fileName.split('.').slice(0, -1).join('.');
+  setFilename(baseFileName);
+  setSelectedFile(file);
 
-        try {
-          for (let i = 0; i < firstRow.length; i++) {
-            if (firstRow[i] === undefined || firstRow[i].trim() === "") {
-              throw new Error(`Missing column name at index ${i}`);
-            }
-            column_check.push(firstRow[i]);
-          }
-        } catch (err) {
-          setError(err.message);
+  const processData = (rows) => {
+    if (!rows.length) {
+      setError('No data found in the file.');
+      return;
+    }
+
+    const firstRow = rows[0];
+    const column_check = [];
+
+    try {
+      for (let i = 0; i < firstRow.length; i++) {
+        if (firstRow[i] === undefined || firstRow[i].trim() === "") {
+          throw new Error(`Missing column name at index ${i}`);
         }
-
+        column_check.push(firstRow[i]);
+      }
+    } catch (err) {
+      setError(err.message);
+      return;
+    }
 
     setColumns(column_check);
 
-
-    const processedRows = resp.rows.slice(1).map(row => {
+    const processedRows = rows.slice(1).map((row) => {
       const fullRow = Array(column_check.length).fill(null);
       row.forEach((cell, index) => {
         if (typeof cell === 'string') {
@@ -248,31 +343,46 @@ ExcelRenderer(fileObj, (err, resp) => {
       return fullRow;
     });
 
-    const filteredRows = processedRows.filter(row => {
-      return row.some(cell => cell !== null && cell !== '');
-    });
-
+    const filteredRows = processedRows.filter((row) =>
+      row.some((cell) => cell !== null && cell !== "")
+    );
 
     setRows(filteredRows);
 
-    const table = filteredRows.map((row, index) => {
+    const table = filteredRows.map((row) => {
       const rowData = {};
       column_check.forEach((column, columnIndex) => {
         rowData[column] = row[columnIndex];
       });
-      //rowData['key'] = index + 1;
       return rowData;
     });
-    setJsondata(table)
-  }
-});  
-      } else {
-        // Invalid file type
-        alert('Please upload a valid CSV or XLSX file.');
-        event.target.value = null; // Clear the file input
-        setSelectedFile(null);
-      }
+
+    setJsondata(table);
   };
+
+  if (fileExtension === 'csv') {
+    Papa.parse(file, {
+      complete: (result) => {
+        processData(result.data);
+      },
+      error: (err) => {
+        setError(`CSV Parsing Error: ${err.message}`);
+      },
+    });
+  } else if (fileExtension === 'xlsx' || fileExtension === 'xls') {
+    ExcelRenderer(file, (err, resp) => {
+      if (err) {
+        setError(`Excel Parsing Error: ${err.message}`);
+      } else {
+        processData(resp.rows);
+      }
+    });
+  } else {
+    alert('Please upload a valid CSV or Excel (.xlsx/.xls) file.');
+    event.target.value = null;
+    setSelectedFile(null);
+  }
+};
 
   const getRowStyle = (row) => {
     const statusIndex = columns.findIndex(col => col === 'matchType_'+zeroDropdownValue);
@@ -375,7 +485,9 @@ ExcelRenderer(fileObj, (err, resp) => {
   return (
     <Box sx={{ backgroundColor: 'black', opacity: 1,flexGrow: 1  }} >
     <div  style={{width:"26%",height:"90%", backgroundColor : '#e0e0e0', padding: '20px',border: '1px solid #ccc',borderRadius : '10px', margin: '10px', overflow:"auto",position:"absolute"}}>
-      <h3 style={{ color: 'black', fontWeight: "bold", marginLeft: 7, padding: "2px" }}> Choose file to import</h3>
+      <p style={{ color: 'White', fontWeight: "bold", marginLeft: 7, padding: "2px" }}>
+      Choose spreadsheet to match
+  </p>
       <input id="fileInput" style={{ color: 'black', fontWeight: "bold", marginLeft: 7, padding: "2px" }} type="file" accept=".csv, .xlsx" onChange={handleFileChange} />
       <Button variant="contained" sx={{
         backgroundColor: 'black',
@@ -390,7 +502,7 @@ ExcelRenderer(fileObj, (err, resp) => {
       <br/>
       {selectedFile !== null && (
         <div>
-          <p style={{ color: 'White', fontWeight: "bold", marginLeft: 7, padding: "2px" }}>Choose column to match</p>     
+          <p style={{ color: 'White', fontWeight: "bold", marginLeft: 7, padding: "2px" }}>Choose spreadsheet column to match</p>     
           <Select
           label="Zero Dropdown"
           style={{height:40}}
@@ -427,13 +539,16 @@ ExcelRenderer(fileObj, (err, resp) => {
              {menuItems}
         </Select>
         <br/>
-        <p style={{ color: 'White', fontWeight: "bold", marginLeft: 7, padding: "2px" }}>Property to search</p>     
+        <p style={{ color: 'White', fontWeight: "bold", marginLeft: 7, padding: "2px" }}>CatMapper Property to Search</p>     
       <Select
           label="Second Dropdown"
           value={secondDropdownValue}
           style={{height:40}}
           sx={{ m: 1, width: "12vw" }}
-          onChange={(event) => setsecondDropdownValue(event.target.value)}>
+          onChange={(event) => {
+            //const newValue = event.target.value === "CatMapper ID (CMID)" ? "CMID" : event.target.value;
+            setsecondDropdownValue(event.target.value) ;
+          }}>
           {svalues.map((key) => (
           <MenuItem key={key} value={key}>
             {key}
@@ -584,7 +699,7 @@ ExcelRenderer(fileObj, (err, resp) => {
           backgroundColor: 'green', 
         },
       }} onClick={handleClicktwo}>
-        Download Data
+        Download proposed matches
       </Button>
       <Dialog open={Boolean(error)} onClose={() => setError(null)}>
         <DialogTitle>Error</DialogTitle>
@@ -604,7 +719,7 @@ ExcelRenderer(fileObj, (err, resp) => {
               <TableHead>
                 <TableRow>
                   {columns.map((col, index) => (
-                    <TableCell key={index}>{col}</TableCell>
+                    <TableCell key={index} sx={{ fontWeight: 'bold' }}>{col}</TableCell>
                   ))}
                 </TableRow>
               </TableHead>

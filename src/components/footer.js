@@ -79,13 +79,14 @@ const Footer = () => {
             })
             .then(data => {setrows([
               createData(data.nodes[0].current),
-              createData("Ethnicities",data.nodes[2].current,(data.encodings[1].current/data.nodes[2].current).toFixed(2),"x",""),
               createData("Areas",data.nodes[1].current,(data.encodings[0].current/data.nodes[1].current).toFixed(2),"x",data.relations[1].current),
+              createData("Ethnicities",data.nodes[2].current,(data.encodings[1].current/data.nodes[2].current).toFixed(2),"x",""),
+              createData("Polities",data.nodes[4].current,(data.encodings[3].current/data.nodes[4].current).toFixed(2),"x",""),
               createData("Languages(incl.Dialects,Families)",data.nodes[3].current,(data.encodings[2].current/data.nodes[3].current).toFixed(2),"x",data.relations[2].current),
-              createData("Religions",data.nodes[4].current,(data.encodings[3].current/data.nodes[4].current).toFixed(2),"x",data.relations[3].current),
-              createData("Variables",data.nodes[5].current,(data.encodings[4].current/data.nodes[5].current).toFixed(2),"x",""),
-              createData("Total",data.nodes[1].current+ data.nodes[2].current +data.nodes[3].current+data.nodes[4].current+data.nodes[5].current,
-                (data.relations[4].current/(data.nodes[1].current+ data.nodes[2].current +data.nodes[3].current+data.nodes[4].current+data.nodes[5].current)).toFixed(2),
+              createData("Religions",data.nodes[5].current,(data.encodings[4].current/data.nodes[5].current).toFixed(2),"x",data.relations[3].current),
+              createData("Variables",data.nodes[6].current,(data.encodings[5].current/data.nodes[6].current).toFixed(2),"x",""),
+              createData("Total",data.nodes[1].current+ data.nodes[2].current +data.nodes[3].current+data.nodes[4].current+data.nodes[5].current+data.nodes[6].current,
+                (data.relations[4].current/(data.nodes[1].current+ data.nodes[2].current +data.nodes[3].current+data.nodes[4].current+data.nodes[5].current+data.nodes[6].current)).toFixed(2),
                 data.relations[0].current,data.relations[1].current+data.relations[2].current+data.relations[3].current
                ),
             ])

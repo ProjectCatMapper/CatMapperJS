@@ -28,9 +28,9 @@ export default function DataTable({ users, snackbarOpen, setSnackbarOpen }) {
       renderCell: () => null, // Renders an empty cell
     },
     { field: 'id', headerName: 'Index', flex: 0.3 },
-    { field: 'cmid', headerName: 'CMID',  flex: 0.9 },
+    { field: 'cmid', headerName: 'CatMapper ID',  flex: 0.9 },
     { field: 'name', headerName: 'CMName', flex: 2 },
-    { field: 'label', headerName: 'Label', flex: 1 },
+    { field: 'label', headerName: 'Domain', flex: 1 },
     { field: 'country', headerName: 'Country', flex: 2,cellClassName: (params) => params.row.hasLargeText ? 'wrap-text-3-lines_ex' : '' },
     {
       field: 'spacer1', // Dummy field for space

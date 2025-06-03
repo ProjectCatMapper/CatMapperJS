@@ -3,6 +3,7 @@ import { Box, Button, FormControlLabel, Radio, RadioGroup, Checkbox, Typography,
 import DatasetForm from './uploadtranslateform';
 import {ExcelRenderer} from 'react-excel-renderer';
 import doptions from "./dropdown.json";
+import aoptions from "./dropdown_archamap.json";
 import Tooltip from '@mui/material/Tooltip';
 import InfoIcon from '@mui/icons-material/Info';
 import { useAuth } from './AuthContext';
@@ -43,13 +44,11 @@ const UploadTranslat = () => {
     cmidColumn: '',
     keyColumn: '',
   });
-  let fileObj= ""
   const [CMIDText, setCMIDText] = useState('The new dataset CMID is pending.');
   let required = [];
   let finalProduct = [];
   const foundColumns = [];
   const notFoundColumns = [];
-
 
   const handleOpen = () => {
     setOpen(true);
@@ -206,6 +205,15 @@ const handleFileChange = async (e) => {
       }
     }
 
+    if (columns.includes('label')) {
+      const labelIndex = columns.indexOf('label');
+      const missingValues = rows.some(row => !row[labelIndex]);
+      if (missingValues) {
+        setError('label column contains missing values.');
+        return false;
+      }
+    }
+
     if (columns.includes('CMID')) {
       const CMIDIndex = columns.indexOf('CMID');
       const count = rows.filter(row => !row[CMIDIndex]).length;
@@ -218,12 +226,6 @@ const handleFileChange = async (e) => {
         setError('CMID column contains missing values.');
         return false;
       }
-
-      // const missingValues = rows.some(row => !row[CMIDIndex]);
-      // if (missingValues) {
-      //   setError('CMID column contains missing values.');
-      //   return false;
-      // }
     }
 
     if (columns.includes('Key')) {
@@ -234,22 +236,6 @@ const handleFileChange = async (e) => {
         return false;
       }
     }
-
-    const numericColumns = ['yearStart', 'yearEnd', 'populationEstimate', 'sampleSize'];
-
-    numericColumns.forEach((column) => {
-      if (columns.includes(column)) {
-        const columnIndex = columns.indexOf(column);
-
-        rows.forEach((row, rowIndex) => {
-          const value = row[columnIndex];
-          if (value === '' || value === null || isNaN(Number(value))) {
-            setError(`${column} not a number at row ${rowIndex + 1}.`);
-            return false;
-          }
-        });
-      }
-    });
 
     if (advselectedOption === 'update_replace') {
       if (selectedExtraColumn === 'longitude' && !columns.includes('latitude')) {
@@ -271,28 +257,6 @@ const handleFileChange = async (e) => {
         }
       }
     }
-
-    if (columns.includes('latitude') && columns.includes('longitude')) {
-      const latitudeIndex = columns.indexOf('latitude');
-      const longitudeIndex = columns.indexOf('longitude');
-      const datasetIDIndex = columns.indexOf('datasetID');
-
-      rows.forEach(row => {
-        const latitude = row[latitudeIndex];
-        const longitude = row[longitudeIndex];
-        const cmid = row[datasetIDIndex];
-
-        if (latitude < -90 || latitude > 90) {
-          setError(`Latitude for CMID ${cmid} illogical.`);
-          return false;
-        }
-        if (longitude < -180 || longitude > 180) {
-          setError(`Longitude for CMID ${cmid} illogical.`);
-          return false;
-        }
-      });
-    }
-
     setError('');
     return true;
   };
@@ -305,8 +269,10 @@ const handleFileChange = async (e) => {
   };
 
   let database = "SocioMap"
+  let dropoptions = doptions
   if (useLocation().pathname.includes("archamap")) {
       database = "ArchaMap"
+      dropoptions = aoptions
     } 
 
   const handleSubmit = async () => {
@@ -331,13 +297,16 @@ const handleFileChange = async (e) => {
     try {
       setProgress(30); 
 
-      const columnsToUse =
-  advselectedOption === 'update_replace' || advselectedOption === 'node_replace' ? [selectedExtraColumn] : selectedExtraColumns;
+      const columnsToUse = advselectedOption === 'update_replace' || advselectedOption === 'node_replace' ? [selectedExtraColumn] : selectedExtraColumns;
 
       const allowedColumns = new Set([
         ...Object.keys(selectedColumns).filter(col => selectedColumns[col]),
         ...columnsToUse,
       ]);
+
+      if (advselectedOption === "add_uses" && missingCount > 0) {
+        allowedColumns.add("CMName");
+      }
       
       const finalProduct = selectedOption === "advanced" 
       ?jsonData.map(item => {
@@ -352,7 +321,6 @@ const handleFileChange = async (e) => {
         return filteredItem;
       }):jsonData;
       
-      console.log(selectedOption)
 
       const response = await fetch("https://catmapper.org/api/uploadInputNodes",{
       //const response = await fetch("http://127.0.0.1:5001/uploadInputNodes", {
@@ -394,15 +362,8 @@ const handleFileChange = async (e) => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ database : "sociomap" }),
+        body: JSON.stringify({ database : database }),
       })
-
-      // console.log(result)
-      // setProgress(70);
-      // setDownload(result.file)      
-      // setCMIDText(result.message);
-      // setPopen(true);
-      // setProgress(100);
 
     } catch (error) {
       console.error('Error submitting form:', error);
@@ -473,24 +434,11 @@ const handleFileChange = async (e) => {
   const [selectedExtraColumn, setSelectedExtraColumn] = useState('');
   const [allRequiredColumnsFound, setAllRequiredColumnsFound] = useState(false);
 
-  // const allowedExtraColumns = [
-  //   'altName', 'ApplicableYears', 'categoryType', 'CMID', 'CMName', 'country', 
-  //   'Dataset', 'DatasetCitation', 'DatasetLocation', 'DatasetScope', 
-  //   'DatasetVersion', 'dateEnd', 'dateStart', 'descriptor', 'district', 
-  //   'District', 'eventDate', 'eventType', 'FIPS', 'geoCoords', 'geoPolygon', 
-  //   'glottocode', 'ignoreNames', 'ISO2', 'ISO3', 'ISONumeric', 'Key', 'label', 
-  //   'language', 'latitude', 'log', 'longitude', 'Name', 'Note', 'parent', 
-  //   'parentContext', 'populationEstimate', 'project', 'propertyValues', 
-  //   'rawDate', 'recordEnd', 'recordStart', 'religion', 'Rfunction', 'role', 
-  //   'Rtransform', 'sampleSize', 'shortName', 'Subdistrict', 'Subnational', 
-  //   'text', 'transform', 'Unit', 'url', 'variableDescription', 'yearEnd', 
-  //   'yearStart'
-  // ];
 
   let allowedExtraColumns = ["descriptor", "Dataset", "log", "country", "dateEnd", "dateStart", "district", "eventDate", "eventType", 
     "geoCoords", "Key", "label", "latitude", "longitude", "ignoreNames", "Name", "parent","period", "parentContext", "propertyValues", 
     "rawDate", "Rfunction", "Rtransform", "recordEnd", "recordStart", "sampleSize", "transform", "categoryType", "url", "variableDescription", 
-    "yearEnd", "yearStart", "language", "populationEstimate", "religion", "geoPolygon","glottocode","FIPS","ISO2","ISO3","ISONumeric"]
+    "yearEnd", "yearStart", "language", "populationEstimate", "religion", "geoPolygon","glottocode","FIPS","ISO2","ISO3","ISONumeric","comment","polity","occupation","culture"]
   let allowedDatasetColumns = []
 
   useEffect(() => {
@@ -511,13 +459,12 @@ const handleFileChange = async (e) => {
     case 'add_node':
       required = ['CMName', 'Name', 'Key', 'label', 'datasetID'];
       const labelIndex = columns.indexOf('label');
-      console.log(labelIndex)
       if (labelIndex !== -1) {
         const datasetValueFound = rows.some(row => row[labelIndex] === 'DATASET');
         if (datasetValueFound) {
           required = ['CMName', 'label', 'shortName', 'DatasetCitation'];
           allowedDatasetColumns = ["ApplicableYears", "CMID", "CMName", "DatasetCitation", "DatasetLocation", "DatasetScope", "DatasetVersion",
-             "District", "log", "Note", "parent", "project", "shortName", "Subdistrict", "Subnational", "Unit"]
+             "District", "log", "names", "Note", "parent", "project", "shortName", "Subdistrict", "Subnational", "Unit"]
 
         }
       }
@@ -532,7 +479,7 @@ const handleFileChange = async (e) => {
     case 'node_add':
       required=['CMID']
       if (IsDataset){
-      allowedExtraColumns = ['parent','District']
+      allowedExtraColumns = ['parent','District','names']
       }
       else{
         setNodeOpen(true)
@@ -541,7 +488,7 @@ const handleFileChange = async (e) => {
     case 'node_replace':
       required=['CMID'];
       if (IsDataset){
-        allowedDatasetColumns = ["CMName","parent","District","shortName","ApplicableYears","DatasetCitation","DatasetLocation","DatasetScope","project"]
+        allowedDatasetColumns = ["CMName","parent","District","shortName","ApplicableYears","DatasetCitation","DatasetLocation","DatasetVersion","DatasetScope","project"]
       }
       else{
         allowedExtraColumns = ["CMName","glottocode","FIPS","ISO2","ISO3","ISONumeric"]
@@ -804,7 +751,7 @@ const handleFileChange = async (e) => {
             sx={{width: 300,height:40 }}
             margin="normal"
           >
-            {Object.keys(doptions).map((key) => (
+            {Object.keys(dropoptions).map((key) => (
           <MenuItem key={key} value={key}>
             {key}
           </MenuItem>
