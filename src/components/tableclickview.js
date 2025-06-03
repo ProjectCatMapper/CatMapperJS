@@ -1,4 +1,3 @@
-import React from 'react';
 import { useState,useEffect } from 'react'
 import { DataGrid } from '@mui/x-data-grid';
 import './tableclickview.css'
@@ -6,18 +5,11 @@ import './tableclickview.css'
 export default function ClickTable(props) {
   const ccolumns = [
     { field: 'name', headerName: 'Name',flex: 1.3,cellClassName: (params) => params.row.hasLarge ? 'wrap-text-3-lines_dt' : ''},
-    {
-      field: 'spacer', // Dummy field for space
-      headerName: '',
-      width: 20, // Set desired width for the space
-      sortable: false,
-      filterable: false,
-      disableColumnMenu: true,
-      renderCell: () => null, // Renders an empty cell
-    },
+    { field: 'spacer', headerName: '', width: 20, sortable: false, filterable: false, disableColumnMenu: true, renderCell: () => null,},
     { field: 'location', headerName: 'Location',flex: 1.3,cellClassName: (params) => params.row.hasLarge ? 'wrap-text-3-lines_dt' : ''},
-    { field: 'timespan', headerName: 'Time span',flex: 0.45,headerClassName: 'wrap-header_data',cellClassName: 'timespan_text',renderCell: (params) => (<div style={{ paddingLeft: '5px' }}>{params.value}</div>), },
+    { field: 'timespan', headerName: 'Time span',flex: 0.47,headerClassName: 'wrap-header_data',cellClassName: 'timespan_text',renderCell: (params) => (<div style={{ paddingLeft: '5px' }}>{params.value === 0 ? "" : params.value}</div>), },
     { field: 'popest', headerName: 'Pop. est.',flex: 0.4,headerClassName: 'wrap-header_data',renderCell: (params) => (<div style={{ paddingLeft: '5px' }}>{params.value}</div>), },
+    { field: 'ctype', headerName: 'Type',flex: 0.4,headerClassName: 'wrap-header_data',renderCell: (params) => (<div style={{ paddingLeft: '5px' }}>{params.value}</div>), },
     { field: 'samplesize', headerName: 'Sample size',flex: 0.37,headerClassName: 'wrap-header_data',renderCell: (params) => (<div style={{ paddingLeft: '5px' }}>{params.value}</div>),},
     { field: 'source', headerName: 'Source',flex: 0.83,  renderCell: (params1) =>{ return <a id='viewlink' href={params1.row.link2} target="_blank" rel="noopener noreferrer">{params1.row.source}</a>}, },
     { field: 'version', headerName: 'Version',flex: 0.7,cellClassName: (params) => params.value && params.value.length > 10 ? 'wrap-text-3-lines_dt' : '',renderCell: (params) => (<div style={{ paddingLeft: '10px' }}>{params.value}</div>), },
@@ -25,36 +17,40 @@ export default function ClickTable(props) {
   ];
   const [rows, setRows] = useState([]);
   let nonEmptyColumns = []
-
-  //React.useEffect(() => {console.log(props.usert)},[])
   
   useEffect(() => {
     setRows(props.usert.map((value, key) => {
       const hasLarge = ['Name','Location','Version'].some(column => {
-        console.log(value)
         const text = value[column];
         return text && text.toString().length > 35;
       });
-      console.log(hasLarge)
 
       return {
         id: key + 1,
         name: value.Name,
         location: value.Location,
-        timespan: value['Time span'],
+        timespan:  !value['rStart'] && !value['rEnd'] ? ''
+                : value['rStart'] && value['rEnd'] && value['rStart'] === value['rEnd']
+                  ? value['rStart']
+                  : !value['rStart']
+                  ? '-' + value['rEnd']
+                  : !value['rEnd']
+                  ? value['rStart'] + '-'
+                  : value['rStart'] + '-' + value['rEnd'],
         popest: value['Population est.'],
         samplesize: value['Sample size'],
         source: value.Source,
         version: value.Version,
         link: value.Link,
         link2:value.link2,
+        ctype: value.cType,
         hasLarge
       }
     }))
   },[props.usert])
 
   nonEmptyColumns = ccolumns.filter((col) => 
-    rows.some((row) => (row[col.field] !== null) && (row[col.field] !== "null"))
+    rows.some((row) => (row[col.field] !== null) &&  row[col.field] !== undefined && row[col.field] !== '' && (row[col.field] !== "null"))
   );
 
 //  useEffect(() => {

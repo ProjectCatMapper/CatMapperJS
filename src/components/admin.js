@@ -50,7 +50,7 @@ const Admin = () => {
     },
     {
       label: "User Options",
-      keys: ["create new user", "change user password"],
+      keys: ["create new user", "change user password","approve new users"],
     },
     {
       label: "Database Checks",
@@ -273,6 +273,27 @@ const Admin = () => {
             variant="outlined"
             margin="normal"
           />
+          <Box 
+            sx={{ 
+              display: 'flex', 
+              justifyContent: 'flex-start',
+              padding: 2 
+            }}
+          >
+          <Button
+            variant="contained"
+            sx={{
+              backgroundColor: "black",
+              color: "white",
+              "&:hover": {
+                backgroundColor: "green",
+              },
+            }}
+            onClick={handleSubmit}
+          >
+            Submit{" "}
+          </Button>
+          </Box>
         </Box>
       )}
 
@@ -716,31 +737,10 @@ password   </InputLabel>
  </Box>
 )
 }
-<Box 
-  sx={{ 
-    display: 'flex', 
-    justifyContent: 'flex-start',
-    padding: 2 
-  }}
->
-      <Button
-        variant="contained"
-        sx={{
-          backgroundColor: "black",
-          color: "white",
-          "&:hover": {
-            backgroundColor: "green",
-          },
-        }}
-        onClick={handleSubmit}
-      >
-        Submit{" "}
-      </Button>
-      </Box>
-      <Divider sx={{ my: 1 }} />
+      {firstDropdownValue === "approve new users" && (
+<div>
       <Typography variant="p">Check for new users and approve them:</Typography>
-      <br/>
-      <br/>
+      
       <Box 
   sx={{ 
     display: 'flex', 
@@ -812,6 +812,7 @@ password   </InputLabel>
           <p>{CMIDText}</p>
         </DialogContent>
       </Dialog>
+      </div>)}
       </Box>
 
       <div style={{ padding: 10, backgroundColor: "black" }}>

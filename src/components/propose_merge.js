@@ -15,7 +15,8 @@ const Propose_Merge = () => {
     const [data, setData] = useState();
     const [isValid, setIsValid] = useState(false);
     const [mergeLevel, setMergeLevel] = useState(1);
-    const [firstDropdownValue, setFirstDropdownValue] = useState("ANY DOMAIN");
+    const [firstDropdownValue, setFirstDropdownValue] = useState("");
+    const [cerror, setError] = useState(false);
     let fileObj= ""
     let sections = [
       { label: 'ANY DOMAIN', keys: ['ANY DOMAIN'] },
@@ -48,7 +49,7 @@ const Propose_Merge = () => {
 
   const menuItems = sections.flatMap((section, index) => [
     index > 0 ? <Divider key={`divider-${section.label}`} /> : null,
-    ...section.keys.map((key, idx) => (
+    ...section.keys.filter(key => !key.toUpperCase().includes('ANY DOMAIN')).map((key, idx) => (
       <MenuItem
         key={key}
         value={key}
@@ -218,7 +219,11 @@ const Propose_Merge = () => {
       if (!isValid) {
         alert('Please validate successfully before submitting.');
         return;
-      } 
+      }
+      if (firstDropdownValue === "") {
+        alert("Please select a category domain to match")
+        return;
+      }
     try {
       const response = await fetch("https://catmapper.org/api/proposeMergeSubmit",{
         //const response = await fetch("http://127.0.0.1:5001/proposeMergeSubmit", {

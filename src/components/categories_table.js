@@ -9,6 +9,7 @@ export default function CategoriesTable(props) {
   const columns = [
     { field: 'Domain', headerName: 'Domain', width: 500 },
     { field: 'Count', headerName: 'Count', width: 200 },
+    { field: 'useskeys', headerName: 'Keys', width: 200 },
   ];
   const [rows, setRows] = useState([]);
   const navigate = useNavigate();
@@ -20,11 +21,11 @@ export default function CategoriesTable(props) {
     path = "archamap"
   } 
   
-  const handleRowClick = (
-    params,
-  ) => {
-    navigate({pathname:`/${path}/${params.row.cmid}`,});
-  };
+  // const handleRowClick = (
+  //   params,
+  // ) => {
+  //   navigate({pathname:`/${path}/${params.row.cmid}`,});
+  // };
 
   React.useEffect(() => {
     setRows(props.categories.map((value, key) => {
@@ -32,6 +33,7 @@ export default function CategoriesTable(props) {
         id: key + 1,
         Domain: value.Domain,
         Count: value.Count,
+        useskeys: value.TotalUses
       }
     }))
   }, [props.categories])
@@ -52,7 +54,7 @@ export default function CategoriesTable(props) {
           },
         }}
         pageSizeOptions={[10, 30, 50]}
-        onRowClick={handleRowClick}
+        //onRowClick={handleRowClick}
         localeText={{ noRowsLabel: "No results to display" }} />
     </div>
   );

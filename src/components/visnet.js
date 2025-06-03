@@ -1,19 +1,45 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { Network } from 'vis-network/standalone';
+import { useEffect, useState, useRef } from 'react';
+import { Network } from 'vis-network';
 import {useNavigate,useLocation} from 'react-router-dom'
 
 const Neo4jVisualization = ({ visData }) => {
-  console.log(visData)
   const navigate = useNavigate();
   const loc = useLocation();
   const valuesToRemove = ['DISTRICT', 'CATEGORY'];
   const nodes = visData["nodes"].length > 10 ? visData["nodes"].slice(0, 10) : visData["nodes"];
-  const filteredData = new Set(visData["nodes"].map(item => ({ domain: item.domain, color: item.color })).map(item => {
-      if (item.domain) {
-        item.domain = item.domain.filter(value => !valuesToRemove.includes(value)).slice(-1)[0];
-      }
-      return item;
-    }))
+const domainHierarchy = [
+  "REGION","SITE","PERIOD","ADM4", "ADM3", "ADM2", "ADM1", "ADM0", "ADMD", "ADME", "ADML", "ADMX",
+  "DIALECT", "LANGUAGE", "FAMILY", "LANGUOID",
+  "ETHNICITY", "RELIGION", "DATASET","GENERIC"
+];
+
+const getMostSpecificDomain = (domains) => {
+  const flat = Array.from(new Set(domains.flat()));
+  const filtered = flat.filter(val => !valuesToRemove.includes(val));
+
+  for (const specific of domainHierarchy) {
+    if (filtered.includes(specific)) {
+      return specific;
+    }
+  }
+
+  return null;
+};
+
+const filteredMap = new Map();
+
+visData["nodes"].forEach((item) => {
+  const mostSpecific = getMostSpecificDomain(item.domain || []);
+  if (mostSpecific && !filteredMap.has(mostSpecific)) {
+    filteredMap.set(mostSpecific, item.color);
+  }
+});
+
+const filteredData = Array.from(filteredMap.entries()).map(([domain, color]) => ({
+  domain,
+  color
+}));
+
   const uniqueMap = new Map();
   let tooltipText
 
@@ -68,15 +94,11 @@ const Neo4jVisualization = ({ visData }) => {
     const network = new Network(container, data, options);
 
     network.once("stabilizationIterationsDone", function () {
-      if (network.layoutEngine) {
       setTimeout(() => {
         network.setOptions({ physics: false });
-      }, 1000);}
-      else {
-        console.warn("layoutEngine does not exist. Skipping setOptions.");
-      }
+      }, 1000);
     });
-
+   
     let singleClickTimer = null;
     let lastClickedNode = null;
 
@@ -90,12 +112,12 @@ const Neo4jVisualization = ({ visData }) => {
           const glottoItems = tooltipContent.filter(item => item.split(':')[0].trim().toLowerCase() === 'glottocode');
           const ISOItems = tooltipContent.filter(item => item.split(':')[0].trim() === 'ISO3');
           const FIPSItems = tooltipContent.filter(item => item.split(':')[0].trim() === 'FIPS');
-          const logItems = tooltipContent
-            .filter(item => item.toLowerCase().includes('log'))
-              .slice(0, 3);
+          // const logItems = tooltipContent
+          //   .filter(item => item.toLowerCase().includes('log'))
+          //     .slice(0, 3);
           tooltipContent = tooltipContent.filter(item =>!['CMID', 'CMName','glottocode','ISO3','FIPS'].includes(item.split(':')[0].trim()) &&  !item.toLowerCase().includes('log'));
                   
-          tooltipContent = [...cmItems, ...glottoItems, ...ISOItems, ...FIPSItems, ...tooltipContent, ...logItems];
+          tooltipContent = [...cmItems, ...glottoItems, ...ISOItems, ...FIPSItems, ...tooltipContent];
 
           // tooltipContent = tooltipContent.filter(item => !['SocioMapID', 'SocioMapName'].includes(item.split(':')[0].trim()));
           console.log(tooltipContent)
@@ -114,7 +136,7 @@ const Neo4jVisualization = ({ visData }) => {
           var clickedNodeData = visData["nodes"].find(obj => obj["id"] === clickedNodeId)
           if (clickedNodeData["CMID"] !== currentid)
       {
-      const tabval = clickedNodeData["CMID"].startsWith("SD") || clickedNodeData["CMID"].startsWith("AD") ? 1 : 2;
+      const tabval = clickedNodeData["CMID"].startsWith("SD") || clickedNodeData["CMID"].startsWith("AD") ? 0 : 0;
       navigate({pathname:`/${path}/${clickedNodeData["CMID"]}/${tabval}`,});
       window.location.reload();
       }
@@ -152,7 +174,8 @@ const Neo4jVisualization = ({ visData }) => {
       acc.top.push(`${key}: ${value}`);
     }
     else if (key.toLowerCase().includes('log')) {
-      if (acc.bottom.length < 3) acc.bottom.push(`${key}: ${value}`);
+      //if (acc.bottom.length < 3) acc.bottom.push(`${key}: ${value}`);
+      return acc;
     }
     else {
       acc.middle.push(`${key}: ${value}`);
