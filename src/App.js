@@ -24,6 +24,7 @@ import Funding from "./routes/Funding"
 import Citation from "./routes/Citation"
 import Terms from "./routes/Terms"
 import Contact from "./routes/Contact"
+import Download from "./routes/Download"
 import Sociomap_ApiGuide from "./routes/Sociomap_ApiGuide"
 import Sociomap_UserGuide from "./routes/Sociomap_UserGuide"
 import Logins from "./routes/Logins";
@@ -72,6 +73,7 @@ function App() {
         <Route path='/funding' element={<Funding />} />
         <Route path='/citation' element={<Citation />} />
         <Route path='/terms' element={<Terms />} />
+        <Route path='/download' element={<Download />} />
         <Route path='/contact' element={<Contact />} />
         <Route path='/map1' element={<Map1 />} />
         <Route path='/map2' element={<Map2 />} />

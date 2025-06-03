@@ -35,6 +35,9 @@ const Navbar = () => {
             <li >
                 <Link id='sociomapnavbar' to='/contact'>Contact Us</Link>
             </li>
+                    <li >
+                <Link id='sociomapnavbar' to='/download'>Download</Link>
+            </li>
                     
         </ul>
         <div className='hamburger' onClick={handleClick}>

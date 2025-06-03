@@ -322,8 +322,8 @@ const handleFileChange = async (e) => {
       }):jsonData;
       
 
-      const response = await fetch("https://catmapper.org/api/uploadInputNodes",{
-      //const response = await fetch("http://127.0.0.1:5001/uploadInputNodes", {
+      //const response = await fetch("https://catmapper.org/api/uploadInputNodes",{
+      const response = await fetch("http://127.0.0.1:5001/uploadInputNodes", {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
