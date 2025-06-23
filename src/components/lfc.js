@@ -16,7 +16,7 @@ const LeafletCanvasMarker = ({ data }) => {
     ciLayer.addOnClickListener((e, marker) => {
       const { data } = marker;
       if (data && data.CMID) {
-        window.location.href = `https://catmapper.org/js/sociomap/${data.CMID}`;
+        window.location.href = `https://catmapper.org/sociomap/${data.CMID}`;
       }
     });
 
