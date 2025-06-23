@@ -30,7 +30,7 @@ const RegisterPage = () => {
               }
           
               setErrorMessage('');
-            const response = await fetch('https://catmapper.org/api/newuser', {
+            const response = await fetch(`${process.env.REACT_APP_API_URL}/newuser`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

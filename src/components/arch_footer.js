@@ -31,7 +31,7 @@ function createData(names,nodes, encodings, contains,context ) {
 
   const handleButtonClick = async () => {
     try {
-      const response = await fetch('https://catmapper.org/api/allDatasets?database=archamap', {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/allDatasets?database=archamap`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -66,7 +66,7 @@ const Footer = () => {
   // const [foci,setfoci] = useState([])
 
   // useEffect(() => {
-  //   fetch("https://catmapper.org/api/foci?database=archamap",
+  //   fetch(`${process.env.REACT_APP_API_URL}/foci?database=archamap`,
   //       // fetch("http://127.0.0.1:5001/foci?database=archamap",
   //           {
   //               method: "GET"
@@ -86,7 +86,7 @@ const Footer = () => {
 
   useEffect(() => {
 
-    fetch("https://catmapper.org/api/progress?database=archamap",
+    fetch(`${process.env.REACT_APP_API_URL}/progress?database=archamap`,
         // fetch("http://127.0.0.1:5001/progress?database=archamap",
             {
                 method: "GET"

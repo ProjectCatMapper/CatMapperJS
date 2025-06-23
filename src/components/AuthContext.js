@@ -36,7 +36,7 @@ export const AuthProvider = ({ children }) => {
     }, [authLevel,user,cred]);
 
     const login = async (username, password) => {
-        const response = await fetch('https://catmapper.org/api/login', {
+        const response = await fetch(`${process.env.REACT_APP_API_URL}/login`, {
         //const response = await fetch("http://127.0.0.1:5001/login", {
             method: 'POST',
             headers: {
