@@ -1,8 +1,19 @@
-import React from 'react'
 import Navbar from '../components/footer_navbar'
 import { Container, Typography, Box, Paper, Divider, Grid } from '@mui/material';
 
 const updates = [
+  {
+    date: 'June 6, 2025',
+    content: 'First version of CatMapper database dump publicly available (<https://catmapper.org/download>).'
+  },  
+  {
+    date: 'May, 2025',
+    content: 'Workshop and presentation at Computational Archaeology Association annual meeting.'
+  },
+  {
+    date: 'April, 2025',
+    content: 'Workshop at Population Association of America annual meeting.'
+  },
   {
     date: 'March 31, 2025',
     content: '1258 ethnic categories from Lomax and Arensberg’s 1977 subsistence paper linked to SocioMap.'

@@ -139,9 +139,27 @@ export default function Tableclick(props) {
 
   const getColorBasedOnValue = (value) => {
     const hierarchy = [
-      "REGION",
+      "PROJECTILE_POINT_TYPE",
+      "PROJECTILE_POINT_CLUSTER",
+      "PROJECTILE_POINT",
+      "CERAMIC_TYPE",
+      "CERAMIC_WARE",
+      "CERAMIC",
+      "PHYTOLITH",
+      "BOTANICAL",
+      "FAUNA",
+      "SUBSPECIES",
+      "SPECIES",
+      "SUBGENUS",
+      "GENUS",
+      "FAMILY",
+      "ORDER",
+      "CLASS",
+      "PHYLUM",
+      "KINGDOM",
+      "BIOTA",
+      "FEATURE",
       "SITE",
-      "PERIOD",
       "ADM4",
       "ADM3",
       "ADM2",
@@ -151,38 +169,72 @@ export default function Tableclick(props) {
       "ADME",
       "ADML",
       "ADMX",
+      "REGION",
+      "DISTRICT",
+      "PERIOD",
       "DIALECT",
       "LANGUAGE",
       "FAMILY",
       "LANGUOID",
       "ETHNICITY",
       "RELIGION",
+      "OCCUPATION",
+      "POLITY",
+      "CULTURE",
+      "STONE",
       "DATASET",
       "GENERIC",
+      "VARIABLE"
     ];
 
     const colorMap = {
-      ADM4: "#e6194B", // red
-      ADM3: "#3cb44b", // green
-      ADM2: "#ffe119", // yellow
-      ADM1: "#4363d8", // blue
-      ADM0: "#f58231", // orange
-      ADMD: "#911eb4", // purple
-      ADME: "#42d4f4", // cyan
-      ADML: "#f032e6", // magenta
-      ADMX: "#bfef45", // lime
-      DATASET: "#fabebe", // pink
-      DIALECT: "#469990", // teal
-      LANGUAGE: "#e6beff", // lavender
-      FAMILY: "#9A6324", // brown
-      LANGUOID: "#800000", // maroon
-      ETHNICITY: "#aaffc3", // mint
-      RELIGION: "#000075", // navy
-      PERIOD: "#ffd8b1", // peach
-      REGION: "#a9a9a9", // dark gray
-      SITE: "#dcbeff", // lilac
-      GENERIC: "#808000", // olive
-    };
+  "PROJECTILE_POINT_TYPE": "#e6194b", // strong red
+  "PROJECTILE_POINT_CLUSTER": "#3cb44b", // medium green
+  "PROJECTILE_POINT": "#ffe119", // bright yellow
+  "CERAMIC_TYPE": "#0082c8", // vivid blue
+  "CERAMIC_WARE": "#f58231", // orange
+  "CERAMIC": "#911eb4", // purple
+  "PHYTOLITH": "#46f0f0", // cyan
+  "BOTANICAL": "#f032e6", // magenta
+  "FAUNA": "#d2f53c", // lime
+  "SUBSPECIES": "#fabebe", // pink
+  "SPECIES": "#008080", // teal
+  "SUBGENUS": "#e6beff", // lavender
+  "GENUS": "#aa6e28", // brown
+  "FAMILY": "#fffac8", // pale yellow
+  "ORDER": "#800000", // maroon
+  "CLASS": "#aaffc3", // mint green
+  "PHYLUM": "#808000", // olive
+  "KINGDOM": "#ffd8b1", // peach
+  "BIOTA": "#000080", // navy
+  "FEATURE": "#808080", // gray
+  "SITE": "#FFFFFF", // white
+  "ADM4": "#a9a9a9", // dark gray
+  "ADM3": "#1f77b4", // medium blue
+  "ADM2": "#ff7f0e", // bright orange
+  "ADM1": "#2ca02c", // bright green
+  "ADM0": "#d62728", // crimson
+  "ADMD": "#9467bd", // lavender purple
+  "ADME": "#8c564b", // dark brown
+  "ADML": "#e377c2", // light pink
+  "ADMX": "#7f7f7f", // medium gray
+  "REGION": "#bcbd22", // yellow-green
+  "DISTRICT": "#17becf", // aqua
+  "PERIOD": "#393b79", // indigo
+  "DIALECT": "#637939", // moss green
+  "LANGUAGE": "#8c6d31", // mustard
+  "LANGUOID": "#843c39", // brick red
+  "ETHNICITY": "#7b4173", // plum
+  "RELIGION": "#3182bd", // steel blue
+  "OCCUPATION": "#fdd0a2", // sand
+  "POLITY": "#a1d99b", // pale green
+  "CULTURE": "#9e9ac8", // lilac
+  "STONE": "#f768a1", // hot pink
+  "DATASET": "#41ab5d", // grass green
+  "GENERIC": "#6baed6", // sky blue
+  "VARIABLE": "#d6616b" // dusty rose
+};
+
 
     const inputSet = new Set(
       value.flat().filter((v) => v !== "CATEGORY" && v !== "DISTRICT")
@@ -344,6 +396,32 @@ export default function Tableclick(props) {
       setLoading(false);
     }
   };
+
+  const handleLogsDownload = async () => {
+  try {
+    const response = await fetch(`https://catmapper.org/api/logs/${encodeURIComponent(database)}/${encodeURIComponent(props.cmid.cmid)}`,
+        { method: "GET"}
+      );
+
+    if (!response.ok) throw new Error("Failed to download file.");
+
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+
+    link.href = url;
+    link.setAttribute("download", `logs_${props.cmid.cmid}.txt`);
+    document.body.appendChild(link);
+    link.click();
+
+    link.remove();
+    window.URL.revokeObjectURL(url);
+  } catch (error) {
+    console.error("Download failed:", error);
+    alert("Failed to download file.");
+  }
+};
+
 
   const fetchData = async (event) => {
     try {
@@ -535,7 +613,7 @@ export default function Tableclick(props) {
             display: "grid",
             gridTemplateRows: "40px auto 20px",
             width: "100%",
-            backgroundImage: `linear-gradient(to right, #93a5cf, #e4efe9)`,
+            backgroundImage: `linear-gradient(to bottom right,#555555, #cccccc)`,
             backgroundSize: "cover",
           }}
         >
@@ -653,10 +731,36 @@ export default function Tableclick(props) {
               />
             </Box>
           )}
+          <Button
+              variant="outlined"
+              onClick={handleLogsDownload}
+              sx={{
+                marginLeft: "auto",
+                marginRight: 2,
+                marginBottom: 2,
+                fontSize: 12,
+                color: "#000",
+                borderColor: "#00BFFF",
+                background: "linear-gradient(135deg, rgba(0,191,255,0.1), rgba(255,255,255,0.05))",
+                backdropFilter: "blur(4px)",
+                boxShadow: "0 0 8px rgba(0,191,255,0.5)",
+                textTransform: "uppercase",
+                fontWeight: 600,
+                letterSpacing: 1,
+                transition: "0.3s ease-in-out",
+                "&:hover": {
+                  backgroundColor: "#00BFFF",
+                  color: "#000",
+                  boxShadow: "0 0 12px rgba(0,191,255,0.8)",
+                  borderColor: "#00BFFF",
+                },
+              }}
+            >
+              Download Logs
+            </Button>
         </Box>
         <Box
           sx={{
-            width: "100%",
             height: "auto",
             position: "relative",
             left: "10px",

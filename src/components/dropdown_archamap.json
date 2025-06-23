@@ -1,4 +1,4 @@
-{
+{   "BIOTA": ["Name","Key","CatMapper ID (CMID)"],
     "KINGDOM" : ["Name","Key","CatMapper ID (CMID)"],
     "FAUNA" : ["Name","Key","CatMapper ID (CMID)"],
     "PHYLUM" : ["Name","Key","CatMapper ID (CMID)"],

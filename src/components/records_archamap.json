@@ -1,0 +1,854 @@
+[
+  {
+    "name" : "",
+    "code" : "null"
+  },
+  {
+    "name": "Afghanistan",
+    "code": "AM21919"
+  },
+  {
+    "name": "Albania",
+    "code": "AM21922"
+  },
+  {
+    "name": "Algeria",
+    "code": "AM21923"
+  },
+  {
+    "name": "Andorra",
+    "code": "AM21926"
+  },
+  {
+    "name": "Angola",
+    "code": "AM21930"
+  },
+  {
+    "name": "Anguilla",
+    "code": "AM43681"
+  },
+  {
+    "name": "Antarctica",
+    "code": "AM37632"
+  },
+  {
+    "name": "Antigua and Barbuda",
+    "code": "AM43685"
+  },
+  {
+    "name": "Argentina",
+    "code": "AM21931"
+  },
+  {
+    "name": "Armenia",
+    "code": "AM21938"
+  },
+  {
+    "name": "Aruba",
+    "code": "AM43689"
+  },
+  {
+    "name": "Australia",
+    "code": "AM21939"
+  },
+  {
+    "name": "Austria",
+    "code": "AM21941"
+  },
+  {
+    "name": "Azerbaijan",
+    "code": "AM21942"
+  },
+  {
+    "name": "The Bahamas",
+    "code": "AM37654"
+  },
+  {
+    "name": "Bahrain",
+    "code": "AM21945"
+  },
+  {
+    "name": "Bangladesh",
+    "code": "AM21947"
+  },
+  {
+    "name": "Barbados",
+    "code": "AM43688"
+  },
+  {
+    "name": "Belarus",
+    "code": "AM21950"
+  },
+  {
+    "name": "Belgium",
+    "code": "AM21951"
+  },
+  {
+    "name": "Belize",
+    "code": "AM21952"
+  },
+  {
+    "name": "Benin",
+    "code": "AM37633"
+  },
+  {
+    "name": "Antigua and Barbuda",
+    "code": "AM43685"
+  },
+  {
+    "name": "Bhutan",
+    "code": "AM21953"
+  },
+  {
+    "name": "Bolivia",
+    "code": "AM21954"
+  },
+  {
+    "name": "Bosnia and Herzegovina",
+    "code": "AM21955"
+  },
+  {
+    "name": "Botswana",
+    "code": "AM21956"
+  },
+  {
+    "name": "Brazil",
+    "code": "AM21957"
+  },
+  {
+    "name": "British Virgin Islands",
+    "code": "AM43678"
+  },
+  {
+    "name": "Brunei",
+    "code": "AM37634"
+  },
+  {
+    "name": "Bulgaria",
+    "code": "AM21959"
+  },
+  {
+    "name": "Burkina Faso",
+    "code": "AM37635"
+  },
+  {
+    "name": "Burundi",
+    "code": "AM21961"
+  },
+  {
+    "name": "Cambodia",
+    "code": "AM21965"
+  },
+  {
+    "name": "Cameroon",
+    "code": "AM21968"
+  },
+  {
+    "name": "Canada",
+    "code": "AM21970"
+  },
+  {
+    "name": "Cayman Islands",
+    "code": "AM43680"
+  },
+  {
+    "name": "Central African Republic",
+    "code": "AM21973"
+  },
+  {
+    "name": "Chad",
+    "code": "AM21974"
+  },
+  {
+    "name": "Chile",
+    "code": "AM21976"
+  },
+  {
+    "name": "People's Republic of China",
+    "code": "AM22192"
+  },
+  {
+    "name": "Colombia",
+    "code": "AM21980"
+  },
+  {
+    "name": "Comoros",
+    "code": "AM21984"
+  },
+  {
+    "name": "Costa Rica",
+    "code": "AM21987"
+  },
+  {
+    "name": "Croatia",
+    "code": "AM21991"
+  },
+  {
+    "name": "Cuba",
+    "code": "AM21992"
+  },
+  {
+    "name": "Curaçao",
+    "code": "AM43686"
+  },
+  {
+    "name": "Cyprus",
+    "code": "AM21993"
+  },
+  {
+    "name": "Czech Republic",
+    "code": "AM21994"
+  },
+  {
+    "name": "Democratic Republic of the Congo",
+    "code": "AM21998"
+  },
+  {
+    "name": "Denmark",
+    "code": "AM22000"
+  },
+  {
+    "name": "Djibouti",
+    "code": "AM22003"
+  },
+  {
+    "name": "Dominica",
+    "code": "AM43682"
+  },
+  {
+    "name": "Dominican Republic",
+    "code": "AM22005"
+  },
+  {
+    "name": "Ecuador",
+    "code": "AM22008"
+  },
+  {
+    "name": "Egypt",
+    "code": "AM22009"
+  },
+  {
+    "name": "El Salvador",
+    "code": "AM22010"
+  },
+  {
+    "name": "Equatorial Guinea",
+    "code": "AM22015"
+  },
+  {
+    "name": "Eritrea",
+    "code": "AM22016"
+  },
+  {
+    "name": "Estonia",
+    "code": "AM22019"
+  },
+  {
+    "name": "Eswatini",
+    "code": "AM22020"
+  },
+  {
+    "name": "Ethiopia",
+    "code": "AM22021"
+  },
+  {
+    "name": "Falkland Islands",
+    "code": "AM37637"
+  },
+  {
+    "name": "Faroe Islands",
+    "code": "AM22023"
+  },
+  {
+    "name": "Fiji",
+    "code": "AM37638"
+  },
+  {
+    "name": "Finland",
+    "code": "AM22025"
+  },
+  {
+    "name": "France",
+    "code": "AM22026"
+  },
+  {
+    "name": "French Southern and Antarctic Lands",
+    "code": "AM37639"
+  },
+  {
+    "name": "Gabon",
+    "code": "AM22027"
+  },
+  {
+    "name": "Gambia",
+    "code": "AM37640"
+  },
+  {
+    "name": "Georgia (Country)",
+    "code": "AM22432"
+  },
+  {
+    "name": "Germany",
+    "code": "AM22032"
+  },
+  {
+    "name": "Ghana",
+    "code": "AM22033"
+  },
+  {
+    "name": "Gibraltar",
+    "code": "AM22034"
+  },
+  {
+    "name": "Greece",
+    "code": "AM22039"
+  },
+  {
+    "name": "Greenland",
+    "code": "AM22040"
+  },
+  {
+    "name": "Grenada",
+    "code": "AM43683"
+  },
+  {
+    "name": "Guam",
+    "code": "AM22041"
+  },
+  {
+    "name": "Guatemala",
+    "code": "AM22042"
+  },
+  {
+    "name": "Guernsey",
+    "code": "AM22044"
+  },
+  {
+    "name": "Guinea",
+    "code": "AM37641"
+  },
+  {
+    "name": "Guinea-Bissau",
+    "code": "AM22447"
+  },
+  {
+    "name": "Guyana",
+    "code": "AM22047"
+  },
+  {
+    "name": "Haiti",
+    "code": "AM22048"
+  },
+  {
+    "name": "Honduras",
+    "code": "AM22057"
+  },
+  {
+    "name": "Hungary",
+    "code": "AM22058"
+  },
+  {
+    "name": "Iceland",
+    "code": "AM22061"
+  },
+  {
+    "name": "India",
+    "code": "AM22063"
+  },
+  {
+    "name": "Indonesia",
+    "code": "AM22066"
+  },
+  {
+    "name": "Iran",
+    "code": "AM22070"
+  },
+  {
+    "name": "Iraq",
+    "code": "AM22071"
+  },
+  {
+    "name": "Republic of Ireland",
+    "code": "AM22204"
+  },
+  {
+    "name": "Isle of Man",
+    "code": "AM22072"
+  },
+  {
+    "name": "Israel",
+    "code": "AM22075"
+  },
+  {
+    "name": "Italy",
+    "code": "AM22076"
+  },
+  {
+    "name": "Côte d'Ivoire",
+    "code": "AM21988"
+  },
+  {
+    "name": "Jamaica",
+    "code": "AM22077"
+  },
+  {
+    "name": "Japan",
+    "code": "AM22079"
+  },
+  {
+    "name": "Jersey",
+    "code": "AM22081"
+  },
+  {
+    "name": "Jordan",
+    "code": "AM22535"
+  },
+  {
+    "name": "Kazakhstan",
+    "code": "AM22086"
+  },
+  {
+    "name": "Kenya",
+    "code": "AM22090"
+  },
+  {
+    "name": "Kosovo, Serbia",
+    "code": "AM22696"
+  },
+  {
+    "name": "Kuwait",
+    "code": "AM22096"
+  },
+  {
+    "name": "Kyrgyzstan",
+    "code": "AM22097"
+  },
+  {
+    "name": "Laos",
+    "code": "AM22100"
+  },
+  {
+    "name": "Latvia",
+    "code": "AM22101"
+  },
+  {
+    "name": "Lebanon",
+    "code": "AM22103"
+  },
+  {
+    "name": "Lesotho",
+    "code": "AM22105"
+  },
+  {
+    "name": "Liberia",
+    "code": "AM22106"
+  },
+  {
+    "name": "Libya",
+    "code": "AM22107"
+  },
+  {
+    "name": "Liechtenstein",
+    "code": "AM22108"
+  },
+  {
+    "name": "Lithuania",
+    "code": "AM22109"
+  },
+  {
+    "name": "Luxembourg",
+    "code": "AM22111"
+  },
+  {
+    "name": "Madagascar",
+    "code": "AM22113"
+  },
+  {
+    "name": "Malawi",
+    "code": "AM22116"
+  },
+  {
+    "name": "Malaysia",
+    "code": "AM22117"
+  },
+  {
+    "name": "Mali",
+    "code": "AM22118"
+  },
+  {
+    "name": "Malta",
+    "code": "AM22121"
+  },
+  {
+    "name": "Mauritania",
+    "code": "AM22128"
+  },
+  {
+    "name": "Mauritius",
+    "code": "AM22129"
+  },
+  {
+    "name": "Mexico",
+    "code": "AM22132"
+  },
+  {
+    "name": "Moldova",
+    "code": "AM22140"
+  },
+  {
+    "name": "Monaco",
+    "code": "AM22141"
+  },
+  {
+    "name": "Mongolia",
+    "code": "AM22142"
+  },
+  {
+    "name": "Montenegro",
+    "code": "AM22145"
+  },
+  {
+    "name": "Montserrat",
+    "code": "AM43684"
+  },
+  {
+    "name": "Morocco",
+    "code": "AM22146"
+  },
+  {
+    "name": "Mozambique",
+    "code": "AM22149"
+  },
+  {
+    "name": "Myanmar",
+    "code": "AM21960"
+  },
+  {
+    "name": "Namibia",
+    "code": "AM22150"
+  },
+  {
+    "name": "Nepal",
+    "code": "AM22151"
+  },
+  {
+    "name": "Netherlands",
+    "code": "AM22152"
+  },
+  {
+    "name": "North Macedonia",
+    "code": "AM22172"
+  },
+  {
+    "name": "New Zealand",
+    "code": "AM22161"
+  },
+  {
+    "name": "Nicaragua",
+    "code": "AM22165"
+  },
+  {
+    "name": "Nigeria",
+    "code": "AM22167"
+  },
+  {
+    "name": "Nigeria",
+    "code": "AM22167"
+  },
+  {
+    "name": "Nigeria",
+    "code": "AM22167"
+  },
+  {
+    "name": "North Korea",
+    "code": "AM37645"
+  },
+  {
+    "name": "North Macedonia",
+    "code": "AM22172"
+  },
+  {
+    "name": "Norway",
+    "code": "AM22178"
+  },
+  {
+    "name": "Oman",
+    "code": "AM22185"
+  },
+  {
+    "name": "Pakistan",
+    "code": "AM22186"
+  },
+  {
+    "name": "Papua New Guinea",
+    "code": "AM37647"
+  },
+  {
+    "name": "Panama",
+    "code": "AM22188"
+  },
+  {
+    "name": "Papua New Guinea",
+    "code": "AM37647"
+  },
+  {
+    "name": "Paraguay",
+    "code": "AM22190"
+  },
+  {
+    "name": "Peru",
+    "code": "AM22193"
+  },
+  {
+    "name": "Philippines",
+    "code": "AM22194"
+  },
+  {
+    "name": "Poland",
+    "code": "AM22195"
+  },
+  {
+    "name": "Portugal",
+    "code": "AM22196"
+  },
+  {
+    "name": "Puerto Rico",
+    "code": "AM22197"
+  },
+  {
+    "name": "Qatar",
+    "code": "AM22200"
+  },
+  {
+    "name": "Republic of the Congo",
+    "code": "AM22205"
+  },
+  {
+    "name": "Réunion",
+    "code": "AM22206"
+  },
+  {
+    "name": "Romania",
+    "code": "AM22209"
+  },
+  {
+    "name": "Rwanda",
+    "code": "AM22211"
+  },
+  {
+    "name": "Saint Kitts and Nevis",
+    "code": "AM43679"
+  },
+  {
+    "name": "Saint Lucia",
+    "code": "AM22213"
+  },
+  {
+    "name": "Saint Kitts and Nevis",
+    "code": "AM43679"
+  },
+  {
+    "name": "Saint Vincent and the Grenadines",
+    "code": "AM22214"
+  },
+  {
+    "name": "San Marino",
+    "code": "AM22215"
+  },
+  {
+    "name": "Saint Kitts and Nevis",
+    "code": "AM43679"
+  },
+  {
+    "name": "Saudi Arabia",
+    "code": "AM22216"
+  },
+  {
+    "name": "Senegal",
+    "code": "AM37649"
+  },
+  {
+    "name": "Serbia",
+    "code": "AM22219"
+  },
+  {
+    "name": "Sierra Leone",
+    "code": "AM22221"
+  },
+  {
+    "name": "Singapore",
+    "code": "AM22222"
+  },
+  {
+    "name": "Slovakia",
+    "code": "AM22223"
+  },
+  {
+    "name": "Slovenia",
+    "code": "AM22225"
+  },
+  {
+    "name": "Solomon Islands",
+    "code": "AM37650"
+  },
+  {
+    "name": "Somalia",
+    "code": "AM22226"
+  },
+  {
+    "name": "South Africa",
+    "code": "AM22548"
+  },
+  {
+    "name": "South Korea",
+    "code": "AM37653"
+  },
+  {
+    "name": "South Sudan",
+    "code": "AM22231"
+  },
+  {
+    "name": "Spain",
+    "code": "AM22233"
+  },
+  {
+    "name": "Sri Lanka",
+    "code": "AM22236"
+  },
+  {
+    "name": "Sudan",
+    "code": "AM22237"
+  },
+  {
+    "name": "Suriname",
+    "code": "AM22238"
+  },
+  {
+    "name": "Sweden",
+    "code": "AM22240"
+  },
+  {
+    "name": "Switzerland",
+    "code": "AM22241"
+  },
+  {
+    "name": "Syria",
+    "code": "AM22243"
+  },
+  {
+    "name": "Taiwan",
+    "code": "AM22244"
+  },
+  {
+    "name": "Tajikistan",
+    "code": "AM22245"
+  },
+  {
+    "name": "United Republic of Tanzania",
+    "code": "AM37657"
+  },
+  {
+    "name": "Thailand",
+    "code": "AM22256"
+  },
+  {
+    "name": "East Timor",
+    "code": "AM37636"
+  },
+  {
+    "name": "Togo",
+    "code": "AM37655"
+  },
+  {
+    "name": "Togo",
+    "code": "AM37655"
+  },
+  {
+    "name": "Trinidad and Tobago",
+    "code": "AM37656"
+  },
+  {
+    "name": "Tunisia",
+    "code": "AM22259"
+  },
+  {
+    "name": "Turkey",
+    "code": "AM22261"
+  },
+  {
+    "name": "Turkmenistan",
+    "code": "AM22262"
+  },
+  {
+    "name": "Turks and Caicos Islands",
+    "code": "AM43687"
+  },
+  {
+    "name": "Uganda",
+    "code": "AM22264"
+  },
+  {
+    "name": "Ukraine",
+    "code": "AM22265"
+  },
+  {
+    "name": "United Arab Emirates",
+    "code": "AM22267"
+  },
+  {
+    "name": "United Kingdom",
+    "code": "AM22268"
+  },
+  {
+    "name": "United States of America",
+    "code": "AM22269"
+  },
+  {
+    "name": "Uruguay",
+    "code": "AM22270"
+  },
+  {
+    "name": "Uzbekistan",
+    "code": "AM22273"
+  },
+  {
+    "name": "Vanuatu",
+    "code": "AM37658"
+  },
+  {
+    "name": "Vatican City",
+    "code": "AM22274"
+  },
+  {
+    "name": "Venezuela",
+    "code": "AM22276"
+  },
+  {
+    "name": "Vietnam",
+    "code": "AM22280"
+  },
+  {
+    "name": "Western Sahara",
+    "code": "AM37659"
+  },
+  {
+    "name": "Yemen",
+    "code": "AM22284"
+  },
+  {
+    "name": "Zambia",
+    "code": "AM22286"
+  },
+  {
+    "name": "Zimbabwe",
+    "code": "AM22287"
+  },
+  {
+    "name": "Northern Cyprus",
+    "code": "AM37646"
+  },
+  {
+    "name": "Yugoslavia",
+    "code": "AM22285"
+  }
+]

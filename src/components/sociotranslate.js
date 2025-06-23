@@ -81,13 +81,25 @@ function Sociotranslate(){
   const emptyRows = rowsPerPage - Math.min(rowsPerPage, rows.length - page * rowsPerPage);
 
   const handleCheckboxChange = () => {
-    setIsChecked(!isChecked);}
+    setIsChecked(!isChecked);
+    if (isChecked){
+      setthirdDropdownValue([""]);
+    }
+  }
   
 const handleCheckboxChangetwo = () => {
-      setIsCheckedtwo(!isCheckedtwo);}
+      setIsCheckedtwo(!isCheckedtwo);
+      if (isCheckedtwo){
+      setfourthDropdownValue([""]);
+    }
+    }
 
 const handleCheckboxChangethree = () => {
-        setIsCheckedthree(!isCheckedthree);}
+        setIsCheckedthree(!isCheckedthree);
+        if (isCheckedthree){
+      setfifthDropdownValue([""]);
+    }
+      }
 
 const handleCheckboxChangefour = () => {
         setIsCheckedfour(!isCheckedfour);}
@@ -98,11 +110,10 @@ if (useLocation().pathname.includes("archamap")) {
     database = "ArchaMap"
     sections = [
       { label: 'ANY DOMAIN', keys: ['ANY DOMAIN'] },
-      { label: 'KINGDOM to SUBSPECIES', keys: ['KINGDOM', 'FAUNA', 'PHYLUM', 'CLASS', 'ORDER', 'FAMILY', 'GENUS', 'SPECIES', 'SUBGENUS', 'SUBSPECIES'] },
-      { label: 'FEATURE to SITE', keys: ['FEATURE', 'ADM0', 'ADM1', 'ADM2', 'ADM3', 'AREA', 'REGION', 'SITE'] },
+      { label: 'BIOTA to PHYTOLITH', keys: ["BIOTA",'FAUNA',"BOTANICAL",'KINGDOM', 'PHYLUM', 'CLASS', 'ORDER', 'FAMILY', 'GENUS', 'SPECIES', 'SUBGENUS', 'SUBSPECIES',"PHYTOLITH"] },
+      { label: 'AREA to SITE', keys: ['AREA', 'ADM0', 'ADM1', 'ADM2', 'ADM3', 'FEATURE', 'REGION', 'SITE'] },
       { label: 'STONE', keys: ['STONE'] },
       { label: 'CULTURE', keys: ['CULTURE'] },
-      { label: 'BOTANICAL to PHYTOLITH', keys: ['BOTANICAL', 'PHYTOLITH'] },
       { label: 'CERAMIC to CERAMIC_WARE', keys: ['CERAMIC', 'CERAMIC_TYPE','CERAMIC_WARE'] },
       { label: 'DATASET', keys: ['DATASET'] },
       { label: 'PERIOD', keys: ['PERIOD'] },
@@ -114,7 +125,6 @@ if (useLocation().pathname.includes("archamap")) {
 const handleClick = async () => {
   setLoading(true);
   setProgress(10);
-  console.log(jsonData)
   try {
     selectedColumnValues = rows.map((row) => row[columns.indexOf(zeroDropdownValue)]);
     setProgress(20);
@@ -176,7 +186,6 @@ const handleClick = async () => {
     ];
 
     setData(responseData);
-    // data.sort((a, b) => a.term.localeCompare(b.term));
     setColumns(reorderedColumns)
     setRows(responseData.map(row => reorderedColumns.map(key => row[key])));
     setProgress(80);
@@ -450,44 +459,63 @@ const handleFileChange = (event) => {
     }
   }, [firstDropdownValue])
 
-  const Terminology = [
-    { label: 'Choose column to match', description: 'Which column in the input dataset do you want to find matches for in CatMapper' },
-    { label: 'Select category domain', description: 'From which category domain do you want to find matches?' },
-    { label: 'Property to match', description: 'For the column you are matching, is it a Name, a CMID, a Key, or some other property? For beginners this will be Name.' },
-    { label: 'Limit by Country', description: 'This permits limiting matches to categories associated with a specific country.  This requires a column with the CMID for the country.' },
-    { label: 'Limit by Contex', description: 'This permits limiting matches to categories that are contained by specific contexts (e.g. only counties in Ohio).  This requires a column with the CMID for the context (e.g. Ohio).' },
-    { label: 'Limit by Dataset', description: 'This permits limiting matches to categories used by a specific dataset.  This requires a column with the CMID for the datasetID.' },
-  ];
+  // const Terminology = [
+  //   { label: 'Choose column to match', description: 'Which column in the input dataset do you want to find matches for in CatMapper' },
+  //   { label: 'Select category domain', description: 'From which category domain do you want to find matches?' },
+  //   { label: 'Property to match', description: 'For the column you are matching, is it a Name, a CMID, a Key, or some other property? For beginners this will be Name.' },
+  //   { label: 'Limit by Country', description: 'This permits limiting matches to categories associated with a specific country.  This requires a column with the CMID for the country.' },
+  //   { label: 'Limit by Contex', description: 'This permits limiting matches to categories that are contained by specific contexts (e.g. only counties in Ohio).  This requires a column with the CMID for the context (e.g. Ohio).' },
+  //   { label: 'Limit by Dataset', description: 'This permits limiting matches to categories used by a specific dataset.  This requires a column with the CMID for the datasetID.' },
+  // ];
 
-  const tooltipContent = (
-    <div style={{ maxWidth: '400px' }}>
-      <h4>Terminology Descriptions</h4>
-      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-        <thead>
-          <tr>
-            <th style={{ borderBottom: '1px solid #ddd', textAlign: 'left', padding: '8px' }}>Label</th>
-            <th style={{ borderBottom: '1px solid #ddd', textAlign: 'left', padding: '8px' }}>Description</th>
-          </tr>
-        </thead>
-        <tbody>
-          {Terminology.map((category, index) => (
-            <tr key={index}>
-              <td style={{ borderBottom: '1px solid #ddd', padding: '8px' }}>{category.label}</td>
-              <td style={{ borderBottom: '1px solid #ddd', padding: '8px' }}>{category.description}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
+  // const tooltipContent = (
+  //   <div style={{ maxWidth: '400px' }}>
+  //     <h4>Terminology Descriptions</h4>
+  //     <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+  //       <thead>
+  //         <tr>
+  //           <th style={{ borderBottom: '1px solid #ddd', textAlign: 'left', padding: '8px' }}>Label</th>
+  //           <th style={{ borderBottom: '1px solid #ddd', textAlign: 'left', padding: '8px' }}>Description</th>
+  //         </tr>
+  //       </thead>
+  //       <tbody>
+  //         {Terminology.map((category, index) => (
+  //           <tr key={index}>
+  //             <td style={{ borderBottom: '1px solid #ddd', padding: '8px' }}>{category.label}</td>
+  //             <td style={{ borderBottom: '1px solid #ddd', padding: '8px' }}>{category.description}</td>
+  //           </tr>
+  //         ))}
+  //       </tbody>
+  //     </table>
+  //   </div>
+  // );
 
+  const getTooltipContent = (num) => {
+    const tooltipTexts = {
+      1: 'Upload a spreadsheet of category names for an automated proposal of matches to CatMapper categories". See <https://catmapper.org/help/> for more information.',
+      2: 'Column in input spreadsheet you want to find matches for in CatMapper?',
+      3: 'From which category domain do you want to find matches?',
+      4: 'For beginners this will be Name. This allows advanced users to mach by other category properties in CatMapper, such as CatMapper ID or Key.',
+      5: 'This permits only finding matches to categories associated with a specific country.  This requires an additional spreadsheet column with the CatMapper ID for the country.',
+      6: "This permits only finding matches to categories that are contained by specific contexts (e.g. only counties in Ohio).  This requires an additional spreadsheet column with the CatMapper ID for the context (e.g. Ohio's CatMapper ID in SocioMap is SM2577)",
+      7: "This permits only finding matches to categories that are used by a specific dataset (e.g. only language categories used by glottolog 4.4).  This requires an additional spreadsheet column with the CatMapper ID for the dataset (e.g. the CatMapper ID for glottolog 4.4 is SD20)",
+      8: 'Specify a time range which matching categories need to fall within.  This uses  information about the years for which a category was observed.',
+      9: 'Checking this button… TBD',
+      10: "This table provides statistics on the matches, including what % were **exact matches** to only one CatMapper category, **fuzzy matches** to only on CatMapper category, matches to more than one CatMapper category (**one-to-many**), multiple matches to a single CatMapper category (**many-to-one**), and no match found."
+    };
+
+    return tooltipTexts[num];
+  };
 
   return (
     <Box sx={{ backgroundColor: 'black', opacity: 1,flexGrow: 1  }} >
     <div  style={{width:"26%",height:"90%", backgroundColor : '#e0e0e0', padding: '20px',border: '1px solid #ccc',borderRadius : '10px', margin: '10px', overflow:"auto",position:"absolute"}}>
-      <p style={{ color: 'White', fontWeight: "bold", marginLeft: 7, padding: "2px" }}>
-      Choose spreadsheet to match
-  </p>
+      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+        <p style={{fontWeight: "bold", marginLeft: 7, padding: "2px" }}>Choose spreadsheet to match</p>
+        <Tooltip title={getTooltipContent(1)} arrow>
+          <Button startIcon={<InfoIcon sx={{ height: '28px', width: '28px' }} />} />
+        </Tooltip>
+      </Box>
       <input id="fileInput" style={{ color: 'black', fontWeight: "bold", marginLeft: 7, padding: "2px" }} type="file" accept=".csv, .xlsx" onChange={handleFileChange} />
       <Button variant="contained" sx={{
         backgroundColor: 'black',
@@ -499,10 +527,14 @@ const handleFileChange = (event) => {
         Reset imported file
       </Button>
       <br/>
-      <br/>
       {selectedFile !== null && (
         <div>
-          <p style={{ color: 'White', fontWeight: "bold", marginLeft: 7, padding: "2px" }}>Choose spreadsheet column to match</p>     
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <p style={{ color: 'White', fontWeight: "bold", marginLeft: 7, padding: "2px" }}>Choose spreadsheet column to match</p>
+            <Tooltip title={getTooltipContent(2)} arrow>
+              <Button startIcon={<InfoIcon sx={{ height: '28px', width: '28px' }} />} />
+            </Tooltip>
+          </Box>   
           <Select
           label="Zero Dropdown"
           style={{height:40}}
@@ -518,35 +550,31 @@ const handleFileChange = (event) => {
         </div>
       )}
       <Box sx={{ display: 'flex', alignItems: 'center' }}>
-  <p style={{ color: 'White', fontWeight: "bold", marginLeft: 7, padding: "2px" }}>
-    Select category domain
-  </p>
-  <Tooltip title={tooltipContent} arrow>
-    <Button startIcon={<InfoIcon sx={{ height: '28px', width: '28px' }} />} />
-  </Tooltip>
-</Box> 
+        <p style={{ color: 'White', fontWeight: "bold", marginLeft: 7, padding: "2px" }}>Select category domain</p>
+        <Tooltip title={getTooltipContent(3)} arrow>
+          <Button startIcon={<InfoIcon sx={{ height: '28px', width: '28px' }} />} />
+        </Tooltip>
+      </Box> 
       <Select
           label="First Dropdown"
           value={firstDropdownValue}
           style={{height:40}}
           sx={{ m: 1, width: "12vw" }}
           onChange={(event) => setFirstDropdownValue(event.target.value)}>
-         {/* {Object.keys(doptions).map((key) => (
-          <MenuItem key={key} value={key}>
-            {key}
-          </MenuItem>
-        ))} */}
              {menuItems}
         </Select>
-        <br/>
-        <p style={{ color: 'White', fontWeight: "bold", marginLeft: 7, padding: "2px" }}>CatMapper Property to Search</p>     
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          <p style={{ color: 'White', fontWeight: "bold", marginLeft: 7, padding: "2px" }}>CatMapper Property to Search</p> 
+          <Tooltip title={getTooltipContent(4)} arrow>
+            <Button startIcon={<InfoIcon sx={{ height: '28px', width: '28px' }} />} />
+          </Tooltip>
+        </Box>
       <Select
           label="Second Dropdown"
           value={secondDropdownValue}
           style={{height:40}}
           sx={{ m: 1, width: "12vw" }}
           onChange={(event) => {
-            //const newValue = event.target.value === "CatMapper ID (CMID)" ? "CMID" : event.target.value;
             setsecondDropdownValue(event.target.value) ;
           }}>
           {svalues.map((key) => (
@@ -555,12 +583,15 @@ const handleFileChange = (event) => {
           </MenuItem>
         ))}
         </Select>
-        <br/>
-        <label>
-        <input type="checkbox" checked={isChecked} onChange={handleCheckboxChange} />
-        Limit by Country?
-      </label>
-
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          <label>
+            <input type="checkbox" checked={isChecked} onChange={handleCheckboxChange} />
+            Limit by Country?
+          </label>
+          <Tooltip title={getTooltipContent(5)} arrow>
+            <Button startIcon={<InfoIcon sx={{ height: '28px', width: '28px' }} />} />
+          </Tooltip>
+        </Box>
       {selectedFile !== null && isChecked && (
         <div>
           <p style={{ color: 'White', fontWeight: "bold", marginLeft: 7, padding: "2px" }}>Select column with Country IDs</p>
@@ -578,13 +609,15 @@ const handleFileChange = (event) => {
           </Select>
         </div>
       )}
-      <br/>
-      <br/>
+      <Box sx={{ display: 'flex', alignItems: 'center' }}>
         <label>
-        <input type="checkbox" checked={isCheckedtwo} onChange={handleCheckboxChangetwo} />
-        Limit by Context?
-      </label>
-
+          <input type="checkbox" checked={isCheckedtwo} onChange={handleCheckboxChangetwo} />
+          Limit by Context?
+        </label>
+        <Tooltip title={getTooltipContent(6)} arrow>
+          <Button startIcon={<InfoIcon sx={{ height: '28px', width: '28px' }} />} />
+        </Tooltip>
+      </Box>
       {selectedFile !== null && isCheckedtwo && (
         <div>
           <p style={{ color: 'White', fontWeight: "bold", marginLeft: 7, padding: "2px" }}>Select Column with context IDs</p>
@@ -602,13 +635,15 @@ const handleFileChange = (event) => {
           </Select>
         </div>
       )}
-      <br/>
-      <br/>
+      <Box sx={{ display: 'flex', alignItems: 'center' }}>
         <label>
-        <input type="checkbox" checked={isCheckedthree} onChange={handleCheckboxChangethree} />
-        Limit by Dataset?
-      </label>
-
+          <input type="checkbox" checked={isCheckedthree} onChange={handleCheckboxChangethree} />
+          Limit by Dataset?
+        </label>
+        <Tooltip title={getTooltipContent(7)} arrow>
+          <Button startIcon={<InfoIcon sx={{ height: '28px', width: '28px' }} />} />
+        </Tooltip>
+      </Box>
       {selectedFile !== null && isCheckedthree && (
         <div>
           <p style={{ color: 'White', fontWeight: "bold", marginLeft: 7, padding: "2px" }}>Select column with Dataset IDs</p>
@@ -633,8 +668,12 @@ const handleFileChange = (event) => {
         </div>
       )}
       <br/>
-      <br/>
-      <p style={{ color: 'White', fontWeight: "bold", marginLeft: 7, padding: "2px" }}>Time range (years)</p>
+      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+        <p style={{ color: 'White', fontWeight: "bold", marginLeft: 7, padding: "2px" }}>Time range (years)</p>
+        <Tooltip title={getTooltipContent(8)} arrow>
+          <Button startIcon={<InfoIcon sx={{ height: '28px', width: '28px' }} />} />
+        </Tooltip>
+      </Box>
       <p style={{ color: 'White', fontWeight: "bold", marginLeft: 7, padding: "2px" }}>from &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; to</p>
       <input
         type="text"
@@ -662,7 +701,6 @@ const handleFileChange = (event) => {
         {loading && <ProgressBar progress={progress} />}
       </Backdrop>
       <Box sx={{ display: 'flex', alignItems: 'center' }}>
-      {/* Title next to the checkbox */}
       <Typography variant="body1" sx={{ marginRight: 2, color: 'black', fontWeight: 500 }}>
         Unique Rows?
       </Typography>
@@ -673,12 +711,15 @@ const handleFileChange = (event) => {
             checked={isRowsChecked}
             onChange={handleRowsChange}
             name="checkboxButton"
-            color="default"  // Optional: color can be changed
-            sx={{ '& .MuiSvgIcon-root': { fontSize: 28 } }}  // Adjust checkbox size
+            color="default"
+            sx={{ '& .MuiSvgIcon-root': { fontSize: 28 } }} 
           />
         }
         label=""
       />
+      <Tooltip title={getTooltipContent(9)} arrow>
+          <Button startIcon={<InfoIcon sx={{ height: '28px', width: '28px' }} />} />
+        </Tooltip>
     </Box>
       <Button variant="contained" sx={{
         backgroundColor: 'black',
@@ -690,7 +731,12 @@ const handleFileChange = (event) => {
         Search
       </Button>
       <br/>
-      <TranslateTable categories={tcategories} />
+      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+        <TranslateTable categories={tcategories} />
+        <Tooltip title={getTooltipContent(10)} arrow>
+          <Button startIcon={<InfoIcon sx={{ height: '28px', width: '28px' }} />} />
+        </Tooltip>
+      </Box>     
       <br/>
       <Button variant="contained" sx={{
         backgroundColor: 'black',

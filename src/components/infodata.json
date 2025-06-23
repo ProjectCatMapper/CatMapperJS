@@ -156,6 +156,10 @@
       {
         "label": "PROJECTILE_POINT_TYPE",
         "description": "A category of stone tools designed for use on an arrow or dart."
+      },
+      {
+        "label": "BIOTA",
+        "description": "A category of living things or their remains."
       }
   ]
   

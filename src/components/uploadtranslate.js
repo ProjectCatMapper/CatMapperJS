@@ -154,7 +154,7 @@ const handleFileChange = async (e) => {
           );
           setRows(filteredRows);
 
-          const table = resp.rows.slice(1).map((row, index) => {
+          const table = filteredRows.map((row, index) => {
               const rowData = {};
               resp.rows[0].forEach((column, columnIndex) => {
                   rowData[column] = row[columnIndex];
@@ -163,9 +163,9 @@ const handleFileChange = async (e) => {
               return rowData;
           });
 
-          setNodeCount(table.length);
+          console.log(table)
 
-          console.log(table.length);
+          setNodeCount(table.length);
 
           await new Promise((resolve) => {
               setJsondata(table);
@@ -214,7 +214,9 @@ const handleFileChange = async (e) => {
       }
     }
 
-    if (columns.includes('CMID')) {
+    if (advselectedOption !== "add_node") {
+
+      if (columns.includes('CMID')) {
       const CMIDIndex = columns.indexOf('CMID');
       const count = rows.filter(row => !row[CMIDIndex]).length;
 
@@ -226,6 +228,8 @@ const handleFileChange = async (e) => {
         setError('CMID column contains missing values.');
         return false;
       }
+    }
+
     }
 
     if (columns.includes('Key')) {
@@ -304,6 +308,9 @@ const handleFileChange = async (e) => {
         ...columnsToUse,
       ]);
 
+      console.log(columnsToUse)
+
+
       if (advselectedOption === "add_uses" && missingCount > 0) {
         allowedColumns.add("CMName");
       }
@@ -319,8 +326,7 @@ const handleFileChange = async (e) => {
         });
       
         return filteredItem;
-      }):jsonData;
-      
+      }):jsonData;      
 
       //const response = await fetch("https://catmapper.org/api/uploadInputNodes",{
       const response = await fetch("http://127.0.0.1:5001/uploadInputNodes", {
@@ -336,12 +342,26 @@ const handleFileChange = async (e) => {
           ao: advselectedOption,
           addoptions: addiColumns,
           user : user,
-          linkContext : columnsToUse
+          allContext : columnsToUse
         }),
       });
       setProgress(50); 
 
       const result = await response.json();
+
+      let orderedData = result.file;
+
+      if (Array.isArray(result.order) && result.order.length > 0) {
+        orderedData = result.file.map(row => {
+          const orderedRow = {};
+          result.order.forEach(col => {
+            if (col in row) {
+              orderedRow[col] = row[col];
+            }
+          });
+          return orderedRow;
+        });
+      }
 
       if (result.error) {
       setProgress(70);
@@ -350,7 +370,7 @@ const handleFileChange = async (e) => {
       setProgress(100);
       } else {
       setProgress(70);
-      setDownload(result.file)      
+      setDownload(orderedData)      
       setCMIDText(result.message);
       setPopen(true);
       setProgress(100);
@@ -438,7 +458,7 @@ const handleFileChange = async (e) => {
   let allowedExtraColumns = ["descriptor", "Dataset", "log", "country", "dateEnd", "dateStart", "district", "eventDate", "eventType", 
     "geoCoords", "Key", "label", "latitude", "longitude", "ignoreNames", "Name", "parent","period", "parentContext", "propertyValues", 
     "rawDate", "Rfunction", "Rtransform", "recordEnd", "recordStart", "sampleSize", "transform", "categoryType", "url", "variableDescription", 
-    "yearEnd", "yearStart", "language", "populationEstimate", "religion", "geoPolygon","glottocode","FIPS","ISO2","ISO3","ISONumeric","comment","polity","occupation","culture"]
+    "yearEnd", "yearStart", "language", "populationEstimate", "religion", "geoPolygon","glottocode","FIPS","ISO2","ISO3","ISONumeric","comment","polity","occupation","culture","yearPublished"]
   let allowedDatasetColumns = []
 
   useEffect(() => {
