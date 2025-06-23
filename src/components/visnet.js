@@ -8,10 +8,53 @@ const Neo4jVisualization = ({ visData }) => {
   const valuesToRemove = ['DISTRICT', 'CATEGORY'];
   const nodes = visData["nodes"].length > 10 ? visData["nodes"].slice(0, 10) : visData["nodes"];
 const domainHierarchy = [
-  "REGION","SITE","PERIOD","ADM4", "ADM3", "ADM2", "ADM1", "ADM0", "ADMD", "ADME", "ADML", "ADMX",
-  "DIALECT", "LANGUAGE", "FAMILY", "LANGUOID",
-  "ETHNICITY", "RELIGION", "DATASET","GENERIC"
-];
+      "PROJECTILE_POINT_TYPE",
+      "PROJECTILE_POINT_CLUSTER",
+      "PROJECTILE_POINT",
+      "CERAMIC_TYPE",
+      "CERAMIC_WARE",
+      "CERAMIC",
+      "PHYTOLITH",
+      "BOTANICAL",
+      "FAUNA",
+      "SUBSPECIES",
+      "SPECIES",
+      "SUBGENUS",
+      "GENUS",
+      "FAMILY",
+      "ORDER",
+      "CLASS",
+      "PHYLUM",
+      "KINGDOM",
+      "BIOTA",
+      "FEATURE",
+      "SITE",
+      "ADM4",
+      "ADM3",
+      "ADM2",
+      "ADM1",
+      "ADM0",
+      "ADMD",
+      "ADME",
+      "ADML",
+      "ADMX",
+      "REGION",
+      "DISTRICT",
+      "PERIOD",
+      "DIALECT",
+      "LANGUAGE",
+      "FAMILY",
+      "LANGUOID",
+      "ETHNICITY",
+      "RELIGION",
+      "OCCUPATION",
+      "POLITY",
+      "CULTURE",
+      "STONE",
+      "DATASET",
+      "GENERIC",
+      "VARIABLE"
+    ];
 
 const getMostSpecificDomain = (domains) => {
   const flat = Array.from(new Set(domains.flat()));

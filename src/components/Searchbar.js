@@ -2,14 +2,14 @@ import React from 'react';
 import { useState,useEffect } from 'react'
 import { styled } from '@mui/material/styles';
 import InputBase from '@mui/material/InputBase';
-import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined';
-import { Box, Button, Checkbox, FormControl, Grid, IconButton, NativeSelect, Tooltip, Typography } from "@mui/material";
+import { Box, Button, Checkbox, FormControl, Grid, NativeSelect, Tooltip, Typography } from "@mui/material";
 import DataTable from './tableviewsc';
 import archdomain from "./domain_archamap.json"
 import sociodomain from "./domain_sociomap.json"
 import socioptions from "./dropdown.json"
 import archoptions from "./dropdown_archamap.json";
 import countries from "./records.json";
+import archamap_countries from "./records_archamap.json";
 import InfoIcon from '@mui/icons-material/Info';
 import { useLocation } from 'react-router-dom';
 import infodata from './infodata.json';
@@ -18,7 +18,7 @@ import "./Searchbar.css";
 import image from '../assets/white.png'
 import { Link } from 'react-router-dom'
 import Divider from '@mui/material/Divider';
-import { motion, AnimatePresence } from "framer-motion";
+import NeonButton from './Button';
 
 const BootstrapInput = styled(InputBase)(({ theme }) => ({
   'label + &': {
@@ -302,6 +302,17 @@ const usersKey = `${database}_myData`;
         }}
       >
         <Box sx={{ display: "flex", alignItems: "center", flexWrap: "wrap", mb: 2, gap: 2 }}>
+          <NeonButton
+          type="infoOutlined"
+          tooltipText={
+            <>
+              Explore all datasets and categories using the search bar. Use the advanced search to limit the search by domain or other criteria. Leave the search bar empty to return all results limited to the first 10,000 categories.{" "}
+              <a href="https://catmapper.org/help/" target="_blank" rel="noopener noreferrer" style={{ color: "#00BFFF", textDecoration: "underline" }}>
+                See for more information.
+              </a>
+            </>
+          }
+        />
           <input
             type="text"
             id="myInput"
@@ -319,16 +330,10 @@ const usersKey = `${database}_myData`;
               }
             }}
           />
-          <motion.div whileTap={{ scale: 0.95 }} whileHover={{ scale: 1.1 }}>
-          <IconButton
-            color="primary"
+          <NeonButton
+            type="searchOutlined"
             onClick={() => handleClick(tvalue, isChecked ? advdomainDrop.trim() : domainDrop.trim())}
-            size="large"
-            sx={{ borderRadius: 2, bgcolor: "primary.main", color: "white", "&:hover": { bgcolor: "primary.dark" } }}
-          >
-            <SearchOutlinedIcon fontSize="large" />
-          </IconButton>
-        </motion.div>
+          />
           <label style={{ display: "flex", alignItems: "center", cursor: "pointer", userSelect: "none" }}>
           <Checkbox checked={isChecked} onChange={handleCheckboxChange} style={{color:"white"}} />
           Advanced search
@@ -344,9 +349,9 @@ const usersKey = `${database}_myData`;
                 mt: 2,
               }}
             >
-            <Grid container spacing={2}>
+            <Grid container spacing={1}>
               <Grid item xs={12} sm={4}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center'}}>
               <FormControl sx={{ width: 320 }} variant="standard">
                   <Typography variant="subtitle2" gutterBottom>Category Domain</Typography>
                 <NativeSelect
@@ -395,7 +400,7 @@ const usersKey = `${database}_myData`;
               </Grid>
 
               <Grid item xs={12} sm={4}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center'}}>
               <FormControl sx={{ width: 300 }} variant="standard">
                 <Typography variant="subtitle2" gutterBottom>Category Subdomain</Typography>
                 <NativeSelect
@@ -446,7 +451,7 @@ const usersKey = `${database}_myData`;
                   sx={{ fontSize: 14, letterSpacing: 0.5, borderRadius: 1,backgroundColor:"white" }}
                   input={<BootstrapInput />}
                 >
-                  {countries.map((country, index) => (
+                  {(database === 'ArchaMap' ? archamap_countries : countries).map((country, index) => (
                     <option key={index} value={country.code}>
                       {country.name}
                     </option>
@@ -456,7 +461,7 @@ const usersKey = `${database}_myData`;
               </Grid>
 
             <Grid item xs={12} sm={3}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
                 <FormControl sx={{ width: 250 }} variant="standard">
                   <Typography variant="subtitle2" gutterBottom>Property to Search</Typography>
               <NativeSelect
@@ -483,7 +488,7 @@ const usersKey = `${database}_myData`;
             </Box>
             </Grid>
 
-            <Grid item xs={12} sm={6} md={4}>
+            <Grid item xs={12} sm={6} md={3}>
                 <FormControl variant="standard">
                 <Typography variant="subtitle2" gutterBottom>Time Range</Typography>
               <Box sx={{ display: 'flex',width:"100%", gap: 1,overflow: 'hidden' }}>
@@ -493,7 +498,7 @@ const usersKey = `${database}_myData`;
                     placeholder='From'
                     value={yearStart}
                     maxLength={10}
-                    style={{ flex: '1 1 0',minWidth: 0, maxWidth: '100%', height: 40, padding: "0 6px", borderRadius: 4, border: "1px solid #ccc" }}
+                    style={{ flex: '1 1 0',minWidth: 0, maxWidth: 100, height: 40, padding: "0 6px", borderRadius: 4, border: "1px solid #ccc" }}
                     onChange={(event) => {
                       setyearStart(event.target.value);
                     }}
@@ -504,7 +509,7 @@ const usersKey = `${database}_myData`;
                     placeholder='To'
                     value={yearEnd}
                     maxLength={10}
-                    style={{ flex: '1 1 0',minWidth: 0, maxWidth: '100%', height: 40, padding: "0 6px", borderRadius: 4, border: "1px solid #ccc" }}
+                    style={{ flex: '1 1 0',minWidth: 0, maxWidth: 100, height: 40, padding: "0 6px", borderRadius: 4, border: "1px solid #ccc" }}
                     onChange={(event) => {
                       setyearEnd(event.target.value);
                     }}
@@ -513,14 +518,14 @@ const usersKey = `${database}_myData`;
             </FormControl>
             </Grid>
 
-            <Grid item xs={12} sm={6} md={4}>
+            <Grid item xs={12} sm={6} md={3}>
                 <FormControl variant="standard">
                   <Typography variant="subtitle2" gutterBottom>Context ID</Typography>
               <input
                 type="text"
                 id="myInput"
                 value={contextID}
-                style={{ width: "100%", height: 40, padding: "0 8px", borderRadius: 4, border: "1px solid #ccc" }}
+                style={{ width: 100, height: 40, padding: "0 8px", borderRadius: 4, border: "1px solid #ccc" }}
                 onChange={(event) => {
                   setcontextID(event.target.value);
                 }}
@@ -529,14 +534,14 @@ const usersKey = `${database}_myData`;
             </Grid>
 
 
-            <Grid item xs={12} sm={6} md={4}>
+            <Grid item xs={12} sm={6} md={3}>
                 <FormControl variant="standard">
                   <Typography variant="subtitle2" gutterBottom>Dataset ID</Typography>
               <input
                 type="text"
                 id="myInput"
                 value={datasetID}
-                style={{ width: "100%", height: 40, padding: "0 8px", borderRadius: 4, border: "1px solid #ccc" }}
+                style={{ width: 100, height: 40, padding: "0 8px", borderRadius: 4, border: "1px solid #ccc" }}
                 onChange={(event) => {
                   setdatasetID(event.target.value);
                 }}

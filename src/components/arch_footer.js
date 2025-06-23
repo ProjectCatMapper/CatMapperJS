@@ -96,17 +96,16 @@ const Footer = () => {
             })
             .then(data => {setrows([
               createData(data.nodes[3].current),
-              createData("Botanicals",data.nodes[0].current,(data.encodings[0].current/data.nodes[0].current).toFixed(2),"x",""),
+              createData("Biota",data.nodes[0].current,(data.encodings[0].current/data.nodes[0].current).toFixed(2),"x",""),
               createData("Ceramics",data.nodes[1].current,(data.encodings[1].current/data.nodes[1].current).toFixed(2),"x",""),
               createData("Cultures",data.nodes[2].current,(data.encodings[2].current/data.nodes[2].current).toFixed(2),"x",""),
               createData("Areas",data.nodes[4].current,(data.encodings[3].current/data.nodes[4].current).toFixed(2),"x",data.relations[1].current),
-              createData("Fauna",data.nodes[5].current,(data.encodings[4].current/data.nodes[5].current).toFixed(2),"x",""),
-              createData("Periods",data.nodes[6].current,(data.encodings[5].current/data.nodes[6].current).toFixed(2),"x",data.relations[2].current),
-              createData("Projectile points",data.nodes[7].current,(data.encodings[6].current/data.nodes[7].current).toFixed(2),"x",""),
-              createData("Stone",data.nodes[8].current,(data.encodings[7].current/data.nodes[8].current).toFixed(2),"x",""),
-              createData("Variables",data.nodes[9].current,(data.encodings[8].current/data.nodes[9].current).toFixed(2),"x",""),
-              createData("Total",data.nodes[0].current+ data.nodes[1].current +data.nodes[2].current+data.nodes[4].current+data.nodes[5].current+data.nodes[6].current+data.nodes[7].current+data.nodes[8].current+data.nodes[9].current,
-                (data.relations[3].current/(data.nodes[0].current+ data.nodes[1].current +data.nodes[2].current+data.nodes[4].current+data.nodes[5].current+data.nodes[6].current+data.nodes[7].current+data.nodes[8].current+data.nodes[9].current)).toFixed(2),
+              createData("Periods",data.nodes[5].current,(data.encodings[4].current/data.nodes[5].current).toFixed(2),"x",data.relations[2].current),
+              createData("Projectile points",data.nodes[6].current,(data.encodings[5].current/data.nodes[6].current).toFixed(2),"x",""),
+              createData("Stone",data.nodes[7].current,(data.encodings[6].current/data.nodes[7].current).toFixed(2),"x",""),
+              createData("Variables",data.nodes[8].current,(data.encodings[7].current/data.nodes[8].current).toFixed(2),"x",""),
+              createData("Total",data.nodes[0].current+ data.nodes[1].current +data.nodes[2].current+data.nodes[4].current+data.nodes[5].current+data.nodes[6].current+data.nodes[7].current+data.nodes[8].current,
+                (data.relations[3].current/(data.nodes[0].current+ data.nodes[1].current +data.nodes[2].current+data.nodes[4].current+data.nodes[5].current+data.nodes[6].current+data.nodes[7].current+data.nodes[8].current)).toFixed(2),
                 data.relations[0].current,data.relations[1].current+data.relations[2].current
                ),
             ])

@@ -56,7 +56,7 @@ const Navbar = () => {
   </a>
     </li>
             {authLevel === 0 && <Link to="/login"><Button variant="outlined">Login</Button></Link>}
-            {authLevel > 0 && <Button variant="outlined" onClick={logout}>Logout</Button>}
+            {authLevel > 0 && <Button variant="outlined" onClick={logout} >Logout</Button>}
         </ul>
         <div className='hamburger' onClick={handleClick}>
             {click ? (<FaTimes size={20} style={{color: '#fff'}} />) : (<FaBars size={20} style={{color: '#fff'}} />)}
