@@ -195,7 +195,7 @@ export default function Tableclick(props) {
 
   useEffect(() => {
     fetch(
-      "https://catmapper.org/api/category?cmid=" +
+      `${process.env.REACT_APP_API_URL}/category?cmid=` +
         props.cmid.cmid +
         "&database=" +
         database,
@@ -243,7 +243,7 @@ export default function Tableclick(props) {
     const fetchData = async () => {
       try {
         const response = await fetch(
-          "https://catmapper.org/api/datasetDomains",
+          `${process.env.REACT_APP_API_URL}/datasetDomains`,
           {
             //const response = await fetch("http://127.0.0.1:5001/datasetDomains", {
             method: "POST",
@@ -280,7 +280,7 @@ export default function Tableclick(props) {
     try {
       let response;
       if (Array.isArray(datasetdomainValue) && datasetdomainValue.length > 1) {
-        response = await fetch("https://catmapper.org/api/dataset", {
+        response = await fetch(`${process.env.REACT_APP_API_URL}/dataset`, {
           // response = await fetch("http://127.0.0.1:5001/dataset", {
           method: "POST",
           headers: {
@@ -296,7 +296,7 @@ export default function Tableclick(props) {
       } else {
         // response = await fetch("http://127.0.0.1:5001/dataset?cmid=" + props.cmid.cmid + "&database=" +database+ "&domain=" + datasetdomainValue+ "&children=" + rememberChoice,{method: "GET"})
         response = await fetch(
-          "https://catmapper.org/api/dataset?cmid=" +
+          `${process.env.REACT_APP_API_URL}/dataset?cmid=` +
             props.cmid.cmid +
             "&database=" +
             database +
@@ -349,7 +349,7 @@ export default function Tableclick(props) {
     try {
       //const response = await fetch("http://127.0.0.1:5001/networksjs?cmid=" + props.cmid.cmid + "&database=" +database+ "&relation=" + event.target.value + "&response=records");
       const response = await fetch(
-        "https://catmapper.org/api/networksjs?cmid=" +
+        `${process.env.REACT_APP_API_URL}/networksjs?cmid=` +
           props.cmid.cmid +
           "&database=" +
           database +

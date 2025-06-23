@@ -268,10 +268,10 @@ const usersKey = `${database}_myData`;
   );
 
   function handleClick(tvalue, domain) {
-    fetch("https://catmapper.org/api/search?domain=" + domain + "&property=" + selectedOption + "&term=" + encodeURIComponent(tvalue) + "&database=" +database+  "&query=false" + "&yearStart=" + yearStart + "&yearEnd=" + yearEnd + "&country=" + selectedcountry + "&context=" + contextID,
+    fetch(`${process.env.REACT_APP_API_URL}/search?domain=` + domain + "&property=" + selectedOption + "&term=" + encodeURIComponent(tvalue) + "&database=" +database+  "&query=false" + "&yearStart=" + yearStart + "&yearEnd=" + yearEnd + "&country=" + selectedcountry + "&context=" + contextID,
     //fetch("http://127.0.0.1:5001/search?domain=" + domain + "&property=" + selectedOption + "&term=" + encodeURIComponent(tvalue) + "&database=" +database+  "&query=false" + "&yearStart=" + yearStart + "&yearEnd=" + yearEnd + "&country=" + selectedcountry + "&context=" + contextID,
-    // fetch("https://catmapper.org/api/count?label=" + domain + "&options=" + selectedOption + "&value=" + tvalue,
-    // fetch("https://catmapper.org/api/search?domain=" + domain + "&property=" + selectedOption + "&term=" + tvalue + "&database=SocioMap"+ "&query=false",
+    // fetch(`${process.env.REACT_APP_API_URL}/count?label=` + domain + "&options=" + selectedOption + "&value=" + tvalue,
+    // fetch(`${process.env.REACT_APP_API_URL}/search?domain=` + domain + "&property=" + selectedOption + "&term=" + tvalue + "&database=SocioMap"+ "&query=false",
       {
         method: "GET"
       })

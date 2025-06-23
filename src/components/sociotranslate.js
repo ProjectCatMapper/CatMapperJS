@@ -119,7 +119,7 @@ const handleClick = async () => {
     selectedColumnValues = rows.map((row) => row[columns.indexOf(zeroDropdownValue)]);
     setProgress(20);
     //const response = await fetch("http://127.0.0.1:5001/translate2", {
-    const response = await fetch("https://catmapper.org/api/translate2", {
+    const response = await fetch(`${process.env.REACT_APP_API_URL}/translate2`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

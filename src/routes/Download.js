@@ -25,7 +25,7 @@ const Download = () => {
   const [loading, setLoading] = useState(true);
 
 const fetchData = async (db) => {
-  const response = await fetch(`https://catmapper.org/api/CSVURLs/${db}`);
+  const response = await fetch(`${process.env.REACT_APP_API_URL}/CSVURLs/${db}`);
   const data = await response.json();
 
   const urls = data.urls || [];

@@ -116,7 +116,7 @@ const JoinDatasets_Merge = () => {
         const handleMergeSubmit = async () => {
         setLoading(true);
         try {
-          const response = await fetch("https://catmapper.org/api/joinDatasets",{
+          const response = await fetch(`${process.env.REACT_APP_API_URL}/joinDatasets`,{
             //const response = await fetch("http://127.0.0.1:5001/joinDatasets", {
             method: 'POST',
             headers: {
