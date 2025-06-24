@@ -34,7 +34,7 @@ import LiveMapCarousel from "./carousel"
  
   const handleButtonClick = async () => {
     try {
-      const response = await fetch('https://catmapper.org/api/allDatasets?database=sociomap', {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/allDatasets?database=sociomap`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -69,7 +69,7 @@ const Footer = () => {
 
   useEffect(() => {
 
-    fetch("https://catmapper.org/api/progress?database=sociomap",
+    fetch(`${process.env.REACT_APP_API_URL}/progress?database=sociomap`,
         // fetch("http://127.0.0.1:5001/progress?database=sociomap",
             {
                 method: "GET"
@@ -94,7 +94,7 @@ const Footer = () => {
     },[])
 
   useEffect(() => {
-    fetch("https://catmapper.org/api/foci?database=sociomap",
+    fetch(`${process.env.REACT_APP_API_URL}/foci?database=sociomap`,
         // fetch("http://127.0.0.1:5001/foci?database=sociomap",
             {
                 method: "GET"

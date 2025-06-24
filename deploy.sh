@@ -1,6 +1,15 @@
 echo "Building"
+
+set -e
+
+# Redirect temp/cache to /mnt/storage
+export TMPDIR=/mnt/storage/tmp
+export npm_config_cache=/mnt/storage/npm-cache
+
+mkdir -p "$TMPDIR" "$npm_config_cache"
+
 npm run build
 
-scp -r build/* hkasi1@sociomap:/var/www/CatMapper.org/js/sociomapper/
+cp -r build/. /mnt/storage/app/nginx/html/
 
 echo "Done!"
