@@ -29,7 +29,7 @@ const Download_Merge = () => {
 
   const handleSubmit = async () => {
     try {
-      const response = await fetch("https://catmapper.org/api//merge/syntax/SocioMap", {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}//merge/syntax/SocioMap`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -73,7 +73,7 @@ const Download_Merge = () => {
         }
       
         try {
-          const response = await fetch(`https://catmapper.org/api/merge/template/${database}/${inputValue}`, {
+          const response = await fetch(`${process.env.REACT_APP_API_URL}/merge/template/${database}/${inputValue}`, {
             method: 'GET',
           });
       
@@ -258,7 +258,7 @@ const Download_Merge = () => {
         '&:hover': {
           backgroundColor: 'green', 
         },
-      }}      onClick={() => window.open(`https://catmapper.org/api/download/zip/${downloadHash}`, '_blank')}>
+      }}      onClick={() => window.open(`${process.env.REACT_APP_API_URL}/download/zip/${downloadHash}`, '_blank')}>
         Download Merge files
       </Button>
 

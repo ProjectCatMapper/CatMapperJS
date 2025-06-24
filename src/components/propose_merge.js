@@ -147,7 +147,7 @@ const Propose_Merge = () => {
     const handleMergeSubmit = async () => {
     setLoading(true);
     try {
-      const response = await fetch("https://catmapper.org/api/joinDatasets",{
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/joinDatasets`,{
         //const response = await fetch("http://127.0.0.1:5001/joinDatasets", {
         method: 'POST',
         headers: {
@@ -172,7 +172,7 @@ const Propose_Merge = () => {
 
   const handleValidate = async () => {
     try {
-      const response = await fetch("https://catmapper.org/api/validateDatasets",{
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/validateDatasets`,{
         //const response = await fetch("http://127.0.0.1:5001/validateDatasets", {
         method: 'POST',
         headers: {
@@ -225,7 +225,7 @@ const Propose_Merge = () => {
         return;
       }
     try {
-      const response = await fetch("https://catmapper.org/api/proposeMergeSubmit",{
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/proposeMergeSubmit`,{
         //const response = await fetch("http://127.0.0.1:5001/proposeMergeSubmit", {
         method: 'POST',
         headers: {

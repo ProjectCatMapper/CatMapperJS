@@ -108,7 +108,7 @@ const Admin = () => {
   const handleCheck = async () => {
     try {
       console.log(cred)
-      const response = await fetch("https://catmapper.org/api/updateNewUsers",{
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/updateNewUsers`,{
       //const response = await fetch("http://127.0.0.1:5001/updateNewUsers", {
         method: "POST",
         headers: {
@@ -131,7 +131,7 @@ const Admin = () => {
 
   const handleApprove = async () => {
     try {
-      const response = await fetch("https://catmapper.org/api/updateNewUsers",{
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/updateNewUsers`,{
       //const response = await fetch("http://127.0.0.1:5001/updateNewUsers", {
         method: "POST",
         headers: {
