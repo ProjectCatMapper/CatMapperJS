@@ -9,6 +9,7 @@
     { "label": "ADML", "description": "NA" },
     { "label": "ADMX", "description": "A district without a clear level" },
     { "label": "ANY DOMAIN", "description": "Any category/domain. Excludes DATASETS." },
+    { "label": "ALL NODES","description": "All category domains and datasets."},
     {
         "label": "DATASET",
         "description": "A dataset for which SocioMap includes metadata on categories and/or variables"

@@ -340,6 +340,27 @@ const Admin = () => {
     variant="outlined"
     margin="normal"
   />
+  <Box 
+    sx={{ 
+      display: 'flex', 
+      justifyContent: 'flex-start',
+      padding: 2 
+    }}
+  >
+  <Button
+    variant="contained"
+    sx={{
+      backgroundColor: "black",
+      color: "white",
+      "&:hover": {
+        backgroundColor: "green",
+      },
+    }}
+    onClick={handleSubmit}
+  >
+    Submit{" "}
+  </Button>
+  </Box>
 </Box>
 )
 }

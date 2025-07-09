@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Box, Button, FormControlLabel, Radio, RadioGroup, Checkbox, Typography, Divider,Select,TextField,MenuItem,InputLabel,FormControl, FormGroup,Table, TableBody, TableCell, TableContainer, TableHead, TableRow,TablePagination, Paper, Snackbar, Alert  } from '@mui/material';
 import DatasetForm from './uploadtranslateform';
 import {ExcelRenderer} from 'react-excel-renderer';
-import doptions from "./dropdown.json";
-import aoptions from "./dropdown_archamap.json";
+import domainOptions from "./dropdown.json";
 import Tooltip from '@mui/material/Tooltip';
 import InfoIcon from '@mui/icons-material/Info';
 import { useAuth } from './AuthContext';
@@ -49,6 +48,10 @@ const UploadTranslat = () => {
   let finalProduct = [];
   const foundColumns = [];
   const notFoundColumns = [];
+
+  const fallbackOptions = ["Name", "Key", "CatMapper ID (CMID)"];
+  const fieldOptions = dropoptions[formData.domain] || fallbackOptions;
+  
 
   const handleOpen = () => {
     setOpen(true);
@@ -273,10 +276,9 @@ const handleFileChange = async (e) => {
   };
 
   let database = "SocioMap"
-  let dropoptions = doptions
+  let dropoptions = domainOptions
   if (useLocation().pathname.includes("archamap")) {
       database = "ArchaMap"
-      dropoptions = aoptions
     } 
 
   const handleSubmit = async () => {
@@ -328,8 +330,8 @@ const handleFileChange = async (e) => {
         return filteredItem;
       }):jsonData;      
 
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/uploadInputNodes`,{
-      // const response = await fetch("http://127.0.0.1:5001/uploadInputNodes", {
+      //const response = await fetch(`${process.env.REACT_APP_API_URL}/uploadInputNodes`,{
+      const response = await fetch("http://127.0.0.1:5001/uploadInputNodes", {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -454,7 +456,6 @@ const handleFileChange = async (e) => {
   const [selectedExtraColumn, setSelectedExtraColumn] = useState('');
   const [allRequiredColumnsFound, setAllRequiredColumnsFound] = useState(false);
 
-
   let allowedExtraColumns = ["descriptor", "Dataset", "log", "country", "dateEnd", "dateStart", "district", "eventDate", "eventType", 
     "geoCoords", "Key", "label", "latitude", "longitude", "ignoreNames", "Name", "parent","period", "parentContext", "propertyValues", 
     "rawDate", "Rfunction", "Rtransform", "recordEnd", "recordStart", "sampleSize", "transform", "categoryType", "url", "variableDescription", 
@@ -499,7 +500,7 @@ const handleFileChange = async (e) => {
     case 'node_add':
       required=['CMID']
       if (IsDataset){
-      allowedExtraColumns = ['parent','District','names']
+      allowedExtraColumns = ['parent','District','names',]
       }
       else{
         setNodeOpen(true)
@@ -508,7 +509,7 @@ const handleFileChange = async (e) => {
     case 'node_replace':
       required=['CMID'];
       if (IsDataset){
-        allowedDatasetColumns = ["CMName","parent","District","shortName","ApplicableYears","DatasetCitation","DatasetLocation","DatasetVersion","DatasetScope","project"]
+        allowedDatasetColumns = ["CMName","parent","District","shortName","ApplicableYears","DatasetCitation","DatasetLocation","DatasetVersion","DatasetScope","project","recordStart","recordEnd","yearPublished"]
       }
       else{
         allowedExtraColumns = ["CMName","glottocode","FIPS","ISO2","ISO3","ISONumeric"]
@@ -771,7 +772,7 @@ const handleFileChange = async (e) => {
             sx={{width: 300,height:40 }}
             margin="normal"
           >
-            {Object.keys(dropoptions).map((key) => (
+            {fieldOptions.map((key)  => (
           <MenuItem key={key} value={key}>
             {key}
           </MenuItem>

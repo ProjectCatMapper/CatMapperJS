@@ -4,10 +4,7 @@ import { styled } from '@mui/material/styles';
 import InputBase from '@mui/material/InputBase';
 import { Box, Button, Checkbox, FormControl, Grid, NativeSelect, Tooltip, Typography } from "@mui/material";
 import DataTable from './tableviewsc';
-import archdomain from "./domain_archamap.json"
-import sociodomain from "./domain_sociomap.json"
-import socioptions from "./dropdown.json"
-import archoptions from "./dropdown_archamap.json";
+import domainOptions from "./dropdown.json"
 import countries from "./records.json";
 import archamap_countries from "./records_archamap.json";
 import InfoIcon from '@mui/icons-material/Info';
@@ -54,11 +51,11 @@ const BootstrapInput = styled(InputBase)(({ theme }) => ({
 
 export default function Searchbar() {
 
-  const [domainDrop, setdomainDrop] = React.useState('ANY DOMAIN');
+  const [domainDrop, setdomainDrop] = React.useState('ALL NODES');
 
-  const [advdomainDrop, setadvdomainDrop] = React.useState('ANY DOMAIN');
+  const [advdomainDrop, setadvdomainDrop] = React.useState('ALL NODES');
 
-  const [advoptions, setadvoptions] = React.useState(['ANY DOMAIN']);
+  const [advoptions, setadvoptions] = React.useState(['ALL NODES']);
 
   const [selectedOption, setSelectedOption] = useState('Name');
 
@@ -80,39 +77,56 @@ export default function Searchbar() {
 
   const [snackbarOpen, setSnackbarOpen] = useState(false);
 
+  const fallbackOptions = ["Name", "Key", "CatMapper ID (CMID)"];
+
   let database = "SocioMap"
-
-  let selectedcategory = sociodomain
-
-  const [optionsForSelectedCategory,setoptionsForSelectedCategory] = useState(socioptions[advdomainDrop])
-
-  const categories = [
-    { label: 'ANY DOMAIN', description: 'Any category/domain. Excludes DATASETS.' },
-    { label: 'DATASET', description: 'A dataset for which SocioMap includes metadata on categories and/or variables' },
-    { label: 'AREA', description: 'A category defined by its geographical boundary' },
-    { label: 'ETHNICITY', description: 'A category of people defined by a shared origin which is often socially constructed. This can include categories defined by ethnicity, race, caste, religion, or ecological zone (e.g., hill people). It can be internally or externally defined depending on the source.' },
-    { label: 'GENERIC', description: 'A general category used to organize other categories (e.g., Missing)' },
-    { label: 'LANGUOID', description: 'A category defined by a linguistic tradition or group of related linguistic traditions' },
-    {label: 'RELIGION', description: 'A category defined by a religious tradition'},
-    {label: 'VARIABLE', description: 'A variable'}
-  ];
-
-  const options = useLocation().pathname.includes('archamap') ? archoptions : socioptions;
   
   if (useLocation().pathname.includes("archamap")) {
     database = "ArchaMap"
-    selectedcategory = archdomain
   }
 
-  const searchStateKey = `${database}_searchState`;
+  const [selectedCategory, setSelectedCategory] = useState({});
+
+  useEffect(() => {
+    fetch(`${process.env.REACT_APP_API_URL}/metadata/subdomains/${database}`)
+      .then((res) => res.json())
+      .then((data) => {
+        const normalized = {};
+
+        data.forEach(({ domain, subdomains }) => {
+          normalized[domain] = subdomains;
+        });
+
+        setSelectedCategory(normalized);
+      })
+      .catch((err) => {
+        console.error("Error loading subdomains:", err);
+      });
+  }, [database]);
+
+  const [optionsForSelectedCategory,setoptionsForSelectedCategory] = useState(domainOptions[advdomainDrop] || fallbackOptions)
+
+  const [categories, setCategories] = useState([]);
+
+  useEffect(() => {
+    fetch(`${process.env.REACT_APP_API_URL}/metadata/domainDescriptions/${database}`)
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to load domain descriptions");
+        return res.json();
+      })
+      .then((data) => {
+        // Assuming data is in the format [{ label: "X", description: "Y" }, ...]
+        setCategories(data);
+      })
+      .catch((err) => {
+        console.error("Error loading categories:", err);
+      });
+  }, [database]);
+
+ 
+
+const searchStateKey = `${database}_searchState`;
 const usersKey = `${database}_myData`;
-
-
-  useEffect(() => {   
-    if (database === "ArchaMap") { 
-    setoptionsForSelectedCategory(archoptions[advdomainDrop])
-    }
-  },[])
 
   useEffect(() => {
     const storedState = sessionStorage.getItem(searchStateKey);
@@ -181,6 +195,33 @@ const usersKey = `${database}_myData`;
     setSelectedCountry(countries[0].code)
   };
 
+  function downloadCSV() {
+  if (!users || users.length === 0) {
+    alert("No data to download.");
+    return;
+  }
+
+  const replacer = (key, value) => (value === null ? '' : value); // handle nulls
+  const header = Object.keys(users[0]);
+  const csv = [
+    header.join(','), // header row
+    ...users.map(row =>
+      header.map(fieldName => JSON.stringify(row[fieldName], replacer)).join(',')
+    )
+  ].join('\r\n');
+
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.setAttribute("href", url);
+  link.setAttribute("download", "catmapper_results.csv");
+  link.style.visibility = 'hidden';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+
   const tooltipContent = (
     <div style={{ maxWidth: '400px' }}>
       <h4>Domain Descriptions</h4>
@@ -214,9 +255,9 @@ const usersKey = `${database}_myData`;
           </tr>
         </thead>
         <tbody>
-        {infodata && selectedcategory?.[domainDrop] ? (
+        {infodata && selectedCategory?.[domainDrop]?.length > 0 ? (
           infodata
-            .filter(desc => selectedcategory[domainDrop].includes(desc.label))
+            .filter(desc => selectedCategory[domainDrop].includes(desc.label))
             .map((category, index) => (
               <tr key={index}>
                 <td style={{ borderBottom: '1px solid #ddd', padding: '8px' }}>{category.label}</td>
@@ -230,6 +271,7 @@ const usersKey = `${database}_myData`;
             </td>
           </tr>
         )}
+
         </tbody>
       </table>
     </div>
@@ -246,9 +288,9 @@ const usersKey = `${database}_myData`;
           </tr>
         </thead>
         <tbody>
-        {infodata2 && options?.[advdomainDrop] ? (
+        {infodata2 && (domainOptions?.[advdomainDrop] || fallbackOptions) ? (
           infodata2
-            .filter(desc => options[advdomainDrop].includes(desc.label))
+            .filter(desc => (domainOptions[advdomainDrop] || fallbackOptions).includes(desc.label))
             .map((category, index) => (
               <tr key={index}>
                 <td style={{ borderBottom: '1px solid #ddd', padding: '8px' }}>{category.label}</td>
@@ -269,9 +311,6 @@ const usersKey = `${database}_myData`;
 
   function handleClick(tvalue, domain) {
     fetch(`${process.env.REACT_APP_API_URL}/search?domain=` + domain + "&property=" + selectedOption + "&term=" + encodeURIComponent(tvalue) + "&database=" +database+  "&query=false" + "&yearStart=" + yearStart + "&yearEnd=" + yearEnd + "&country=" + selectedcountry + "&context=" + contextID,
-    //fetch("http://127.0.0.1:5001/search?domain=" + domain + "&property=" + selectedOption + "&term=" + encodeURIComponent(tvalue) + "&database=" +database+  "&query=false" + "&yearStart=" + yearStart + "&yearEnd=" + yearEnd + "&country=" + selectedcountry + "&context=" + contextID,
-    // fetch(`${process.env.REACT_APP_API_URL}/count?label=` + domain + "&options=" + selectedOption + "&value=" + tvalue,
-    // fetch(`${process.env.REACT_APP_API_URL}/search?domain=` + domain + "&property=" + selectedOption + "&term=" + tvalue + "&database=SocioMap"+ "&query=false",
       {
         method: "GET"
       })
@@ -360,29 +399,27 @@ const usersKey = `${database}_myData`;
                   label=""
                   sx={{ fontSize: 14, letterSpacing: 0.5, borderRadius: 1,backgroundColor:"white" }}
                   onChange={(event) => {
-                    setdomainDrop(event.target.value);
-                    setadvoptions(selectedcategory[event.target.value]);
-                    setadvdomainDrop(selectedcategory[event.target.value][0]);
+                    const newDomain = event.target.value;
+                    const subdomains = selectedCategory[newDomain] || [];
 
-                    if (database === "ArchaMap") {
-                      setoptionsForSelectedCategory(
-                        archoptions[selectedcategory[event.target.value][0]]
-                      );
-                      setSelectedOption(
-                        archoptions[selectedcategory[event.target.value][0]][0]
-                      );
+                    setdomainDrop(newDomain);
+                    setadvoptions(subdomains);
+                    setadvdomainDrop(subdomains[0] || '');
+
+                    const firstSub = subdomains[0];
+
+                    if (firstSub) {
+                        setoptionsForSelectedCategory(domainOptions[firstSub] || fallbackOptions || []);
+                        setSelectedOption((domainOptions[firstSub] || fallbackOptions || [])[0] || '');
                     } else {
-                      setoptionsForSelectedCategory(
-                        socioptions[selectedcategory[event.target.value][0]]
-                      );
-                      setSelectedOption(
-                        socioptions[selectedcategory[event.target.value][0]][0]
-                      );
+                      // fallback if no subdomain exists
+                      setoptionsForSelectedCategory([]);
+                      setSelectedOption('');
                     }
                   }}
                   input={<BootstrapInput />}
                 >
-                  {Object.keys(selectedcategory).map((category, index) => (
+                  {Object.keys(selectedCategory).map((category, index) => (
                     <option key={index} value={category}>
                       {category}
                     </option>
@@ -410,15 +447,9 @@ const usersKey = `${database}_myData`;
                   sx={{ fontSize: 14, letterSpacing: 0.5, borderRadius: 1,backgroundColor:"white" }}
                   onChange={(event) => {
                     setadvdomainDrop(event.target.value);
-                    if (database === "ArchaMap") {
                       setoptionsForSelectedCategory(
-                        archoptions[event.target.value]
+                        domainOptions[event.target.value] || fallbackOptions || []
                       );
-                    } else {
-                      setoptionsForSelectedCategory(
-                        socioptions[event.target.value]
-                      );
-                    }
                   }}
                   input={<BootstrapInput />}
                 >
@@ -552,6 +583,9 @@ const usersKey = `${database}_myData`;
             </Box>
         )}
       </Box>
+      <Button variant="contained" onClick={downloadCSV} sx={{ mt: 2 }}>
+        Download Results as CSV
+      </Button>
       <div style={{ padding: 10, backgroundColor: "black" }}>
         <Box sx={{ width: "100%", color: "black", backgroundColor: "white" }}>
           {
