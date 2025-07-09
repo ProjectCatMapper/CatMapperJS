@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
-import doptions from "./dropdown.json";
-import aoptions from "./dropdown_archamap.json";
+import domainOptions from "./dropdown.json";
 import {Select, MenuItem } from '@mui/material';
 import {ExcelRenderer} from 'react-excel-renderer';
 import Papa from 'papaparse';
@@ -118,7 +117,8 @@ if (useLocation().pathname.includes("archamap")) {
       { label: 'DATASET', keys: ['DATASET'] },
       { label: 'PERIOD', keys: ['PERIOD'] },
       { label: 'PROJECTILE_POINT TO PROJECTILE_POINT_TYPE', keys: ['PROJECTILE_POINT','PROJECTILE_POINT_CLUSTER','PROJECTILE_POINT_TYPE'] },
-      { label: 'VARIABLE', keys: ['VARIABLE'] }
+      { label: 'VARIABLE', keys: ['VARIABLE'] },
+      { label: 'GENERIC', keys: ['GENERIC'] }
     ];
   } 
 
@@ -451,14 +451,8 @@ const handleFileChange = (event) => {
   ]).filter(Boolean);
 
   useEffect(() => {
-    if (database === "SocioMap") {
-    setsvalues(doptions[firstDropdownValue])
-  }
-    else{
-      setsvalues(aoptions[firstDropdownValue])
-    }
-  }, [firstDropdownValue])
-
+    setsvalues(domainOptions[firstDropdownValue]);
+  }, [firstDropdownValue]);
   // const Terminology = [
   //   { label: 'Choose column to match', description: 'Which column in the input dataset do you want to find matches for in CatMapper' },
   //   { label: 'Select category domain', description: 'From which category domain do you want to find matches?' },
