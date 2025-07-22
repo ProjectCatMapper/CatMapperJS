@@ -1,17 +1,15 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Box,
   Button,
   Radio,
   RadioGroup,
-  Checkbox,
   Typography,
   Divider,
   Select,
   TextField,
   MenuItem,
   InputLabel,
-  Paper,
   Dialog,
   DialogContent,
   ListSubheader,
@@ -21,6 +19,8 @@ import { useAuth } from './AuthContext';
 import { DataGrid } from '@mui/x-data-grid';
 import image from '../assets/white.png'
 import { Link } from 'react-router-dom'
+import { useLocation } from 'react-router-dom';
+
 
 
 const Admin = () => {
@@ -31,6 +31,11 @@ const Admin = () => {
   const [users, setUsers] = useState([]);
   const [selectedUserIds, setSelectedUserIds] = useState([]);
   const [CMIDText, setCMIDText] = useState('');
+
+  let database = "SocioMap"
+  if (useLocation().pathname.includes("archamap")) {
+        database = "ArchaMap"
+      } 
 
 
   const sections = [
@@ -91,12 +96,18 @@ const Admin = () => {
 
   const handleSubmit = async () => {
     try {
-      const response = await fetch("YOUR_API_ENDPOINT", {
+      //const response = await fetch(`${process.env.REACT_APP_API_URL}/admin/edit`, {
+      const response = await fetch("http://127.0.0.1:5001/admin/edit", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(firstDropdownValue),
+        body: JSON.stringify({
+          database: database,
+          cred: cred,
+          fun: firstDropdownValue,
+          input: formData
+        }),
       });
 
       const result = await response.json();
@@ -107,16 +118,15 @@ const Admin = () => {
 
   const handleCheck = async () => {
     try {
-      console.log(cred)
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/updateNewUsers`,{
-      //const response = await fetch("http://127.0.0.1:5001/updateNewUsers", {
+      //const response = await fetch(`${process.env.REACT_APP_API_URL}/updateNewUsers`,{
+      const response = await fetch("http://127.0.0.1:5001/updateNewUsers", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
           userid : "none",
-          database : "sociomap",
+          database : database,
           credentials: cred,
           process : "None",
         }),
@@ -139,7 +149,7 @@ const Admin = () => {
         },
         body: JSON.stringify({
           userid : selectedUserIds,
-          database : "sociomap",
+          database : database,
           credentials: cred,
           process : "approve",
         }),
@@ -163,13 +173,14 @@ const Admin = () => {
   };
 
   const [formData, setFormData] = useState({
-    s1_1: "standard",  // radio
+    s1_1: "add",  // radio
     s1_2: "",          // textfield
     s1_3: "",          //textfield
     s1_4: "",          //textfield
     s1_5: "",          //textfield
     s1_6: "",          //textfield
-    s1_7: ""           //dropdown
+    s1_7: "",           //dropdown
+    s1_8: ""            //dropdown
   });
 
   const columns = [
@@ -198,6 +209,91 @@ const Admin = () => {
       [name]: value
     }));
   };
+
+  const [add_edit_delete_Nodeprops_Options, setDropdownOptions] = useState([]);
+  const [add_edit_delete_usesprops_Options, setDropdown1Options] = useState([]);
+  const [add_edit_delete_usesprops_properties, setDropdown2Options] = useState([]);
+
+  useEffect(() => {
+  if (firstDropdownValue !== "add/edit/delete node property") {
+    setDropdownOptions([]); // reset dropdown if not in this mode
+    return;
+  }
+
+  const cmid = formData.s1_2.trim();
+  const pattern = /^(AM|CP|CL|SM|AD|SD)\d+$/;
+
+  if (pattern.test(cmid)) {
+    const fetchData = async () => {
+      try {
+        //const res = await fetch(`${process.env.REACT_APP_API_URL}/admin_add_edit_delete_nodeproperties?CMID=`+cmid+"&database="+database,{
+      const res = await fetch("http://127.0.0.1:5001/admin_add_edit_delete_nodeproperties?CMID="+cmid+"&database="+database, {
+      method: "GET",
+        });
+        const data = await res.json();
+
+        if (data.error){
+          alert("An error occurred: " + data.error);
+          return;
+        }
+
+        if (formData.s1_1 === "add") {
+          setDropdownOptions(data.r1);
+        } else if (formData.s1_1 === "edit" || formData.s1_1 === "delete") {
+          setDropdownOptions(data.r);
+        }
+
+        
+      } catch (err) {
+        setDropdownOptions([]); // reset on error
+      }
+    };
+    fetchData();
+  } else {
+    setDropdownOptions([]); // reset dropdown if input does not match
+  }
+}, [formData.s1_1,formData.s1_2, firstDropdownValue]);
+
+  useEffect(() => {
+  if (firstDropdownValue !== "add/edit/delete USES property") {
+    setDropdown1Options([]); // reset dropdown if not in this mode
+    return;
+  }
+
+  const cmid = formData.s1_2.trim();
+  const pattern = /^(AM|SM|AD|SD)\d+$/;
+
+  if (pattern.test(cmid)) {
+    const fetchData = async () => {
+      try {
+        //const res = await fetch(`${process.env.REACT_APP_API_URL}/admin_add_edit_delete_nodeproperties?CMID=`+cmid+"&database="+database,{
+      const res = await fetch("http://127.0.0.1:5001/admin_add_edit_delete_usesproperties?CMID="+cmid+"&database="+database, {
+      method: "GET",
+        });
+        const data = await res.json();
+
+        if (data.error){
+          alert("An error occurred: " + data.error);
+          return;
+        }
+       
+        setDropdown1Options(data.r);
+        setFormData(prevFormData => ({
+          ...prevFormData,
+          s1_4: data.r
+        }));
+        setDropdown2Options(data.r1)
+  
+      } catch (err) {
+        setDropdown1Options([]); // reset on error
+      }
+    };
+    fetchData();
+  } else {
+    setDropdown1Options([]); // reset dropdown if input does not match
+  }
+}, [formData.s1_1,formData.s1_2, firstDropdownValue]);
+
 
   return (
     <div>
@@ -262,6 +358,71 @@ const Admin = () => {
             variant="outlined"
             margin="normal"
           />
+          {add_edit_delete_usesprops_Options !== "" &&
+              <>
+                <InputLabel id="api-results-label" style={{ color: "black" }}>
+                  Choose USES tie to change
+                </InputLabel>
+                <Select
+                  name="s1_7"
+                  sx={{ width: 300, height: 40, mb: 3 }}
+                  value={formData.s1_7 || ""}
+                  onChange={handleChange}
+                >
+                  {add_edit_delete_usesprops_Options.map(([n, r, d], index) => (
+                    <MenuItem key={index} value={index+1}>
+                      {`${n.CMName} ---- USES Key: ${r.Key} --- ${d.CMName}`}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </>
+            }
+
+            {formData.s1_7 !== "" && add_edit_delete_usesprops_Options && (
+                <>
+                  {(() => {
+                    const [n, r, d] = add_edit_delete_usesprops_Options[formData.s1_7-1];
+                    let dropdown2Options = [];
+
+                    if (formData.s1_1 === "edit" || formData.s1_1 === "delete") {
+                      dropdown2Options = Object.keys(r);
+                    } else {
+                      const rKeys = Object.keys(r);
+                      dropdown2Options = add_edit_delete_usesprops_properties.filter(
+                        (prop) => !rKeys.includes(prop)
+                      );
+                    }
+
+                    return (
+                      dropdown2Options.length !== 0 && (
+                        <>
+                          <InputLabel id="dropdown2-label" style={{ color: "black" }}>
+                            Choose property to {formData.s1_1}
+                          </InputLabel>
+                          <Select
+                            name="s1_8"
+                            sx={{ width: 300, height: 40, mb: 3 }}
+                            value={formData.s1_8 || ""}
+                            onChange={handleChange}
+                          >
+                            {dropdown2Options.map((option, index) => (
+                              <MenuItem key={index} value={option}>
+                                {option}
+                              </MenuItem>
+                            ))}
+                          </Select>
+
+                          <Typography variant="body1" sx={{ mb: 1 }}>
+                            Selected:
+                            {` ${add_edit_delete_usesprops_Options[formData.s1_7-1][1][formData.s1_8]}`}
+                          </Typography>
+                        </>
+                      )
+                    );
+                  })()}
+                </>
+              )}
+
           <InputLabel id="domain-label" style={{ color: "black " }}>
             Property value ( use ' || ' to split values)
           </InputLabel>
@@ -310,12 +471,13 @@ const Admin = () => {
     value={formData.s1_1}
     onChange={handleRadioChange}
   >
-    <FormControlLabel value="add" control={<Radio />} label="add" />
+    <FormControlLabel value="add" control={<Radio />} label="add" disabled={formData.s1_2.startsWith("CP") || formData.s1_2.startsWith("CL")} />
     <FormControlLabel value="edit" control={<Radio />} label="edit" />
     <FormControlLabel
       value="delete"
       control={<Radio />}
       label="delete"
+      disabled={formData.s1_2.startsWith("CP") || formData.s1_2.startsWith("CL")}
     />
   </RadioGroup>
   <InputLabel id="domain-label" style={{ color: "black " }}>
@@ -329,6 +491,55 @@ const Admin = () => {
     variant="outlined"
     margin="normal"
   />
+
+  {add_edit_delete_Nodeprops_Options.length !== 0 &&
+     (Array.isArray(add_edit_delete_Nodeprops_Options) ? (
+    // If it's an array
+    <>
+      <InputLabel id="api-results-label" style={{ color: "black" }}>
+        Choose property to add
+      </InputLabel>
+      <Select
+        name="s1_7"
+        sx={{ width: 300, height: 40, mb: 3 }}
+        value={formData.s1_7 || ""}
+        onChange={handleChange}
+      >
+        {add_edit_delete_Nodeprops_Options.map((value, index) => (
+          <MenuItem key={index} value={value}>
+            {value}
+          </MenuItem>
+        ))}
+      </Select>
+    </>
+  ):(
+    // If it's an object
+    Object.keys(add_edit_delete_Nodeprops_Options).length !== 0 && (
+      <>
+        <InputLabel id="api-results-label" style={{ color: "black" }}>
+          Choose property to change
+        </InputLabel>
+        <Select
+          name="s1_7"
+          sx={{ width: 300, height: 40, mb: 3 }}
+          value={formData.s1_7 || ""}
+          onChange={handleChange}
+        >
+          {Object.keys(add_edit_delete_Nodeprops_Options).map((key, index) => (
+            <MenuItem key={index} value={key}>
+              {key}
+            </MenuItem>
+          ))}
+        </Select>
+        {formData.s1_7 && (
+          <Typography variant="body1" sx={{mb: 1 }}>
+            Current value is : {add_edit_delete_Nodeprops_Options[formData.s1_7]}
+          </Typography>
+        )}
+      </>
+    )
+    ))}
+
   <InputLabel id="domain-label" style={{ color: "black " }}>
     Property value
   </InputLabel>

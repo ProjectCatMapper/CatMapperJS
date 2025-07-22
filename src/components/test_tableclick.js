@@ -208,7 +208,7 @@ export default function Tableclick(props) {
   "KINGDOM": "#ffd8b1", // peach
   "BIOTA": "#000080", // navy
   "FEATURE": "#808080", // gray
-  "SITE": "#FFFFFF", // white
+  "SITE": "#7b4173", // plum
   "ADM4": "#a9a9a9", // dark gray
   "ADM3": "#1f77b4", // medium blue
   "ADM2": "#ff7f0e", // bright orange
@@ -246,11 +246,7 @@ export default function Tableclick(props) {
   };
 
   useEffect(() => {
-    fetch(
-      `${process.env.REACT_APP_API_URL}/category?cmid=` +
-        props.cmid.cmid +
-        "&database=" +
-        database,
+    fetch(`${process.env.REACT_APP_API_URL}/category?cmid=` + props.cmid.cmid + "&database=" + database,
       //fetch("http://127.0.0.1:5001/category?cmid=" + props.cmid.cmid + "&database="+ database,
       {
         method: "GET",
@@ -277,6 +273,7 @@ export default function Tableclick(props) {
 
         const pointsToUse = data.datasetpoints && data.datasetpoints.length > 0 ? data.datasetpoints : data.points;
         
+        console.log(pointsToUse)
 
         const uniqueSources = [
           ...new Set([
@@ -943,6 +940,9 @@ export default function Tableclick(props) {
                 <div>
                   <Typography variant="h6" sx={{ mb: 1 }}>
                     Double click on node to move to that node's info page
+                  </Typography>
+                  <Typography variant="h6" sx={{ mb: 1 }}>
+                    No more than ten nodes are shown in the network, use the Nodes dropdown to view other nodes. 
                   </Typography>
                   <FormControl sx={{ m: 1, width: 300 }}>
                     <InputLabel htmlFor="first-dropdown">

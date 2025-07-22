@@ -61,6 +61,7 @@ function Sociotranslate(){
   let selectedColumnValues = ""
   const [jsonData, setJsondata] = useState();
   let query = "false"
+  const fallbackOptions = ["Name", "Key", "CatMapper ID (CMID)"];
 
   const [isRowsChecked, setIsRowsChecked] = useState(false);
 
@@ -451,7 +452,7 @@ const handleFileChange = (event) => {
   ]).filter(Boolean);
 
   useEffect(() => {
-    setsvalues(domainOptions[firstDropdownValue]);
+    setsvalues(domainOptions[firstDropdownValue] || fallbackOptions);
   }, [firstDropdownValue]);
   // const Terminology = [
   //   { label: 'Choose column to match', description: 'Which column in the input dataset do you want to find matches for in CatMapper' },

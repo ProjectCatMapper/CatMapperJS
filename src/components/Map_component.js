@@ -280,10 +280,18 @@ const LeafletMap = ({ points, mapt, sources, sourceColorMap, stringToColor }) =>
 
 const DeckGlMap = ({ points }) => {
 
-  const data = points.map((p) => ({
-    position: p.cood,
+  const data = points.map((p) => {
+  let position = p.cood;
+  if (position == null && Array.isArray(p.geometry) && p.geometry.length > 0) {
+    const geom = JSON.parse(p.geometry[0]);
+    position = geom.coordinates;
+  }
+  return {
+    position,
     source: p.source,
-  }));
+  };
+});
+
 
   const longitudes = data.map((d) => d.position[0]).filter((x) => typeof x === 'number');
   const latitudes = data.map((d) => d.position[1]).filter((x) => typeof x === 'number');

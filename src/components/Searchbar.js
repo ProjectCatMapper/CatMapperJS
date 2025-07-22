@@ -206,7 +206,13 @@ const usersKey = `${database}_myData`;
   const csv = [
     header.join(','), // header row
     ...users.map(row =>
-      header.map(fieldName => JSON.stringify(row[fieldName], replacer)).join(',')
+      header.map(fieldName => {
+        const value = row[fieldName];
+        if (Array.isArray(value)) {
+          return `"${value.join('; ')}"`; // join with semicolon and wrap in quotes
+        }
+        return JSON.stringify(value);
+      }).join(',')
     )
   ].join('\r\n');
 
@@ -214,7 +220,7 @@ const usersKey = `${database}_myData`;
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.setAttribute("href", url);
-  link.setAttribute("download", "catmapper_results.csv");
+  link.setAttribute("download", "search_results.csv");
   link.style.visibility = 'hidden';
   document.body.appendChild(link);
   link.click();
@@ -310,6 +316,7 @@ const usersKey = `${database}_myData`;
   );
 
   function handleClick(tvalue, domain) {
+    //fetch("http://127.0.0.1:5001/search?domain=" + domain + "&property=" + selectedOption + "&term=" + encodeURIComponent(tvalue) + "&database=" +database+  "&query=false" + "&yearStart=" + yearStart + "&yearEnd=" + yearEnd + "&country=" + selectedcountry + "&context=" + contextID,
     fetch(`${process.env.REACT_APP_API_URL}/search?domain=` + domain + "&property=" + selectedOption + "&term=" + encodeURIComponent(tvalue) + "&database=" +database+  "&query=false" + "&yearStart=" + yearStart + "&yearEnd=" + yearEnd + "&country=" + selectedcountry + "&context=" + contextID,
       {
         method: "GET"
@@ -346,7 +353,7 @@ const usersKey = `${database}_myData`;
           tooltipText={
             <>
               Explore all datasets and categories using the search bar. Use the advanced search to limit the search by domain or other criteria. Leave the search bar empty to return all results limited to the first 10,000 categories.{" "}
-              <a href="https://catmapper.org/help/" target="_blank" rel="noopener noreferrer" style={{ color: "#00BFFF", textDecoration: "underline" }}>
+              <a href="https://catmapper.org/help/" target="_blank" rel="noopener noreferrer" style={{ color: "#0645AD !important", textDecoration: "underline" }}>
                 See for more information.
               </a>
             </>
@@ -356,7 +363,7 @@ const usersKey = `${database}_myData`;
             type="text"
             id="myInput"
             value={tvalue}
-            style={{ flexGrow: 1, minWidth: 180, height: 45, padding: "0 10px", borderRadius: 6, border: "1px solid #ccc", fontSize: 16 }}
+            style={{ flexGrow: 1, minWidth: 150, height: 45, padding: "0 10px", borderRadius: 6, border: "1px solid #ccc", fontSize: 16 }}
             placeholder="Search..."
             onChange={(event) => {
               settvalue(event.target.value);
@@ -373,6 +380,7 @@ const usersKey = `${database}_myData`;
             type="searchOutlined"
             onClick={() => handleClick(tvalue, isChecked ? advdomainDrop.trim() : domainDrop.trim())}
           />
+          <NeonButton onClick={downloadCSV} label={'Download Results'}/>
           <label style={{ display: "flex", alignItems: "center", cursor: "pointer", userSelect: "none" }}>
           <Checkbox checked={isChecked} onChange={handleCheckboxChange} style={{color:"white"}} />
           Advanced search
@@ -583,9 +591,6 @@ const usersKey = `${database}_myData`;
             </Box>
         )}
       </Box>
-      <Button variant="contained" onClick={downloadCSV} sx={{ mt: 2 }}>
-        Download Results as CSV
-      </Button>
       <div style={{ padding: 10, backgroundColor: "black" }}>
         <Box sx={{ width: "100%", color: "black", backgroundColor: "white" }}>
           {
@@ -689,6 +694,18 @@ const usersKey = `${database}_myData`;
               }}
             >
               Contact
+            </Link>
+            <Link
+              to="/download"
+              id="catmapperfooter"
+              underline="none"
+              style={{
+                color: "white",
+                textDecoration: "none",
+                margin: "0 8px",
+              }}
+            >
+              Download
             </Link>
           </Box>
         </Box>

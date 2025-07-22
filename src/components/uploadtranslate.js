@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { Box, Button, FormControlLabel, Radio, RadioGroup, Checkbox, Typography, Divider,Select,TextField,MenuItem,InputLabel,FormControl, FormGroup,Table, TableBody, TableCell, TableContainer, TableHead, TableRow,TablePagination, Paper, Snackbar, Alert  } from '@mui/material';
 import DatasetForm from './uploadtranslateform';
 import {ExcelRenderer} from 'react-excel-renderer';
@@ -48,10 +48,6 @@ const UploadTranslat = () => {
   let finalProduct = [];
   const foundColumns = [];
   const notFoundColumns = [];
-
-  const fallbackOptions = ["Name", "Key", "CatMapper ID (CMID)"];
-  const fieldOptions = dropoptions[formData.domain] || fallbackOptions;
-  
 
   const handleOpen = () => {
     setOpen(true);
@@ -280,6 +276,9 @@ const handleFileChange = async (e) => {
   if (useLocation().pathname.includes("archamap")) {
       database = "ArchaMap"
     } 
+  
+  const fallbackOptions = ["Name", "Key", "CatMapper ID (CMID)"];
+  const fieldOptions = dropoptions[formData.domain] || fallbackOptions;
 
   const handleSubmit = async () => {
     const validationResult = validateColumns();
@@ -296,7 +295,6 @@ const handleFileChange = async (e) => {
     continueWithSubmit();
   }
 
-
   const continueWithSubmit = async () => {
     setLoading(true);
     setProgress(0);
@@ -309,8 +307,6 @@ const handleFileChange = async (e) => {
         ...Object.keys(selectedColumns).filter(col => selectedColumns[col]),
         ...columnsToUse,
       ]);
-
-      console.log(columnsToUse)
 
 
       if (advselectedOption === "add_uses" && missingCount > 0) {
