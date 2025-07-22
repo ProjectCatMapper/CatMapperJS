@@ -1,7 +1,7 @@
-import Navbar from '../components/Navbar'
+import Navbar from '../components/arch_navbar'
 import Admin from '../components/admin';
 
- const AdminPage = () => {
+ const Archamap_AdminPage = () => {
    return (
     <div style={{backgroundColor:"white",height:"120vh"}}>
     <Navbar />
@@ -11,4 +11,4 @@ import Admin from '../components/admin';
  }
 
 
-export default AdminPage;
+export default Archamap_AdminPage;
