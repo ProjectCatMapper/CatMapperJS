@@ -21,8 +21,6 @@ import image from '../assets/white.png'
 import { Link } from 'react-router-dom'
 import { useLocation } from 'react-router-dom';
 
-
-
 const Admin = () => {
   const [firstDropdownValue, setFirstDropdownValue] = useState(
     "add/edit/delete USES property"
@@ -31,6 +29,7 @@ const Admin = () => {
   const [users, setUsers] = useState([]);
   const [selectedUserIds, setSelectedUserIds] = useState([]);
   const [CMIDText, setCMIDText] = useState('');
+  const [grouplabels, setgrouplabels] = useState(["NA"]);
 
   let database = "SocioMap"
   if (useLocation().pathname.includes("archamap")) {
@@ -50,7 +49,7 @@ const Admin = () => {
         "delete node",
         "delete USES relation",
         "create new label",
-        "add foci",
+        //"add foci",
       ],
     },
     {
@@ -111,6 +110,8 @@ const Admin = () => {
       });
 
       const result = await response.json();
+      alert("Action completed");
+
     } catch (error) {
       console.error("Error submitting form:", error);
     }
@@ -118,8 +119,8 @@ const Admin = () => {
 
   const handleCheck = async () => {
     try {
-      //const response = await fetch(`${process.env.REACT_APP_API_URL}/updateNewUsers`,{
-      const response = await fetch("http://127.0.0.1:5001/updateNewUsers", {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/updateNewUsers`,{
+      //const response = await fetch("http://127.0.0.1:5001/updateNewUsers", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -226,8 +227,8 @@ const Admin = () => {
   if (pattern.test(cmid)) {
     const fetchData = async () => {
       try {
-        //const res = await fetch(`${process.env.REACT_APP_API_URL}/admin_add_edit_delete_nodeproperties?CMID=`+cmid+"&database="+database,{
-      const res = await fetch("http://127.0.0.1:5001/admin_add_edit_delete_nodeproperties?CMID="+cmid+"&database="+database, {
+        const res = await fetch(`${process.env.REACT_APP_API_URL}/admin_add_edit_delete_nodeproperties?CMID=`+cmid+"&database="+database,{
+      //const res = await fetch("http://127.0.0.1:5001/admin_add_edit_delete_nodeproperties?CMID="+cmid+"&database="+database, {
       method: "GET",
         });
         const data = await res.json();
@@ -266,8 +267,8 @@ const Admin = () => {
   if (pattern.test(cmid)) {
     const fetchData = async () => {
       try {
-        //const res = await fetch(`${process.env.REACT_APP_API_URL}/admin_add_edit_delete_nodeproperties?CMID=`+cmid+"&database="+database,{
-      const res = await fetch("http://127.0.0.1:5001/admin_add_edit_delete_usesproperties?CMID="+cmid+"&database="+database, {
+        const res = await fetch(`${process.env.REACT_APP_API_URL}/admin_add_edit_delete_nodeproperties?CMID=`+cmid+"&database="+database,{
+      //const res = await fetch("http://127.0.0.1:5001/admin_add_edit_delete_usesproperties?CMID="+cmid+"&database="+database, {
       method: "GET",
         });
         const data = await res.json();
@@ -293,6 +294,29 @@ const Admin = () => {
     setDropdown1Options([]); // reset dropdown if input does not match
   }
 }, [formData.s1_1,formData.s1_2, firstDropdownValue]);
+
+useEffect(() => {
+    const createLabel = async () => {
+      try {
+        const res = await fetch(`${process.env.REACT_APP_API_URL}/create_label_helper?database=`+database,{
+      //const res = await fetch("http://127.0.0.1:5001/create_label_helper?&database="+database, {
+          method: 'GET',
+                 
+        });
+
+        const data = await res.json();
+        
+        setgrouplabels(data.res)
+
+      } catch (error) {
+        console.error('Error creating label:', error);
+      }
+    };
+
+    if (firstDropdownValue === 'create new label') {
+      createLabel();
+    }
+  }, [firstDropdownValue]);
 
 
   return (
@@ -600,6 +624,27 @@ const Admin = () => {
      variant="outlined"
      margin="normal"
    />
+   <Box 
+    sx={{ 
+      display: 'flex', 
+      justifyContent: 'flex-start',
+      padding: 2 
+    }}
+  >
+  <Button
+    variant="contained"
+    sx={{
+      backgroundColor: "black",
+      color: "white",
+      "&:hover": {
+        backgroundColor: "green",
+      },
+    }}
+    onClick={handleSubmit}
+  >
+    Submit{" "}
+  </Button>
+  </Box>
  </Box>
 )
 }
@@ -686,6 +731,27 @@ const Admin = () => {
      variant="outlined"
      margin="normal"
    />
+   <Box 
+    sx={{ 
+      display: 'flex', 
+      justifyContent: 'flex-start',
+      padding: 2 
+    }}
+  >
+  <Button
+    variant="contained"
+    sx={{
+      backgroundColor: "black",
+      color: "white",
+      "&:hover": {
+        backgroundColor: "green",
+      },
+    }}
+    onClick={handleSubmit}
+  >
+    Submit{" "}
+  </Button>
+  </Box>
  </Box>
 )
 }
@@ -703,6 +769,27 @@ const Admin = () => {
      variant="outlined"
      margin="normal"
    />
+   <Box 
+    sx={{ 
+      display: 'flex', 
+      justifyContent: 'flex-start',
+      padding: 2 
+    }}
+  >
+  <Button
+    variant="contained"
+    sx={{
+      backgroundColor: "black",
+      color: "white",
+      "&:hover": {
+        backgroundColor: "green",
+      },
+    }}
+    onClick={handleSubmit}
+  >
+    Submit{" "}
+  </Button>
+  </Box>
  </Box>
 )
 }
@@ -731,16 +818,12 @@ const Admin = () => {
             sx={{width: 300,height:40 }}
             margin="normal"
           >
-          <MenuItem value={"NA"}>NA</MenuItem>
-        <MenuItem value={"ANY DOMAIN"}>ANY DOMAIN</MenuItem>
-        <MenuItem value={"DATASET"}>DATASET</MenuItem>
-        <MenuItem value={"AREA"}>AREA</MenuItem>
-        <MenuItem value={"ETHNICITY"}>ETHNICITY</MenuItem>
-        <MenuItem value={"GENERIC"}>GENERIC</MenuItem>
-        <MenuItem value={"LANGUOID"}>LANGUOID</MenuItem>
-        <MenuItem value={"RELIGION"}>RELIGION</MenuItem>
-        <MenuItem value={"USER"}>USER</MenuItem>
-        <MenuItem value={"VARIABLE"}>VARIABLE</MenuItem>
+            <MenuItem value="NA">NA</MenuItem>
+            {grouplabels.map((value) => (
+        <MenuItem key={value} value={value}>
+          {value}
+        </MenuItem>
+      ))}
     </Select>
    <InputLabel id="domain-label" style={{ color: "black " }}>
    Enter contextual Relationship Name (usually 'LABEL_OF')
@@ -788,11 +871,32 @@ const Admin = () => {
      variant="outlined"
      margin="normal"
    />
+   <Box 
+    sx={{ 
+      display: 'flex', 
+      justifyContent: 'flex-start',
+      padding: 2 
+    }}
+  >
+  <Button
+    variant="contained"
+    sx={{
+      backgroundColor: "black",
+      color: "white",
+      "&:hover": {
+        backgroundColor: "green",
+      },
+    }}
+    onClick={handleSubmit}
+  >
+    Submit{" "}
+  </Button>
+  </Box>
  </Box>
 )
 }
 
-{firstDropdownValue === "add foci" && (
+{/* {firstDropdownValue === "add foci" && (
    <Box sx={{ ml: 1 }}>
    <InputLabel id="domain-label" style={{ color: "black " }}>
    CMID of DATASET to add foci to
@@ -818,7 +922,7 @@ const Admin = () => {
    />
  </Box>
 )
-}
+} */}
 
 {firstDropdownValue === "create new user" && (
    <Box sx={{ ml: 1 }}>

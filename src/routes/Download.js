@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import Navbar from '../components/footer_navbar';
 import {
+  Tabs,
+  Tab,
+  Box,
   Container,
   Typography,
   List,
@@ -23,20 +26,24 @@ const theme = createTheme({
 const Download = () => {
   const [urls, setUrls] = useState({ ArchaMap: [], SocioMap: [] });
   const [loading, setLoading] = useState(true);
+  const [tabIndex, setTabIndex] = useState(0); // ✅ added tab index state
 
-const fetchData = async (db) => {
-  const response = await fetch(`${process.env.REACT_APP_API_URL}/CSVURLs/${db}`);
-  const data = await response.json();
+  const handleChange = (event, newIndex) => {
+    setTabIndex(newIndex);
+  };
 
-  const urls = data.urls || [];
+  const fetchData = async (db) => {
+    const response = await fetch(`${process.env.REACT_APP_API_URL}/CSVURLs/${db}`);
+    const data = await response.json();
 
-  return urls.sort((a, b) => {
-    const dateA = new Date(a.match(/\d{4}-\d{2}-\d{2}/)?.[0] || 0);
-    const dateB = new Date(b.match(/\d{4}-\d{2}-\d{2}/)?.[0] || 0);
-    return dateB - dateA;
-  });
-};
+    const urls = data.urls || [];
 
+    return urls.sort((a, b) => {
+      const dateA = new Date(a.match(/\d{4}-\d{2}-\d{2}/)?.[0] || 0);
+      const dateB = new Date(b.match(/\d{4}-\d{2}-\d{2}/)?.[0] || 0);
+      return dateB - dateA;
+    });
+  };
 
   useEffect(() => {
     const loadData = async () => {
@@ -83,25 +90,78 @@ const fetchData = async (db) => {
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
+            flexDirection: 'column',
           }}
         >
           <Paper elevation={1} style={{ padding: '2em', width: '100%' }}>
             <Typography variant="h4" component="h1" gutterBottom>
               Download Datasets
             </Typography>
+
             <Typography variant="body1" paragraph>
-              The following datasets are available for download.
+              This page contains weekly backups of the key elements of the database:
             </Typography>
 
-            <Typography variant="h5" component="h2" gutterBottom>
-              ArchaMap
+            <Typography variant="body1" component="div">
+              <ol style={{ paddingLeft: '1.25rem' }}>
+                <li>
+                  Metadata for each dataset which has categories linked to CatMapper (datasetNodes_{"{date}"}.csv)
+                </li>
+                <li>
+                  Metadata for each category stored in CatMapper (categoryNodes_{"{date}"}.csv)
+                </li>
+                <li>
+                  USES ties containing metadata about how datasets refer to each category (USESties_{"{date}"}.csv)
+                </li>
+                <li>
+                  Metadata for deleted nodes (deletedNodes_{"{date}"}.csv)
+                </li>
+                <li>
+                  Metadata for each property (properties_{"{date}"}.csv)
+                </li>
+                <li>
+                  The database schema (schema_{"{date}"}.csv)
+                </li>
+              </ol>
             </Typography>
-            {loading ? <CircularProgress /> : renderList(urls.ArchaMap)}
 
-            <Typography variant="h5" component="h2" gutterBottom style={{ marginTop: '1.5em' }}>
-              SocioMap
+            <Typography variant="body1" paragraph>
+              If you are interested in using an API to access this information, please visit{' '}
+              <Link href="https://catmapper.org/help/API.html" target="_blank" rel="noopener">
+                this link
+              </Link>.
             </Typography>
-            {loading ? <CircularProgress /> : renderList(urls.SocioMap)}
+
+            <Typography variant="body1" paragraph>
+              For custom downloads (e.g., metadata for all ETHNICITY categories), the search page provides a <strong><em>download search results</em></strong> button.
+            </Typography>
+
+            {/* Tabs */}
+            <Box sx={{ mt: 4 }}>
+              <Tabs value={tabIndex} onChange={handleChange} aria-label="Download Tabs">
+                <Tab label="ArchaMap" />
+                <Tab label="SocioMap" />
+              </Tabs>
+
+              <Box sx={{ mt: 2 }}>
+                {tabIndex === 0 && (
+                  <>
+                    <Typography variant="h5" component="h2" gutterBottom>
+                      ArchaMap
+                    </Typography>
+                    {loading ? <CircularProgress /> : renderList(urls.ArchaMap)}
+                  </>
+                )}
+                {tabIndex === 1 && (
+                  <>
+                    <Typography variant="h5" component="h2" gutterBottom>
+                      SocioMap
+                    </Typography>
+                    {loading ? <CircularProgress /> : renderList(urls.SocioMap)}
+                  </>
+                )}
+              </Box>
+            </Box>
           </Paper>
         </Container>
       </ThemeProvider>
