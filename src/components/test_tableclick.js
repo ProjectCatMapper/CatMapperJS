@@ -160,11 +160,11 @@ export default function Tableclick(props) {
       "BIOTA",
       "FEATURE",
       "SITE",
-      "ADM4",
-      "ADM3",
-      "ADM2",
-      "ADM1",
       "ADM0",
+      "ADM1",
+      "ADM2",
+      "ADM3",
+      "ADM4",
       "ADMD",
       "ADME",
       "ADML",
@@ -209,11 +209,11 @@ export default function Tableclick(props) {
   "BIOTA": "#000080", // navy
   "FEATURE": "#808080", // gray
   "SITE": "#7b4173", // plum
-  "ADM4": "#a9a9a9", // dark gray
-  "ADM3": "#1f77b4", // medium blue
-  "ADM2": "#ff7f0e", // bright orange
-  "ADM1": "#2ca02c", // bright green
   "ADM0": "#d62728", // crimson
+  "ADM1": "#2ca02c", // bright green
+  "ADM2": "#ff7f0e", // bright orange
+  "ADM3": "#1f77b4", // medium blue
+  "ADM4": "#a9a9a9", // dark gray
   "ADMD": "#9467bd", // lavender purple
   "ADME": "#8c564b", // dark brown
   "ADML": "#e377c2", // light pink
@@ -246,6 +246,7 @@ export default function Tableclick(props) {
   };
 
   useEffect(() => {
+    setLoading(true);
     fetch(`${process.env.REACT_APP_API_URL}/category?cmid=` + props.cmid.cmid + "&database=" + database,
       //fetch("http://127.0.0.1:5001/category?cmid=" + props.cmid.cmid + "&database="+ database,
       {
@@ -256,6 +257,7 @@ export default function Tableclick(props) {
         return response.json();
       })
       .then((data) => {
+        console.log(data)
         setUsert(data.samples);
         setCategories(data.categories);
         setMapt(data.polygons);
@@ -263,7 +265,6 @@ export default function Tableclick(props) {
         setPoints(data.points);
         setDatasetPoints(data.datasetpoints);
         setfdrop(data.relnames);
-        console.log(data.relnames)
         setbadsources(data.badsources);
         setOpen(Boolean(data.badsources?.length));
 
@@ -285,7 +286,13 @@ export default function Tableclick(props) {
         ];
 
         setsources(uniqueSources);
-      });
+      })
+      .catch((err) => {
+      console.error("Error fetching category:", err);
+    })
+    .finally(() => {
+      setLoading(false);
+    });
   }, []);
 
   useEffect(() => {
@@ -756,6 +763,7 @@ export default function Tableclick(props) {
               Download Logs
             </Button>
         </Box>
+        {loading && <LoadingSpinner />}
         <Box
           sx={{
             height: "auto",
@@ -789,7 +797,7 @@ export default function Tableclick(props) {
                     top: "10",
                     left: "200",
                     width: "95%",
-                    height: "60vh",
+                    height: "80vh",
                   }}
                 >
                   {mapt.length !== 0 || datasetpoints.length !== 0 ? (
@@ -824,6 +832,12 @@ export default function Tableclick(props) {
               </CustomTabPanel>
               <CustomTabPanel value={value} index={0}>
                 <div>
+                  <Typography variant="h6" sx={{ mb: 1 }}>
+                    Double click on node to move to that node's info page
+                  </Typography>
+                  <Typography variant="h6" sx={{ mb: 1 }}>
+                    No more than ten nodes are shown in the network, use the Nodes dropdown to view up to 200 nodes. 
+                  </Typography>
                   <FormControl sx={{ m: 1, width: 300 }}>
                     <InputLabel htmlFor="first-dropdown">
                       Relationship
@@ -942,7 +956,7 @@ export default function Tableclick(props) {
                     Double click on node to move to that node's info page
                   </Typography>
                   <Typography variant="h6" sx={{ mb: 1 }}>
-                    No more than ten nodes are shown in the network, use the Nodes dropdown to view other nodes. 
+                    No more than ten nodes are shown in the network, use the Nodes dropdown to view up to 200 nodes. 
                   </Typography>
                   <FormControl sx={{ m: 1, width: 300 }}>
                     <InputLabel htmlFor="first-dropdown">
@@ -1110,6 +1124,7 @@ export default function Tableclick(props) {
               >
                 Contact
               </Link>
+              <Link to="/download" id="catmapperfooter" underline="none" style={{ color: "white", textDecoration: "none", margin: "0 8px" }}> Download</Link>
             </Box>
           </Box>{" "}
         </div>

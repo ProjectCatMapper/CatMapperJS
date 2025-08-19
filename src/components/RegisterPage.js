@@ -31,6 +31,7 @@ const RegisterPage = () => {
           
               setErrorMessage('');
             const response = await fetch(`${process.env.REACT_APP_API_URL}/newuser`, {
+            //const response = await fetch("http://127.0.0.1:5001/newuser", {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -120,7 +121,7 @@ const RegisterPage = () => {
         <MenuItem value="archamap">Archamap</MenuItem>
       </Select>
       <Typography variant="p" style={{fontWeight:"bolder"}}>
-      Intended use for CatMapper applications:
+      Intended use for CatMapper applications (Please write one or more sentences for timely approval):
         </Typography>
       <TextField
         multiline

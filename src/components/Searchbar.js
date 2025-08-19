@@ -16,6 +16,8 @@ import image from '../assets/white.png'
 import { Link } from 'react-router-dom'
 import Divider from '@mui/material/Divider';
 import NeonButton from './Button';
+import DownloadDialogButton from './advancedDownload';
+import CircularProgress from '@mui/material/CircularProgress';
 
 const BootstrapInput = styled(InputBase)(({ theme }) => ({
   'label + &': {
@@ -76,6 +78,8 @@ export default function Searchbar() {
   const [datasetID, setdatasetID] = useState(null);
 
   const [snackbarOpen, setSnackbarOpen] = useState(false);
+
+  const [loading,setLoading] = useState(false);
 
   const fallbackOptions = ["Name", "Key", "CatMapper ID (CMID)"];
 
@@ -142,6 +146,7 @@ const usersKey = `${database}_myData`;
         yearEnd,
         isChecked,
         contextID,
+        datasetID,
         optionsForSelectedCategory
       } = JSON.parse(storedState);
 
@@ -194,39 +199,6 @@ const usersKey = `${database}_myData`;
     setIsChecked(!isChecked);
     setSelectedCountry(countries[0].code)
   };
-
-  function downloadCSV() {
-  if (!users || users.length === 0) {
-    alert("No data to download.");
-    return;
-  }
-
-  const replacer = (key, value) => (value === null ? '' : value); // handle nulls
-  const header = Object.keys(users[0]);
-  const csv = [
-    header.join(','), // header row
-    ...users.map(row =>
-      header.map(fieldName => {
-        const value = row[fieldName];
-        if (Array.isArray(value)) {
-          return `"${value.join('; ')}"`; // join with semicolon and wrap in quotes
-        }
-        return JSON.stringify(value);
-      }).join(',')
-    )
-  ].join('\r\n');
-
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.setAttribute("href", url);
-  link.setAttribute("download", "search_results.csv");
-  link.style.visibility = 'hidden';
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-}
-
 
   const tooltipContent = (
     <div style={{ maxWidth: '400px' }}>
@@ -316,8 +288,9 @@ const usersKey = `${database}_myData`;
   );
 
   function handleClick(tvalue, domain) {
-    //fetch("http://127.0.0.1:5001/search?domain=" + domain + "&property=" + selectedOption + "&term=" + encodeURIComponent(tvalue) + "&database=" +database+  "&query=false" + "&yearStart=" + yearStart + "&yearEnd=" + yearEnd + "&country=" + selectedcountry + "&context=" + contextID,
-    fetch(`${process.env.REACT_APP_API_URL}/search?domain=` + domain + "&property=" + selectedOption + "&term=" + encodeURIComponent(tvalue) + "&database=" +database+  "&query=false" + "&yearStart=" + yearStart + "&yearEnd=" + yearEnd + "&country=" + selectedcountry + "&context=" + contextID,
+    setLoading(true);
+    //fetch("http://127.0.0.1:5001/search?domain=" + domain + "&property=" + selectedOption + "&term=" + encodeURIComponent(tvalue) + "&database=" +database+  "&query=false" + "&yearStart=" + yearStart + "&yearEnd=" + yearEnd + "&country=" + selectedcountry + "&context=" + contextID + "&dataset=" + datasetID,
+    fetch(`${process.env.REACT_APP_API_URL}/search?domain=` + domain + "&property=" + selectedOption + "&term=" + encodeURIComponent(tvalue) + "&database=" +database+  "&query=false" + "&yearStart=" + yearStart + "&yearEnd=" + yearEnd + "&country=" + selectedcountry + "&context=" + contextID+ "&dataset=" + datasetID,
       {
         method: "GET"
       })
@@ -333,6 +306,13 @@ const usersKey = `${database}_myData`;
           setUsers(data);
         }
       })
+      .catch(error => {
+      console.error("Fetch error:", error);
+      setSnackbarOpen(true); 
+    })
+    .finally(() => {
+      setLoading(false);
+    });
   }
 
   return (
@@ -380,7 +360,12 @@ const usersKey = `${database}_myData`;
             type="searchOutlined"
             onClick={() => handleClick(tvalue, isChecked ? advdomainDrop.trim() : domainDrop.trim())}
           />
-          <NeonButton onClick={downloadCSV} label={'Download Results'}/>
+          {loading && (
+            <div style={{ position: "absolute", top: "40vh", left: "50vw", transform: "translate(-50%, -50%)" }}>
+              <CircularProgress />
+            </div>
+          )}
+          <DownloadDialogButton users={users} database={database} domain={domainDrop}/>
           <label style={{ display: "flex", alignItems: "center", cursor: "pointer", userSelect: "none" }}>
           <Checkbox checked={isChecked} onChange={handleCheckboxChange} style={{color:"white"}} />
           Advanced search

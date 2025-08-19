@@ -1,166 +1,4 @@
-// import { useEffect,useRef } from 'react';
-// import L from "leaflet";
-// import {
-//   CircleMarker,
-//   GeoJSON,
-//   MapContainer,
-//   TileLayer,
-//   Tooltip,
-//   useMap,
-// } from "react-leaflet";
-// import MarkerClusterGroup from "@changey/react-leaflet-markercluster";
-// import "leaflet/dist/leaflet.css";
-// import "@changey/react-leaflet-markercluster/dist/styles.min.css";
-
-// import DeckGL from "@deck.gl/react";
-// import { ScatterplotLayer } from "@deck.gl/layers";
-// import { StaticMap } from "react-map-gl";
-// import maplibregl from "maplibre-gl";
-
-// import Legend from './legend';
-
-// const MapComponent = ({
-//   points,
-//   mapt,
-//   sources,
-// }) => {
-
-//   const sourceColorMap = {};
-
-//   // setting map bounds
-//   const mapRef = useRef();
-
-//   function SetViewToDataBounds({ points, polygons }) {
-//     const map = useMap();
-
-//     useEffect(() => {
-//       // Initialize an empty bounds object
-//       let bounds = new L.LatLngBounds();
-
-//       // Add polygons to the bounds if they exist
-//       if (polygons) {
-//         const polygonBounds = L.geoJSON(polygons).getBounds();
-//         bounds.extend(polygonBounds);
-//       }
-//       // Add points to the bounds if they exist
-//       if (points && points?.length > 0) {
-//         points.forEach((point) => {
-//           if (point.cood && point.cood.length === 2) {
-//             bounds.extend(L.latLng(point.cood));
-//           }
-//         });
-//       }
-
-//       // If bounds are valid, fit the map to these bounds
-//       if (bounds.isValid()) {
-//         map.fitBounds(bounds);
-//       }
-//     }, [points, polygons, map]);
-
-//     return null;
-//   }
-
-//   // to set map tooltip
-//   const onEachFeature = (feature, layer) => {
-//     layer.bindTooltip(`Source: ${feature.source}`, {
-//       permanent: false,
-//       direction: "top",
-//     });
-//   };
-
-//   //to set map color
-//   const getFeatureStyle = (feature) => {
-//     const category = feature.geometry.source;
-
-//     return {
-//       fillColor: sourceColorMap[category] || "gray",
-//       weight: 2,
-//       opacity: 1,
-//       color: "white",
-//       dashArray: "0",
-//       fillOpacity: 0.3,
-//     };
-//   };
-
-//   const stringToColor = (str) => {
-//     let hash = 0;
-//     for (let i = 0; i < str.length; i++) {
-//       hash = str.charCodeAt(i) + ((hash << 5) - hash);
-//     }
-//     let color = "#";
-//     for (let i = 0; i < 3; i++) {
-//       const value = (hash >> (i * 8)) & 0xff;
-//       color += ("00" + value.toString(16)).substr(-2);
-//     }
-//     return color;
-//   };
-
-//   sources.forEach((source) => {
-//     if (!sourceColorMap[source]) {
-//       sourceColorMap[source] = stringToColor(source);
-//     }
-//   });
-
-//   const allsources = Object.keys(sourceColorMap);
-//   const allcolors = allsources.map((source) => sourceColorMap[source]);
-
-
-
-//   return (
-//     <MapContainer
-//       center={[0, 0]}
-//       zoom="5"
-//       scrollWheelZoom={true}
-//       style={{ height: "100%" }}
-//       ref={mapRef}
-//     >
-//       <SetViewToDataBounds points={points} polygons={mapt} />
-//       <GeoJSON
-//         data={mapt}
-//         style={getFeatureStyle}
-//         onEachFeature={onEachFeature}
-//       />
-//       <TileLayer
-//         url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
-//         attribution='&copy; <a href="https://carto.com/">CARTO</a> contributors'
-//       />
-//       {points.length !== 0 ? ( points.length > 50 ? (
-//         <CanvasPointsLayer points={points} mapRef={mapRef} stringToColor={stringToColor} />):
-//         (<MarkerClusterGroup>
-//           {points
-//             .filter(
-//               (point) =>
-//                 Array.isArray(point.cood) &&
-//                 point.cood.length === 2 &&
-//                 !isNaN(point.cood[0]) &&
-//                 !isNaN(point.cood[1]) &&
-//                 point.cood[0] >= -90 &&
-//                 point.cood[0] <= 90 &&
-//                 point.cood[1] >= -180 &&
-//                 point.cood[1] <= 180
-//             )
-//             .map((point, index) => (
-//               <CircleMarker
-//                 center={point.cood}
-//                 radius={10}
-//                 color={stringToColor(point.source)}
-//                 fillColor={stringToColor(point.source)}
-//                 fillOpacity={0.5}
-//               >
-//                 <Tooltip>{point.source}</Tooltip>
-//               </CircleMarker>
-//             ))}
-//         </MarkerClusterGroup>)
-//       ) : (
-//         points
-//       )}
-//       {points.length <= 50 && <Legend sources={allsources} colors={allcolors} />}
-//     </MapContainer>
-//   );
-// };
-
-// export default MapComponent;
-import React, { useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import L from "leaflet";
 import {
   CircleMarker,
@@ -197,7 +35,7 @@ const LeafletMap = ({ points, mapt, sources, sourceColorMap, stringToColor }) =>
       if (points && points.length > 0) {
         points.forEach((point) => {
           if (point.cood && point.cood.length === 2) {
-            bounds.extend(L.latLng(point.cood));
+            bounds.extend(L.latLng(point.cood[1], point.cood[0]));
           }
         });
       }
@@ -252,15 +90,15 @@ const LeafletMap = ({ points, mapt, sources, sourceColorMap, stringToColor }) =>
                 point.cood.length === 2 &&
                 !isNaN(point.cood[0]) &&
                 !isNaN(point.cood[1]) &&
-                point.cood[0] >= -90 &&
-                point.cood[0] <= 90 &&
-                point.cood[1] >= -180 &&
-                point.cood[1] <= 180
+                point.cood[1] >= -90 &&
+                point.cood[1] <= 90 &&
+                point.cood[0] >= -180 &&
+                point.cood[0] <= 180
             )
             .map((point, index) => (
               <CircleMarker
                 key={index}
-                center={[point.cood[0], point.cood[1]]} // swapped lat, lng correctly here
+                center={[point.cood[1], point.cood[0]]} // swapped lat, lng correctly here
                 radius={10}
                 color={stringToColor(point.source)}
                 fillColor={stringToColor(point.source)}
@@ -336,7 +174,7 @@ const DeckGlMap = ({ points }) => {
   });
 
   return (
-    <DeckGL initialViewState={initialViewState} controller={true} layers={[scatterLayer]} getTooltip={({ object }) => object ? { text: `Entity: ${object.source}` } : null} style={{ width: "100%", height: "100%" }}>
+    <DeckGL initialViewState={initialViewState} controller={true} layers={[scatterLayer]} getTooltip={({ object }) => object ? { text: `Entity: ${object.source}` } : null} style={{ width: "100%", height: "100%",overflow:'hidden' }}>
       <Map
         mapLib={maplibregl}
         reuseMaps
@@ -363,7 +201,7 @@ const MapComponent = ({ points, mapt, sources }) => {
 
   // Build source-color map for Leaflet only
   const sourceColorMap = {};
-  if (points.length <= 50) {
+  if (points.length <= 300) {
     sources.forEach((source) => {
       if (!sourceColorMap[source]) {
         sourceColorMap[source] = stringToColor(source);
@@ -371,10 +209,12 @@ const MapComponent = ({ points, mapt, sources }) => {
     });
   }
 
-  if (points.length > 50) {
+  if (points.length > 300) {
     // Large data: use deck.gl map without legend or colors
     return <DeckGlMap points={points} />;
   }
+
+  console.log(points)
 
   // Small data: use Leaflet map with colors and legend
   return <LeafletMap points={points} mapt={mapt} sources={sources} sourceColorMap={sourceColorMap} stringToColor={stringToColor} />;

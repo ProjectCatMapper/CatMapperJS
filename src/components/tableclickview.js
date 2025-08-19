@@ -91,7 +91,7 @@ const getRowHeight = (params) => {
         }}
         pageSizeOptions={[10, 30, 50]}
        />
-       <p>*population estimate estimated from survey sample</p>
+       <p>*population estimate reported directly from source or estimated from survey sample</p>
     </div>
   );
 }

@@ -127,6 +127,11 @@ const handleFileChange = async (e) => {
   const file = e.target.files[0];
   if (!file) return;
 
+  if (file.size > 50 * 1024 * 1024) {
+    alert(`File size exceeds 50MB limit.`);
+    return;
+  }
+
   const fileType = file.type;
   if (
       fileType === 'application/vnd.ms-excel' || 
@@ -311,6 +316,21 @@ const handleFileChange = async (e) => {
 
       if (advselectedOption === "add_uses" && missingCount > 0) {
         allowedColumns.add("CMName");
+        const cmNameExists = jsonData.some(row => "CMName" in row);
+
+        if (!cmNameExists) {
+          alert("CMName column is required but missing.");
+        }
+
+          const invalidRows = jsonData.filter(row => {
+            const cmidMissing = row["CMID"] == null || row["CMID"] === "";
+            const cmnameMissing = row["CMName"] == null || row["CMName"] === "";
+            return cmidMissing && cmnameMissing;
+          });
+
+          if (invalidRows.length > 0) {
+            alert("CMName must be provided when CMID is missing.");
+          }
       }
       
       const finalProduct = selectedOption === "advanced" 

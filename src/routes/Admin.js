@@ -3,7 +3,8 @@ import Admin from '../components/admin';
 
  const AdminPage = () => {
    return (
-    <div style={{backgroundColor:"white",height:"120vh"}}>
+    <div style={{backgroundColor:"white",height:"100vh", display: 'flex',
+    flexDirection: 'column'}}>
     <Navbar />
     <Admin />
   </div>
