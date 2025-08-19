@@ -3,6 +3,7 @@ import {
   Box,
   Button,
   Radio,
+  Modal,
   RadioGroup,
   Typography,
   Divider,
@@ -14,12 +15,20 @@ import {
   DialogContent,
   ListSubheader,
   FormControlLabel,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper
 } from "@mui/material";
 import { useAuth } from './AuthContext';
 import { DataGrid } from '@mui/x-data-grid';
 import image from '../assets/white.png'
 import { Link } from 'react-router-dom'
 import { useLocation } from 'react-router-dom';
+import CircularProgress from "@mui/material/CircularProgress";
 
 const Admin = () => {
   const [firstDropdownValue, setFirstDropdownValue] = useState(
@@ -30,6 +39,15 @@ const Admin = () => {
   const [selectedUserIds, setSelectedUserIds] = useState([]);
   const [CMIDText, setCMIDText] = useState('');
   const [grouplabels, setgrouplabels] = useState(["NA"]);
+  const [loading,setLoading] =  useState(false);
+  const [open, setOpen] = useState(false);
+  const [tableData, setTableData] = useState([]);
+  const [ntableData, setnTableData] = useState([]);
+  const [tableDropdownValues, setTableDropdownValues] = useState({});
+  const [datasetID, setDatasetID] = useState('')
+
+  const handleOpen = () => setOpen(true);
+  const handleClose = () => setOpen(false);
 
   let database = "SocioMap"
   if (useLocation().pathname.includes("archamap")) {
@@ -95,8 +113,17 @@ const Admin = () => {
 
   const handleSubmit = async () => {
     try {
-      //const response = await fetch(`${process.env.REACT_APP_API_URL}/admin/edit`, {
-      const response = await fetch("http://127.0.0.1:5001/admin/edit", {
+      setLoading(true);
+      if (firstDropdownValue === "delete node" || firstDropdownValue === "delete USES relation") {
+      const confirmed = window.confirm(
+        `Are you sure you want to ${firstDropdownValue} of ${formData.s1_2}? This action cannot be undone.`
+      );
+      if (!confirmed) {
+        return;
+      }
+    }
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/admin/edit`, {
+      //const response = await fetch("http://127.0.0.1:5001/admin/edit", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -105,16 +132,115 @@ const Admin = () => {
           database: database,
           cred: cred,
           fun: firstDropdownValue,
-          input: formData
+          input: formData,
+          tabledata: ntableData,
+          datasetID: datasetID
         }),
       });
 
-      const result = await response.json();
+      const result = await response.text();
       alert("Action completed");
 
     } catch (error) {
       console.error("Error submitting form:", error);
     }
+    finally {
+      setLoading(false);
+    };
+  };
+
+  const handleSubmitTable = async () => {
+    try {
+      setLoading(true);
+
+      const combinedData = tableData.map((row, idx) => {
+      const optionA = tableDropdownValues[idx];
+
+      // Throw error if any dropdown is empty
+      if (optionA === "default") {
+        alert(`Dropdown values missing for row ${idx + 1}`);
+      }
+
+      return {
+        ...row,       // original table data columns
+        optionA,      // first dropdown
+      };
+    });
+      
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/admin/edit`, {
+      //const response = await fetch("http://127.0.0.1:5001/admin/edit", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          database: database,
+          cred: cred,
+          fun: firstDropdownValue,
+          input: formData,
+          tabledata: combinedData,
+          datasetID: datasetID
+        }),
+      });
+
+      const result = await response.text();
+      alert("Action completed");
+      handleClose();
+
+    } catch (error) {
+      console.error("Error submitting form:", error);
+    }
+    finally {
+      setLoading(false);
+    };
+  };
+
+    const handleAmbiguousTies = async () => {
+    try {
+      setLoading(true);
+    
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/check_ambiguous_usesties`, {
+      //const response = await fetch("http://127.0.0.1:5001/check_ambiguous_usesties", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          database: database,
+          cred: cred,
+          input: formData
+        }),
+      });
+
+      const result = await response.json();
+      setDatasetID(result.dataset)
+      if (result.status === "False"){
+        const updatedTableData = (result.child_USES_check || []).map(row => ({
+          ...row,
+          "optionA": "To"
+        }));
+
+        setnTableData(updatedTableData);
+        handleOpen()
+      }
+      else{
+        console.log("Ambiguity detected:", result)
+        setTableData(result.child_USES_check)
+        const initialDropdowns = {};
+      (result.child_USES_check || []).forEach((row, idx) => {
+        initialDropdowns[idx] = "default"; // default value
+      });
+      setTableDropdownValues(initialDropdowns);
+      handleOpen();
+      }
+
+
+    } catch (error) {
+      console.error("Error submitting form:", error);
+    }
+    finally {
+      setLoading(false);
+    };
   };
 
   const handleCheck = async () => {
@@ -203,6 +329,10 @@ const Admin = () => {
     }));
   };
 
+   const handleDropdownChange = (idx, value) => {
+    setTableDropdownValues((prev) => ({ ...prev, [idx]: value }));
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prevFormData => ({
@@ -211,12 +341,16 @@ const Admin = () => {
     }));
   };
 
+  const handleCancel = () => {
+    handleClose();
+  };
+
   const [add_edit_delete_Nodeprops_Options, setDropdownOptions] = useState([]);
   const [add_edit_delete_usesprops_Options, setDropdown1Options] = useState([]);
   const [add_edit_delete_usesprops_properties, setDropdown2Options] = useState([]);
 
   useEffect(() => {
-  if (firstDropdownValue !== "add/edit/delete node property") {
+  if (firstDropdownValue !== "add/edit/delete node property" && firstDropdownValue !== "delete node") {
     setDropdownOptions([]); // reset dropdown if not in this mode
     return;
   }
@@ -238,6 +372,13 @@ const Admin = () => {
           return;
         }
 
+        if (firstDropdownValue === "delete node")
+        {
+          formData.s1_7 = data.r["CMName"]
+          console.log(formData.s1_7)
+          return;
+        }
+
         if (formData.s1_1 === "add") {
           setDropdownOptions(data.r1);
         } else if (formData.s1_1 === "edit" || formData.s1_1 === "delete") {
@@ -256,10 +397,12 @@ const Admin = () => {
 }, [formData.s1_1,formData.s1_2, firstDropdownValue]);
 
   useEffect(() => {
-  if (firstDropdownValue !== "add/edit/delete USES property") {
+  if (firstDropdownValue !== "add/edit/delete USES property" && firstDropdownValue !== "delete USES relation" && firstDropdownValue !== "move USES tie") {
     setDropdown1Options([]); // reset dropdown if not in this mode
     return;
   }
+
+  setDropdown1Options("")
 
   const cmid = formData.s1_2.trim();
   const pattern = /^(AM|SM|AD|SD)\d+$/;
@@ -267,7 +410,7 @@ const Admin = () => {
   if (pattern.test(cmid)) {
     const fetchData = async () => {
       try {
-        const res = await fetch(`${process.env.REACT_APP_API_URL}/admin_add_edit_delete_nodeproperties?CMID=`+cmid+"&database="+database,{
+        const res = await fetch(`${process.env.REACT_APP_API_URL}/admin_add_edit_delete_usesproperties?CMID=`+cmid+"&database="+database,{
       //const res = await fetch("http://127.0.0.1:5001/admin_add_edit_delete_usesproperties?CMID="+cmid+"&database="+database, {
       method: "GET",
         });
@@ -279,6 +422,7 @@ const Admin = () => {
         }
        
         setDropdown1Options(data.r);
+        console.log(data.r)
         setFormData(prevFormData => ({
           ...prevFormData,
           s1_4: data.r
@@ -320,8 +464,8 @@ useEffect(() => {
 
 
   return (
-    <div>
-    <Box sx={{ p: 4,height: '110vh', display: 'flex',flexDirection: 'column', overflow: 'auto' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
+    <Box sx={{ p: 4,flex: 1, display: 'flex',flexDirection: 'column',bgcolor:"white"}}>
       <Box sx={{ mb: 1 }}>
         <h4 style={{ color: "black", padding: "2px", fontSize: "larger" }}>
           Admin panel: these functions are intended for admin users to identify
@@ -344,7 +488,19 @@ useEffect(() => {
           value={firstDropdownValue}
           style={{ height: 40 }}
           sx={{ m: 1, width: 300 }}
-          onChange={(event) => setFirstDropdownValue(event.target.value)}
+          onChange={(event) => {
+            setFirstDropdownValue(event.target.value);
+            setFormData({
+            s1_1: "edit",  
+            s1_2: "",     
+            s1_3: "",     
+            s1_4: "",     
+            s1_5: "",
+            s1_6: "",      
+            s1_7: "",     
+            s1_8: ""     
+          });}
+          }
         >
           {menuItems}
         </Select>
@@ -357,7 +513,7 @@ useEffect(() => {
             property :
           </h4>
           <RadioGroup
-            defaultValue="add"
+            defaultValue="edit"
             name="uploadOption"
             sx={{ mb: 2 }}
             value={formData.s1_1}
@@ -402,7 +558,7 @@ useEffect(() => {
               </>
             }
 
-            {formData.s1_7 !== "" && add_edit_delete_usesprops_Options && (
+            {formData.s1_7 !== "" && add_edit_delete_usesprops_Options.length !== 0 && (
                 <>
                   {(() => {
                     const [n, r, d] = add_edit_delete_usesprops_Options[formData.s1_7-1];
@@ -410,6 +566,13 @@ useEffect(() => {
 
                     if (formData.s1_1 === "edit" || formData.s1_1 === "delete") {
                       dropdown2Options = Object.keys(r);
+                      if (formData.s1_1 === "edit") {
+                        dropdown2Options = dropdown2Options.filter(key => key !== "logID");
+                      }
+
+                      if (formData.s1_1 === "delete") {
+                        dropdown2Options = dropdown2Options.filter(key => key !== "logID" && key !== "Key" && key !== "Name" && key !== "label");
+                      }
                     } else {
                       const rKeys = Object.keys(r);
                       dropdown2Options = add_edit_delete_usesprops_properties.filter(
@@ -429,7 +592,8 @@ useEffect(() => {
                             value={formData.s1_8 || ""}
                             onChange={handleChange}
                           >
-                            {dropdown2Options.map((option, index) => (
+                            {[...dropdown2Options].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
+                              .map((option, index) => (
                               <MenuItem key={index} value={option}>
                                 {option}
                               </MenuItem>
@@ -438,7 +602,27 @@ useEffect(() => {
 
                           <Typography variant="body1" sx={{ mb: 1 }}>
                             Selected:
-                            {` ${add_edit_delete_usesprops_Options[formData.s1_7-1][1][formData.s1_8]}`}
+                          {(() => {
+                            const value = add_edit_delete_usesprops_Options?.[formData.s1_7 - 1]?.[1]?.[formData.s1_8];
+
+                            if (Array.isArray(value)) {
+                              return ' ' + value
+                                .map(item => {
+                                  if (typeof item === 'string') return item;
+                                  if (typeof item === 'object' && item !== null) {
+                                    return item.label ?? JSON.stringify(item);
+                                  }
+                                  return String(item);
+                                })
+                                .join(' || ');
+                            }
+
+                            if (typeof value === 'string') {
+                              return ' ' + value.replace(/,/g, '||');
+                            }
+
+                            return ' N/A';
+                          })()}
                           </Typography>
                         </>
                       )
@@ -446,7 +630,8 @@ useEffect(() => {
                   })()}
                 </>
               )}
-
+          {(formData.s1_1 === "add" || formData.s1_1 === "edit") &&  (
+            <>
           <InputLabel id="domain-label" style={{ color: "black " }}>
             Property value ( use ' || ' to split values)
           </InputLabel>
@@ -458,6 +643,9 @@ useEffect(() => {
             variant="outlined"
             margin="normal"
           />
+          </>
+          )}
+
           <Box 
             sx={{ 
               display: 'flex', 
@@ -489,7 +677,7 @@ useEffect(() => {
     property :
   </h4>
   <RadioGroup
-    defaultValue="add"
+    defaultValue="edit"
     name="uploadOption"
     sx={{ mb: 2 }}
     value={formData.s1_1}
@@ -564,6 +752,8 @@ useEffect(() => {
     )
     ))}
 
+  {(formData.s1_1 === "add" || formData.s1_1 === "edit") &&  (
+  <>
   <InputLabel id="domain-label" style={{ color: "black " }}>
     Property value
   </InputLabel>
@@ -575,6 +765,8 @@ useEffect(() => {
     variant="outlined"
     margin="normal"
   />
+  </>
+  )}
   <Box 
     sx={{ 
       display: 'flex', 
@@ -662,6 +854,25 @@ useEffect(() => {
      variant="outlined"
      margin="normal"
    />
+   {add_edit_delete_usesprops_Options !== "" &&
+              <>
+                <InputLabel id="api-results-label" style={{ color: "black" }}>
+                  Choose USES tie to change
+                </InputLabel>
+                <Select
+                  name="s1_7"
+                  sx={{ width: 300, height: 40, mb: 3 }}
+                  value={formData.s1_7 || ""}
+                  onChange={handleChange}
+                >
+                  {add_edit_delete_usesprops_Options.map(([n, r, d], index) => (
+                    <MenuItem key={index} value={JSON.stringify([n, r, d])}>
+                      {`${n.CMName} ---- USES Key: ${r.Key} --- ${d.CMName}`}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </>
+            }
    <InputLabel id="domain-label" style={{ color: "black " }}>
      CMID moving to
    </InputLabel>
@@ -673,6 +884,27 @@ useEffect(() => {
      variant="outlined"
      margin="normal"
    />
+   <Box 
+    sx={{ 
+      display: 'flex', 
+      justifyContent: 'flex-start',
+      padding: 2 
+    }}
+  >
+  <Button
+    variant="contained"
+    sx={{
+      backgroundColor: "black",
+      color: "white",
+      "&:hover": {
+        backgroundColor: "green",
+      },
+    }}
+    onClick={handleAmbiguousTies}
+  >
+    Check for Ambiguous Ties{" "}
+  </Button>
+  </Box>
  </Box>
 )
 }
@@ -769,6 +1001,25 @@ useEffect(() => {
      variant="outlined"
      margin="normal"
    />
+   {add_edit_delete_usesprops_Options !== "" &&
+              <>
+                <InputLabel id="api-results-label" style={{ color: "black" }}>
+                  Choose USES tie to change
+                </InputLabel>
+                <Select
+                  name="s1_7"
+                  sx={{ width: 300, height: 40, mb: 3 }}
+                  value={formData.s1_7 || ""}
+                  onChange={handleChange}
+                >
+                  {add_edit_delete_usesprops_Options.map(([n, r, d], index) => (
+                    <MenuItem key={index} value={JSON.stringify([n, r, d])}>
+                      {`${n.CMName} ---- USES Key: ${r.Key} --- ${d.CMName}`}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </>
+            }
    <Box 
     sx={{ 
       display: 'flex', 
@@ -1151,9 +1402,89 @@ password   </InputLabel>
       </div>)}
       </Box>
 
-      <div style={{ padding: 10, backgroundColor: "black" }}>
+      {loading && (
+                  <div style={{ position: "absolute", top: "40vh", left: "50vw", transform: "translate(-50%, -50%)" }}>
+                    <CircularProgress />
+                  </div>
+                )}
 
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 2, mb:0 }}>
+       <Modal open={open} onClose={handleClose}>
+        <Box sx={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            bgcolor: "background.paper",
+            borderRadius: 2,
+            boxShadow: 24,
+            p: 4,
+            textAlign: "center",
+            minWidth: 300,
+          }}>
+          {tableData.length === 0 ? (
+          <Box textAlign="center">
+          <Typography variant="h6" mb={2}>
+            There are no ambiguous parents. Press submit to continue moving the USES tie.
+          </Typography>
+          <Box display="flex" justifyContent="center" gap={2}>
+            <Button variant="contained" color="success" onClick={handleSubmit}>
+              Submit
+            </Button>
+            <Button variant="outlined" color="secondary" onClick={handleCancel}>
+              Wait for later
+            </Button>
+          </Box>
+        </Box>)
+        :(<Box>
+              <Typography variant="h6" mb={2}>
+                This node has multiple uses ties from dataset {datasetID}.  There are {tableData.length} USES ties to children with ambiguous parents. 
+                For each USES tie please select whether the appropriate parent is the from node or to node
+              </Typography>
+              <TableContainer component={Paper} sx={{ maxHeight: 300, overflowY: 'auto' }}>
+                <Table size="small" stickyHeader>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>CMID</TableCell>
+                      <TableCell>Key</TableCell>
+                      <TableCell>Parent Node</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {tableData.map((row, idx) => (
+                      <TableRow key={idx}>
+                        <TableCell>{row.CMID}</TableCell>
+                        <TableCell>{row.Key}</TableCell>
+                        <TableCell>
+                          <Select
+                            value={tableDropdownValues[idx] || "From"}
+                            onChange={(e) => handleDropdownChange(idx, e.target.value)}
+                            size= "small"
+                          >
+                            <MenuItem value="From">From</MenuItem>
+                            <MenuItem value="To">To</MenuItem>
+                          </Select>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+              <Box display="flex" justifyContent="center" mt={2} gap={2}>
+                <Button variant="contained" color="success" onClick={handleSubmitTable}>
+                  Submit
+                </Button>
+                <Button variant="outlined" color="secondary" onClick={handleClose}>
+                  Cancel
+                </Button>
+              </Box>
+            </Box>
+          )}
+        </Box>
+      </Modal>
+
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between',padding: 2,
+      backgroundColor: 'black', height:"15vh"
+      }}>
               <img src={image} alt="CatMapper Logo" style={{ height: 80 }} />
               <Box>
                 <Link  id="catmapperfooter" to="/people"  underline="none" style={{ color: 'white', textDecoration: 'none', margin: '0 8px' }}>People</Link>
@@ -1162,9 +1493,9 @@ password   </InputLabel>
                 <Link to="/citation" id="catmapperfooter"  underline="none" style={{ color: 'white', textDecoration: 'none', margin: '0 8px' }}>Citation</Link>
                 <Link to="/terms" id="catmapperfooter"  underline="none" style={{ color: 'white', textDecoration: 'none', margin: '0 8px' }}>Terms</Link>
                 <Link to="/contact" id="catmapperfooter"  underline="none" style={{ color: 'white', textDecoration: 'none', margin: '0 8px' }}>Contact</Link>
+                <Link to="/download" id="catmapperfooter" underline="none" style={{ color: "white", textDecoration: "none", margin: "0 8px" }}> Download</Link>
               </Box>
             </Box>
-            </div>
             </div>
   );
 };

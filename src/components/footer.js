@@ -360,7 +360,7 @@ const Footer = () => {
           mb: 0,
         }}
       >
-        <img src={image} alt="CatMapper Logo" style={{ height: 80 }} />
+        <img src={image} alt="CatMapper Logo" style={{ height: "7vh" }} />
         <Box>
           <Link
             id="catmapperfooter"

@@ -1,6 +1,6 @@
 {
-  "name": "[REDACTED]",
-  "version": "0.1.0",
+  "name": "CatMapper",
+  "version": "1.0.0",
   "private": true,
   "homepage": "/",
   "proxy": "http://catmapper.org/api",

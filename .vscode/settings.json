@@ -1,2 +1,5 @@
 {
+  "javascript.implicitProjectConfig.checkJs": false,
+  "typescript.tsserver.log": "off",
+  "typescript.tsserver.experimental.enableProjectDiagnostics": false
 }

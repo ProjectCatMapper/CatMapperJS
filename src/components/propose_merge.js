@@ -216,6 +216,7 @@ const Propose_Merge = () => {
   };
     
     const handleSubmit = async () => {
+      setLoading(true)
       if (!isValid) {
         alert('Please validate successfully before submitting.');
         return;
@@ -246,6 +247,9 @@ const Propose_Merge = () => {
       setOpen(true);
     } catch (error) {
       console.error('Error submitting form:', error);
+    }
+    finally {
+      setLoading(false);
     }
   };
 
@@ -489,8 +493,13 @@ const Propose_Merge = () => {
       }}  onClick={downloadMerge}>
         Download Results
       </Button>
-
-
+      <Backdrop
+        open={loading}
+        style={{ color: '#fff', zIndex: 1200 }}
+      >
+        <CircularProgress color="inherit" />
+        <span style={{ marginLeft: 16 }}>Processing...</span>
+      </Backdrop>
       </Box>
     )
 }
