@@ -9,11 +9,12 @@ export const useAuth = () => {
 
 
 export const AuthProvider = ({ children }) => {
-    // let database = "SocioMap"; // Default database
-    // // Check the current path to determine the database
-    // if (useLocation().pathname.includes("archamap")) {
-    // database = "ArchaMap"
-    // }
+
+//     const location = useLocation();
+// const database = location.pathname.includes("archamap") ? "ArchaMap" : "SocioMap";
+const currentPath = window.location.pathname;
+console.log(currentPath)
+
     const [user, setUser] = useState(() => {
         return localStorage.getItem('userId') || null;
     });
