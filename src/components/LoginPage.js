@@ -10,6 +10,8 @@ const LoginPage = () => {
     const history = useNavigate();
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
+    const currentPath = window.location.pathname;
+    console.log(currentPath)
 
     const handleLogin = async () => {
         await login(username, password);
