@@ -129,8 +129,8 @@ const handleClick = async () => {
   try {
     selectedColumnValues = rows.map((row) => row[columns.indexOf(zeroDropdownValue)]);
     setProgress(20);
-    const response = await fetch("http://127.0.0.1:5001/translate2", {
-    //const response = await fetch(`${process.env.REACT_APP_API_URL}/translate2`, {
+    //const response = await fetch("http://127.0.0.1:5001/translate2", {
+    const response = await fetch(`${process.env.REACT_APP_API_URL}/translate2`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -605,7 +605,7 @@ const handleFileChange = (event) => {
       </Backdrop>
       <Box sx={{ display: 'flex', alignItems: 'center' }}>
       <Typography variant="body1" sx={{ marginRight: 2, color: 'black', fontWeight: 500 }}>
-        Unique Rows?
+        Assign many-to-one to identical spellings
       </Typography>
 
       <FormControlLabel
