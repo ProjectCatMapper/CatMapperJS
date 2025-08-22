@@ -439,8 +439,8 @@ const handleFileChange = async (e) => {
     { option: 'Adding new uses ties', description: 'Use this if you are adding new uses ties with existing nodes or if you have a mix of new nodes and existing nodes or if you have new nodes that have multiple rows of data that represent each node. This function will aggregate rows by dataset, SocioMapID or ArchaMapID (if present), and Key.' },
     { option: 'Updating existing USES only--add or add to properties ', description: 'Use this if you are updating properties for existing uses ties but not replacing any information.' },
     { option: 'Updating existing USES only--replace one property ', description: 'Use this if you are replacing or removing data from a property. This is only valid for a single property.' },
-    { option: 'Updating existing Node properties--add or add to properties ', description: 'Tbf.' },
-    { option: 'Updating existing Node properties--replace one property ', description: 'Tbf.' },
+    { option: 'Updating existing Node properties--Add new property and add to existing property values ', description: 'Tbf.' },
+    { option: 'Updating existing Node properties--Add new property and replace existing property values ', description: 'Tbf.' },
   ];
 
   const tooltipContent = (

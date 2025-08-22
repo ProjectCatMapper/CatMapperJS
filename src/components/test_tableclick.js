@@ -724,7 +724,7 @@ export default function Tableclick(props) {
                 }}
                 onClick={datasetButtonClick}
               >
-                Download Dataset Relationships
+                Download Dataset Categories and Metadata
               </Button>
               {loading && <LoadingSpinner />}
               <FormControlLabel
