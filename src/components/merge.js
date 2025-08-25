@@ -44,7 +44,7 @@ export default function VerticalTabs() {
   return (
     <Box sx={{ backgroundColor: 'black', opacity: 1 }}>
     <Box
-      sx={{ flexGrow: 1, bgcolor: 'background.paper', display: 'flex', height: "85vh" }}
+      sx={{ flexGrow: 1, bgcolor: 'background.paper', display: 'flex'}}
     >
       <Tabs
         orientation="vertical"
@@ -54,29 +54,10 @@ export default function VerticalTabs() {
         aria-label="Vertical tabs example"
         sx={{ borderRight: 1, borderColor: 'divider' }}
       >
-        <Tab label="Propose merge" {...a11yProps(0)} sx={{ alignItems: 'flex-end', justifyContent: 'center', textAlign: 'right' }} />
-        <Tab label="Join Datasets" {...a11yProps(1)} sx={{ alignItems: 'flex-end', justifyContent: 'center', textAlign: 'right' }} />
-        <Tab label="Download merge template" {...a11yProps(2)} sx={{ alignItems: 'flex-end', justifyContent: 'center', textAlign: 'right' }} />
+        <Tab label="Propose merge" {...a11yProps(0)} sx={{  justifyContent: 'center', textAlign: 'right' }} />
+        <Tab label="Join Datasets" {...a11yProps(1)} sx={{  justifyContent: 'center', textAlign: 'right' }} />
+        <Tab label="Download merge template" {...a11yProps(2)} sx={{justifyContent: 'center', textAlign: 'right' }} />
       </Tabs>
-      {/* <TabPanel value={value} index={0}>
-      <Typography variant="h6" gutterBottom>
-        Build Dataset Stack
-      </Typography>
-      <Typography variant="subtitle1" gutterBottom>
-        Choose datasets to stack
-      </Typography>
-      <Box sx={{ marginTop: 2, marginBottom: 2 }}>
-        <Button variant="contained" onClick={() => console.log("Load Datasets")}>
-          Load Datasets
-        </Button>
-      </Box>
-      <TextField
-        fullWidth
-        label="Datasets"
-        placeholder="Enter dataset names or IDs"
-        variant="outlined"
-      />
-      </TabPanel> */}
       <TabPanel value={value} index={0}>
         <Propose_Merge />
       </TabPanel>

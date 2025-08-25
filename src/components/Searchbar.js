@@ -77,6 +77,8 @@ export default function Searchbar() {
 
   const [datasetID, setdatasetID] = useState(null);
 
+  const [qlimit, setqlimit] = useState(null);
+
   const [snackbarOpen, setSnackbarOpen] = useState(false);
 
   const [loading,setLoading] = useState(false);
@@ -161,6 +163,7 @@ const usersKey = `${database}_myData`;
       setIsChecked(isChecked);
       setcontextID(contextID);
       setdatasetID(datasetID);
+      setqlimit(qlimit);
       setoptionsForSelectedCategory(optionsForSelectedCategory);
     }
   }, [searchStateKey]);
@@ -290,7 +293,7 @@ const usersKey = `${database}_myData`;
   function handleClick(tvalue, domain) {
     setLoading(true);
     //fetch("http://127.0.0.1:5001/search?domain=" + domain + "&property=" + selectedOption + "&term=" + encodeURIComponent(tvalue) + "&database=" +database+  "&query=false" + "&yearStart=" + yearStart + "&yearEnd=" + yearEnd + "&country=" + selectedcountry + "&context=" + contextID + "&dataset=" + datasetID,
-    fetch(`${process.env.REACT_APP_API_URL}/search?domain=` + domain + "&property=" + selectedOption + "&term=" + encodeURIComponent(tvalue) + "&database=" +database+  "&query=false" + "&yearStart=" + yearStart + "&yearEnd=" + yearEnd + "&country=" + selectedcountry + "&context=" + contextID+ "&dataset=" + datasetID,
+    fetch(`${process.env.REACT_APP_API_URL}/search?domain=` + domain + "&property=" + selectedOption + "&term=" + encodeURIComponent(tvalue) + "&database=" +database+  "&query=false" + "&yearStart=" + yearStart + "&yearEnd=" + yearEnd + "&country=" + selectedcountry + "&context=" + contextID+ "&dataset=" + datasetID + "&limit=" + qlimit,
       {
         method: "GET"
       })
@@ -572,6 +575,22 @@ const usersKey = `${database}_myData`;
               />
             </FormControl>
             </Grid>
+
+            <Grid item xs={12} sm={6} md={3}>
+                <FormControl variant="standard">
+                  <Typography variant="subtitle2" gutterBottom>Query Limit</Typography>
+              <input
+                type="text"
+                id="myInput"
+                value={qlimit}
+                style={{ width: 100, height: 40, padding: "0 8px", borderRadius: 4, border: "1px solid #ccc" }}
+                onChange={(event) => {
+                  setqlimit(event.target.value);
+                }}
+              />
+            </FormControl>
+            </Grid>
+
             </Grid>
             </Box>
         )}
