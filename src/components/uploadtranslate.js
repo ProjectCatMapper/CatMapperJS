@@ -200,6 +200,23 @@ const handleFileChange = async (e) => {
 
   const validateColumns = () => {
 
+      const seen = new Set();
+      const duplicates = new Set();
+
+      columns.forEach((item) => {
+        if (seen.has(item)) {
+          duplicates.add(item);
+        } else {
+          seen.add(item);
+        }
+      });
+
+      if (duplicates.size > 0) {
+        setError(`Duplicate column values found: ${[...duplicates].join(", ")}`);
+        return false
+      }
+
+
     if (columns.includes('datasetID')) {
       const datasetIDIndex = columns.indexOf('datasetID');
       const missingValues = rows.some(row => !row[datasetIDIndex]);
@@ -308,10 +325,14 @@ const handleFileChange = async (e) => {
 
       const columnsToUse = advselectedOption === 'update_replace' || advselectedOption === 'node_replace' ? [selectedExtraColumn] : selectedExtraColumns;
 
+      console.log(columnsToUse)
+
       const allowedColumns = new Set([
         ...Object.keys(selectedColumns).filter(col => selectedColumns[col]),
         ...columnsToUse,
       ]);
+
+      console.log(allowedColumns)
 
 
       if (advselectedOption === "add_uses" && missingCount > 0) {
@@ -920,8 +941,8 @@ const handleFileChange = async (e) => {
         <FormControlLabel value="add_uses" control={<Radio />} label="Adding new uses ties (with old or new nodes)" />
         {authLevel === 2 &&<FormControlLabel value="update_add" control={<Radio />} label="Updating existing USES only--add or add to properties" />}
         {authLevel === 2 &&<FormControlLabel value="update_replace" control={<Radio />} label="Updating existing USES only--replace one property" />}
-        {authLevel === 2 &&<FormControlLabel value="node_add" control={<Radio />} label="Updating existing Node properties--add or add to properties" />}
-        {authLevel === 2 &&<FormControlLabel value="node_replace" control={<Radio />} label="Updating existing Node properties--replace one property" />}
+        {authLevel === 2 &&<FormControlLabel value="node_add" control={<Radio />} label="Updating existing Node properties--Add new property and add to existing property values" />}
+        {authLevel === 2 &&<FormControlLabel value="node_replace" control={<Radio />} label="Updating existing Node properties--Add new property and replace existing property values" />}
       </RadioGroup>
 
       <FormControl component="fieldset" sx={{ mb: 2 }}>
