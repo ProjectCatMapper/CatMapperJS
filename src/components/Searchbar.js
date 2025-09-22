@@ -4,10 +4,7 @@ import { styled } from '@mui/material/styles';
 import InputBase from '@mui/material/InputBase';
 import { Box, Button, Checkbox, FormControl, Grid, NativeSelect, Tooltip, Typography } from "@mui/material";
 import DataTable from './tableviewsc';
-import archdomain from "./domain_archamap.json"
-import sociodomain from "./domain_sociomap.json"
-import socioptions from "./dropdown.json"
-import archoptions from "./dropdown_archamap.json";
+import domainOptions from "./dropdown.json"
 import countries from "./records.json";
 import archamap_countries from "./records_archamap.json";
 import InfoIcon from '@mui/icons-material/Info';
@@ -19,6 +16,8 @@ import image from '../assets/white.png'
 import { Link } from 'react-router-dom'
 import Divider from '@mui/material/Divider';
 import NeonButton from './Button';
+import DownloadDialogButton from './advancedDownload';
+import CircularProgress from '@mui/material/CircularProgress';
 
 const BootstrapInput = styled(InputBase)(({ theme }) => ({
   'label + &': {
@@ -54,11 +53,11 @@ const BootstrapInput = styled(InputBase)(({ theme }) => ({
 
 export default function Searchbar() {
 
-  const [domainDrop, setdomainDrop] = React.useState('ANY DOMAIN');
+  const [domainDrop, setdomainDrop] = React.useState('ALL NODES');
 
-  const [advdomainDrop, setadvdomainDrop] = React.useState('ANY DOMAIN');
+  const [advdomainDrop, setadvdomainDrop] = React.useState('ALL NODES');
 
-  const [advoptions, setadvoptions] = React.useState(['ANY DOMAIN']);
+  const [advoptions, setadvoptions] = React.useState(['ALL NODES']);
 
   const [selectedOption, setSelectedOption] = useState('Name');
 
@@ -78,41 +77,64 @@ export default function Searchbar() {
 
   const [datasetID, setdatasetID] = useState(null);
 
+  const [qcount, setqcount] = useState(null);
+
+  const [cmid_download, setCMIDDownload] = useState(null);
+
   const [snackbarOpen, setSnackbarOpen] = useState(false);
 
+  const [loading,setLoading] = useState(false);
+
+  const fallbackOptions = ["Name", "Key", "CatMapper ID (CMID)"];
+
   let database = "SocioMap"
-
-  let selectedcategory = sociodomain
-
-  const [optionsForSelectedCategory,setoptionsForSelectedCategory] = useState(socioptions[advdomainDrop])
-
-  const categories = [
-    { label: 'ANY DOMAIN', description: 'Any category/domain. Excludes DATASETS.' },
-    { label: 'DATASET', description: 'A dataset for which SocioMap includes metadata on categories and/or variables' },
-    { label: 'AREA', description: 'A category defined by its geographical boundary' },
-    { label: 'ETHNICITY', description: 'A category of people defined by a shared origin which is often socially constructed. This can include categories defined by ethnicity, race, caste, religion, or ecological zone (e.g., hill people). It can be internally or externally defined depending on the source.' },
-    { label: 'GENERIC', description: 'A general category used to organize other categories (e.g., Missing)' },
-    { label: 'LANGUOID', description: 'A category defined by a linguistic tradition or group of related linguistic traditions' },
-    {label: 'RELIGION', description: 'A category defined by a religious tradition'},
-    {label: 'VARIABLE', description: 'A variable'}
-  ];
-
-  const options = useLocation().pathname.includes('archamap') ? archoptions : socioptions;
   
   if (useLocation().pathname.includes("archamap")) {
     database = "ArchaMap"
-    selectedcategory = archdomain
   }
 
-  const searchStateKey = `${database}_searchState`;
+  const [selectedCategory, setSelectedCategory] = useState({});
+
+  useEffect(() => {
+    fetch(`${process.env.REACT_APP_API_URL}/metadata/subdomains/${database}`)
+      .then((res) => res.json())
+      .then((data) => {
+        const normalized = {};
+
+        data.forEach(({ domain, subdomains }) => {
+          normalized[domain] = subdomains;
+        });
+
+        setSelectedCategory(normalized);
+      })
+      .catch((err) => {
+        console.error("Error loading subdomains:", err);
+      });
+  }, [database]);
+
+  const [optionsForSelectedCategory,setoptionsForSelectedCategory] = useState(domainOptions[advdomainDrop] || fallbackOptions)
+
+  const [categories, setCategories] = useState([]);
+
+  useEffect(() => {
+    fetch(`${process.env.REACT_APP_API_URL}/metadata/domainDescriptions/${database}`)
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to load domain descriptions");
+        return res.json();
+      })
+      .then((data) => {
+        // Assuming data is in the format [{ label: "X", description: "Y" }, ...]
+        setCategories(data);
+      })
+      .catch((err) => {
+        console.error("Error loading categories:", err);
+      });
+  }, [database]);
+
+ 
+
+const searchStateKey = `${database}_searchState`;
 const usersKey = `${database}_myData`;
-
-
-  useEffect(() => {   
-    if (database === "ArchaMap") { 
-    setoptionsForSelectedCategory(archoptions[advdomainDrop])
-    }
-  },[])
 
   useEffect(() => {
     const storedState = sessionStorage.getItem(searchStateKey);
@@ -128,6 +150,7 @@ const usersKey = `${database}_myData`;
         yearEnd,
         isChecked,
         contextID,
+        datasetID,
         optionsForSelectedCategory
       } = JSON.parse(storedState);
 
@@ -142,6 +165,7 @@ const usersKey = `${database}_myData`;
       setIsChecked(isChecked);
       setcontextID(contextID);
       setdatasetID(datasetID);
+      //setqlimit(qlimit);
       setoptionsForSelectedCategory(optionsForSelectedCategory);
     }
   }, [searchStateKey]);
@@ -181,6 +205,18 @@ const usersKey = `${database}_myData`;
     setSelectedCountry(countries[0].code)
   };
 
+  const handleReset = () => {
+    setdomainDrop("ALL NODES")
+    setadvdomainDrop("ALL NODES")
+    setadvoptions(["ALL NODES"])
+    setSelectedOption("Name")
+    setSelectedCountry(countries[0].code)
+    setyearStart("")
+    setyearEnd("")
+    setcontextID("")
+    setdatasetID("")
+  }
+
   const tooltipContent = (
     <div style={{ maxWidth: '400px' }}>
       <h4>Domain Descriptions</h4>
@@ -214,9 +250,9 @@ const usersKey = `${database}_myData`;
           </tr>
         </thead>
         <tbody>
-        {infodata && selectedcategory?.[domainDrop] ? (
+        {infodata && selectedCategory?.[domainDrop]?.length > 0 ? (
           infodata
-            .filter(desc => selectedcategory[domainDrop].includes(desc.label))
+            .filter(desc => selectedCategory[domainDrop].includes(desc.label))
             .map((category, index) => (
               <tr key={index}>
                 <td style={{ borderBottom: '1px solid #ddd', padding: '8px' }}>{category.label}</td>
@@ -230,6 +266,7 @@ const usersKey = `${database}_myData`;
             </td>
           </tr>
         )}
+
         </tbody>
       </table>
     </div>
@@ -246,9 +283,9 @@ const usersKey = `${database}_myData`;
           </tr>
         </thead>
         <tbody>
-        {infodata2 && options?.[advdomainDrop] ? (
+        {infodata2 && (domainOptions?.[advdomainDrop] || fallbackOptions) ? (
           infodata2
-            .filter(desc => options[advdomainDrop].includes(desc.label))
+            .filter(desc => (domainOptions[advdomainDrop] || fallbackOptions).includes(desc.label))
             .map((category, index) => (
               <tr key={index}>
                 <td style={{ borderBottom: '1px solid #ddd', padding: '8px' }}>{category.label}</td>
@@ -268,25 +305,32 @@ const usersKey = `${database}_myData`;
   );
 
   function handleClick(tvalue, domain) {
-    fetch(`${process.env.REACT_APP_API_URL}/search?domain=` + domain + "&property=" + selectedOption + "&term=" + encodeURIComponent(tvalue) + "&database=" +database+  "&query=false" + "&yearStart=" + yearStart + "&yearEnd=" + yearEnd + "&country=" + selectedcountry + "&context=" + contextID,
-    //fetch("http://127.0.0.1:5001/search?domain=" + domain + "&property=" + selectedOption + "&term=" + encodeURIComponent(tvalue) + "&database=" +database+  "&query=false" + "&yearStart=" + yearStart + "&yearEnd=" + yearEnd + "&country=" + selectedcountry + "&context=" + contextID,
-    // fetch(`${process.env.REACT_APP_API_URL}/count?label=` + domain + "&options=" + selectedOption + "&value=" + tvalue,
-    // fetch(`${process.env.REACT_APP_API_URL}/search?domain=` + domain + "&property=" + selectedOption + "&term=" + tvalue + "&database=SocioMap"+ "&query=false",
+    setLoading(true);
+    //fetch("http://127.0.0.1:5001/search?domain=" + domain + "&property=" + selectedOption + "&term=" + encodeURIComponent(tvalue) + "&database=" +database+  "&query=false" + "&yearStart=" + yearStart + "&yearEnd=" + yearEnd + "&country=" + selectedcountry + "&context=" + contextID + "&dataset=" + datasetID,
+    fetch(`${process.env.REACT_APP_API_URL}/search?domain=` + domain + "&property=" + selectedOption + "&term=" + encodeURIComponent(tvalue) + "&database=" +database+  "&query=false" + "&yearStart=" + yearStart + "&yearEnd=" + yearEnd + "&country=" + selectedcountry + "&context=" + contextID+ "&dataset=" + datasetID,
       {
         method: "GET"
       })
       .then(response => {
-        //console.log(response.json)
         return response.json()
       })
       .then(data => {
-        if (data.length === 0) {
+        if (data.count[0].totalCount === 0) {
           setUsers([]);
           setSnackbarOpen(true);
         } else {
-          setUsers(data);
+          setUsers(data.data);
+          setqcount(data.count[0].totalCount)
+          setCMIDDownload(data.count[0].CMID)
         }
       })
+      .catch(error => {
+      console.error("Fetch error:", error);
+      setSnackbarOpen(true); 
+    })
+    .finally(() => {
+      setLoading(false);
+    });
   }
 
   return (
@@ -307,7 +351,7 @@ const usersKey = `${database}_myData`;
           tooltipText={
             <>
               Explore all datasets and categories using the search bar. Use the advanced search to limit the search by domain or other criteria. Leave the search bar empty to return all results limited to the first 10,000 categories.{" "}
-              <a href="https://catmapper.org/help/" target="_blank" rel="noopener noreferrer" style={{ color: "#00BFFF", textDecoration: "underline" }}>
+              <a href="https://catmapper.org/help/" target="_blank" rel="noopener noreferrer" style={{ color: "#0645AD !important", textDecoration: "underline" }}>
                 See for more information.
               </a>
             </>
@@ -317,27 +361,53 @@ const usersKey = `${database}_myData`;
             type="text"
             id="myInput"
             value={tvalue}
-            style={{ flexGrow: 1, minWidth: 180, height: 45, padding: "0 10px", borderRadius: 6, border: "1px solid #ccc", fontSize: 16 }}
+            style={{ flexGrow: 1, minWidth: 150, height: 45, padding: "0 10px", borderRadius: 6, border: "1px solid #ccc", fontSize: 16 }}
             placeholder="Search..."
             onChange={(event) => {
               settvalue(event.target.value);
             }}
             onKeyDown={(event) => {
               if (event.key === "Enter") {
-                isChecked
-                  ? handleClick(tvalue, advdomainDrop.trim())
-                  : handleClick(tvalue, domainDrop.trim());
+                  handleClick(tvalue, advdomainDrop.trim())
               }
             }}
           />
           <NeonButton
             type="searchOutlined"
-            onClick={() => handleClick(tvalue, isChecked ? advdomainDrop.trim() : domainDrop.trim())}
+            onClick={() => handleClick(tvalue,advdomainDrop.trim())}
           />
-          <label style={{ display: "flex", alignItems: "center", cursor: "pointer", userSelect: "none" }}>
-          <Checkbox checked={isChecked} onChange={handleCheckboxChange} style={{color:"white"}} />
-          Advanced search
-        </label>
+          {loading && (
+            <div style={{ position: "absolute", top: "40vh", left: "50vw", transform: "translate(-50%, -50%)" }}>
+              <CircularProgress />
+            </div>
+          )}
+          <DownloadDialogButton users={users} database={database} domain={advdomainDrop} count ={qcount} cmid_download={cmid_download}/>
+          <label
+            style={{
+              display: "flex",
+              alignItems: "center",
+              cursor: "pointer",
+              userSelect: "none",
+            }}
+          >
+            Advanced Search: 
+          </label>
+          <label
+            style={{
+              display: "flex",
+              alignItems: "center",
+              cursor: "pointer",
+              userSelect: "none",
+            }}
+          >
+            <Checkbox
+              checked={isChecked}
+              onChange={handleCheckboxChange}
+              style={{ color: "white" }}
+            />
+            Show 
+          </label>
+          <NeonButton label="Reset" onClick={handleReset} />
       </Box>
         {isChecked && (
             <Box
@@ -352,37 +422,36 @@ const usersKey = `${database}_myData`;
             <Grid container spacing={1}>
               <Grid item xs={12} sm={4}>
               <Box sx={{ display: 'flex', alignItems: 'center'}}>
-              <FormControl sx={{ width: 320 }} variant="standard">
+              <FormControl sx={{ width: 320 }} variant="standard" size="small">
                   <Typography variant="subtitle2" gutterBottom>Category Domain</Typography>
                 <NativeSelect
-                  id="demo-customized-select-native"
                   value={domainDrop}
                   label=""
-                  sx={{ fontSize: 14, letterSpacing: 0.5, borderRadius: 1,backgroundColor:"white" }}
+                  sx={{ fontSize: 14, letterSpacing: 0.5, borderRadius: 1,backgroundColor:"white","& .MuiNativeSelect-select": {
+      padding: "4px 8px",
+    }, }}
                   onChange={(event) => {
-                    setdomainDrop(event.target.value);
-                    setadvoptions(selectedcategory[event.target.value]);
-                    setadvdomainDrop(selectedcategory[event.target.value][0]);
+                    const newDomain = event.target.value;
+                    const subdomains = selectedCategory[newDomain] || [];
 
-                    if (database === "ArchaMap") {
-                      setoptionsForSelectedCategory(
-                        archoptions[selectedcategory[event.target.value][0]]
-                      );
-                      setSelectedOption(
-                        archoptions[selectedcategory[event.target.value][0]][0]
-                      );
+                    setdomainDrop(newDomain);
+                    setadvoptions(subdomains);
+                    setadvdomainDrop(subdomains[0] || '');
+
+                    const firstSub = subdomains[0];
+
+                    if (firstSub) {
+                        setoptionsForSelectedCategory(domainOptions[firstSub] || fallbackOptions || []);
+                        setSelectedOption((domainOptions[firstSub] || fallbackOptions || [])[0] || '');
                     } else {
-                      setoptionsForSelectedCategory(
-                        socioptions[selectedcategory[event.target.value][0]]
-                      );
-                      setSelectedOption(
-                        socioptions[selectedcategory[event.target.value][0]][0]
-                      );
+                      // fallback if no subdomain exists
+                      setoptionsForSelectedCategory([]);
+                      setSelectedOption('');
                     }
                   }}
                   input={<BootstrapInput />}
                 >
-                  {Object.keys(selectedcategory).map((category, index) => (
+                  {Object.keys(selectedCategory).map((category, index) => (
                     <option key={index} value={category}>
                       {category}
                     </option>
@@ -407,18 +476,14 @@ const usersKey = `${database}_myData`;
                   id="demo-customized-select-native"
                   value={advdomainDrop}
                   label=""
-                  sx={{ fontSize: 14, letterSpacing: 0.5, borderRadius: 1,backgroundColor:"white" }}
+                  sx={{ fontSize: 14, letterSpacing: 0.5, borderRadius: 1,backgroundColor:"white","& .MuiNativeSelect-select": {
+      padding: "4px 8px",
+    }, }}
                   onChange={(event) => {
                     setadvdomainDrop(event.target.value);
-                    if (database === "ArchaMap") {
                       setoptionsForSelectedCategory(
-                        archoptions[event.target.value]
+                        domainOptions[event.target.value] || fallbackOptions || []
                       );
-                    } else {
-                      setoptionsForSelectedCategory(
-                        socioptions[event.target.value]
-                      );
-                    }
                   }}
                   input={<BootstrapInput />}
                 >
@@ -448,7 +513,9 @@ const usersKey = `${database}_myData`;
                   onChange={(event) => {
                     setSelectedCountry(event.target.value);
                   }}
-                  sx={{ fontSize: 14, letterSpacing: 0.5, borderRadius: 1,backgroundColor:"white" }}
+                  sx={{ fontSize: 14, letterSpacing: 0.5, borderRadius: 1,backgroundColor:"white","& .MuiNativeSelect-select": {
+      padding: "4px 8px",
+    }, }}
                   input={<BootstrapInput />}
                 >
                   {(database === 'ArchaMap' ? archamap_countries : countries).map((country, index) => (
@@ -470,7 +537,9 @@ const usersKey = `${database}_myData`;
                 onChange={(event) => {
                   setSelectedOption(event.target.value);
                 }}
-                sx={{ fontSize: 14, letterSpacing: 0.5, borderRadius: 1,backgroundColor:"white" }}
+                sx={{ fontSize: 14, letterSpacing: 0.5, borderRadius: 1,backgroundColor:"white","& .MuiNativeSelect-select": {
+      padding: "4px 8px",
+    }, }}
                 input={<BootstrapInput />}
               >
                 {optionsForSelectedCategory.map((option, index) => (
@@ -498,7 +567,7 @@ const usersKey = `${database}_myData`;
                     placeholder='From'
                     value={yearStart}
                     maxLength={10}
-                    style={{ flex: '1 1 0',minWidth: 0, maxWidth: 100, height: 40, padding: "0 6px", borderRadius: 4, border: "1px solid #ccc" }}
+                    style={{ flex: '1 1 0',minWidth: 0, maxWidth: 100, height: 30, padding: "0 6px", borderRadius: 4, border: "1px solid #ccc" }}
                     onChange={(event) => {
                       setyearStart(event.target.value);
                     }}
@@ -509,7 +578,7 @@ const usersKey = `${database}_myData`;
                     placeholder='To'
                     value={yearEnd}
                     maxLength={10}
-                    style={{ flex: '1 1 0',minWidth: 0, maxWidth: 100, height: 40, padding: "0 6px", borderRadius: 4, border: "1px solid #ccc" }}
+                    style={{ flex: '1 1 0',minWidth: 0, maxWidth: 100, height: 30, padding: "0 6px", borderRadius: 4, border: "1px solid #ccc" }}
                     onChange={(event) => {
                       setyearEnd(event.target.value);
                     }}
@@ -525,7 +594,7 @@ const usersKey = `${database}_myData`;
                 type="text"
                 id="myInput"
                 value={contextID}
-                style={{ width: 100, height: 40, padding: "0 8px", borderRadius: 4, border: "1px solid #ccc" }}
+                style={{ width: 100, height: 30, padding: "0 8px", borderRadius: 4, border: "1px solid #ccc" }}
                 onChange={(event) => {
                   setcontextID(event.target.value);
                 }}
@@ -541,7 +610,7 @@ const usersKey = `${database}_myData`;
                 type="text"
                 id="myInput"
                 value={datasetID}
-                style={{ width: 100, height: 40, padding: "0 8px", borderRadius: 4, border: "1px solid #ccc" }}
+                style={{ width: 100, height: 30, padding: "0 8px", borderRadius: 4, border: "1px solid #ccc" }}
                 onChange={(event) => {
                   setdatasetID(event.target.value);
                 }}
@@ -655,6 +724,18 @@ const usersKey = `${database}_myData`;
               }}
             >
               Contact
+            </Link>
+            <Link
+              to="/download"
+              id="catmapperfooter"
+              underline="none"
+              style={{
+                color: "white",
+                textDecoration: "none",
+                margin: "0 8px",
+              }}
+            >
+              Download
             </Link>
           </Box>
         </Box>

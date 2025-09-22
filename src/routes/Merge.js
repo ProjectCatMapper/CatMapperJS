@@ -4,7 +4,7 @@ import Mergelayout from "../components/merge"
 
  const Merge = () => {
    return (
-     <div style={{backgroundColor:"white"}}>
+     <div style={{backgroundColor:"white",minHeight: "100vh"}}>
          <Navbar />
          <Mergelayout />
      </div>

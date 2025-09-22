@@ -1,4 +1,5 @@
 import { createContext, useState, useContext,useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 
 const AuthContext = createContext();
 
@@ -6,7 +7,14 @@ export const useAuth = () => {
     return useContext(AuthContext);
 };
 
+
 export const AuthProvider = ({ children }) => {
+
+//     const location = useLocation();
+// const database = location.pathname.includes("archamap") ? "ArchaMap" : "SocioMap";
+const currentPath = window.location.pathname;
+console.log(currentPath)
+
     const [user, setUser] = useState(() => {
         return localStorage.getItem('userId') || null;
     });
@@ -43,7 +51,6 @@ export const AuthProvider = ({ children }) => {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                database : "sociomap",
                 user : username, 
                 password : password}),
         });

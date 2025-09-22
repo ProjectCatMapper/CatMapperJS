@@ -62,7 +62,7 @@ export default function NeonButton({ type, tooltipText, onClick, label, sx }) {
 
   // normal button
   return (
-    <motion.div whileTap={{ scale: 0.95 }} whileHover={{ scale: 1.1 }}>
+    <motion.div whileTap={{ scale: 0.95 }} whileHover={{ scale: 1.1 }} style={{ display: "inline-block", transformOrigin: "center" }}>
       <Button
         onClick={onClick}
         sx={{

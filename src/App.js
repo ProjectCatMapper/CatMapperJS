@@ -25,6 +25,7 @@ import Citation from "./routes/Citation"
 import Terms from "./routes/Terms"
 import Contact from "./routes/Contact"
 import Download from "./routes/Download"
+import DownloadAll from "./routes/DownloadAll"
 import Sociomap_ApiGuide from "./routes/Sociomap_ApiGuide"
 import Sociomap_UserGuide from "./routes/Sociomap_UserGuide"
 import Logins from "./routes/Logins";
@@ -32,6 +33,7 @@ import RegisterPage from './routes/RegisterPage';
 // import AdvancedPage from './routes/Advanced';
 import AdminPage from './routes/Admin';
 import ProtectedRoute from './components/ProtectedRoute';
+import Archamap_AdminPage from "./routes/Archamap_Admin";
 
 function App() {
   useEffect(() => {
@@ -74,6 +76,7 @@ function App() {
         <Route path='/citation' element={<Citation />} />
         <Route path='/terms' element={<Terms />} />
         <Route path='/download' element={<Download />} />
+        <Route path='/download/all' element={<DownloadAll />} />
         <Route path='/contact' element={<Contact />} />
         <Route path='/map1' element={<Map1 />} />
         <Route path='/map2' element={<Map2 />} />
@@ -82,7 +85,8 @@ function App() {
         {/* <Route path="/advanced" element={<ProtectedRoute requiredLevel={1}><AdvancedPage /></ProtectedRoute>}/> */}
         <Route path="sociomap/uploadtranslate" element={<ProtectedRoute requiredLevel={1}><UploadTranslate /></ProtectedRoute>}/>
         <Route path="archamap/uploadtranslate" element={<ProtectedRoute requiredLevel={1}><Archamap_UploadTranslate /></ProtectedRoute>}/>
-        <Route path="/admin" element={<ProtectedRoute requiredLevel={2}><AdminPage /></ProtectedRoute>}/>
+        <Route path="/sociomap/admin" element={<ProtectedRoute requiredLevel={2}><AdminPage /></ProtectedRoute>}/>
+        <Route path="/archamap/admin" element={<ProtectedRoute requiredLevel={2}><Archamap_AdminPage /></ProtectedRoute>}/>
       </Routes>
   );
 }

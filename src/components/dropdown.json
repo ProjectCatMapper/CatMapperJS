@@ -1,26 +1,85 @@
 {
-    "ANY DOMAIN" : ["Name","Key","CatMapper ID (CMID)","glottocode","FIPS","ISO2","ISO3","ISONumeric"],
-    "AREA" : ["Name","Key","CatMapper ID (CMID)","glottocode","FIPS","ISO2","ISO3","ISONumeric"],
-    "ADM0" : ["Name","Key","CatMapper ID (CMID)","FIPS","ISO2","ISO3","ISONumeric"],
-    "ADM1" : ["Name","Key","CatMapper ID (CMID)","FIPS","ISO2","ISO3","ISONumeric"],
-    "ADM2" : ["Name","Key","CatMapper ID (CMID)","glottocode","FIPS","ISO2","ISO3","ISONumeric"],
-    "ADM3" : ["Name","Key","CatMapper ID (CMID)"],
-    "ADM4" : ["Name","Key","CatMapper ID (CMID)"],
-    "ADMD" : ["Name","Key","CatMapper ID (CMID)"],
-    "ADME" : ["Name","Key","CatMapper ID (CMID)"],
-    "ADML" : ["Name","Key","CatMapper ID (CMID)"],
-    "ADMX" : ["Name","Key","CatMapper ID (CMID)"],
-    "PPL" : ["Name","Key","CatMapper ID (CMID)"],
-    "NATURAL" : ["Name","Key","CatMapper ID (CMID)"],
-    "DATASET" : ["Name","CatMapper ID (CMID)","DatasetCitation","project","shortName"],
-    "LANGUOID" : ["Name","Key","CatMapper ID (CMID)","glottocode","ISO3"],
-    "LANGUAGE" : ["Name","Key","CatMapper ID (CMID)","glottocode","ISO3"],
-    "DIALECT" : ["Name","Key","CatMapper ID (CMID)","glottocode","ISO3"],
-    "FAMILY" : ["Name","Key","CatMapper ID (CMID)","glottocode","ISO3"],
-    "ETHNICITY" : ["Name","Key","CatMapper ID (CMID)"],
-    "GENERIC" : ["Name","Key","CatMapper ID (CMID)"],
-    "RELIGION" : ["Name","Key","CatMapper ID (CMID)"],
-    "VARIABLE" : ["Name","Key","CatMapper ID (CMID)"],
-    "POLITY" : ["Name","Key","CatMapper ID (CMID)"],
-    "OCCUPATION" : ["Name","Key","CatMapper ID (CMID)"]
+    "ALL NODES": [
+        "Name",
+        "CatMapper ID (CMID)"
+    ],
+    "ANY DOMAIN": [
+        "Name",
+        "Key",
+        "CatMapper ID (CMID)",
+        "glottocode",
+        "FIPS",
+        "ISO2",
+        "ISO3",
+        "ISONumeric"
+    ],
+    "AREA": [
+        "Name",
+        "Key",
+        "CatMapper ID (CMID)",
+        "FIPS",
+        "ISO2",
+        "ISO3",
+        "ISONumeric"
+    ],
+    "ADM0": [
+        "Name",
+        "Key",
+        "CatMapper ID (CMID)",
+        "FIPS",
+        "ISO2",
+        "ISO3",
+        "ISONumeric"
+    ],
+    "ADM1": [
+        "Name",
+        "Key",
+        "CatMapper ID (CMID)",
+        "FIPS",
+        "ISO2",
+        "ISO3",
+        "ISONumeric"
+    ],
+    "ADM2": [
+        "Name",
+        "Key",
+        "CatMapper ID (CMID)",
+        "FIPS",
+        "ISO2",
+        "ISO3",
+        "ISONumeric"
+    ],
+    "DATASET": [
+        "Name",
+        "CatMapper ID (CMID)",
+        "project"
+    ],
+    "LANGUOID": [
+        "Name",
+        "Key",
+        "CatMapper ID (CMID)",
+        "glottocode",
+        "ISO3"
+    ],
+    "LANGUAGE": [
+        "Name",
+        "Key",
+        "CatMapper ID (CMID)",
+        "glottocode",
+        "ISO3"
+    ],
+    "DIALECT": [
+        "Name",
+        "Key",
+        "CatMapper ID (CMID)",
+        "glottocode",
+        "ISO3"
+    ],
+    "FAMILY": [
+        "Name",
+        "Key",
+        "CatMapper ID (CMID)",
+        "glottocode",
+        "ISO3"
+    ]
 }

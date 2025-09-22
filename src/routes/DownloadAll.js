@@ -23,7 +23,7 @@ const theme = createTheme({
   },
 });
 
-const Download = () => {
+const DownloadAll = () => {
   const [urls, setUrls] = useState({ ArchaMap: [], SocioMap: [] });
   const [loading, setLoading] = useState(true);
   const [tabIndex, setTabIndex] = useState(0); // ✅ added tab index state
@@ -33,54 +33,54 @@ const Download = () => {
   };
 
   const fetchData = async (db) => {
-    const response = await fetch(`${process.env.REACT_APP_API_URL}/CSVURLs/${db}`);
-    const data = await response.json();
-
-    const files = Array.isArray(data.urls)
-      ? data.urls.map(([url, size]) => ({ url, size }))
-      : [];
-
-    return files.sort((a, b) => {
-      const dateA = new Date(a.url.match(/\d{4}-\d{2}-\d{2}/)?.[0] || 0);
-      const dateB = new Date(b.url.match(/\d{4}-\d{2}-\d{2}/)?.[0] || 0);
-      return dateB - dateA;
-    });
-  };
-  useEffect(() => {
-    const loadData = async () => {
-      const [archamap, sociomap] = await Promise.all([
-        fetchData('ArchaMap'),
-        fetchData('SocioMap'),
-      ]);
-      setUrls({ ArchaMap: archamap, SocioMap: sociomap });
-      setLoading(false);
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/CSVURLs/${db}?mostRecent=False`);
+      const data = await response.json();
+  
+      const files = Array.isArray(data.urls)
+        ? data.urls.map(([url, size]) => ({ url, size }))
+        : [];
+  
+      return files.sort((a, b) => {
+        const dateA = new Date(a.url.match(/\d{4}-\d{2}-\d{2}/)?.[0] || 0);
+        const dateB = new Date(b.url.match(/\d{4}-\d{2}-\d{2}/)?.[0] || 0);
+        return dateB - dateA;
+      });
     };
-    loadData();
-  }, []);
-
-const renderList = (items) =>
-  items.length === 0 ? (
-    <Typography variant="body2">No files available.</Typography>
-  ) : (
-    <List>
-      {items.map(({ url, size }) => {
-        const filename = url.split('/').pop();
-        return (
-          <ListItem key={url}>
-            <ListItemText
-              primary={
-                <Link href={url} target="_blank" rel="noopener noreferrer">
-                  {filename}
-                </Link>
-              }
-              secondary={`${size.toFixed(2)} MB`}
-            />
-          </ListItem>
-        );
-      })}
-    </List>
-  );
-
+    useEffect(() => {
+      const loadData = async () => {
+        const [archamap, sociomap] = await Promise.all([
+          fetchData('ArchaMap'),
+          fetchData('SocioMap'),
+        ]);
+        setUrls({ ArchaMap: archamap, SocioMap: sociomap });
+        setLoading(false);
+      };
+      loadData();
+    }, []);
+  
+  const renderList = (items) =>
+    items.length === 0 ? (
+      <Typography variant="body2">No files available.</Typography>
+    ) : (
+      <List>
+        {items.map(({ url, size }) => {
+          const filename = url.split('/').pop();
+          return (
+            <ListItem key={url}>
+              <ListItemText
+                primary={
+                  <Link href={url} target="_blank" rel="noopener noreferrer">
+                    {filename}
+                  </Link>
+                }
+                secondary={`${size.toFixed(2)} MB`}
+              />
+            </ListItem>
+          );
+        })}
+      </List>
+    );
+  
 
   return (
     <div style={{ backgroundColor: 'white' }}>
@@ -102,7 +102,7 @@ const renderList = (items) =>
             </Typography>
 
             <Typography variant="body1" paragraph>
-              This page contains the most recent weekly backups of the key elements of the database:
+              This page contains all weekly backups of the key elements of the database:
             </Typography>
 
             <Typography variant="body1" component="div">
@@ -134,13 +134,6 @@ const renderList = (items) =>
 
             <Typography variant="body1" paragraph>
               For custom downloads (e.g., metadata for all ETHNICITY categories), the search page provides a <strong><em>download search results</em></strong> button.
-            </Typography>
-
-            <Typography variant="body1" paragraph>
-              See prior versions of this data here: {''}:
-              <Link href="/download/all" style={{ marginLeft: '0.5em' }}>
-                Previous Downloads
-              </Link>
             </Typography>
 
             {/* Tabs */}
@@ -176,4 +169,4 @@ const renderList = (items) =>
   );
 };
 
-export default Download;
+export default DownloadAll;

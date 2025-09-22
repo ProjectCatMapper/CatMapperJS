@@ -10,7 +10,7 @@ const CatHome = () => {
   const handleClick = () => setClick(!click)
 
   return (
-    <div className="hero" style={{ backgroundImage: `url(${backgroundImage})` }}>
+    <div className="cat_hero" style={{ backgroundImage: `url(${backgroundImage})`,marginBottom:"2rem" }}>
       <div className="overlay">
         <div className="headertransparent">
             <Link to="/" className='logo'><img src={logo} width={100} height={70} alt="Logo" /></Link>

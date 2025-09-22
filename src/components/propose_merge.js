@@ -216,6 +216,7 @@ const Propose_Merge = () => {
   };
     
     const handleSubmit = async () => {
+      setLoading(true)
       if (!isValid) {
         alert('Please validate successfully before submitting.');
         return;
@@ -247,6 +248,9 @@ const Propose_Merge = () => {
     } catch (error) {
       console.error('Error submitting form:', error);
     }
+    finally {
+      setLoading(false);
+    }
   };
 
   const downloadMerge = async () => {
@@ -268,102 +272,8 @@ const Propose_Merge = () => {
     return(
 
       <Box sx={{ height: '100%',              
-        maxHeight: 'calc(100vh - 100px)',
         overflow: 'auto',            
         padding: '16px',}}>
-      {/* <h2 style={{ color: 'black', padding: "2px" }}>Join Datasets</h2>
-      <Divider sx={{ my: 1 }} />
-      <Typography variant="p">Upload two datasets to merge. Both datasets must have a `datasetID` column with a valid CMID for each row. Both datasets must have the original `Key` columns specified in the database translation that was previously uploaded to the dataset with the matching CMID. If you have not yet translated and uploaded your dataset, please do so now.</Typography>
-      <br/>
-      <br/>
-      <Box sx={{
-    mb: 2,
-    display: 'flex',
-    alignItems: 'center',
-    gap:30,
-    backgroundColor: '#87CEEB',
-        borderRadius: 4,
-        padding: 2,
-        boxShadow: 1,
-  }}
->
-<Box>
-    <h3 style={{ color: 'black', fontWeight: "bold", padding: "2px" }}>Upload first Dataset</h3>
-    <input
-      id="fileInput"
-      style={{ color: 'black', fontWeight: "bold", marginLeft: 7, padding: "2px" }}
-      type="file"
-      accept=".csv, .xlsx"
-      onChange={handleFileChange}
-    />
-    <Button
-      variant="contained"
-      sx={{
-        backgroundColor: 'black',
-        color: 'white',
-        '&:hover': {
-          backgroundColor: 'green',
-        },
-        mt: 1,
-      }}
-      onClick={handleclear}
-    >
-      Reset imported file
-    </Button>
-  </Box>
-
-  <Box>
-    <h3 style={{ color: 'black', fontWeight: "bold", padding: "2px" }}>Upload second Dataset</h3>
-    <input
-      id="fileInput"
-      style={{ color: 'black', fontWeight: "bold", marginLeft: 7, padding: "2px" }}
-      type="file"
-      accept=".csv, .xlsx"
-      onChange={handleFileChange1}
-    />
-    <Button
-      variant="contained"
-      sx={{
-        backgroundColor: 'black',
-        color: 'white',
-        '&:hover': {
-          backgroundColor: 'green',
-        },
-        mt: 1,
-      }}
-      onClick={handleclear1}
-    >
-      Reset imported file
-    </Button>
-  </Box>
-</Box>
-<Button variant="contained" sx={{
-        backgroundColor: 'black',
-        color: 'white', 
-        '&:hover': {
-          backgroundColor: 'green', 
-        },
-        mr:4
-      }}  onClick={handleMergeSubmit}>
-        Merge Datasets
-      </Button>
-      <Backdrop
-        open={loading}
-        style={{ color: '#fff', zIndex: 1200 }}
-      >
-        <CircularProgress color="inherit" />
-        <span style={{ marginLeft: 16 }}>Processing...</span>
-      </Backdrop>
-<Button variant="contained" sx={{
-        backgroundColor: 'black',
-        color: 'white', 
-        '&:hover': {
-          backgroundColor: 'green', 
-        },
-      }}  onClick={handleJoinDownload}>
-        Download Results
-      </Button>
-      <Divider sx={{ my: 2 }} /> */}
       <h2 style={{ color: 'black', padding: "1px" }}>Propose Merges</h2>
       <h4 style={{ color: 'black', padding: "1px" }}>Select Datasets for Merging</h4>
     <Box sx={{ display: 'flex', alignItems: 'center', mt: 2 }}>
@@ -489,8 +399,13 @@ const Propose_Merge = () => {
       }}  onClick={downloadMerge}>
         Download Results
       </Button>
-
-
+      <Backdrop
+        open={loading}
+        style={{ color: '#fff', zIndex: 1200 }}
+      >
+        <CircularProgress color="inherit" />
+        <span style={{ marginLeft: 16 }}>Processing...</span>
+      </Backdrop>
       </Box>
     )
 }

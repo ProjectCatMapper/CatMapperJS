@@ -4,7 +4,8 @@ import Sociotranslate from '../components/sociotranslate'
 
  const Translate = () => {
    return (
-     <div style={{backgroundColor:"white"}}>
+     <div style={{backgroundColor:"white",display: 'flex',
+    flexDirection: 'column', height:"100vh"}}>
          <Navbar />
          <Sociotranslate />
      </div>
