@@ -159,8 +159,9 @@ const handleClick = async () => {
     }
 
     const responseData = await response.json();
+    console.log(responseData)
 
-    const allKeys = Object.keys(responseData[0]);
+    const allKeys = responseData.order;
 
     const matchedColumn = zeroDropdownValue;
 
@@ -171,7 +172,7 @@ const handleClick = async () => {
       'CMName_',
       'CMID_',
       'label_',
-      'country_'
+      'CMcountry_',
     ];
 
     const suffixColumns = patternPrefixes.map(prefix => prefix + zeroDropdownValue).filter(col => allKeys.includes(col));
@@ -186,18 +187,19 @@ const handleClick = async () => {
       ...remainingColumns
     ];
 
-    setData(responseData);
+  
+    setData(responseData.file);
     setColumns(reorderedColumns)
-    setRows(responseData.map(row => reorderedColumns.map(key => row[key])));
+    setRows(responseData.file.map(row => reorderedColumns.map(key => row[key])));
     setProgress(80);
 
-    const matchTypeCounts = responseData.reduce((acc, row) => {
+    const matchTypeCounts = responseData.file.reduce((acc, row) => {
       const matchType = row['matchType_'+zeroDropdownValue]
       acc[matchType] = acc[matchType] ? acc[matchType] + 1 : 1;
       return acc;
     }, {});
 
-    const total = responseData.length;
+    const total = responseData.file.length;
     const matchTypePercentages = Object.keys(matchTypeCounts).reduce((acc, key) => {
       acc[key] = (matchTypeCounts[key] / total * 100).toFixed(2) + '%';
       return acc;
@@ -241,7 +243,7 @@ const handleclear = () => {
 const [inputValue, setinputValue] = useState(-4000);
 const [inputValuetwo, setinputValuetwo] = useState(2024);        
 
-const handleFileChange = (event) => {
+const handleFileChange = async (event) => {
   const file = event.target.files[0];
   if (!file) return;
 
@@ -317,6 +319,17 @@ const handleFileChange = (event) => {
       },
     });
   } else if (fileExtension === 'xlsx' || fileExtension === 'xls') {
+      const data = await file.arrayBuffer();
+      const workbook = XLSX.read(data, { type: 'array', dense: true });
+
+      const sheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[sheetName];
+
+      const merges = worksheet["!merges"] || [];
+      if (merges.length > 0) {
+        alert("Merged cells detected. Please unmerge all cells before uploading.")
+        return;
+      }
     ExcelRenderer(file, (err, resp) => {
       if (err) {
         setError(`Excel Parsing Error: ${err.message}`);
@@ -334,8 +347,6 @@ const handleFileChange = (event) => {
   const getRowStyle = (row) => {
     const statusIndex = columns.findIndex(col => col === 'matchType_'+zeroDropdownValue);
     const status = row[statusIndex];
-
-    console.log(row)
   
     return getClassForStatus(status);
   };
@@ -345,7 +356,6 @@ const handleFileChange = (event) => {
     if (status === undefined) {
       return 'color-undefined';
     }
-    console.log(status)
     status = (status && typeof status === "string") ? status.trim() : status;
 
     switch (status) {

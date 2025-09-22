@@ -40,7 +40,7 @@ const LeafletMap = ({ points, mapt, sources, sourceColorMap, stringToColor }) =>
         });
       }
       if (bounds.isValid()) {
-        map.fitBounds(bounds);
+        map.fitBounds(bounds,{ maxZoom: 7 });
       }
     }, [points, polygons, map]);
 

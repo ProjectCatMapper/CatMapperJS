@@ -257,7 +257,6 @@ export default function Tableclick(props) {
         return response.json();
       })
       .then((data) => {
-        console.log(data)
         setUsert(data.samples);
         setCategories(data.categories);
         setMapt(data.polygons);
@@ -274,8 +273,6 @@ export default function Tableclick(props) {
 
         const pointsToUse = data.datasetpoints && data.datasetpoints.length > 0 ? data.datasetpoints : data.points;
         
-        console.log(pointsToUse)
-
         const uniqueSources = [
           ...new Set([
             ...pointsToUse.map((point) => point.source),
@@ -350,7 +347,7 @@ export default function Tableclick(props) {
           }),
         });
       } else {
-        // response = await fetch("http://127.0.0.1:5001/dataset?cmid=" + props.cmid.cmid + "&database=" +database+ "&domain=" + datasetdomainValue+ "&children=" + rememberChoice,{method: "GET"})
+        //response = await fetch("http://127.0.0.1:5001/dataset?cmid=" + props.cmid.cmid + "&database=" +database+ "&domain=" + adjustedDomain+ "&children=" + rememberChoice,{method: "GET"})
         response = await fetch(
           `${process.env.REACT_APP_API_URL}/dataset?cmid=` +
             props.cmid.cmid +
@@ -429,6 +426,7 @@ export default function Tableclick(props) {
 
   const fetchData = async (event) => {
     try {
+      console.log(rev)
       //const response = await fetch("http://127.0.0.1:5001/networksjs?cmid=" + props.cmid.cmid + "&database=" +database+ "&relation=" + event.target.value + "&response=records");
       const response = await fetch(
         `${process.env.REACT_APP_API_URL}/networksjs?cmid=` +
@@ -608,7 +606,6 @@ export default function Tableclick(props) {
         style={{
           backgroundColor: "white",
           width: "100%",
-          height: "auto",
           color: "black",
         }}
       >
@@ -766,7 +763,6 @@ export default function Tableclick(props) {
         {loading && <LoadingSpinner />}
         <Box
           sx={{
-            height: "auto",
             position: "relative",
             left: "10px",
             top: boxHeight + 100,

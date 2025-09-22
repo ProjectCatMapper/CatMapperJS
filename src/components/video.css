@@ -10,44 +10,50 @@
     color: white !important;
 }
 
+.stacked {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem; 
+}
+
 .hero{
-    height: 100vh;
+    min-height: 100vh;
     width: 100%;
     object-fit: contain;
-}
-
-.hero .content {
+    display: flex;
+    justify-content:center;
+    align-items: center;
     text-align: center;
-    position: absolute;
-    margin: auto;
-    width: 100%;
-    height: 100%;
-    top: 40vh;
+    position: relative;
 }
 
-.hero .content h1{
-    font-size: 4rem;
+.hero .sociocontent {
+    max-width: 90%;
+    padding: 1rem;
     color: white;
+}
+
+.hero .sociocontent h1{
+    font-size: 3rem;
 }
 
 .hero p{
     font-size: 1.8rem;
     font-weight: 200;
     margin-bottom: 1.6rem;
-    color: white;
 }
 
 .hero .btn{
-    margin: 1rem .2rem;
+    margin: 1rem .4rem;
 }
 
-@media screen and (max-width:640px) {
-    .content h1{
-        font-size:  3rem;
+@media (max-width: 768px) {
+    .hero .sociocontent h1#sociomapvideo{
+        font-size: 1.8rem !important;
     }
 
-    .content p{
-        font-size: 1.4rem;
+    .sociocontent p{
+        font-size: 1rem;
         margin-bottom: 1.6rem;
     }
     

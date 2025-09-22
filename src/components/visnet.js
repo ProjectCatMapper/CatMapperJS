@@ -155,14 +155,10 @@ const filteredData = Array.from(filteredMap.entries()).map(([domain, color]) => 
           const glottoItems = tooltipContent.filter(item => item.split(':')[0].trim().toLowerCase() === 'glottocode');
           const ISOItems = tooltipContent.filter(item => item.split(':')[0].trim() === 'ISO3');
           const FIPSItems = tooltipContent.filter(item => item.split(':')[0].trim() === 'FIPS');
-          // const logItems = tooltipContent
-          //   .filter(item => item.toLowerCase().includes('log'))
-          //     .slice(0, 3);
           tooltipContent = tooltipContent.filter(item =>!['CMID', 'CMName','glottocode','ISO3','FIPS'].includes(item.split(':')[0].trim()) &&  !item.toLowerCase().includes('log'));
                   
           tooltipContent = [...cmItems, ...glottoItems, ...ISOItems, ...FIPSItems, ...tooltipContent];
 
-          // tooltipContent = tooltipContent.filter(item => !['SocioMapID', 'SocioMapName'].includes(item.split(':')[0].trim()));
           console.log(tooltipContent)
           setTooltipContent(tooltipContent.map((item, index) => <span key={index}>{item}<br /></span>));
           setTooltipPosition({ x: params.pointer.DOM.x, y: params.pointer.DOM.y });
@@ -188,18 +184,6 @@ const filteredData = Array.from(filteredMap.entries()).map(([domain, color]) => 
       }
     }
     });
-  
-    // network.on("doubleClick", function (params) {
-    //   if (params.nodes.length > 0) {
-    //     var clickedNodeId = params.nodes[0];
-    //     var clickedNodeData = visData["nodes"].find(obj => obj["id"] === clickedNodeId)
-    //     if (clickedNodeData["CMID"] !== currentid)
-    // {
-    // navigate({pathname:`/sociomap/${clickedNodeData["CMID"]}/${tabval}`,});
-    // window.location.reload();
-    // }
-    //   }
-    // });
 
     network.on("hoverEdge", function (params) {
       const edgeId = params.edge;
@@ -217,7 +201,6 @@ const filteredData = Array.from(filteredMap.entries()).map(([domain, color]) => 
       acc.top.push(`${key}: ${value}`);
     }
     else if (key.toLowerCase().includes('log')) {
-      //if (acc.bottom.length < 3) acc.bottom.push(`${key}: ${value}`);
       return acc;
     }
     else {
@@ -240,7 +223,6 @@ tooltipText = [...tooltipText.top, ...tooltipText.middle, ...tooltipText.bottom]
           break;
       }
 
-      // const tooltipText = `eventDate: ${edge.eventDate} <br> eventType: ${edge.eventType} <br> referenceKey: ${edge.refkey}`; 
       const tooltipElement = document.getElementById('edge-tooltip');
       tooltipElement.innerHTML = tooltipText;
       tooltipElement.style.top = params.event.clientY + 'px';

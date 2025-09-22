@@ -63,7 +63,7 @@ const getRowHeight = (params) => {
 };
 
   return (
-    <div style={{ marginLeft:"2vw",height: 600, width: "90vw" }}>
+    <div style={{ marginLeft:"2vw",minHeight: 500,maxHeight:750, width: "90vw" }}>
       <style>
         {`
           .wrap-header_data .MuiDataGrid-columnHeaderTitle {
@@ -82,6 +82,7 @@ const getRowHeight = (params) => {
       <DataGrid
         className="custom-row-height"
         rows={rows}
+        autoHeight
         getRowHeight={getRowHeight}
         columns={nonEmptyColumns}
         initialState={{

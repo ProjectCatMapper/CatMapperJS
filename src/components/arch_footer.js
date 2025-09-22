@@ -20,7 +20,6 @@ import image from '../assets/white.png'
 import { Link } from 'react-router-dom'
 import Divider from '@mui/material/Divider';
 
-
 function createData(names,nodes, encodings, contains,context ) {
   return { names, nodes, encodings, contains, context };
 }

@@ -71,16 +71,11 @@ export default function DataTable({ users, snackbarOpen, setSnackbarOpen }) {
     setPaginationModel((prev) => ({ ...prev, page: 0 }));
   }, [users])
 
-  // React.useEffect(() => {
-  //   console.log(rows)
-  // }, [rows])
-
-
   const getRowHeight = (params) => {
     return params.model.hasLargeText ? 63 : 40;  };
 
   return (
-    <div style={{ height: 650, width: '100%' }}>
+    <div style={{ height: "auto", width: '100%' }}>
       <DataGrid
         className="custom-row-height"
         rows={rows}
@@ -95,13 +90,13 @@ export default function DataTable({ users, snackbarOpen, setSnackbarOpen }) {
         }}
         pageSizeOptions={[10, 30, 50]}
         onRowClick={handleRowClick}
-        localeText={{ noRowsLabel: "No results to display" }} />
+        localeText={{ noRowsLabel: "" }} />
     <Snackbar
         open={snackbarOpen}
         autoHideDuration={5000}
         onClose={() => setSnackbarOpen(false)}
         message="No results found"
-        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
         >
         <Alert
           onClose={() => setSnackbarOpen(false)}
