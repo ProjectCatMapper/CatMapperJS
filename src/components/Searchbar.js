@@ -77,7 +77,9 @@ export default function Searchbar() {
 
   const [datasetID, setdatasetID] = useState(null);
 
-  const [qlimit, setqlimit] = useState(null);
+  const [qcount, setqcount] = useState(null);
+
+  const [cmid_download, setCMIDDownload] = useState(null);
 
   const [snackbarOpen, setSnackbarOpen] = useState(false);
 
@@ -163,7 +165,7 @@ const usersKey = `${database}_myData`;
       setIsChecked(isChecked);
       setcontextID(contextID);
       setdatasetID(datasetID);
-      setqlimit(qlimit);
+      //setqlimit(qlimit);
       setoptionsForSelectedCategory(optionsForSelectedCategory);
     }
   }, [searchStateKey]);
@@ -202,6 +204,18 @@ const usersKey = `${database}_myData`;
     setIsChecked(!isChecked);
     setSelectedCountry(countries[0].code)
   };
+
+  const handleReset = () => {
+    setdomainDrop("ALL NODES")
+    setadvdomainDrop("ALL NODES")
+    setadvoptions(["ALL NODES"])
+    setSelectedOption("Name")
+    setSelectedCountry(countries[0].code)
+    setyearStart("")
+    setyearEnd("")
+    setcontextID("")
+    setdatasetID("")
+  }
 
   const tooltipContent = (
     <div style={{ maxWidth: '400px' }}>
@@ -293,20 +307,21 @@ const usersKey = `${database}_myData`;
   function handleClick(tvalue, domain) {
     setLoading(true);
     //fetch("http://127.0.0.1:5001/search?domain=" + domain + "&property=" + selectedOption + "&term=" + encodeURIComponent(tvalue) + "&database=" +database+  "&query=false" + "&yearStart=" + yearStart + "&yearEnd=" + yearEnd + "&country=" + selectedcountry + "&context=" + contextID + "&dataset=" + datasetID,
-    fetch(`${process.env.REACT_APP_API_URL}/search?domain=` + domain + "&property=" + selectedOption + "&term=" + encodeURIComponent(tvalue) + "&database=" +database+  "&query=false" + "&yearStart=" + yearStart + "&yearEnd=" + yearEnd + "&country=" + selectedcountry + "&context=" + contextID+ "&dataset=" + datasetID + "&limit=" + qlimit,
+    fetch(`${process.env.REACT_APP_API_URL}/search?domain=` + domain + "&property=" + selectedOption + "&term=" + encodeURIComponent(tvalue) + "&database=" +database+  "&query=false" + "&yearStart=" + yearStart + "&yearEnd=" + yearEnd + "&country=" + selectedcountry + "&context=" + contextID+ "&dataset=" + datasetID,
       {
         method: "GET"
       })
       .then(response => {
-        //console.log(response.json)
         return response.json()
       })
       .then(data => {
-        if (data.length === 0) {
+        if (data.count[0].totalCount === 0) {
           setUsers([]);
           setSnackbarOpen(true);
         } else {
-          setUsers(data);
+          setUsers(data.data);
+          setqcount(data.count[0].totalCount)
+          setCMIDDownload(data.count[0].CMID)
         }
       })
       .catch(error => {
@@ -353,26 +368,46 @@ const usersKey = `${database}_myData`;
             }}
             onKeyDown={(event) => {
               if (event.key === "Enter") {
-                isChecked
-                  ? handleClick(tvalue, advdomainDrop.trim())
-                  : handleClick(tvalue, domainDrop.trim());
+                  handleClick(tvalue, advdomainDrop.trim())
               }
             }}
           />
           <NeonButton
             type="searchOutlined"
-            onClick={() => handleClick(tvalue, isChecked ? advdomainDrop.trim() : domainDrop.trim())}
+            onClick={() => handleClick(tvalue,advdomainDrop.trim())}
           />
           {loading && (
             <div style={{ position: "absolute", top: "40vh", left: "50vw", transform: "translate(-50%, -50%)" }}>
               <CircularProgress />
             </div>
           )}
-          <DownloadDialogButton users={users} database={database} domain={domainDrop}/>
-          <label style={{ display: "flex", alignItems: "center", cursor: "pointer", userSelect: "none" }}>
-          <Checkbox checked={isChecked} onChange={handleCheckboxChange} style={{color:"white"}} />
-          Advanced search
-        </label>
+          <DownloadDialogButton users={users} database={database} domain={advdomainDrop} count ={qcount} cmid_download={cmid_download}/>
+          <label
+            style={{
+              display: "flex",
+              alignItems: "center",
+              cursor: "pointer",
+              userSelect: "none",
+            }}
+          >
+            Advanced Search: 
+          </label>
+          <label
+            style={{
+              display: "flex",
+              alignItems: "center",
+              cursor: "pointer",
+              userSelect: "none",
+            }}
+          >
+            <Checkbox
+              checked={isChecked}
+              onChange={handleCheckboxChange}
+              style={{ color: "white" }}
+            />
+            Show 
+          </label>
+          <NeonButton label="Reset" onClick={handleReset} />
       </Box>
         {isChecked && (
             <Box
@@ -387,13 +422,14 @@ const usersKey = `${database}_myData`;
             <Grid container spacing={1}>
               <Grid item xs={12} sm={4}>
               <Box sx={{ display: 'flex', alignItems: 'center'}}>
-              <FormControl sx={{ width: 320 }} variant="standard">
+              <FormControl sx={{ width: 320 }} variant="standard" size="small">
                   <Typography variant="subtitle2" gutterBottom>Category Domain</Typography>
                 <NativeSelect
-                  id="demo-customized-select-native"
                   value={domainDrop}
                   label=""
-                  sx={{ fontSize: 14, letterSpacing: 0.5, borderRadius: 1,backgroundColor:"white" }}
+                  sx={{ fontSize: 14, letterSpacing: 0.5, borderRadius: 1,backgroundColor:"white","& .MuiNativeSelect-select": {
+      padding: "4px 8px",
+    }, }}
                   onChange={(event) => {
                     const newDomain = event.target.value;
                     const subdomains = selectedCategory[newDomain] || [];
@@ -440,7 +476,9 @@ const usersKey = `${database}_myData`;
                   id="demo-customized-select-native"
                   value={advdomainDrop}
                   label=""
-                  sx={{ fontSize: 14, letterSpacing: 0.5, borderRadius: 1,backgroundColor:"white" }}
+                  sx={{ fontSize: 14, letterSpacing: 0.5, borderRadius: 1,backgroundColor:"white","& .MuiNativeSelect-select": {
+      padding: "4px 8px",
+    }, }}
                   onChange={(event) => {
                     setadvdomainDrop(event.target.value);
                       setoptionsForSelectedCategory(
@@ -475,7 +513,9 @@ const usersKey = `${database}_myData`;
                   onChange={(event) => {
                     setSelectedCountry(event.target.value);
                   }}
-                  sx={{ fontSize: 14, letterSpacing: 0.5, borderRadius: 1,backgroundColor:"white" }}
+                  sx={{ fontSize: 14, letterSpacing: 0.5, borderRadius: 1,backgroundColor:"white","& .MuiNativeSelect-select": {
+      padding: "4px 8px",
+    }, }}
                   input={<BootstrapInput />}
                 >
                   {(database === 'ArchaMap' ? archamap_countries : countries).map((country, index) => (
@@ -497,7 +537,9 @@ const usersKey = `${database}_myData`;
                 onChange={(event) => {
                   setSelectedOption(event.target.value);
                 }}
-                sx={{ fontSize: 14, letterSpacing: 0.5, borderRadius: 1,backgroundColor:"white" }}
+                sx={{ fontSize: 14, letterSpacing: 0.5, borderRadius: 1,backgroundColor:"white","& .MuiNativeSelect-select": {
+      padding: "4px 8px",
+    }, }}
                 input={<BootstrapInput />}
               >
                 {optionsForSelectedCategory.map((option, index) => (
@@ -525,7 +567,7 @@ const usersKey = `${database}_myData`;
                     placeholder='From'
                     value={yearStart}
                     maxLength={10}
-                    style={{ flex: '1 1 0',minWidth: 0, maxWidth: 100, height: 40, padding: "0 6px", borderRadius: 4, border: "1px solid #ccc" }}
+                    style={{ flex: '1 1 0',minWidth: 0, maxWidth: 100, height: 30, padding: "0 6px", borderRadius: 4, border: "1px solid #ccc" }}
                     onChange={(event) => {
                       setyearStart(event.target.value);
                     }}
@@ -536,7 +578,7 @@ const usersKey = `${database}_myData`;
                     placeholder='To'
                     value={yearEnd}
                     maxLength={10}
-                    style={{ flex: '1 1 0',minWidth: 0, maxWidth: 100, height: 40, padding: "0 6px", borderRadius: 4, border: "1px solid #ccc" }}
+                    style={{ flex: '1 1 0',minWidth: 0, maxWidth: 100, height: 30, padding: "0 6px", borderRadius: 4, border: "1px solid #ccc" }}
                     onChange={(event) => {
                       setyearEnd(event.target.value);
                     }}
@@ -552,7 +594,7 @@ const usersKey = `${database}_myData`;
                 type="text"
                 id="myInput"
                 value={contextID}
-                style={{ width: 100, height: 40, padding: "0 8px", borderRadius: 4, border: "1px solid #ccc" }}
+                style={{ width: 100, height: 30, padding: "0 8px", borderRadius: 4, border: "1px solid #ccc" }}
                 onChange={(event) => {
                   setcontextID(event.target.value);
                 }}
@@ -568,29 +610,13 @@ const usersKey = `${database}_myData`;
                 type="text"
                 id="myInput"
                 value={datasetID}
-                style={{ width: 100, height: 40, padding: "0 8px", borderRadius: 4, border: "1px solid #ccc" }}
+                style={{ width: 100, height: 30, padding: "0 8px", borderRadius: 4, border: "1px solid #ccc" }}
                 onChange={(event) => {
                   setdatasetID(event.target.value);
                 }}
               />
             </FormControl>
             </Grid>
-
-            <Grid item xs={12} sm={6} md={3}>
-                <FormControl variant="standard">
-                  <Typography variant="subtitle2" gutterBottom>Query Limit</Typography>
-              <input
-                type="text"
-                id="myInput"
-                value={qlimit}
-                style={{ width: 100, height: 40, padding: "0 8px", borderRadius: 4, border: "1px solid #ccc" }}
-                onChange={(event) => {
-                  setqlimit(event.target.value);
-                }}
-              />
-            </FormControl>
-            </Grid>
-
             </Grid>
             </Box>
         )}

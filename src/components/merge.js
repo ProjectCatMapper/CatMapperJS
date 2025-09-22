@@ -52,11 +52,11 @@ export default function VerticalTabs() {
         value={value}
         onChange={handleChange}
         aria-label="Vertical tabs example"
-        sx={{ borderRight: 1, borderColor: 'divider' }}
+        sx={{ borderRight: 1, borderColor: 'divider',minWidth:250 }}
       >
-        <Tab label="Propose merge" {...a11yProps(0)} sx={{  justifyContent: 'center', textAlign: 'right' }} />
-        <Tab label="Join Datasets" {...a11yProps(1)} sx={{  justifyContent: 'center', textAlign: 'right' }} />
-        <Tab label="Download merge template" {...a11yProps(2)} sx={{justifyContent: 'center', textAlign: 'right' }} />
+        <Tab label="Propose merge" {...a11yProps(0)} sx={{ alignItems: 'flex-end', justifyContent: 'center', textAlign: 'right' }} />
+        <Tab label="Join Datasets" {...a11yProps(1)} sx={{ alignItems: 'flex-end', justifyContent: 'center', textAlign: 'right' }} />
+        <Tab label="Download merge template" {...a11yProps(2)} sx={{ alignItems: 'flex-end', justifyContent: 'center', textAlign: 'right' }} />
       </Tabs>
       <TabPanel value={value} index={0}>
         <Propose_Merge />

@@ -141,6 +141,19 @@ const handleFileChange = async (e) => {
       const fileObj = file;
 
       try {
+          const data = await file.arrayBuffer();
+          const workbook = XLSX.read(data, { type: "array" });
+
+          const sheetName = workbook.SheetNames[0];
+          const worksheet = workbook.Sheets[sheetName];
+
+          const merges = worksheet["!merges"] || [];
+          if (merges.length > 0) {
+            alert("Merged cells detected. Please unmerge all cells before uploading.")
+            setFile(null);
+            return;
+          }
+          
           const resp = await new Promise((resolve, reject) => {
               ExcelRenderer(fileObj, (err, resp) => {
                   if (err) {
@@ -151,7 +164,6 @@ const handleFileChange = async (e) => {
               });
           });
 
-          
           setColumns(resp.rows[0]);
           const filteredRows = resp.rows.slice(1).filter(row => 
             row.some(value => value !== null && value !== undefined && value !== "")
@@ -167,8 +179,6 @@ const handleFileChange = async (e) => {
               return rowData;
           });
 
-          console.log(table)
-
           setNodeCount(table.length);
 
           await new Promise((resolve) => {
@@ -178,7 +188,6 @@ const handleFileChange = async (e) => {
               resolve();
           });
       } catch (error) {
-          console.error(error);
           alert('Error processing file: ' + error.message);
       }
   } else {
@@ -262,6 +271,27 @@ const handleFileChange = async (e) => {
       }
     }
 
+    if (["add_node",'add_uses', 'update_add'].includes(advselectedOption)){
+      if (selectedExtraColumns.includes('longitude') && !selectedExtraColumns.includes('latitude')) {
+        setError('Longitude requires Latitude to be present.');
+        return false;
+      }
+      if (selectedExtraColumns.includes('latitude') && !selectedExtraColumns.includes('longitude')) {
+        setError('Latitude requires Longitude to be present.');
+        return false;
+      }
+      if (selectedExtraColumns.includes('eventType') && !selectedExtraColumns.includes('parent')) {
+        setError('eventType requires parent to be present.');
+        return false;
+      }
+      if (selectedExtraColumns.includes('eventDate')) {
+        if (!selectedExtraColumns.includes('parent') || !selectedExtraColumns.includes('eventType')) {
+          setError('eventDate requires both parent and eventType to be present.');
+          return false;
+        }
+      }
+    }
+
     if (advselectedOption === 'update_replace') {
       if (selectedExtraColumn === 'longitude' && !columns.includes('latitude')) {
         setError('Longitude requires Latitude to be present.');
@@ -314,6 +344,7 @@ const handleFileChange = async (e) => {
       setOpenDialog(true);
       return;
     }
+
     continueWithSubmit();
   }
 
@@ -325,15 +356,19 @@ const handleFileChange = async (e) => {
 
       const columnsToUse = advselectedOption === 'update_replace' || advselectedOption === 'node_replace' ? [selectedExtraColumn] : selectedExtraColumns;
 
-      console.log(columnsToUse)
-
+      if (advselectedOption === 'update_replace'){
+        if(columnsToUse[0] === "longitude"){
+        columnsToUse.push('latitude')
+        }
+        if(columnsToUse[0] === "latitude"){
+        columnsToUse.push('longitude')
+        }
+      }
+      
       const allowedColumns = new Set([
         ...Object.keys(selectedColumns).filter(col => selectedColumns[col]),
         ...columnsToUse,
       ]);
-
-      console.log(allowedColumns)
-
 
       if (advselectedOption === "add_uses" && missingCount > 0) {
         allowedColumns.add("CMName");
@@ -1018,7 +1053,7 @@ const handleFileChange = async (e) => {
         <Select
           value={selectedExtraColumn}
           onChange={handleSingleExtraColumnChange}
-          style={{width:"7vw"}}
+          style={{width:"10vw"}}
         >
           {extraColumns.map((col) => (
             <MenuItem key={col} value={col}>

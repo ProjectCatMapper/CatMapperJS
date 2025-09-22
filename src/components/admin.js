@@ -113,8 +113,12 @@ const Admin = () => {
 
   const handleSubmit = async () => {
     try {
+      console.log(ntableData)
+      if (firstDropdownValue === "move USES tie"){
+        handleClose();
+      }
       setLoading(true);
-      if (firstDropdownValue === "delete node" || firstDropdownValue === "delete USES relation") {
+      if (firstDropdownValue === "delete node") {
       const confirmed = window.confirm(
         `Are you sure you want to ${firstDropdownValue} of ${formData.s1_2}? This action cannot be undone.`
       );
@@ -122,6 +126,22 @@ const Admin = () => {
         return;
       }
     }
+
+    if (firstDropdownValue === "delete USES relation") {
+      const confirmed = window.confirm(
+        `Are you sure you want to ${firstDropdownValue} of ${JSON.parse(formData.s1_7)[0].CMName} <- ${JSON.parse(formData.s1_7)[1].Key} - ${JSON.parse(formData.s1_7)[2].CMName}? This action cannot be undone.`
+      );
+      if (!confirmed) {
+        return;
+      }
+    }
+
+     const cleanedData = {
+      ...formData,
+      s1_2: formData.s1_2.trim(),
+      s1_3: formData.s1_3.trim(),
+    };
+
       const response = await fetch(`${process.env.REACT_APP_API_URL}/admin/edit`, {
       //const response = await fetch("http://127.0.0.1:5001/admin/edit", {
         method: "POST",
@@ -132,14 +152,18 @@ const Admin = () => {
           database: database,
           cred: cred,
           fun: firstDropdownValue,
-          input: formData,
+          input: cleanedData,
           tabledata: ntableData,
           datasetID: datasetID
         }),
       });
 
       const result = await response.text();
-      alert("Action completed");
+      if (!response.ok) {
+        alert(result);
+      } else {
+        alert("Action completed");
+      }
 
     } catch (error) {
       console.error("Error submitting form:", error);
@@ -151,6 +175,7 @@ const Admin = () => {
 
   const handleSubmitTable = async () => {
     try {
+      handleClose();
       setLoading(true);
 
       const combinedData = tableData.map((row, idx) => {
@@ -166,6 +191,12 @@ const Admin = () => {
         optionA,      // first dropdown
       };
     });
+
+    const cleanedData = {
+      ...formData,
+      s1_2: formData.s1_2.trim(),
+      s1_3: formData.s1_3.trim(),
+    };
       
       const response = await fetch(`${process.env.REACT_APP_API_URL}/admin/edit`, {
       //const response = await fetch("http://127.0.0.1:5001/admin/edit", {
@@ -177,7 +208,7 @@ const Admin = () => {
           database: database,
           cred: cred,
           fun: firstDropdownValue,
-          input: formData,
+          input: cleanedData,
           tabledata: combinedData,
           datasetID: datasetID
         }),
@@ -185,7 +216,6 @@ const Admin = () => {
 
       const result = await response.text();
       alert("Action completed");
-      handleClose();
 
     } catch (error) {
       console.error("Error submitting form:", error);
@@ -198,6 +228,7 @@ const Admin = () => {
     const handleAmbiguousTies = async () => {
     try {
       setLoading(true);
+      setTableData([])
     
       const response = await fetch(`${process.env.REACT_APP_API_URL}/check_ambiguous_usesties`, {
       //const response = await fetch("http://127.0.0.1:5001/check_ambiguous_usesties", {
@@ -213,7 +244,10 @@ const Admin = () => {
       });
 
       const result = await response.json();
-      setDatasetID(result.dataset)
+      if (!response.ok) {
+        alert(result.error);
+      } else {
+         setDatasetID(result.dataset)
       if (result.status === "False"){
         const updatedTableData = (result.child_USES_check || []).map(row => ({
           ...row,
@@ -233,8 +267,8 @@ const Admin = () => {
       setTableDropdownValues(initialDropdowns);
       handleOpen();
       }
-
-
+      }
+    
     } catch (error) {
       console.error("Error submitting form:", error);
     }
@@ -300,14 +334,14 @@ const Admin = () => {
   };
 
   const [formData, setFormData] = useState({
-    s1_1: "add",  // radio
-    s1_2: "",          // textfield
-    s1_3: "",          //textfield
-    s1_4: "",          //textfield
-    s1_5: "",          //textfield
-    s1_6: "",          //textfield
-    s1_7: "",           //dropdown
-    s1_8: ""            //dropdown
+    s1_1: "edit",  // radio
+    s1_2: "",          
+    s1_3: "",          
+    s1_4: "",          
+    s1_5: "",          
+    s1_6: "",          
+    s1_7: "",           
+    s1_8: ""            
   });
 
   const columns = [
@@ -402,7 +436,11 @@ const Admin = () => {
     return;
   }
 
-  setDropdown1Options("")
+  setDropdown1Options([])
+  setFormData(prevFormData => ({
+          ...prevFormData,
+          s1_7: ""
+        }));
 
   const cmid = formData.s1_2.trim();
   const pattern = /^(AM|SM|AD|SD)\d+$/;
@@ -410,7 +448,7 @@ const Admin = () => {
   if (pattern.test(cmid)) {
     const fetchData = async () => {
       try {
-        const res = await fetch(`${process.env.REACT_APP_API_URL}/admin_add_edit_delete_usesproperties?CMID=`+cmid+"&database="+database,{
+      const res = await fetch(`${process.env.REACT_APP_API_URL}/admin_add_edit_delete_usesproperties?CMID=`+cmid+"&database="+database,{
       //const res = await fetch("http://127.0.0.1:5001/admin_add_edit_delete_usesproperties?CMID="+cmid+"&database="+database, {
       method: "GET",
         });
@@ -422,7 +460,6 @@ const Admin = () => {
         }
        
         setDropdown1Options(data.r);
-        console.log(data.r)
         setFormData(prevFormData => ({
           ...prevFormData,
           s1_4: data.r
@@ -481,7 +518,7 @@ useEffect(() => {
             padding: "2px",
           }}
         >
-          Select category domain
+          Select option
         </p>
         <Select
           label="First Dropdown"
@@ -513,6 +550,7 @@ useEffect(() => {
             property :
           </h4>
           <RadioGroup
+            row
             defaultValue="edit"
             name="uploadOption"
             sx={{ mb: 2 }}
@@ -534,9 +572,10 @@ useEffect(() => {
             name="s1_2"
             value={formData.s1_2}
             onChange={handleChange}
-            sx={{ width: 300, height: 40, mb : 3 }}
+            sx={{ width: 300, height: 22 ,mt:0, mb : 5, fontSize: 12  }}
             variant="outlined"
             margin="normal"
+            size="small"
           />
           {add_edit_delete_usesprops_Options !== "" &&
               <>
@@ -592,7 +631,7 @@ useEffect(() => {
                             value={formData.s1_8 || ""}
                             onChange={handleChange}
                           >
-                            {[...dropdown2Options].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
+                            {[...dropdown2Options].filter(option => option.toLowerCase() !== "id").sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
                               .map((option, index) => (
                               <MenuItem key={index} value={option}>
                                 {option}
@@ -609,7 +648,7 @@ useEffect(() => {
                               return ' ' + value
                                 .map(item => {
                                   if (typeof item === 'string') return item;
-                                  if (typeof item === 'object' && item !== null) {
+                                  else if (typeof item === 'object' && item !== null) {
                                     return item.label ?? JSON.stringify(item);
                                   }
                                   return String(item);
@@ -617,8 +656,9 @@ useEffect(() => {
                                 .join(' || ');
                             }
 
-                            if (typeof value === 'string') {
-                              return ' ' + value.replace(/,/g, '||');
+                            else if (typeof value === 'string') {
+                              //return ' ' + value.replace(/,/g, '||');
+                              return value;
                             }
 
                             return ' N/A';
@@ -639,9 +679,10 @@ useEffect(() => {
             name="s1_3"
             value={formData.s1_3}
             onChange={handleChange}
-            sx={{ width: 300, height: 40, mb: 4 }}
+            sx={{ width: 300, height: 25, mb: 4 ,mt:0}}
             variant="outlined"
             margin="normal"
+            size="small"
           />
           </>
           )}
@@ -677,6 +718,7 @@ useEffect(() => {
     property :
   </h4>
   <RadioGroup
+    row
     defaultValue="edit"
     name="uploadOption"
     sx={{ mb: 2 }}
@@ -699,8 +741,9 @@ useEffect(() => {
     name="s1_2"
     value={formData.s1_2}
     onChange={handleChange}
-    sx={{ width: 300, height: 40, mb : 3 }}
+    sx={{ width: 300, height: 25, mb : 5,padding:"0 0",mt:0 }}
     variant="outlined"
+    size="small"
     margin="normal"
   />
 
@@ -713,7 +756,7 @@ useEffect(() => {
       </InputLabel>
       <Select
         name="s1_7"
-        sx={{ width: 300, height: 40, mb: 3 }}
+        sx={{ width: 300, height: 25, mb: 3 }}
         value={formData.s1_7 || ""}
         onChange={handleChange}
       >
@@ -733,7 +776,7 @@ useEffect(() => {
         </InputLabel>
         <Select
           name="s1_7"
-          sx={{ width: 300, height: 40, mb: 3 }}
+          sx={{ width: 300, height: 25, mb: 3 }}
           value={formData.s1_7 || ""}
           onChange={handleChange}
         >
@@ -761,8 +804,9 @@ useEffect(() => {
     name="s1_3"
     value={formData.s1_3}
     onChange={handleChange}
-    sx={{ width: 300, height: 40, mb: 4 }}
+    sx={{ width: 300, height: 25, mb: 4,mt:0 }}
     variant="outlined"
+    size="small"
     margin="normal"
   />
   </>
@@ -801,9 +845,10 @@ useEffect(() => {
      name="s1_2"
      value={formData.s1_2}
      onChange={handleChange}
-     sx={{ width: 300, height: 40, mb : 3 }}
+     sx={{ width: 300, height: 40, mb : 3,mt:0 }}
      variant="outlined"
      margin="normal"
+     size="small"
    />
    <InputLabel id="domain-label" style={{ color: "black " }}>
      ID to discard
@@ -812,9 +857,10 @@ useEffect(() => {
      name="s1_3"
      value={formData.s1_3}
      onChange={handleChange}
-     sx={{ width: 300, height: 40, mb: 4 }}
+     sx={{ width: 300, height: 40, mb: 4,mt:0 }}
      variant="outlined"
      margin="normal"
+     size="small"
    />
    <Box 
     sx={{ 
@@ -850,9 +896,10 @@ useEffect(() => {
      name="s1_2"
      value={formData.s1_2}
      onChange={handleChange}
-     sx={{ width: 300, height: 40, mb : 3 }}
+     sx={{ width: 300, height: 40, mb : 3,mt:0 }}
      variant="outlined"
      margin="normal"
+     size="small"
    />
    {add_edit_delete_usesprops_Options !== "" &&
               <>
@@ -880,9 +927,10 @@ useEffect(() => {
      name="s1_3"
      value={formData.s1_3}
      onChange={handleChange}
-     sx={{ width: 300, height: 40, mb: 4 }}
+     sx={{ width: 300, height: 40, mb: 4,mt:0 }}
      variant="outlined"
      margin="normal"
+     size="small"
    />
    <Box 
     sx={{ 
@@ -931,9 +979,10 @@ useEffect(() => {
      name="s1_2"
      value={formData.s1_2}
      onChange={handleChange}
-     sx={{ width: 300, height: 40, mb : 3 }}
+     sx={{ width: 300, height: 40, mb : 3,mt:0 }}
      variant="outlined"
      margin="normal"
+     size="small"
    />
    <InputLabel id="domain-label" style={{ color: "black " }}>
    Reason why this comment is necessary
@@ -942,9 +991,10 @@ useEffect(() => {
      name="s1_3"
      value={formData.s1_3}
      onChange={handleChange}
-     sx={{ width: 300, height: 40, mb: 4 }}
+     sx={{ width: 300, height: 40, mb: 4,mt:0 }}
      variant="outlined"
      margin="normal"
+     size="small"
    />
  </Box>
 )
@@ -959,9 +1009,10 @@ useEffect(() => {
      name="s1_2"
      value={formData.s1_2}
      onChange={handleChange}
-     sx={{ width: 300, height: 40, mb : 3 }}
+     sx={{ width: 300, height: 40, mb : 3,mt:0 }}
      variant="outlined"
      margin="normal"
+     size="small"
    />
    <Box 
     sx={{ 
@@ -997,9 +1048,10 @@ useEffect(() => {
      name="s1_2"
      value={formData.s1_2}
      onChange={handleChange}
-     sx={{ width: 300, height: 40, mb : 3 }}
+     sx={{ width: 300, height: 40, mb : 3,mt:0 }}
      variant="outlined"
      margin="normal"
+     size="small"
    />
    {add_edit_delete_usesprops_Options !== "" &&
               <>
@@ -1054,9 +1106,10 @@ useEffect(() => {
      name="s1_2"
      value={formData.s1_2}
      onChange={handleChange}
-     sx={{ width: 300, height: 40, mb : 3 }}
+     sx={{ width: 300, height: 40, mb : 3,mt:0 }}
      variant="outlined"
      margin="normal"
+     size="small"
    />
    <InputLabel id="domain-label" style={{color:"black "}}>Choose Group label (select 'NA' if it is a group label)</InputLabel>
           <br />
@@ -1066,7 +1119,7 @@ useEffect(() => {
             name="s1_7"
             value={formData.s1_7}
             onChange={handleChange}
-            sx={{width: 300,height:40 }}
+            sx={{width: 300,height:40,mb:3 }}
             margin="normal"
           >
             <MenuItem value="NA">NA</MenuItem>
@@ -1083,9 +1136,10 @@ useEffect(() => {
      name="s1_3"
      value={formData.s1_3}
      onChange={handleChange}
-     sx={{ width: 300, height: 40, mb : 3 }}
+     sx={{ width: 300, height: 40, mb : 3,mt:0 }}
      variant="outlined"
      margin="normal"
+     size="small"
    />
    <InputLabel id="domain-label" style={{ color: "black " }}>
    Enter label description
@@ -1094,7 +1148,7 @@ useEffect(() => {
      name="s1_4"
      value={formData.s1_4}
      onChange={handleChange}
-     sx={{ width: 300, height: 40, mb : 12 }}
+     sx={{ width: 300, height: 40, mb : 12,mt:0 }}
      multiline 
     rows={4}
      variant="outlined"
@@ -1107,9 +1161,10 @@ useEffect(() => {
      name="s1_5"
      value={formData.s1_5}
      onChange={handleChange}
-     sx={{ width: 300, height: 40, mb : 3,mt: 1 }}
+     sx={{ width: 300, height: 40, mb : 3,mt: 0 }}
      variant="outlined"
      margin="normal"
+     size="small"
    />
    <InputLabel id="domain-label" style={{ color: "black " }}>
    Enter hex color for network display (leave blank for default color)
@@ -1118,9 +1173,10 @@ useEffect(() => {
      name="s1_6"
      value={formData.s1_6}
      onChange={handleChange}
-     sx={{ width: 300, height: 40, mb : 3 }}
+     sx={{ width: 300, height: 40, mb : 3,mt:0 }}
      variant="outlined"
      margin="normal"
+     size="small"
    />
    <Box 
     sx={{ 
@@ -1183,9 +1239,10 @@ username   </InputLabel>
      name="s1_2"
      value={formData.s1_2}
      onChange={handleChange}
-     sx={{ width: 300, height: 40, mb : 3 }}
+     sx={{ width: 300, height: 40, mb : 3,mt:0 }}
      variant="outlined"
      margin="normal"
+     size="small"
    />
    <InputLabel id="domain-label" style={{ color: "black " }}>
 first name   </InputLabel>
@@ -1193,9 +1250,10 @@ first name   </InputLabel>
      name="s1_3"
      value={formData.s1_3}
      onChange={handleChange}
-     sx={{ width: 300, height: 40, mb : 3 }}
+     sx={{ width: 300, height: 40, mb : 3,mt:0 }}
      variant="outlined"
      margin="normal"
+     size="small"
    />
    <InputLabel id="domain-label" style={{ color: "black " }}>
 last name   </InputLabel>
@@ -1203,9 +1261,7 @@ last name   </InputLabel>
      name="s1_4"
      value={formData.s1_4}
      onChange={handleChange}
-     sx={{ width: 300, height: 40, mb : 12 }}
-     multiline 
-    rows={4}
+     sx={{ width: 300, height: 40, mb : 3,mt:0 }}  
      variant="outlined"
      margin="normal"
    />
@@ -1218,6 +1274,7 @@ email   </InputLabel>
      sx={{ width: 300, height: 40, mb : 3,mt: 1 }}
      variant="outlined"
      margin="normal"
+     size="small"
    />
    <InputLabel id="domain-label" style={{color:"black "}}>Select role:</InputLabel>
           <br />
@@ -1227,7 +1284,7 @@ email   </InputLabel>
             name="s1_7"
             value={formData.s1_7}
             onChange={handleChange}
-            sx={{width: 300,height:40 }}
+            sx={{width: 300,height:40,mb:3 }}
             margin="normal"
           >
           <MenuItem value={"user"}>user</MenuItem>
@@ -1239,7 +1296,7 @@ password   </InputLabel>
      name="s1_6"
      value={formData.s1_6}
      onChange={handleChange}
-     sx={{ width: 300, height: 40, mb : 3 }}
+     sx={{ width: 300, height: 40, mb : 3,mt:0 }}
      variant="outlined"
      margin="normal"
    />
@@ -1259,6 +1316,7 @@ password   </InputLabel>
      sx={{ width: 300, height: 40, mb : 3 }}
      variant="outlined"
      margin="normal"
+     size="small"
    />
    <InputLabel id="domain-label" style={{ color: "black " }}>
    new password
@@ -1270,6 +1328,7 @@ password   </InputLabel>
      sx={{ width: 300, height: 40, mb: 4 }}
      variant="outlined"
      margin="normal"
+     size="small"
    />
  </Box>
 )
@@ -1403,7 +1462,13 @@ password   </InputLabel>
       </Box>
 
       {loading && (
-                  <div style={{ position: "absolute", top: "40vh", left: "50vw", transform: "translate(-50%, -50%)" }}>
+                  <div style={{
+      position: "fixed",     
+      top: "50%",            
+      left: "50%",           
+      transform: "translate(-50%, -50%)", 
+      zIndex: 1300,         
+    }}>
                     <CircularProgress />
                   </div>
                 )}

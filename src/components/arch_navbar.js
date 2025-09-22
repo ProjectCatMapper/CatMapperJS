@@ -27,17 +27,19 @@ const Navbar = () => {
             <li>
                 <Link id='sociomapnavbar' to='/archamap/explore'>Explore</Link>
             </li>
-            <li className='dropdown' >
-            <Link id='sociomapnavbar' > Translate <span className="dropdown-arrow">&#x25BC;</span></Link>
-            <div className='dropdown-content' style={{ whiteSpace: 'nowrap' }} >
-                <Link to='/archamap/translate'>Propose Translation</Link>
-                {authLevel > 0 &&<Link to='/archamap/uploadtranslate'>Upload Translation</Link>}
-                </div>
+            <li>
+                <Link id='sociomapnavbar'  to='/archamap/translate'>Translate</Link>
             </li>
             <li >
                 <Link id='sociomapnavbar'  to='/archamap/merge'>Merge</Link>
             </li>
-            {authLevel > 1 && <Link id='sociomapnavbar'  to="/archamap/admin" style={{marginLeft:20}}>Admin</Link>}
+            {authLevel > 0 &&<li className='dropdown' >
+            <Link id='sociomapnavbar' > Edit <span className="dropdown-arrow">&#x25BC;</span></Link>
+            <div className='dropdown-content' style={{ whiteSpace: 'nowrap' }} >
+                <Link to='/archamap/uploadtranslate'>Bulk Edit</Link>
+                {authLevel > 1 &&<Link to='/archamap/admin'>Admin</Link>}
+                </div>
+            </li>}
             <li className='dropdown'>
             <a
     id="sociomapnavbar"

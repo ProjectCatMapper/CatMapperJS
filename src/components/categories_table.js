@@ -8,7 +8,7 @@ import { useLocation } from 'react-router-dom';
 export default function CategoriesTable(props) {
   const columns = [
     { field: 'Domain', headerName: 'Domain', width: 500 },
-    { field: 'Count', headerName: 'Count', width: 200 },
+    { field: 'Count', headerName: 'Categories', width: 200 },
     { field: 'useskeys', headerName: 'Keys', width: 200 },
   ];
   const [rows, setRows] = useState([]);

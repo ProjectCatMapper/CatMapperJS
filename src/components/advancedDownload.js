@@ -1,6 +1,6 @@
 import {
   Dialog, DialogTitle, DialogContent, DialogActions,
-  FormControlLabel, Checkbox, Button, Typography
+  FormControlLabel, Checkbox, Button, Typography, CircularProgress
 } from '@mui/material';
 import { useState, useEffect } from 'react';
 
@@ -50,15 +50,15 @@ function saveBlob(input, filename, mime = 'text/csv;charset=utf-8') {
   setTimeout(() => URL.revokeObjectURL(url), 0);
 }
 
-const DownloadDialogButton = ({ users, database, domain }) => {
+const DownloadDialogButton = ({ users, database, domain, count,cmid_download }) => {
   const [open, setOpen] = useState(false);
-  const [includeProps, setIncludeProps] = useState(false);
   const [selectedProps, setSelectedProps] = useState([]);
   const [availableProps, setAvailableProps] = useState([]);
+  const [loading,setLoading] = useState(false);
 
   useEffect(() => {
     const fetchProps = async () => {
-      if (!users || users.length === 0 || !includeProps || !open) return;
+      if (!users || users.length === 0 || !open) return;
 
       // API for metadata appears to expect "CMID" (singular key with array value) – keep as-is
       const CMID = users.map(u => u.CMID).filter(Boolean);
@@ -85,35 +85,31 @@ const DownloadDialogButton = ({ users, database, domain }) => {
     };
 
     fetchProps();
-  }, [users, database, domain, includeProps, open]);
+  }, [users, database, domain, open]);
 
   const handleDownload = async () => {
+    setOpen(false)
     if (!users || users.length === 0) {
       alert('No data to download.');
       return;
     }
 
-    const CMID = users.map(u => u.CMID).filter(Boolean);
     const dateStr = new Date().toISOString().split('T')[0];
+    console.log(domain)
 
     try {
-      if (!includeProps) {
-        // Export what you already have in `users`
-        const fields = users[0] ? Object.keys(users[0]) : [];
-        const csv = toCsv(users, fields);
-        saveBlob(csv, `explore_results_${dateStr}.csv`);
-        setOpen(false);
-        return;
-      }
-
+      setLoading(true);
+      console.log(cmid_download)
       // Download with selected node properties from API
       const res = await fetch(`${process.env.REACT_APP_API_URL}/download/advanced/${database}`, {
+      //const res = await fetch(`http://127.0.0.1:5001/download/advanced/${database}`, {
+
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json' // ensure JSON so we can control columns
   },
-  body: JSON.stringify({ CMID, properties: selectedProps })
+  body: JSON.stringify({properties: selectedProps,domain:domain,CMIDs:cmid_download })
 });
 
 if (!res.ok) throw new Error(`Download failed: ${res.status}`);
@@ -159,35 +155,23 @@ setOpen(false);
       alert('Error downloading node properties. Check console for details.');
       console.error(error);
     }
+    finally {
+      setLoading(false);
+    };
   };
 
   return (
     <>
+    {loading && (
+                <div style={{ position: "absolute", top: "40vh", left: "50vw", transform: "translate(-50%, -50%)" }}>
+                  <CircularProgress />
+                </div>
+              )}
       <NeonButton onClick={() => setOpen(true)} label="Download Results" />
       <Dialog open={open} onClose={() => setOpen(false)}>
         <DialogTitle>Download Options</DialogTitle>
         <DialogContent>
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={!includeProps}
-                onChange={() => setIncludeProps(false)}
-              />
-            }
-            label="Download current results only"
-          />
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={includeProps}
-                onChange={() => setIncludeProps(!includeProps)}
-              />
-            }
-            label="Download results with specific properties"
-          />
-          {includeProps && (
-            <>
-              <Typography sx={{ mt: 2 }}>Select properties:</Typography>
+              <Typography sx={{ mt: 2 }}>You have {count} results to download from, select your choice of properties:</Typography>
               {availableProps.map((prop) => (
                 <FormControlLabel
                   key={prop}
@@ -206,12 +190,10 @@ setOpen(false);
                   label={prop}
                 />
               ))}
-            </>
-          )}
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setOpen(false)}>Cancel</Button>
-          <Button onClick={handleDownload} disabled={includeProps && selectedProps.length === 0}>
+          <Button onClick={handleDownload} disabled={selectedProps.length === 0}>
             Download
           </Button>
         </DialogActions>
