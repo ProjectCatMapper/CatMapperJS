@@ -1,4 +1,5 @@
-    {"ANY DOMAIN": ["ANY DOMAIN"],
+    {"ALL NODES": ["ALL NODES"],
+    "ANY DOMAIN": ["ANY DOMAIN"],
     "DATASET": ["DATASET"],
     "AREA" : ["AREA","ADM0","ADM1","ADM2","ADM3","ADM4","ADMD","ADME","ADML","ADMX","PPL","NATURAL"],
     "ETHNICITY": ["ETHNICITY"],

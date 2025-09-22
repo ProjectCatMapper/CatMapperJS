@@ -1,9 +1,8 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { Box, Button, FormControlLabel, Radio, RadioGroup, Checkbox, Typography, Divider,Select,TextField,MenuItem,InputLabel,FormControl, FormGroup,Table, TableBody, TableCell, TableContainer, TableHead, TableRow,TablePagination, Paper, Snackbar, Alert  } from '@mui/material';
 import DatasetForm from './uploadtranslateform';
 import {ExcelRenderer} from 'react-excel-renderer';
-import doptions from "./dropdown.json";
-import aoptions from "./dropdown_archamap.json";
+import domainOptions from "./dropdown.json";
 import Tooltip from '@mui/material/Tooltip';
 import InfoIcon from '@mui/icons-material/Info';
 import { useAuth } from './AuthContext';
@@ -128,6 +127,11 @@ const handleFileChange = async (e) => {
   const file = e.target.files[0];
   if (!file) return;
 
+  if (file.size > 50 * 1024 * 1024) {
+    alert(`File size exceeds 50MB limit.`);
+    return;
+  }
+
   const fileType = file.type;
   if (
       fileType === 'application/vnd.ms-excel' || 
@@ -137,6 +141,19 @@ const handleFileChange = async (e) => {
       const fileObj = file;
 
       try {
+          const data = await file.arrayBuffer();
+          const workbook = XLSX.read(data, { type: "array" });
+
+          const sheetName = workbook.SheetNames[0];
+          const worksheet = workbook.Sheets[sheetName];
+
+          const merges = worksheet["!merges"] || [];
+          if (merges.length > 0) {
+            alert("Merged cells detected. Please unmerge all cells before uploading.")
+            setFile(null);
+            return;
+          }
+          
           const resp = await new Promise((resolve, reject) => {
               ExcelRenderer(fileObj, (err, resp) => {
                   if (err) {
@@ -147,7 +164,6 @@ const handleFileChange = async (e) => {
               });
           });
 
-          
           setColumns(resp.rows[0]);
           const filteredRows = resp.rows.slice(1).filter(row => 
             row.some(value => value !== null && value !== undefined && value !== "")
@@ -163,8 +179,6 @@ const handleFileChange = async (e) => {
               return rowData;
           });
 
-          console.log(table)
-
           setNodeCount(table.length);
 
           await new Promise((resolve) => {
@@ -174,7 +188,6 @@ const handleFileChange = async (e) => {
               resolve();
           });
       } catch (error) {
-          console.error(error);
           alert('Error processing file: ' + error.message);
       }
   } else {
@@ -195,6 +208,23 @@ const handleFileChange = async (e) => {
   };
 
   const validateColumns = () => {
+
+      const seen = new Set();
+      const duplicates = new Set();
+
+      columns.forEach((item) => {
+        if (seen.has(item)) {
+          duplicates.add(item);
+        } else {
+          seen.add(item);
+        }
+      });
+
+      if (duplicates.size > 0) {
+        setError(`Duplicate column values found: ${[...duplicates].join(", ")}`);
+        return false
+      }
+
 
     if (columns.includes('datasetID')) {
       const datasetIDIndex = columns.indexOf('datasetID');
@@ -241,6 +271,27 @@ const handleFileChange = async (e) => {
       }
     }
 
+    if (["add_node",'add_uses', 'update_add'].includes(advselectedOption)){
+      if (selectedExtraColumns.includes('longitude') && !selectedExtraColumns.includes('latitude')) {
+        setError('Longitude requires Latitude to be present.');
+        return false;
+      }
+      if (selectedExtraColumns.includes('latitude') && !selectedExtraColumns.includes('longitude')) {
+        setError('Latitude requires Longitude to be present.');
+        return false;
+      }
+      if (selectedExtraColumns.includes('eventType') && !selectedExtraColumns.includes('parent')) {
+        setError('eventType requires parent to be present.');
+        return false;
+      }
+      if (selectedExtraColumns.includes('eventDate')) {
+        if (!selectedExtraColumns.includes('parent') || !selectedExtraColumns.includes('eventType')) {
+          setError('eventDate requires both parent and eventType to be present.');
+          return false;
+        }
+      }
+    }
+
     if (advselectedOption === 'update_replace') {
       if (selectedExtraColumn === 'longitude' && !columns.includes('latitude')) {
         setError('Longitude requires Latitude to be present.');
@@ -273,11 +324,13 @@ const handleFileChange = async (e) => {
   };
 
   let database = "SocioMap"
-  let dropoptions = doptions
+  let dropoptions = domainOptions
   if (useLocation().pathname.includes("archamap")) {
       database = "ArchaMap"
-      dropoptions = aoptions
     } 
+  
+  const fallbackOptions = ["Name", "Key", "CatMapper ID (CMID)"];
+  const fieldOptions = dropoptions[formData.domain] || fallbackOptions;
 
   const handleSubmit = async () => {
     const validationResult = validateColumns();
@@ -291,9 +344,9 @@ const handleFileChange = async (e) => {
       setOpenDialog(true);
       return;
     }
+
     continueWithSubmit();
   }
-
 
   const continueWithSubmit = async () => {
     setLoading(true);
@@ -303,16 +356,37 @@ const handleFileChange = async (e) => {
 
       const columnsToUse = advselectedOption === 'update_replace' || advselectedOption === 'node_replace' ? [selectedExtraColumn] : selectedExtraColumns;
 
+      if (advselectedOption === 'update_replace'){
+        if(columnsToUse[0] === "longitude"){
+        columnsToUse.push('latitude')
+        }
+        if(columnsToUse[0] === "latitude"){
+        columnsToUse.push('longitude')
+        }
+      }
+      
       const allowedColumns = new Set([
         ...Object.keys(selectedColumns).filter(col => selectedColumns[col]),
         ...columnsToUse,
       ]);
 
-      console.log(columnsToUse)
-
-
       if (advselectedOption === "add_uses" && missingCount > 0) {
         allowedColumns.add("CMName");
+        const cmNameExists = jsonData.some(row => "CMName" in row);
+
+        if (!cmNameExists) {
+          alert("CMName column is required but missing.");
+        }
+
+          const invalidRows = jsonData.filter(row => {
+            const cmidMissing = row["CMID"] == null || row["CMID"] === "";
+            const cmnameMissing = row["CMName"] == null || row["CMName"] === "";
+            return cmidMissing && cmnameMissing;
+          });
+
+          if (invalidRows.length > 0) {
+            alert("CMName must be provided when CMID is missing.");
+          }
       }
       
       const finalProduct = selectedOption === "advanced" 
@@ -329,7 +403,7 @@ const handleFileChange = async (e) => {
       }):jsonData;      
 
       const response = await fetch(`${process.env.REACT_APP_API_URL}/uploadInputNodes`,{
-      // const response = await fetch("http://127.0.0.1:5001/uploadInputNodes", {
+      //const response = await fetch("http://127.0.0.1:5001/uploadInputNodes", {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -421,8 +495,8 @@ const handleFileChange = async (e) => {
     { option: 'Adding new uses ties', description: 'Use this if you are adding new uses ties with existing nodes or if you have a mix of new nodes and existing nodes or if you have new nodes that have multiple rows of data that represent each node. This function will aggregate rows by dataset, SocioMapID or ArchaMapID (if present), and Key.' },
     { option: 'Updating existing USES only--add or add to properties ', description: 'Use this if you are updating properties for existing uses ties but not replacing any information.' },
     { option: 'Updating existing USES only--replace one property ', description: 'Use this if you are replacing or removing data from a property. This is only valid for a single property.' },
-    { option: 'Updating existing Node properties--add or add to properties ', description: 'Tbf.' },
-    { option: 'Updating existing Node properties--replace one property ', description: 'Tbf.' },
+    { option: 'Updating existing Node properties--Add new property and add to existing property values ', description: 'Tbf.' },
+    { option: 'Updating existing Node properties--Add new property and replace existing property values ', description: 'Tbf.' },
   ];
 
   const tooltipContent = (
@@ -453,7 +527,6 @@ const handleFileChange = async (e) => {
   const [selectedExtraColumns, setSelectedExtraColumns] = useState([]);
   const [selectedExtraColumn, setSelectedExtraColumn] = useState('');
   const [allRequiredColumnsFound, setAllRequiredColumnsFound] = useState(false);
-
 
   let allowedExtraColumns = ["descriptor", "Dataset", "log", "country", "dateEnd", "dateStart", "district", "eventDate", "eventType", 
     "geoCoords", "Key", "label", "latitude", "longitude", "ignoreNames", "Name", "parent","period", "parentContext", "propertyValues", 
@@ -499,7 +572,7 @@ const handleFileChange = async (e) => {
     case 'node_add':
       required=['CMID']
       if (IsDataset){
-      allowedExtraColumns = ['parent','District','names']
+      allowedExtraColumns = ['parent','District','names',]
       }
       else{
         setNodeOpen(true)
@@ -508,7 +581,7 @@ const handleFileChange = async (e) => {
     case 'node_replace':
       required=['CMID'];
       if (IsDataset){
-        allowedDatasetColumns = ["CMName","parent","District","shortName","ApplicableYears","DatasetCitation","DatasetLocation","DatasetVersion","DatasetScope","project"]
+        allowedDatasetColumns = ["CMName","parent","District","shortName","ApplicableYears","DatasetCitation","DatasetLocation","DatasetVersion","DatasetScope","project","recordStart","recordEnd","yearPublished"]
       }
       else{
         allowedExtraColumns = ["CMName","glottocode","FIPS","ISO2","ISO3","ISONumeric"]
@@ -771,7 +844,7 @@ const handleFileChange = async (e) => {
             sx={{width: 300,height:40 }}
             margin="normal"
           >
-            {Object.keys(dropoptions).map((key) => (
+            {fieldOptions.map((key)  => (
           <MenuItem key={key} value={key}>
             {key}
           </MenuItem>
@@ -903,8 +976,8 @@ const handleFileChange = async (e) => {
         <FormControlLabel value="add_uses" control={<Radio />} label="Adding new uses ties (with old or new nodes)" />
         {authLevel === 2 &&<FormControlLabel value="update_add" control={<Radio />} label="Updating existing USES only--add or add to properties" />}
         {authLevel === 2 &&<FormControlLabel value="update_replace" control={<Radio />} label="Updating existing USES only--replace one property" />}
-        {authLevel === 2 &&<FormControlLabel value="node_add" control={<Radio />} label="Updating existing Node properties--add or add to properties" />}
-        {authLevel === 2 &&<FormControlLabel value="node_replace" control={<Radio />} label="Updating existing Node properties--replace one property" />}
+        {authLevel === 2 &&<FormControlLabel value="node_add" control={<Radio />} label="Updating existing Node properties--Add new property and add to existing property values" />}
+        {authLevel === 2 &&<FormControlLabel value="node_replace" control={<Radio />} label="Updating existing Node properties--Add new property and replace existing property values" />}
       </RadioGroup>
 
       <FormControl component="fieldset" sx={{ mb: 2 }}>
@@ -980,7 +1053,7 @@ const handleFileChange = async (e) => {
         <Select
           value={selectedExtraColumn}
           onChange={handleSingleExtraColumnChange}
-          style={{width:"7vw"}}
+          style={{width:"10vw"}}
         >
           {extraColumns.map((col) => (
             <MenuItem key={col} value={col}>

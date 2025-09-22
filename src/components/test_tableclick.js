@@ -160,11 +160,11 @@ export default function Tableclick(props) {
       "BIOTA",
       "FEATURE",
       "SITE",
-      "ADM4",
-      "ADM3",
-      "ADM2",
-      "ADM1",
       "ADM0",
+      "ADM1",
+      "ADM2",
+      "ADM3",
+      "ADM4",
       "ADMD",
       "ADME",
       "ADML",
@@ -208,12 +208,12 @@ export default function Tableclick(props) {
   "KINGDOM": "#ffd8b1", // peach
   "BIOTA": "#000080", // navy
   "FEATURE": "#808080", // gray
-  "SITE": "#FFFFFF", // white
-  "ADM4": "#a9a9a9", // dark gray
-  "ADM3": "#1f77b4", // medium blue
-  "ADM2": "#ff7f0e", // bright orange
-  "ADM1": "#2ca02c", // bright green
+  "SITE": "#7b4173", // plum
   "ADM0": "#d62728", // crimson
+  "ADM1": "#2ca02c", // bright green
+  "ADM2": "#ff7f0e", // bright orange
+  "ADM3": "#1f77b4", // medium blue
+  "ADM4": "#a9a9a9", // dark gray
   "ADMD": "#9467bd", // lavender purple
   "ADME": "#8c564b", // dark brown
   "ADML": "#e377c2", // light pink
@@ -246,11 +246,8 @@ export default function Tableclick(props) {
   };
 
   useEffect(() => {
-    fetch(
-      `${process.env.REACT_APP_API_URL}/category?cmid=` +
-        props.cmid.cmid +
-        "&database=" +
-        database,
+    setLoading(true);
+    fetch(`${process.env.REACT_APP_API_URL}/category?cmid=` + props.cmid.cmid + "&database=" + database,
       //fetch("http://127.0.0.1:5001/category?cmid=" + props.cmid.cmid + "&database="+ database,
       {
         method: "GET",
@@ -267,7 +264,6 @@ export default function Tableclick(props) {
         setPoints(data.points);
         setDatasetPoints(data.datasetpoints);
         setfdrop(data.relnames);
-        console.log(data.relnames)
         setbadsources(data.badsources);
         setOpen(Boolean(data.badsources?.length));
 
@@ -277,7 +273,6 @@ export default function Tableclick(props) {
 
         const pointsToUse = data.datasetpoints && data.datasetpoints.length > 0 ? data.datasetpoints : data.points;
         
-
         const uniqueSources = [
           ...new Set([
             ...pointsToUse.map((point) => point.source),
@@ -288,7 +283,13 @@ export default function Tableclick(props) {
         ];
 
         setsources(uniqueSources);
-      });
+      })
+      .catch((err) => {
+      console.error("Error fetching category:", err);
+    })
+    .finally(() => {
+      setLoading(false);
+    });
   }, []);
 
   useEffect(() => {
@@ -346,7 +347,7 @@ export default function Tableclick(props) {
           }),
         });
       } else {
-        // response = await fetch("http://127.0.0.1:5001/dataset?cmid=" + props.cmid.cmid + "&database=" +database+ "&domain=" + datasetdomainValue+ "&children=" + rememberChoice,{method: "GET"})
+        //response = await fetch("http://127.0.0.1:5001/dataset?cmid=" + props.cmid.cmid + "&database=" +database+ "&domain=" + adjustedDomain+ "&children=" + rememberChoice,{method: "GET"})
         response = await fetch(
           `${process.env.REACT_APP_API_URL}/dataset?cmid=` +
             props.cmid.cmid +
@@ -425,6 +426,7 @@ export default function Tableclick(props) {
 
   const fetchData = async (event) => {
     try {
+      console.log(rev)
       //const response = await fetch("http://127.0.0.1:5001/networksjs?cmid=" + props.cmid.cmid + "&database=" +database+ "&relation=" + event.target.value + "&response=records");
       const response = await fetch(
         `${process.env.REACT_APP_API_URL}/networksjs?cmid=` +
@@ -604,7 +606,6 @@ export default function Tableclick(props) {
         style={{
           backgroundColor: "white",
           width: "100%",
-          height: "auto",
           color: "black",
         }}
       >
@@ -720,7 +721,7 @@ export default function Tableclick(props) {
                 }}
                 onClick={datasetButtonClick}
               >
-                Download Dataset Relationships
+                Download Dataset Categories and Metadata
               </Button>
               {loading && <LoadingSpinner />}
               <FormControlLabel
@@ -759,9 +760,9 @@ export default function Tableclick(props) {
               Download Logs
             </Button>
         </Box>
+        {loading && <LoadingSpinner />}
         <Box
           sx={{
-            height: "auto",
             position: "relative",
             left: "10px",
             top: boxHeight + 100,
@@ -792,7 +793,7 @@ export default function Tableclick(props) {
                     top: "10",
                     left: "200",
                     width: "95%",
-                    height: "60vh",
+                    height: "80vh",
                   }}
                 >
                   {mapt.length !== 0 || datasetpoints.length !== 0 ? (
@@ -827,6 +828,12 @@ export default function Tableclick(props) {
               </CustomTabPanel>
               <CustomTabPanel value={value} index={0}>
                 <div>
+                  <Typography variant="h6" sx={{ mb: 1 }}>
+                    Double click on node to move to that node's info page
+                  </Typography>
+                  <Typography variant="h6" sx={{ mb: 1 }}>
+                    No more than ten nodes are shown in the network, use the Nodes dropdown to view up to 200 nodes. 
+                  </Typography>
                   <FormControl sx={{ m: 1, width: 300 }}>
                     <InputLabel htmlFor="first-dropdown">
                       Relationship
@@ -943,6 +950,9 @@ export default function Tableclick(props) {
                 <div>
                   <Typography variant="h6" sx={{ mb: 1 }}>
                     Double click on node to move to that node's info page
+                  </Typography>
+                  <Typography variant="h6" sx={{ mb: 1 }}>
+                    No more than ten nodes are shown in the network, use the Nodes dropdown to view up to 200 nodes. 
                   </Typography>
                   <FormControl sx={{ m: 1, width: 300 }}>
                     <InputLabel htmlFor="first-dropdown">
@@ -1110,6 +1120,7 @@ export default function Tableclick(props) {
               >
                 Contact
               </Link>
+              <Link to="/download" id="catmapperfooter" underline="none" style={{ color: "white", textDecoration: "none", margin: "0 8px" }}> Download</Link>
             </Box>
           </Box>{" "}
         </div>

@@ -1,17 +1,38 @@
-import React from 'react'
+import {useEffect,useState} from 'react'
 import {Link} from 'react-router-dom'
-import './video.css'
+import './arch_video.css'
 
 import cvideo from "../assets/new.mp4"
 
-const video = () => {
+const Video = () => {
+
+  const [displayData, setDisplayData] = useState([]);
+  
+    useEffect(() => {
+        fetch(`${process.env.REACT_APP_API_URL}/homepagecount?database=ArchaMap`, {
+          method: "GET"
+        })
+          .then(response => response.json())
+          .then(data => {
+            setDisplayData(data)
+          })
+        .catch(err => console.error("Failed to fetch progress", err));
+    }, []);
+  
+
   return (
-    <div className='hero'>
+    <div className='hero' style={{marginBottom:"2rem"}}>
         <video autoPlay loop muted id='video'>
             <source src={cvideo} type='video/mp4' />
         </video>
-    <div className='content'>
-       <h1 id='sociomapvideo'>Ceramics.Periods.Sites</h1>
+    <div className='archacontent'>
+      {displayData.length > 0 &&
+      (<h1 id="sociomapvideo" className="stacked">
+        <div>{displayData[0].node_count} Sites</div>
+        <div>{displayData[3].node_count} Artifact Types</div>
+        <div>{displayData[1].node_count} Periods</div>
+        <div>{displayData[2].node_count} Cultures</div>
+      </h1>)}
        <p id='sociomapvideo'>ArchaMap organizes categories of material objects used in archaeology, including sites, ceramic types, lithic and projectile point types, and faunal types. Our hope in the future is to extend CatMapper’s capabilities to other classes of complex, dynamic categories.</p>
     <div>
        <Link id='sociomapvideo' to='/archamap/explore' className='btn'>Explore</Link>
@@ -22,4 +43,4 @@ const video = () => {
   )
 }
 
-export default video
+export default Video

@@ -20,7 +20,6 @@ import image from '../assets/white.png'
 import { Link } from 'react-router-dom'
 import Divider from '@mui/material/Divider';
 
-
 function createData(names,nodes, encodings, contains,context ) {
   return { names, nodes, encodings, contains, context };
 }
@@ -94,22 +93,65 @@ const Footer = () => {
             .then(response => {
                 return response.json()
             })
-            .then(data => {setrows([
-              createData(data.nodes[3].current),
-              createData("Biota",data.nodes[0].current,(data.encodings[0].current/data.nodes[0].current).toFixed(2),"x",""),
-              createData("Ceramics",data.nodes[1].current,(data.encodings[1].current/data.nodes[1].current).toFixed(2),"x",""),
-              createData("Cultures",data.nodes[2].current,(data.encodings[2].current/data.nodes[2].current).toFixed(2),"x",""),
-              createData("Areas",data.nodes[4].current,(data.encodings[3].current/data.nodes[4].current).toFixed(2),"x",data.relations[1].current),
-              createData("Periods",data.nodes[5].current,(data.encodings[4].current/data.nodes[5].current).toFixed(2),"x",data.relations[2].current),
-              createData("Projectile points",data.nodes[6].current,(data.encodings[5].current/data.nodes[6].current).toFixed(2),"x",""),
-              createData("Stone",data.nodes[7].current,(data.encodings[6].current/data.nodes[7].current).toFixed(2),"x",""),
-              createData("Variables",data.nodes[8].current,(data.encodings[7].current/data.nodes[8].current).toFixed(2),"x",""),
-              createData("Total",data.nodes[0].current+ data.nodes[1].current +data.nodes[2].current+data.nodes[4].current+data.nodes[5].current+data.nodes[6].current+data.nodes[7].current+data.nodes[8].current,
-                (data.relations[3].current/(data.nodes[0].current+ data.nodes[1].current +data.nodes[2].current+data.nodes[4].current+data.nodes[5].current+data.nodes[6].current+data.nodes[7].current+data.nodes[8].current)).toFixed(2),
-                data.relations[0].current,data.relations[1].current+data.relations[2].current
-               ),
-            ])
+            .then(data => {const nodeMap = {};
+      const encodingMap = {};
+      const relationMap = {};
+
+      data.nodes.forEach(n => { nodeMap[n.label] = n.current; });
+      data.encodings.forEach(e => { encodingMap[e.label] = e.current; });
+      data.relations.forEach(r => { relationMap[r.label] = r.current; });
+
+      // Define explicit relation mapping
+      const nodeToRelationMap = {
+        "AREAS": "AREA OF",
+        "PERIODS": "PERIOD OF",
+        "CULTURES": "CULTURE OF",
+        // Add more mappings if new types gain relations
+      };
+
+      const rows = [];
+
+      // Add DATASETS row if present
+      if (nodeMap["DATASETS"] !== undefined) {
+        rows.push(createData("Datasets", nodeMap["DATASETS"], "", "", ""));
+      }
+
+      let totalNodes = 0;
+
+      Object.entries(nodeMap).forEach(([label, count]) => {
+        if (label === "DATASETS") return;
+
+        const encoding = encodingMap[label] || 0;
+        const encodingPerNode = count > 0 ? (encoding / count).toFixed(2) : "0.00";
+        const relationLabel = nodeToRelationMap[label];
+        const relation = relationLabel ? (relationMap[relationLabel] || "") : "";
+
+        rows.push(
+          createData(label, count, encodingPerNode, "x", relation)
+        );
+
+        totalNodes += count;
+      });
+
+      const totalContains = relationMap["CONTAINS"] || 0;
+
+      const totalRelationSum = Object.entries(nodeToRelationMap).reduce((sum, [, relationLabel]) => {
+        return sum + (relationMap[relationLabel] || 0);
+      }, 0);
+
+      rows.push(
+        createData(
+          "Total",
+          totalNodes,
+          totalNodes > 0 ? (totalContains / totalNodes).toFixed(2) : "0.00",
+          totalContains,
+          totalRelationSum
+        )
+      );
+
+      setrows(rows);
             })
+            .catch(err => console.error("Failed to fetch progress", err));
     },[])
 
   return (
@@ -131,63 +173,73 @@ const Footer = () => {
     </Card >
       </Grid>
 
-      <Grid item xs={6}>
-      <Card variant="outlined" style={{backgroundColor: 'black',border: '1px solid white',}}>
-        <CardContent>
-      <Typography id="sociomapfooter" sx={{ fontSize: 20 }} color="#fff" gutterBottom>
-        Dataset Progress &nbsp; 
-        <Button
-        variant="contained"
-        size="small"
-        color="primary"
-        sx={{
-          backgroundColor: 'blue',
-          color: 'white', 
-          '&:hover': {
-            backgroundColor: 'green', 
-          },fontSize: '0.6rem', padding: '4px 8px'
-        }}
-        onClick={handleButtonClick}
-      >
-Download datasets list      </Button>&nbsp;
-
-
-DATASETS: {rows[0]?.names}
-      </Typography>
-      <Typography variant="table" color="#000" component="div">
-      <TableContainer component={Paper}>
-      <Table sx={{ minWidth: 650 }} size="small" aria-label="a dense table">
-        <TableHead>
-          <TableRow>
-            <TableCell align="justify"></TableCell>
-            <TableCell align="justify">Nodes</TableCell>
-            <TableCell >Dataset Encodings per node</TableCell>
-            <TableCell align="justify" >Contains ties</TableCell>
-            <TableCell align="justify">Context ties</TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-        {rows.filter((_, index) => index !== 0).map((row) => (
-            <TableRow
-              key={row.name}
-              sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+      <Grid item xs={12} md={6}>
+            <Card
+              variant="outlined"
+              sx={{
+                backgroundColor: "black",
+                border: "1px solid white",
+              }}
             >
-              <TableCell component="th" scope="row">
-                {row.names}
-              </TableCell>
-              <TableCell align="left">{row.nodes}</TableCell>
-              <TableCell align="left">{row.encodings}</TableCell>
-              <TableCell align="left">{row.contains}</TableCell>
-              <TableCell align="left">{row.context}</TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </TableContainer>
-      </Typography>
-    </CardContent>
-    </Card>
-      </Grid>
+              <CardContent>
+                <Typography
+                  id="sociomapfooter"
+                  sx={{ fontSize: 20 }}
+                  color="#fff"
+                  gutterBottom
+                >
+                  Dataset Progress &nbsp;
+                  <Button
+                    variant="contained"
+                    size="small"
+                    sx={{
+                      backgroundColor: "blue",
+                      color: "white",
+                      "&:hover": {
+                        backgroundColor: "green",
+                      },
+                      fontSize: "0.6rem",
+                      px: 1,
+                      py: 0.5,
+                    }}
+                    onClick={handleButtonClick}
+                  >
+                    Download datasets list
+                  </Button>
+                  &nbsp; DATASETS: {rows[0]?.nodes ?? "Loading..."}
+                </Typography>
+
+                <TableContainer component={Paper}>
+                  <Table
+                    sx={{ minWidth: 650, backgroundColor: "#f5f5f5" }}
+                    size="small"
+                    aria-label="dataset progress table"
+                  >
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>Type</TableCell>
+                        <TableCell>Nodes</TableCell>
+                        <TableCell>Datasets per node</TableCell>
+                        <TableCell>Context ties</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {rows.slice(1).map((row) => (
+                        <TableRow key={row.names}>
+                          <TableCell component="th" scope="row">
+                            {row.names}
+                          </TableCell>
+                          <TableCell>{row.nodes}</TableCell>
+                          <TableCell>{row.encodings}</TableCell>
+                          <TableCell>{row.context}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              </CardContent>
+            </Card>
+          </Grid>
 
       </Grid>        
     </Box>

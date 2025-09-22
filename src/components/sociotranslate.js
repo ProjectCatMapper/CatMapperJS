@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
-import doptions from "./dropdown.json";
-import aoptions from "./dropdown_archamap.json";
+import domainOptions from "./dropdown.json";
 import {Select, MenuItem } from '@mui/material';
 import {ExcelRenderer} from 'react-excel-renderer';
 import Papa from 'papaparse';
@@ -62,6 +61,7 @@ function Sociotranslate(){
   let selectedColumnValues = ""
   const [jsonData, setJsondata] = useState();
   let query = "false"
+  const fallbackOptions = ["Name", "Key", "CatMapper ID (CMID)"];
 
   const [isRowsChecked, setIsRowsChecked] = useState(false);
 
@@ -118,7 +118,8 @@ if (useLocation().pathname.includes("archamap")) {
       { label: 'DATASET', keys: ['DATASET'] },
       { label: 'PERIOD', keys: ['PERIOD'] },
       { label: 'PROJECTILE_POINT TO PROJECTILE_POINT_TYPE', keys: ['PROJECTILE_POINT','PROJECTILE_POINT_CLUSTER','PROJECTILE_POINT_TYPE'] },
-      { label: 'VARIABLE', keys: ['VARIABLE'] }
+      { label: 'VARIABLE', keys: ['VARIABLE'] },
+      { label: 'GENERIC', keys: ['GENERIC'] }
     ];
   } 
 
@@ -154,12 +155,13 @@ const handleClick = async () => {
     setProgress(50);
 
     if (!response.ok) {
-      throw new Error('Network response was not ok');
+      alert('Propose translate was not completed, please check your matching column for unusual characters and please contact the CatMapper team if the issue persists.');
     }
 
     const responseData = await response.json();
+    console.log(responseData)
 
-    const allKeys = Object.keys(responseData[0]);
+    const allKeys = responseData.order;
 
     const matchedColumn = zeroDropdownValue;
 
@@ -170,7 +172,7 @@ const handleClick = async () => {
       'CMName_',
       'CMID_',
       'label_',
-      'country_'
+      'CMcountry_',
     ];
 
     const suffixColumns = patternPrefixes.map(prefix => prefix + zeroDropdownValue).filter(col => allKeys.includes(col));
@@ -185,18 +187,19 @@ const handleClick = async () => {
       ...remainingColumns
     ];
 
-    setData(responseData);
+  
+    setData(responseData.file);
     setColumns(reorderedColumns)
-    setRows(responseData.map(row => reorderedColumns.map(key => row[key])));
+    setRows(responseData.file.map(row => reorderedColumns.map(key => row[key])));
     setProgress(80);
 
-    const matchTypeCounts = responseData.reduce((acc, row) => {
+    const matchTypeCounts = responseData.file.reduce((acc, row) => {
       const matchType = row['matchType_'+zeroDropdownValue]
       acc[matchType] = acc[matchType] ? acc[matchType] + 1 : 1;
       return acc;
     }, {});
 
-    const total = responseData.length;
+    const total = responseData.file.length;
     const matchTypePercentages = Object.keys(matchTypeCounts).reduce((acc, key) => {
       acc[key] = (matchTypeCounts[key] / total * 100).toFixed(2) + '%';
       return acc;
@@ -240,77 +243,14 @@ const handleclear = () => {
 const [inputValue, setinputValue] = useState(-4000);
 const [inputValuetwo, setinputValuetwo] = useState(2024);        
 
-// const handleFileChange = (event) => {
-//       const fileType = event.target.files[0].type;
-//       setFilename(event.target.files[0].name.split('.').slice(0, -1).join('.'));
-//       if (fileType === 'application/vnd.ms-excel' || fileType === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') {
-//         // File is either CSV or XLSX
-//         setSelectedFile(event.target.files[0]);
-//         fileObj = event.target.files[0];
-
-// ExcelRenderer(fileObj, (err, resp) => {
-//   if(err){
-//     console.log(err);            
-//   }
-//   else{
-//     const firstRow = resp.rows[0];
-//         const column_check = [];
-
-//         try {
-//           for (let i = 0; i < firstRow.length; i++) {
-//             if (firstRow[i] === undefined || firstRow[i].trim() === "") {
-//               throw new Error(`Missing column name at index ${i}`);
-//             }
-//             column_check.push(firstRow[i]);
-//           }
-//         } catch (err) {
-//           setError(err.message);
-//         }
-
-
-//     setColumns(column_check);
-
-
-//     const processedRows = resp.rows.slice(1).map(row => {
-//       const fullRow = Array(column_check.length).fill(null);
-//       row.forEach((cell, index) => {
-//         if (typeof cell === 'string') {
-//           cell = cell.replace(/^['"]|['"]$/g, '');
-//         }
-//         fullRow[index] = cell !== undefined ? cell : null;
-//       });
-//       return fullRow;
-//     });
-
-//     const filteredRows = processedRows.filter(row => {
-//       return row.some(cell => cell !== null && cell !== '');
-//     });
-
-
-//     setRows(filteredRows);
-
-//     const table = filteredRows.map((row, index) => {
-//       const rowData = {};
-//       column_check.forEach((column, columnIndex) => {
-//         rowData[column] = row[columnIndex];
-//       });
-//       //rowData['key'] = index + 1;
-//       return rowData;
-//     });
-//     setJsondata(table)
-//   }
-// });  
-//       } else {
-//         // Invalid file type
-//         alert('Please upload a valid CSV or XLSX file.');
-//         event.target.value = null; // Clear the file input
-//         setSelectedFile(null);
-//       }
-//   };
-
-const handleFileChange = (event) => {
+const handleFileChange = async (event) => {
   const file = event.target.files[0];
   if (!file) return;
+
+  if (file.size > 50 * 1024 * 1024) {
+    setError(`File size exceeds 50MB limit.`);
+    return;
+  }
 
   const fileName = file.name;
   const fileExtension = fileName.split('.').pop().toLowerCase();
@@ -379,6 +319,17 @@ const handleFileChange = (event) => {
       },
     });
   } else if (fileExtension === 'xlsx' || fileExtension === 'xls') {
+      const data = await file.arrayBuffer();
+      const workbook = XLSX.read(data, { type: 'array', dense: true });
+
+      const sheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[sheetName];
+
+      const merges = worksheet["!merges"] || [];
+      if (merges.length > 0) {
+        alert("Merged cells detected. Please unmerge all cells before uploading.")
+        return;
+      }
     ExcelRenderer(file, (err, resp) => {
       if (err) {
         setError(`Excel Parsing Error: ${err.message}`);
@@ -396,8 +347,6 @@ const handleFileChange = (event) => {
   const getRowStyle = (row) => {
     const statusIndex = columns.findIndex(col => col === 'matchType_'+zeroDropdownValue);
     const status = row[statusIndex];
-
-    console.log(row)
   
     return getClassForStatus(status);
   };
@@ -407,7 +356,6 @@ const handleFileChange = (event) => {
     if (status === undefined) {
       return 'color-undefined';
     }
-    console.log(status)
     status = (status && typeof status === "string") ? status.trim() : status;
 
     switch (status) {
@@ -451,44 +399,8 @@ const handleFileChange = (event) => {
   ]).filter(Boolean);
 
   useEffect(() => {
-    if (database === "SocioMap") {
-    setsvalues(doptions[firstDropdownValue])
-  }
-    else{
-      setsvalues(aoptions[firstDropdownValue])
-    }
-  }, [firstDropdownValue])
-
-  // const Terminology = [
-  //   { label: 'Choose column to match', description: 'Which column in the input dataset do you want to find matches for in CatMapper' },
-  //   { label: 'Select category domain', description: 'From which category domain do you want to find matches?' },
-  //   { label: 'Property to match', description: 'For the column you are matching, is it a Name, a CMID, a Key, or some other property? For beginners this will be Name.' },
-  //   { label: 'Limit by Country', description: 'This permits limiting matches to categories associated with a specific country.  This requires a column with the CMID for the country.' },
-  //   { label: 'Limit by Contex', description: 'This permits limiting matches to categories that are contained by specific contexts (e.g. only counties in Ohio).  This requires a column with the CMID for the context (e.g. Ohio).' },
-  //   { label: 'Limit by Dataset', description: 'This permits limiting matches to categories used by a specific dataset.  This requires a column with the CMID for the datasetID.' },
-  // ];
-
-  // const tooltipContent = (
-  //   <div style={{ maxWidth: '400px' }}>
-  //     <h4>Terminology Descriptions</h4>
-  //     <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-  //       <thead>
-  //         <tr>
-  //           <th style={{ borderBottom: '1px solid #ddd', textAlign: 'left', padding: '8px' }}>Label</th>
-  //           <th style={{ borderBottom: '1px solid #ddd', textAlign: 'left', padding: '8px' }}>Description</th>
-  //         </tr>
-  //       </thead>
-  //       <tbody>
-  //         {Terminology.map((category, index) => (
-  //           <tr key={index}>
-  //             <td style={{ borderBottom: '1px solid #ddd', padding: '8px' }}>{category.label}</td>
-  //             <td style={{ borderBottom: '1px solid #ddd', padding: '8px' }}>{category.description}</td>
-  //           </tr>
-  //         ))}
-  //       </tbody>
-  //     </table>
-  //   </div>
-  // );
+    setsvalues(domainOptions[firstDropdownValue] || fallbackOptions);
+  }, [firstDropdownValue]);
 
   const getTooltipContent = (num) => {
     const tooltipTexts = {
@@ -508,8 +420,9 @@ const handleFileChange = (event) => {
   };
 
   return (
-    <Box sx={{ backgroundColor: 'black', opacity: 1,flexGrow: 1  }} >
-    <div  style={{width:"26%",height:"90%", backgroundColor : '#e0e0e0', padding: '20px',border: '1px solid #ccc',borderRadius : '10px', margin: '10px', overflow:"auto",position:"absolute"}}>
+    <Box sx={{ backgroundColor: 'black', opacity: 1,flexGrow: 1,display: 'flex',flexDirection: 'column' }}>
+      <Box sx={{ display: 'flex', flexDirection: 'row', gap: 0.5, flexGrow: 1 }}>
+    <div  style={{width:"26%", backgroundColor : '#e0e0e0', padding: '20px',border: '1px solid #ccc',borderRadius : '10px', overflow:"auto"}}>
       <Box sx={{ display: 'flex', alignItems: 'center' }}>
         <p style={{fontWeight: "bold", marginLeft: 7, padding: "2px" }}>Choose spreadsheet to match</p>
         <Tooltip title={getTooltipContent(1)} arrow>
@@ -702,7 +615,7 @@ const handleFileChange = (event) => {
       </Backdrop>
       <Box sx={{ display: 'flex', alignItems: 'center' }}>
       <Typography variant="body1" sx={{ marginRight: 2, color: 'black', fontWeight: 500 }}>
-        Unique Rows?
+        Assign many-to-one to identical spellings
       </Typography>
 
       <FormControlLabel
@@ -757,7 +670,7 @@ const handleFileChange = (event) => {
         </DialogActions>
       </Dialog>
     </div>
-    <div style={{top:100,width:"72%", height:"90%", backgroundColor:"white", padding: '20px',border: '1px solid #ccc',borderRadius : '10px', marginLeft: "27%",position:"absolute",overflow: 'auto'}}>
+    <div style={{width:"72%", backgroundColor:"white", padding: '20px',border: '1px solid #ccc',borderRadius : '10px',overflow: 'auto'}}>
     {columns.length > 0 && rows.length > 0 && (
         <>
           <TableContainer component={Paper} sx={{ width: '100%', overflow: 'auto' }}>
@@ -800,7 +713,8 @@ const handleFileChange = (event) => {
         </>
       )}
       </div>
-      <div style={{top:1070,width:"100%", height:"10%", backgroundColor:"black", padding: '20px',position:"absolute"}}>
+      </Box>
+      <div style={{width:"100%", backgroundColor:"black", padding: '20px'}}>
       <Divider sx={{ marginLeft:1,marginRight:1, backgroundColor: 'white' }} />
 
 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 2, mb:0 }}>
@@ -812,6 +726,7 @@ const handleFileChange = (event) => {
     <Link to="/citation" id="catmapperfooter"  underline="none" style={{ color: 'white', textDecoration: 'none', margin: '0 8px' }}>Citation</Link>
     <Link to="/terms" id="catmapperfooter"  underline="none" style={{ color: 'white', textDecoration: 'none', margin: '0 8px' }}>Terms</Link>
     <Link to="/contact" id="catmapperfooter"  underline="none" style={{ color: 'white', textDecoration: 'none', margin: '0 8px' }}>Contact</Link>
+    <Link to="/download" id="catmapperfooter" underline="none" style={{ color: "white", textDecoration: "none", margin: "0 8px" }}> Download</Link>
   </Box>
 </Box>      </div>
     </Box>
