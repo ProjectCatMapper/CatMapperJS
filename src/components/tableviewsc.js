@@ -35,7 +35,7 @@ export default function DataTable({ users, snackbarOpen, setSnackbarOpen }) {
     {
       field: 'spacer1', // Dummy field for space
       headerName: '',
-      width: 50, // Set desired width for the space
+      width: 50, 
       sortable: false,
       filterable: false,
       disableColumnMenu: true,
@@ -89,7 +89,8 @@ export default function DataTable({ users, snackbarOpen, setSnackbarOpen }) {
           },
         }}
         pageSizeOptions={[10, 30, 50]}
-        onRowClick={handleRowClick}
+        //onRowClick={handleRowClick}
+        onRowDoubleClick={handleRowClick}
         localeText={{ noRowsLabel: "" }} />
     <Snackbar
         open={snackbarOpen}
