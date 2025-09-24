@@ -529,7 +529,7 @@ const handleFileChange = async (e) => {
   const [allRequiredColumnsFound, setAllRequiredColumnsFound] = useState(false);
 
   let allowedExtraColumns = ["descriptor", "Dataset", "log", "country", "dateEnd", "dateStart", "district", "eventDate", "eventType", 
-    "geoCoords", "Key", "label", "latitude", "longitude", "ignoreNames", "Name", "parent","period", "parentContext", "propertyValues", 
+    "geoCoords", "Key","NewKey", "label", "latitude", "longitude", "ignoreNames", "Name", "parent","period", "parentContext", "propertyValues", 
     "rawDate", "Rfunction", "Rtransform", "recordEnd", "recordStart", "sampleSize", "transform", "categoryType", "url", "variableDescription", 
     "yearEnd", "yearStart", "language", "populationEstimate", "religion", "geoPolygon","glottocode","FIPS","ISO2","ISO3","ISONumeric","comment","polity","occupation","culture","yearPublished"]
   let allowedDatasetColumns = []
@@ -605,8 +605,10 @@ const handleFileChange = async (e) => {
   if (['add_node','add_uses', 'update_add','update_replace','node_add','node_replace'].includes(advselectedOption)) {
     // const extraCols = columns
     //   .filter((col) => !required.includes(col))
-    //   .filter((col) => allowedExtraColumns.includes(col)); 
-    let extraCols = columns.filter((col) => !required.includes(col));
+    //   .filter((col) => allowedExtraColumns.includes(col));
+    console.log(columns)
+    let extraCols = columns.filter((col) => {
+      return !required.includes(col)});
 
     if (allowedDatasetColumns.length > 0) {
       extraCols = extraCols.filter((col) => allowedDatasetColumns.includes(col));

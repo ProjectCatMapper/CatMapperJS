@@ -26,10 +26,10 @@ const Video = () => {
     <div className='sociocontent'>
       {displayData.length > 0 &&
       (<h1 id="sociomapvideo" className="stacked">
-        <div>{displayData[0].node_count} Ethnicities</div>
-        <div>{displayData[1].node_count} Religions</div>
-        <div>{displayData[2].node_count} Languages</div>
-        <div>{displayData[3].node_count} Districts</div>
+        <div>{Math.floor(displayData[0].node_count / 1000) * 1000}+ Ethnicities</div>
+        <div>{Math.floor(displayData[1].node_count / 1000) * 1000}+ Religions</div>
+        <div>{Math.floor(displayData[2].node_count / 1000) * 1000}+ Languages</div>
+        <div>{Math.floor(displayData[3].node_count / 1000) * 1000}+ Districts</div>
       </h1>)}
        <p id='sociomapvideo'>SocioMap organizes dynamic and complex category systems commonly used by social scientists and policymakers, including ethnicities, languages, religions, and political districts. Each of these systems includes thousands of categories encoded in diverse, dynamic and incompatible ways across a growing corpus of thousands of datasets. SocioMap helps organize these categories so that users can merge diverse datasets for novel analyses.</p>
     <div>
