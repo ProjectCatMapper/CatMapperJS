@@ -267,6 +267,8 @@ export default function Tableclick(props) {
         setbadsources(data.badsources);
         setOpen(Boolean(data.badsources?.length));
 
+        console.log(data.info)
+
         const maptFeatures = data.polygons?.features?.length
           ? data.polygons.features
           : data.polygons;
