@@ -10,6 +10,6 @@ mkdir -p "$TMPDIR" "$npm_config_cache"
 
 npm run build
 
-cp -r build/. /mnt/storage/app/nginx/html/
+rsync -av --delete build/ /mnt/storage/app/nginx/html/
 
 echo "Done!"

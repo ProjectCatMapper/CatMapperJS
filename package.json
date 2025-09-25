@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "homepage": "/",
-  "proxy": "http://catmapper.org/api",
+  "proxy": "https://test.catmapper.org",
   "dependencies": {
     "@auth0/auth0-react": "^2.2.1",
     "@changey/react-leaflet-markercluster": "^4.0.0-rc1",
