@@ -529,7 +529,7 @@ const handleFileChange = async (e) => {
   const [allRequiredColumnsFound, setAllRequiredColumnsFound] = useState(false);
 
   let allowedExtraColumns = ["descriptor", "Dataset", "log", "country", "dateEnd", "dateStart", "district", "eventDate", "eventType", 
-    "geoCoords", "Key", "label", "latitude", "longitude", "ignoreNames", "Name", "parent","period", "parentContext", "propertyValues", 
+    "geoCoords", "Key","NewKey", "label", "latitude", "longitude", "ignoreNames", "Name", "parent","period", "parentContext", "propertyValues", 
     "rawDate", "Rfunction", "Rtransform", "recordEnd", "recordStart", "sampleSize", "transform", "categoryType", "url", "variableDescription", 
     "yearEnd", "yearStart", "language", "populationEstimate", "religion", "geoPolygon","glottocode","FIPS","ISO2","ISO3","ISONumeric","comment","polity","occupation","culture","yearPublished"]
   let allowedDatasetColumns = []
@@ -570,12 +570,12 @@ const handleFileChange = async (e) => {
       required = ['CMID', 'Key', 'datasetID'];
       break;
     case 'node_add':
-      required=['CMID']
+      required=['CMID'];
       if (IsDataset){
-      allowedExtraColumns = ['parent','District','names',]
+        allowedDatasetColumns = ["CMName","parent","District","shortName","ApplicableYears","DatasetCitation","DatasetLocation","DatasetVersion","DatasetScope","project","recordStart","recordEnd","yearPublished","names"]
       }
       else{
-        setNodeOpen(true)
+        allowedExtraColumns = ["CMName","glottocode","FIPS","ISO2","ISO3","ISONumeric"]
       }
       break;
     case 'node_replace':
@@ -605,8 +605,10 @@ const handleFileChange = async (e) => {
   if (['add_node','add_uses', 'update_add','update_replace','node_add','node_replace'].includes(advselectedOption)) {
     // const extraCols = columns
     //   .filter((col) => !required.includes(col))
-    //   .filter((col) => allowedExtraColumns.includes(col)); 
-    let extraCols = columns.filter((col) => !required.includes(col));
+    //   .filter((col) => allowedExtraColumns.includes(col));
+    console.log(columns)
+    let extraCols = columns.filter((col) => {
+      return !required.includes(col)});
 
     if (allowedDatasetColumns.length > 0) {
       extraCols = extraCols.filter((col) => allowedDatasetColumns.includes(col));
@@ -976,8 +978,8 @@ const handleFileChange = async (e) => {
         <FormControlLabel value="add_uses" control={<Radio />} label="Adding new uses ties (with old or new nodes)" />
         {authLevel === 2 &&<FormControlLabel value="update_add" control={<Radio />} label="Updating existing USES only--add or add to properties" />}
         {authLevel === 2 &&<FormControlLabel value="update_replace" control={<Radio />} label="Updating existing USES only--replace one property" />}
-        {authLevel === 2 &&<FormControlLabel value="node_add" control={<Radio />} label="Updating existing Node properties--Add new property and add to existing property values" />}
-        {authLevel === 2 &&<FormControlLabel value="node_replace" control={<Radio />} label="Updating existing Node properties--Add new property and replace existing property values" />}
+        {authLevel === 2 &&<FormControlLabel value="node_add" control={<Radio />} label="Updating existing Node properties--add or add to properties" />}
+        {authLevel === 2 &&<FormControlLabel value="node_replace" control={<Radio />} label="Updating existing Node properties--replace one property" />}
       </RadioGroup>
 
       <FormControl component="fieldset" sx={{ mb: 2 }}>

@@ -28,10 +28,10 @@ const Video = () => {
     <div className='archacontent'>
       {displayData.length > 0 &&
       (<h1 id="sociomapvideo" className="stacked">
-        <div>{displayData[0].node_count} Sites</div>
-        <div>{displayData[3].node_count} Artifact Types</div>
-        <div>{displayData[1].node_count} Periods</div>
-        <div>{displayData[2].node_count} Cultures</div>
+        <div>{Math.floor(displayData[0].node_count / 1000) * 1000}+ Sites</div>
+        <div>{Math.floor(displayData[3].node_count / 1000) * 1000}+ Artifact Types</div>
+        <div>{Math.floor(displayData[1].node_count / 1000) * 1000}+ Periods</div>
+        <div>{Math.floor(displayData[2].node_count / 1000) * 1000}+ Cultures</div>
       </h1>)}
        <p id='sociomapvideo'>ArchaMap organizes categories of material objects used in archaeology, including sites, ceramic types, lithic and projectile point types, and faunal types. Our hope in the future is to extend CatMapper’s capabilities to other classes of complex, dynamic categories.</p>
     <div>
