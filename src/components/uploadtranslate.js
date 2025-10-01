@@ -6,7 +6,7 @@ import domainOptions from "./dropdown.json";
 import Tooltip from '@mui/material/Tooltip';
 import InfoIcon from '@mui/icons-material/Info';
 import { useAuth } from './AuthContext';
-import { LinearProgress } from '@mui/material';
+import { CircularProgress } from '@mui/material';
 import { Dialog, DialogContent,DialogActions, DialogContentText, DialogTitle } from '@mui/material';
 import * as XLSX from 'xlsx';
 import { useLocation } from 'react-router-dom';
@@ -350,9 +350,7 @@ const handleFileChange = async (e) => {
 
   const continueWithSubmit = async () => {
     setLoading(true);
-    setProgress(0);
     try {
-      setProgress(30); 
 
       const columnsToUse = advselectedOption === 'update_replace' || advselectedOption === 'node_replace' ? [selectedExtraColumn] : selectedExtraColumns;
 
@@ -419,7 +417,6 @@ const handleFileChange = async (e) => {
           allContext : columnsToUse
         }),
       });
-      setProgress(50); 
 
       const result = await response.json();
 
@@ -438,16 +435,12 @@ const handleFileChange = async (e) => {
       }
 
       if (result.error) {
-      setProgress(70);
       setCMIDText(result.error);
       setPopen(true);
-      setProgress(100);
       } else {
-      setProgress(70);
       setDownload(orderedData)      
       setCMIDText(result.message);
       setPopen(true);
-      setProgress(100);
       }
 
       //await fetch("http://127.0.0.1:5001/updateWaitingUSES", {
@@ -1133,23 +1126,16 @@ const handleFileChange = async (e) => {
         UPLOAD
       </Button>
       {loading && (
-        <Box
-          sx={{
-            position: 'fixed',
-            bottom: 16,
-            right: 16,
-            width: 200,
-            backgroundColor: 'white',
-            boxShadow: 3,
-            padding: 1,
-            borderRadius: 2,
-            textAlign: 'center'
-          }}
-        >
-          <Typography variant="body2">{`Progress: ${progress}%`}</Typography>
-          <LinearProgress variant="determinate" value={progress} />
-        </Box>
-      )}
+                        <div style={{
+            position: "fixed",     
+            top: "50%",            
+            left: "50%",           
+            transform: "translate(-50%, -50%)", 
+            zIndex: 1300,         
+          }}>
+                          <CircularProgress />
+                        </div>
+                      )}
       
       <Button variant="contained" disabled={!download} sx={{
         backgroundColor: 'black',

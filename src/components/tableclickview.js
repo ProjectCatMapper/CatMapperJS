@@ -46,6 +46,20 @@ export default function ClickTable(props) {
         ctype: value.cType,
         hasLarge
       }
+    }).sort((a, b) => {
+      // Compare Source first
+      if (a.source < b.source) return -1;
+      if (a.source > b.source) return 1;
+      // If Source equal, compare Location
+      if (a.location < b.location) return -1;
+      if (a.location > b.location) return 1;
+      // If Location equal, compare timespan
+      if (a.timespan < b.timespan) return -1;
+      if (a.timespan > b.timespan) return 1;
+      // If timespan equal, compare Version
+      if (a.version < b.version) return -1;
+      if (a.version > b.version) return 1;
+      return 0;
     }))
   },[props.usert])
 
@@ -53,9 +67,7 @@ export default function ClickTable(props) {
     rows.some((row) => (row[col.field] !== null) &&  row[col.field] !== undefined && row[col.field] !== '' && (row[col.field] !== "null"))
   );
 
-//  useEffect(() => {
-//   setColumns(nonEmptyColumns);
-//   }, [])
+
 
 const getRowHeight = (params) => {
   return params.model.hasLarge ? 63 : 40;
@@ -85,6 +97,12 @@ const getRowHeight = (params) => {
         autoHeight
         getRowHeight={getRowHeight}
         columns={nonEmptyColumns}
+        sortModel={[
+          { field: "source", sort: "asc" },
+          { field: "location", sort: "asc" },
+          { field: "timespan", sort: "asc" },
+          { field: "version", sort: "asc" },
+        ]}
         initialState={{
           pagination: {
             paginationModel: { page: 0, pageSize: 10 },

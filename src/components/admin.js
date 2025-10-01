@@ -606,11 +606,11 @@ useEffect(() => {
                     if (formData.s1_1 === "edit" || formData.s1_1 === "delete") {
                       dropdown2Options = Object.keys(r);
                       if (formData.s1_1 === "edit") {
-                        dropdown2Options = dropdown2Options.filter(key => key !== "logID");
+                        dropdown2Options = dropdown2Options.filter(key => key !== "logID" && key !== "log");
                       }
 
                       if (formData.s1_1 === "delete") {
-                        dropdown2Options = dropdown2Options.filter(key => key !== "logID" && key !== "Key" && key !== "Name" && key !== "label");
+                        dropdown2Options = dropdown2Options.filter(key => key !== "logID" && key !== "Key" && key !== "Name" && key !== "label" && key !== "log");
                       }
                     } else {
                       const rKeys = Object.keys(r);
