@@ -69,6 +69,12 @@ function Sociotranslate(){
     setIsRowsChecked(event.target.checked);
   };
 
+  const [isUniqueRows, setUniqueRows] = useState(false);
+
+  const handleUniqueRows = (event) => {
+    setUniqueRows(event.target.checked);
+  };
+
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
   };
@@ -130,7 +136,7 @@ const handleClick = async () => {
     selectedColumnValues = rows.map((row) => row[columns.indexOf(zeroDropdownValue)]);
     setProgress(20);
     //const response = await fetch("http://127.0.0.1:5001/translate2", {
-    const response = await fetch(`${process.env.REACT_APP_API_URL}/translate2`, {
+    const response = await fetch(`${process.env.REACT_APP_API_URL}/translate`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -241,7 +247,36 @@ const handleclear = () => {
 
 
 const [inputValue, setinputValue] = useState(-4000);
-const [inputValuetwo, setinputValuetwo] = useState(2024);        
+const [inputValuetwo, setinputValuetwo] = useState(2024);
+const [inputValueSep, setinputValueSep] = useState(';');
+
+const handleClickSeparator = () => {
+  if (!jsonData || !zeroDropdownValue || !inputValueSep) return;
+
+  const newTable = jsonData.flatMap(row => {
+    const cellValue = row[zeroDropdownValue];
+    if (cellValue == null) return [row]; // keep row as-is if empty
+
+    // Split + trim each part
+    const parts = String(cellValue)
+      .split(inputValueSep)
+      .map(part => part.trim())   // ✅ trim whitespace
+      .filter(part => part.length > 0);
+
+    return parts.map(part => ({
+      ...row,
+      [zeroDropdownValue]: part, // replace with trimmed value
+    }));
+  });
+
+  setJsondata(newTable);
+
+  const newColumns = Object.keys(newTable[0] || {});
+  const newRows = newTable.map(r => Object.values(r));
+
+  setColumns(newColumns);
+  setRows(newRows);
+};
 
 const handleFileChange = async (event) => {
   const file = event.target.files[0];
@@ -409,11 +444,13 @@ const handleFileChange = async (event) => {
       3: 'From which category domain do you want to find matches?',
       4: 'For beginners this will be Name. This allows advanced users to mach by other category properties in CatMapper, such as CatMapper ID or Key.',
       5: 'This permits only finding matches to categories associated with a specific country.  This requires an additional spreadsheet column with the CatMapper ID for the country.',
-      6: "This permits only finding matches to categories that are contained by specific contexts (e.g. only counties in Ohio).  This requires an additional spreadsheet column with the CatMapper ID for the context (e.g. Ohio's CatMapper ID in SocioMap is SM2577)",
-      7: "This permits only finding matches to categories that are used by a specific dataset (e.g. only language categories used by glottolog 4.4).  This requires an additional spreadsheet column with the CatMapper ID for the dataset (e.g. the CatMapper ID for glottolog 4.4 is SD20)",
+      6: "This permits only finding matches to categories that are contained by specific contexts (e.g., only counties in Ohio).  This requires an additional spreadsheet column with the CatMapper ID for the context (e.g., Ohio's CatMapper ID in SocioMap is SM2577)",
+      7: "This permits only finding matches to categories that are used by a specific dataset (e.g., only language categories used by glottolog 4.4).  This requires an additional spreadsheet column with the CatMapper ID for the dataset (e.g., the CatMapper ID for glottolog 4.4 is SD20)",
       8: 'Specify a time range which matching categories need to fall within.  This uses  information about the years for which a category was observed.',
       9: 'Checking this button… TBD',
-      10: "This table provides statistics on the matches, including what % were **exact matches** to only one CatMapper category, **fuzzy matches** to only on CatMapper category, matches to more than one CatMapper category (**one-to-many**), multiple matches to a single CatMapper category (**many-to-one**), and no match found."
+      10: "This table provides statistics on the matches, including what % were **exact matches** to only one CatMapper category, **fuzzy matches** to only on CatMapper category, matches to more than one CatMapper category (**one-to-many**), multiple matches to a single CatMapper category (**many-to-one**), and no match found.",
+      11: "Press apply to split categories in the selected category domain by the selected separator.  This will create new rows for each split category, and will assign them the same context (e.g., country) as the combined category.",
+      12: "Checking this button will combine identical categories from the selected column into a single row for matching, although it will preserve other information if selected. For example, if Country, Context, and/or Dataset is checked then categories will be considered identical only if they have the same spelling and are associated with the same Country, Context, and/or Dataset.  This is useful if your spreadsheet has many identical categories that you want to match only once to speed up processing time and make corrections easier.",
     };
 
     return tooltipTexts[num];
@@ -464,10 +501,10 @@ const handleFileChange = async (event) => {
       )}
       <Box sx={{ display: 'flex', alignItems: 'center' }}>
         <p style={{ color: 'White', fontWeight: "bold", marginLeft: 7, padding: "2px" }}>Select category domain</p>
-        <Tooltip title={getTooltipContent(3)} arrow>
+        <Tooltip title={getTooltipContent(8)} arrow>
           <Button startIcon={<InfoIcon sx={{ height: '28px', width: '28px' }} />} />
         </Tooltip>
-      </Box> 
+      </Box>
       <Select
           label="First Dropdown"
           value={firstDropdownValue}
@@ -613,16 +650,63 @@ const handleFileChange = async (event) => {
         </div>
         {loading && <ProgressBar progress={progress} />}
       </Backdrop>
+      {/* Add row separator */}
       <Box sx={{ display: 'flex', alignItems: 'center' }}>
       <Typography variant="body1" sx={{ marginRight: 2, color: 'black', fontWeight: 500 }}>
-        Assign many-to-one to identical spellings
+        Split rows by separator
       </Typography>
-
+        <input
+        type="text"
+        id="rowSeparator"
+        style={{height:30,width:15,marginLeft:7,marginRight:7}}
+        value={inputValueSep}
+        onChange={(event) => setinputValueSep(event.target.value)}
+      />
+      <Button variant="contained" sx={{
+        backgroundColor: 'black',
+        color: 'white', 
+        '&:hover': {
+          backgroundColor: 'green', 
+        },
+      }} onClick={handleClickSeparator}>
+        Apply
+      </Button>
+        <Tooltip title={getTooltipContent(11)} arrow>
+          <Button startIcon={<InfoIcon sx={{ height: '28px', width: '28px' }} />} />
+        </Tooltip>
+      </Box> 
+      <br/>
+      {/* Add unique rows */}
+      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+      <Typography variant="body1" sx={{ marginRight: 2, color: 'black', fontWeight: 500 }}>
+        Combine identical categories
+      </Typography>
       <FormControlLabel
         control={
           <Checkbox
             checked={isRowsChecked}
             onChange={handleRowsChange}
+            name="checkboxButton"
+            color="default"
+            sx={{ '& .MuiSvgIcon-root': { fontSize: 28 } }} 
+          />
+        }
+        label=""
+      />
+        <Tooltip title={getTooltipContent(12)} arrow>
+          <Button startIcon={<InfoIcon sx={{ height: '28px', width: '28px' }} />} />
+        </Tooltip>
+      </Box> 
+      <br/>
+      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+      <Typography variant="body1" sx={{ marginRight: 2, color: 'black', fontWeight: 500 }}>
+        Assign many-to-one to identical spellings
+      </Typography>
+      <FormControlLabel
+        control={
+          <Checkbox
+            checked={isUniqueRows}
+            onChange={handleUniqueRows}
             name="checkboxButton"
             color="default"
             sx={{ '& .MuiSvgIcon-root': { fontSize: 28 } }} 
