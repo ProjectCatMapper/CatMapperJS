@@ -22,24 +22,12 @@ import { Dialog, DialogTitle, DialogContent, DialogActions} from "@mui/material"
 
 function Sociotranslate(){
 
-  let sections = [
-    { label: 'ANY DOMAIN', keys: ['ANY DOMAIN'] },
-    { label: 'DATASET', keys: ['DATASET'] },
-    { label: 'AREA to PPL', keys: ['AREA', 'ADM0', 'ADM1', 'ADM2', 'ADM3','NATURAL'] },
-    { label: 'ETHNICITY', keys: ['ETHNICITY'] },
-    { label: 'POLITY', keys: ['POLITY'] },
-    { label: 'LANGUOID to FAMILY', keys: ['LANGUOID', 'LANGUAGE', 'DIALECT', 'FAMILY'] },
-    { label: 'RELIGION', keys: ['RELIGION'] },
-    { label: 'OCCUPATION', keys: ['OCCUPATION'] },
-    { label: 'VARIABLE', keys: ['VARIABLE'] },
-    { label: 'GENERIC', keys: ['GENERIC'] }
-  ];
-
-
   const [selectedFile, setSelectedFile] = useState(null);
   const [error, setError] = useState(null);
   const [zeroDropdownValue, setZeroDropdownValue] = useState([]);
   const [firstDropdownValue, setFirstDropdownValue] = useState("ANY DOMAIN");
+  const [dropdownData, setDropdownData] = useState([]);
+  const [subDomainValue, setsubDomain] = useState("");
   const [secondDropdownValue, setsecondDropdownValue] = useState([]);
   const [thirdDropdownValue, setthirdDropdownValue] = useState([""]);
   const [fourthDropdownValue, setfourthDropdownValue] = useState([""]);
@@ -52,6 +40,7 @@ function Sociotranslate(){
   const [isCheckedtwo, setIsCheckedtwo] = useState(false);
   const [isCheckedthree, setIsCheckedthree] = useState(false);
   const [isCheckedfour, setIsCheckedfour] = useState(false);
+  const [showAdvanced, setShowAdvanced] = useState(false);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [loading, setLoading] = useState(false);
@@ -114,19 +103,6 @@ const [data, setData] = useState({});
 let database = "SocioMap"
 if (useLocation().pathname.includes("archamap")) {
     database = "ArchaMap"
-    sections = [
-      { label: 'ANY DOMAIN', keys: ['ANY DOMAIN'] },
-      { label: 'BIOTA to PHYTOLITH', keys: ["BIOTA",'FAUNA',"BOTANICAL",'KINGDOM', 'PHYLUM', 'CLASS', 'ORDER', 'FAMILY', 'GENUS', 'SPECIES', 'SUBGENUS', 'SUBSPECIES',"PHYTOLITH"] },
-      { label: 'AREA to SITE', keys: ['AREA', 'ADM0', 'ADM1', 'ADM2', 'ADM3', 'FEATURE', 'REGION', 'SITE'] },
-      { label: 'STONE', keys: ['STONE'] },
-      { label: 'CULTURE', keys: ['CULTURE'] },
-      { label: 'CERAMIC to CERAMIC_WARE', keys: ['CERAMIC', 'CERAMIC_TYPE','CERAMIC_WARE'] },
-      { label: 'DATASET', keys: ['DATASET'] },
-      { label: 'PERIOD', keys: ['PERIOD'] },
-      { label: 'PROJECTILE_POINT TO PROJECTILE_POINT_TYPE', keys: ['PROJECTILE_POINT','PROJECTILE_POINT_CLUSTER','PROJECTILE_POINT_TYPE'] },
-      { label: 'VARIABLE', keys: ['VARIABLE'] },
-      { label: 'GENERIC', keys: ['GENERIC'] }
-    ];
   } 
 
 const handleClick = async () => {
@@ -144,7 +120,7 @@ const handleClick = async () => {
       body: JSON.stringify({
         database : database,
         property : secondDropdownValue,
-        domain : firstDropdownValue,
+        domain : subDomainValue,
         key : String(isCheckedfour),
         term : zeroDropdownValue,
         country : thirdDropdownValue,
@@ -165,7 +141,6 @@ const handleClick = async () => {
     }
 
     const responseData = await response.json();
-    console.log(responseData)
 
     const allKeys = responseData.order;
 
@@ -193,7 +168,6 @@ const handleClick = async () => {
       ...remainingColumns
     ];
 
-  
     setData(responseData.file);
     setColumns(reorderedColumns)
     setRows(responseData.file.map(row => reorderedColumns.map(key => row[key])));
@@ -420,18 +394,47 @@ const handleFileChange = async (event) => {
     </Box>
   );
 
-  const menuItems = sections.flatMap((section, index) => [
-    index > 0 ? <Divider key={`divider-${section.label}`} /> : null,
-    ...section.keys.map((key, idx) => (
-      <MenuItem
-        key={key}
-        value={key}
-        sx={idx === 0 ? { fontWeight: 'bold', backgroundColor: '#f0f0f0' } : {}}
-      >
-        {key}
-      </MenuItem>
-    ))
-  ]).filter(Boolean);
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        //const response = await fetch("http://127.0.0.1:5001/getTranslatedomains?database=" +database,{
+
+        const response = await fetch(`${process.env.REACT_APP_API_URL}/getTranslatedomains?database=`+database, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        setDropdownData(data);
+
+        if (data.length > 0) setFirstDropdownValue(data[0].group);
+
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    };
+
+    fetchData();
+  }, []); 
+
+  const secondDropdownOptions = firstDropdownValue
+    ? dropdownData.find((item) => item.group === firstDropdownValue)?.nodes || []
+    : [];
+
+  useEffect(() => {
+    if (secondDropdownOptions.length > 0) {
+      setsubDomain(secondDropdownOptions[0]);
+    } else {
+      setsubDomain("");
+    }
+  }, [firstDropdownValue, secondDropdownOptions]);
+
 
   useEffect(() => {
     setsvalues(domainOptions[firstDropdownValue] || fallbackOptions);
@@ -511,8 +514,34 @@ const handleFileChange = async (event) => {
           style={{height:40}}
           sx={{ m: 1, width: "12vw" }}
           onChange={(event) => setFirstDropdownValue(event.target.value)}>
-             {menuItems}
+             {dropdownData.map((key, index) => (
+        <MenuItem key={index} value={key.group}>
+          {key.group}
+        </MenuItem>
+      ))}
         </Select>
+        {secondDropdownOptions.length > 1 && (
+        <>
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+        <p style={{ color: 'White', fontWeight: "bold", marginLeft: 7, padding: "2px" }}>Select category sub-domain</p>
+        <Tooltip title={getTooltipContent(3)} arrow>
+          <Button startIcon={<InfoIcon sx={{ height: '28px', width: '28px' }} />} />
+        </Tooltip>
+      </Box> 
+      <Select
+          label="Sub Dropdown"
+          value={subDomainValue}
+          style={{height:40}}
+          sx={{ m: 1, width: "12vw" }}
+          onChange={(event) => setsubDomain(event.target.value)}>
+             {secondDropdownOptions.map((key, index) => (
+        <MenuItem key={index} value={key}>
+          {key}
+        </MenuItem>
+      ))}
+        </Select>
+        </>
+        )}
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
           <p style={{ color: 'White', fontWeight: "bold", marginLeft: 7, padding: "2px" }}>CatMapper Property to Search</p> 
           <Tooltip title={getTooltipContent(4)} arrow>
@@ -533,7 +562,25 @@ const handleFileChange = async (event) => {
           </MenuItem>
         ))}
         </Select>
-        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+
+      <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+        <label style={{ fontWeight: "bold", marginLeft: 7 }}>
+          <input
+            type="checkbox"
+            checked={showAdvanced}
+            onChange={() => setShowAdvanced(!showAdvanced)}
+          />{" "}
+          Advanced Options
+        </label>
+        <Tooltip title="Enable additional data filters and settings" arrow>
+          <Button startIcon={<InfoIcon sx={{ height: 28, width: 28 }} />} />
+        </Tooltip>
+      </Box>
+
+
+        {showAdvanced && (
+          <Box sx={{ ml: 3 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
           <label>
             <input type="checkbox" checked={isChecked} onChange={handleCheckboxChange} />
             Limit by Country?
@@ -718,6 +765,8 @@ const handleFileChange = async (event) => {
           <Button startIcon={<InfoIcon sx={{ height: '28px', width: '28px' }} />} />
         </Tooltip>
     </Box>
+    </Box>
+    )}
       <Button variant="contained" sx={{
         backgroundColor: 'black',
         color: 'white', 

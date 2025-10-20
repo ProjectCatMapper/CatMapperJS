@@ -66,7 +66,7 @@ const Admin = () => {
         "add credible comment",
         "delete node",
         "delete USES relation",
-        "create new label",
+        "create new domain",
         //"add foci",
       ],
     },
@@ -494,7 +494,7 @@ useEffect(() => {
       }
     };
 
-    if (firstDropdownValue === 'create new label') {
+    if (firstDropdownValue === 'create new domain') {
       createLabel();
     }
   }, [firstDropdownValue]);
@@ -1097,7 +1097,7 @@ useEffect(() => {
 )
 }
 
-{firstDropdownValue === "create new label" && (
+{firstDropdownValue === "create new domain" && (
    <Box sx={{ ml: 1 }}>
    <InputLabel id="domain-label" style={{ color: "black " }}>
      Enter label name

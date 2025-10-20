@@ -122,6 +122,7 @@ const filteredData = Array.from(filteredMap.entries()).map(([domain, color]) => 
           scaleFactor: 1,
         },
       },
+      
     },
     interaction: {
       hover: true,
@@ -159,7 +160,6 @@ const filteredData = Array.from(filteredMap.entries()).map(([domain, color]) => 
                   
           tooltipContent = [...cmItems, ...glottoItems, ...ISOItems, ...FIPSItems, ...tooltipContent];
 
-          console.log(tooltipContent)
           setTooltipContent(tooltipContent.map((item, index) => <span key={index}>{item}<br /></span>));
           setTooltipPosition({ x: params.pointer.DOM.x, y: params.pointer.DOM.y });
          }
@@ -212,14 +212,11 @@ const filteredData = Array.from(filteredMap.entries()).map(([domain, color]) => 
 tooltipText = [...tooltipText.top, ...tooltipText.middle, ...tooltipText.bottom].join(' <br> ');
             break;
           }
-        case 'DISTRICT_OF':
-          tooltipText = `referenceKey: ${edge.referenceKey} <br> type: ${edge.type}`;
-          break;
-        case 'LANGUOID_OF':
-          tooltipText = `referenceKey: ${edge.referenceKey} <br> type: ${edge.type}`;
+        case 'EQUIVALENT':
+          tooltipText = `merging: ${edge.Merging}`;
           break;
         default:
-          tooltipText = `eventDate: ${edge.eventDate} <br> eventType: ${edge.eventType} <br> referenceKey: ${edge.referenceKey}`;
+          tooltipText = `referenceKey: ${edge.referenceKey} <br> type: ${edge.type}`;
           break;
       }
 

@@ -370,21 +370,6 @@ const handleFileChange = async (e) => {
 
       if (advselectedOption === "add_uses" && missingCount > 0) {
         allowedColumns.add("CMName");
-        const cmNameExists = jsonData.some(row => "CMName" in row);
-
-        if (!cmNameExists) {
-          alert("CMName column is required but missing.");
-        }
-
-          const invalidRows = jsonData.filter(row => {
-            const cmidMissing = row["CMID"] == null || row["CMID"] === "";
-            const cmnameMissing = row["CMName"] == null || row["CMName"] === "";
-            return cmidMissing && cmnameMissing;
-          });
-
-          if (invalidRows.length > 0) {
-            alert("CMName must be provided when CMID is missing.");
-          }
       }
       
       const finalProduct = selectedOption === "advanced" 
@@ -437,10 +422,12 @@ const handleFileChange = async (e) => {
       if (result.error) {
       setCMIDText(result.error);
       setPopen(true);
+      setLoading(false);
       } else {
       setDownload(orderedData)      
       setCMIDText(result.message);
       setPopen(true);
+      setLoading(false);
       }
 
       //await fetch("http://127.0.0.1:5001/updateWaitingUSES", {
@@ -454,9 +441,6 @@ const handleFileChange = async (e) => {
 
     } catch (error) {
       console.error('Error submitting form:', error);
-    }
-    finally{
-      setLoading(false);
     }
   };
 
@@ -550,10 +534,47 @@ const handleFileChange = async (e) => {
         if (datasetValueFound) {
           required = ['CMName', 'label', 'shortName', 'DatasetCitation'];
           allowedDatasetColumns = ["ApplicableYears", "CMID", "CMName", "DatasetCitation", "DatasetLocation", "DatasetScope", "DatasetVersion",
-             "District", "log", "names", "Note", "parent", "project", "shortName", "Subdistrict", "Subnational", "Unit"]
+             "District", "log", "names", "Note", "parent", "project","recordStart","recordEnd", "shortName", "Subdistrict", "Subnational", "Unit","yearPublished"]
 
         }
       }
+
+      // when uploading categories, if CMName is absent, use Name column and vice versa.
+
+      if (!IsDataset){
+
+        if (columns.includes('CMName') && !columns.includes('Name')) {
+        const updatedColumns = [...columns, 'Name'];
+        setColumns(updatedColumns);
+
+        const cmIndex = columns.indexOf('CMName');
+
+        const updatedRows = rows.map(row => {
+          const newRow = [...row];
+          newRow.push(row[cmIndex]);
+          return newRow;
+        });
+
+        setRows(updatedRows);
+      }
+
+      if (columns.includes('Name') && !columns.includes('CMName')) {
+        const updatedColumns = [...columns, 'CMName'];
+        setColumns(updatedColumns);
+
+        const cmIndex = columns.indexOf('Name');
+
+        const updatedRows = rows.map(row => {
+          const newRow = [...row];
+          newRow.push(row[cmIndex]);
+          return newRow;
+        });
+
+        setRows(updatedRows);
+      }
+
+      }
+
       break;
     case 'add_uses':
       required = ['CMID', 'Name', 'Key', 'label', 'datasetID'];
