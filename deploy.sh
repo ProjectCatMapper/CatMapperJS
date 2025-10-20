@@ -2,11 +2,11 @@ echo "Building"
 
 set -e
 
-# Redirect temp/cache to /mnt/storage
-export TMPDIR=/mnt/storage/tmp
-export npm_config_cache=/mnt/storage/npm-cache
+# # Redirect temp/cache to /mnt/storage
+# export TMPDIR=/mnt/storage/tmp
+# export npm_config_cache=/mnt/storage/npm-cache
 
-mkdir -p "$TMPDIR" "$npm_config_cache"
+# mkdir -p "$TMPDIR" "$npm_config_cache"
 
 npm run build
 
