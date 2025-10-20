@@ -101,6 +101,7 @@ export default function Tableclick(props) {
     "CULTURE_OF",
     "POLITY_OF",
     "USES",
+    "EQUIVALENT"
   ];
   const [datasetdomainValue, setdatasetdomainValue] = useState([]);
   const [datasetdropdown, setDatasetDropdown] = useState(["ANY DOMAIN"]);
@@ -111,6 +112,7 @@ export default function Tableclick(props) {
   const [open, setOpen] = useState(false);
 
   let database = "SocioMap";
+  let limit = 300;
 
   if (useLocation().pathname.includes("archamap")) {
     database = "ArchaMap";
@@ -268,7 +270,7 @@ export default function Tableclick(props) {
         setOpen(Boolean(data.badsources?.length));
 
         console.log(data.info)
-
+        
         const maptFeatures = data.polygons?.features?.length
           ? data.polygons.features
           : data.polygons;
@@ -428,8 +430,7 @@ export default function Tableclick(props) {
 
   const fetchData = async (event) => {
     try {
-      console.log(rev)
-      //const response = await fetch("http://127.0.0.1:5001/networksjs?cmid=" + props.cmid.cmid + "&database=" +database+ "&relation=" + event.target.value + "&response=records");
+      //const response = await fetch("http://127.0.0.1:5001/networksjs?cmid=" + props.cmid.cmid + "&database=" +database+ "&relation=" + event.target.value + "&response=records" + "&limit=" +limit);
       const response = await fetch(
         `${process.env.REACT_APP_API_URL}/networksjs?cmid=` +
           props.cmid.cmid +
@@ -437,7 +438,8 @@ export default function Tableclick(props) {
           database +
           "&relation=" +
           event.target.value +
-          "&response=records"
+          "&response=records"+
+          "&limit="+limit
       );
       const result = await response.json();
 
@@ -458,13 +460,25 @@ export default function Tableclick(props) {
       );
 
       const edges = Object.entries(result["relations"]).map((relationship) => {
-        const { start_node_id, end_node_id, ...rest } = relationship["1"];
-        return {
+        const { start_node_id, end_node_id, eventType, ...rest } = relationship["1"];
+
+        const edge =
+         {
           from: start_node_id,
           to: end_node_id,
+          eventType: eventType,
           ...rest,
           color: "black",
         };
+
+        if (event.target.value === "CONTAINS" && eventType && Array.isArray(eventType)) {
+          const filtered = eventType.filter(e => e !== "HIERARCHY");
+          if (filtered.length > 0) {
+            edge.label = filtered.join(", ");
+          }
+        }
+
+        return edge;
       });
 
       let domains = nodes.map((object) => object.domain).slice(1);
@@ -514,7 +528,7 @@ export default function Tableclick(props) {
         datasetvalues.unshift("All");
         setSelectedDatasets(datasetvalues);
       }
-
+      
       setFirstDropdownValue(event.target.value);
       setoriginaldata({ nodes, edges });
       setVisData({ nodes, edges });
@@ -649,35 +663,26 @@ export default function Tableclick(props) {
               fontSize: "large",
             }}
           >
-            {rev.length !== 0
-              ? Object.entries(rev).map(
-                  ([key, value]) =>
-                    value && (
-                      <li key={key}>
-                        <strong>{key}:</strong>{" "}
-                        {key === "Dataset Location" ? (
-                          <a
-                            href={value}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            <Box
-                              component="span"
-                              sx={{
-                                color: "blue",
-                                textDecoration: "underline",
-                              }}
-                            >
-                              {value}
-                            </Box>
-                          </a>
-                        ) : (
-                          value
-                        )}
-                      </li>
-                    )
-                )
-              : rev}
+            {rev && Object.keys(rev).length > 0 ? (
+              Object.entries(rev).map(([key, value]) =>
+                value !== "" && value !== null && value !== undefined && value !== 0 ? (
+                  <li key={key}>
+                    <strong>{key}:</strong>{" "}
+                    {key === "Dataset Location" ? (
+                      <a href={value} target="_blank" rel="noopener noreferrer">
+                        {value}
+                      </a>
+                    ) : (
+                      <Box component="span" sx={{ wordBreak: "break-word" }}>
+                        {value}
+                      </Box>
+                    )}
+                  </li>
+                ) : null
+              )
+            ) : (
+              <p>No data</p>
+            )}
           </ul>
           {(props.cmid.cmid.startsWith("SD") ||
             props.cmid.cmid.startsWith("AD")) && (
@@ -830,12 +835,10 @@ export default function Tableclick(props) {
               </CustomTabPanel>
               <CustomTabPanel value={value} index={0}>
                 <div>
-                  <Typography variant="h6" sx={{ mb: 1 }}>
-                    Double click on node to move to that node's info page
+                  <Typography variant="p" sx={{ mb: 1 }}>
+                    Double click on node to move to that node's info page.No more than ten nodes are shown in the network, use the Nodes dropdown to view up to {limit} nodes.
                   </Typography>
-                  <Typography variant="h6" sx={{ mb: 1 }}>
-                    No more than ten nodes are shown in the network, use the Nodes dropdown to view up to 200 nodes. 
-                  </Typography>
+                  <br/>
                   <FormControl sx={{ m: 1, width: 300 }}>
                     <InputLabel htmlFor="first-dropdown">
                       Relationship
@@ -950,12 +953,10 @@ export default function Tableclick(props) {
               </CustomTabPanel>
               <CustomTabPanel value={value} index={0}>
                 <div>
-                  <Typography variant="h6" sx={{ mb: 1 }}>
-                    Double click on node to move to that node's info page
+                  <Typography variant="p" sx={{ mb: 1 }}>
+                    Double click on node to move to that node's info page.No more than ten nodes are shown in the network, use the Nodes dropdown to view up to {limit} nodes.
                   </Typography>
-                  <Typography variant="h6" sx={{ mb: 1 }}>
-                    No more than ten nodes are shown in the network, use the Nodes dropdown to view up to 200 nodes. 
-                  </Typography>
+                  <br/>
                   <FormControl sx={{ m: 1, width: 300 }}>
                     <InputLabel htmlFor="first-dropdown">
                       Relationship
