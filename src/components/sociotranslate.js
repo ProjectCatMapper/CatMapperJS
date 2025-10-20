@@ -52,16 +52,16 @@ function Sociotranslate(){
   let query = "false"
   const fallbackOptions = ["Name", "Key", "CatMapper ID (CMID)"];
 
-  const [isRowsChecked, setIsRowsChecked] = useState(false);
-
-  const handleRowsChange = (event) => {
-    setIsRowsChecked(event.target.checked);
-  };
-
   const [isUniqueRows, setUniqueRows] = useState(false);
 
   const handleUniqueRows = (event) => {
     setUniqueRows(event.target.checked);
+  };
+
+  const [isCountSameName, setCountSameName] = useState(false);
+
+  const handleCountSameName = (event) => {
+    setCountSameName(event.target.checked);
   };
 
   const handleChangePage = (event, newPage) => {
@@ -130,7 +130,8 @@ const handleClick = async () => {
         yearEnd : inputValuetwo,
         table : jsonData,
         query : query,
-        uniqueRows: isRowsChecked
+        countsamename: isCountSameName,
+        uniqueRows: isUniqueRows
       }),
     });
 
@@ -731,8 +732,8 @@ const handleFileChange = async (event) => {
       <FormControlLabel
         control={
           <Checkbox
-            checked={isRowsChecked}
-            onChange={handleRowsChange}
+            checked={isUniqueRows}
+            onChange={handleUniqueRows}
             name="checkboxButton"
             color="default"
             sx={{ '& .MuiSvgIcon-root': { fontSize: 28 } }} 
@@ -752,8 +753,8 @@ const handleFileChange = async (event) => {
       <FormControlLabel
         control={
           <Checkbox
-            checked={isUniqueRows}
-            onChange={handleUniqueRows}
+            checked={isCountSameName}
+            onChange={handleCountSameName}
             name="checkboxButton"
             color="default"
             sx={{ '& .MuiSvgIcon-root': { fontSize: 28 } }} 
