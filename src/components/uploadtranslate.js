@@ -207,6 +207,11 @@ const handleFileChange = async (e) => {
     }));
   };
 
+  // Checks for:
+  // - Duplicate column name values
+  // - Missing values for datasetID,Key,label and CMID(except for function 1)
+  // - Missing values for complex properties
+
   const validateColumns = () => {
 
       const seen = new Set();
@@ -333,6 +338,7 @@ const handleFileChange = async (e) => {
   const fieldOptions = dropoptions[formData.domain] || fallbackOptions;
 
   const handleSubmit = async () => {
+
     const validationResult = validateColumns();
 
     if (validationResult === false) {
@@ -385,8 +391,8 @@ const handleFileChange = async (e) => {
         return filteredItem;
       }):jsonData;      
 
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/uploadInputNodes`,{
-      //const response = await fetch("http://127.0.0.1:5001/uploadInputNodes", {
+      //const response = await fetch(`${process.env.REACT_APP_API_URL}/uploadInputNodes`,{
+      const response = await fetch("http://127.0.0.1:5001/uploadInputNodes", {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -529,50 +535,47 @@ const handleFileChange = async (e) => {
     case 'add_node':
       required = ['CMName', 'Name', 'Key', 'label', 'datasetID'];
       const labelIndex = columns.indexOf('label');
+      allowedExtraColumns = allowedExtraColumns.filter(column => column !== "parent");
       if (labelIndex !== -1) {
         const datasetValueFound = rows.some(row => row[labelIndex] === 'DATASET');
         if (datasetValueFound) {
           required = ['CMName', 'label', 'shortName', 'DatasetCitation'];
-          allowedDatasetColumns = ["ApplicableYears", "CMID", "CMName", "DatasetCitation", "DatasetLocation", "DatasetScope", "DatasetVersion",
+          allowedDatasetColumns = ["CMID", "CMName", "DatasetCitation", "DatasetLocation", "DatasetScope", "DatasetVersion",
              "District", "log", "names", "Note", "parent", "project","recordStart","recordEnd", "shortName", "Subdistrict", "Subnational", "Unit","yearPublished"]
 
         }
-      }
+        // else {
+        //       if (columns.includes('CMName') && !columns.includes('Name')) {
+        //       const updatedColumns = [...columns, 'Name'];
+        //       setColumns(updatedColumns);
 
-      // when uploading categories, if CMName is absent, use Name column and vice versa.
+        //       const cmIndex = columns.indexOf('CMName');
 
-      if (!IsDataset){
+        //       const updatedRows = rows.map(row => {
+        //         const newRow = [...row];
+        //         newRow.push(row[cmIndex]);
+        //         return newRow;
+        //       });
 
-        if (columns.includes('CMName') && !columns.includes('Name')) {
-        const updatedColumns = [...columns, 'Name'];
-        setColumns(updatedColumns);
+        //       setRows(updatedRows);
+        //     }
 
-        const cmIndex = columns.indexOf('CMName');
+        //     if (columns.includes('Name') && !columns.includes('CMName')) {
+        //       const updatedColumns = [...columns, 'CMName'];
+        //       setColumns(updatedColumns);
 
-        const updatedRows = rows.map(row => {
-          const newRow = [...row];
-          newRow.push(row[cmIndex]);
-          return newRow;
-        });
+        //       const cmIndex = columns.indexOf('Name');
 
-        setRows(updatedRows);
-      }
+        //       const updatedRows = rows.map(row => {
+        //         const newRow = [...row];
+        //         newRow.push(row[cmIndex]);
+        //         return newRow;
+        //       });
 
-      if (columns.includes('Name') && !columns.includes('CMName')) {
-        const updatedColumns = [...columns, 'CMName'];
-        setColumns(updatedColumns);
+        //       setRows(updatedRows);
+        //     }
 
-        const cmIndex = columns.indexOf('Name');
-
-        const updatedRows = rows.map(row => {
-          const newRow = [...row];
-          newRow.push(row[cmIndex]);
-          return newRow;
-        });
-
-        setRows(updatedRows);
-      }
-
+        // }
       }
 
       break;
@@ -605,6 +608,7 @@ const handleFileChange = async (e) => {
       required = [];
   }
 
+  //  Checks that all required columns are present
   required.forEach((column) => {
     if (columns.includes(column)) {
       foundColumns.push(column);
@@ -612,6 +616,31 @@ const handleFileChange = async (e) => {
       notFoundColumns.push(column);
     }
   });
+
+  // when uploading categories, if CMName is absent, use Name column and vice versa.
+  // Name and CMName columns are added in the backend
+  if (advselectedOption === "add_node") {
+    const hasName = columns.includes("Name");
+    const hasCMName = columns.includes("CMName");
+
+    // If it has one but not the other, push whichever exists
+    if (hasName !== hasCMName) {
+      if (hasName) {
+        foundColumns.push("CMName");
+        const index = notFoundColumns.indexOf("CMName");
+        if (index > -1) {
+          notFoundColumns.splice(index, 1);
+        }
+      };
+      if (hasCMName) {
+        foundColumns.push("Name");
+        const index = notFoundColumns.indexOf("Name");
+        if (index > -1) {
+          notFoundColumns.splice(index, 1);
+        }
+      };
+      };
+    }
 
   setMissingColumns(notFoundColumns);
   setAllRequiredColumnsFound(notFoundColumns.length === 0);
