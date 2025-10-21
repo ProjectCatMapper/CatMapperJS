@@ -6,8 +6,6 @@ import CircularProgress from '@mui/material/CircularProgress';
 import Backdrop from '@mui/material/Backdrop';
 
 const Propose_Merge = () => {
-  const [file, setFile] = useState(null);
-  const [file1, setFile1] = useState(null);
   const [loading, setLoading] = useState(false);
   const [inputValue, setInputValue] = useState('');
   const [open, setOpen] = useState(false);
@@ -15,6 +13,7 @@ const Propose_Merge = () => {
   const [isValid, setIsValid] = useState(false);
   const [mergeLevel, setMergeLevel] = useState(1);
   const [firstDropdownValue, setFirstDropdownValue] = useState("");
+  const [resultFormat, setResultFormat] = useState("key-to-key");
   let sections = [
     { label: 'ANY DOMAIN', keys: ['ANY DOMAIN'] },
     { label: 'AREA to PPL', keys: ['AREA', 'ADM0', 'ADM1', 'ADM2', 'ADM3', 'ADM4', 'ADMD', 'ADME', 'ADML', 'ADMX', 'PPL', 'NATURAL'] },
@@ -69,31 +68,6 @@ const Propose_Merge = () => {
     setReturnAllCategories(event.target.checked);
   };
 
-  const handleMergeSubmit = async () => {
-    setLoading(true);
-    try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/joinDatasets`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          "joinLeft": file,
-          "joinRight": file1,
-          "database": database,
-        }),
-      });
-
-      const result = await response.json();
-      setData(result)
-    } catch (error) {
-      console.error('Error submitting form:', error);
-    }
-    finally {
-      setLoading(false);
-    }
-  };
-
   const handleValidate = async () => {
     try {
       const response = await fetch(`${process.env.REACT_APP_API_URL}/validateDatasets`, {
@@ -143,7 +117,8 @@ const Propose_Merge = () => {
           "intersection": returnAllCategories,
           "database": database,
           "mergelevel": mergeLevel,
-          "equivalence": selectedOption
+          "equivalence": selectedOption,
+          "resultFormat": resultFormat,
         }),
       });
 
@@ -223,7 +198,22 @@ const Propose_Merge = () => {
             {menuItems}
           </Select>
         </Box>
-
+        <Box>
+          <Typography variant="h7" style={{ color: 'black', padding: '1px' }}>
+            Choose Result Format
+          </Typography>
+          <Select
+            label="resultFormat"
+            value={resultFormat}
+            style={{ height: 40 }}
+            sx={{ m: 1, width: '12vw' }}
+            onChange={(event) => setResultFormat(event.target.value)}
+          >
+            {["key-to-key", "key-to-category", "category-level"].map((level) => (
+              <MenuItem key={level} value={level}>{level}</MenuItem>
+            ))}
+          </Select>
+        </Box>
         <Box>
           <Typography variant="h7" style={{ color: 'black', padding: '1px' }}>
             Choose Merge Level for Extended Merge
