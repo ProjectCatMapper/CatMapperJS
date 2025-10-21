@@ -391,8 +391,8 @@ const handleFileChange = async (e) => {
         return filteredItem;
       }):jsonData;      
 
-      //const response = await fetch(`${process.env.REACT_APP_API_URL}/uploadInputNodes`,{
-      const response = await fetch("http://127.0.0.1:5001/uploadInputNodes", {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/uploadInputNodes`,{
+      //const response = await fetch("http://127.0.0.1:5001/uploadInputNodes", {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -535,7 +535,6 @@ const handleFileChange = async (e) => {
     case 'add_node':
       required = ['CMName', 'Name', 'Key', 'label', 'datasetID'];
       const labelIndex = columns.indexOf('label');
-      allowedExtraColumns = allowedExtraColumns.filter(column => column !== "parent");
       if (labelIndex !== -1) {
         const datasetValueFound = rows.some(row => row[labelIndex] === 'DATASET');
         if (datasetValueFound) {
@@ -544,38 +543,6 @@ const handleFileChange = async (e) => {
              "District", "log", "names", "Note", "parent", "project","recordStart","recordEnd", "shortName", "Subdistrict", "Subnational", "Unit","yearPublished"]
 
         }
-        // else {
-        //       if (columns.includes('CMName') && !columns.includes('Name')) {
-        //       const updatedColumns = [...columns, 'Name'];
-        //       setColumns(updatedColumns);
-
-        //       const cmIndex = columns.indexOf('CMName');
-
-        //       const updatedRows = rows.map(row => {
-        //         const newRow = [...row];
-        //         newRow.push(row[cmIndex]);
-        //         return newRow;
-        //       });
-
-        //       setRows(updatedRows);
-        //     }
-
-        //     if (columns.includes('Name') && !columns.includes('CMName')) {
-        //       const updatedColumns = [...columns, 'CMName'];
-        //       setColumns(updatedColumns);
-
-        //       const cmIndex = columns.indexOf('Name');
-
-        //       const updatedRows = rows.map(row => {
-        //         const newRow = [...row];
-        //         newRow.push(row[cmIndex]);
-        //         return newRow;
-        //       });
-
-        //       setRows(updatedRows);
-        //     }
-
-        // }
       }
 
       break;
@@ -589,7 +556,7 @@ const handleFileChange = async (e) => {
     case 'node_add':
       required=['CMID'];
       if (IsDataset){
-        allowedDatasetColumns = ["CMName","parent","District","shortName","ApplicableYears","DatasetCitation","DatasetLocation","DatasetVersion","DatasetScope","project","recordStart","recordEnd","yearPublished","names"]
+        allowedDatasetColumns = ["CMName","parent","District","shortName","DatasetCitation","DatasetLocation","DatasetVersion","DatasetScope","project","recordStart","recordEnd","yearPublished","names"]
       }
       else{
         allowedExtraColumns = ["CMName","glottocode","FIPS","ISO2","ISO3","ISONumeric"]
@@ -598,7 +565,7 @@ const handleFileChange = async (e) => {
     case 'node_replace':
       required=['CMID'];
       if (IsDataset){
-        allowedDatasetColumns = ["CMName","parent","District","shortName","ApplicableYears","DatasetCitation","DatasetLocation","DatasetVersion","DatasetScope","project","recordStart","recordEnd","yearPublished"]
+        allowedDatasetColumns = ["CMName","parent","District","shortName","DatasetCitation","DatasetLocation","DatasetVersion","DatasetScope","project","recordStart","recordEnd","yearPublished"]
       }
       else{
         allowedExtraColumns = ["CMName","glottocode","FIPS","ISO2","ISO3","ISONumeric"]
@@ -646,10 +613,6 @@ const handleFileChange = async (e) => {
   setAllRequiredColumnsFound(notFoundColumns.length === 0);
 
   if (['add_node','add_uses', 'update_add','update_replace','node_add','node_replace'].includes(advselectedOption)) {
-    // const extraCols = columns
-    //   .filter((col) => !required.includes(col))
-    //   .filter((col) => allowedExtraColumns.includes(col));
-    console.log(columns)
     let extraCols = columns.filter((col) => {
       return !required.includes(col)});
 
