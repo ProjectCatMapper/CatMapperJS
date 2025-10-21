@@ -1,36 +1,33 @@
-import React, { useState} from 'react'
-import { Box, Button, FormControlLabel, Radio, RadioGroup, Checkbox, Typography, Divider,Select,TextField,MenuItem,FormControl,FormGroup,Snackbar,Alert } from '@mui/material';
-import {ExcelRenderer} from 'react-excel-renderer';
+import React, { useState } from 'react'
+import { Box, Button, FormControlLabel, Radio, RadioGroup, Checkbox, Typography, Divider, Select, TextField, MenuItem, FormControl, FormGroup, Snackbar, Alert } from '@mui/material';
 import { useLocation } from 'react-router-dom';
 import * as XLSX from 'xlsx';
 import CircularProgress from '@mui/material/CircularProgress';
 import Backdrop from '@mui/material/Backdrop';
 
 const Propose_Merge = () => {
-    const [file, setFile] = useState(null);
-    const [file1, setFile1] = useState(null);
-    const [loading, setLoading] = useState(false);
-    const [inputValue, setInputValue] = useState('');
-    const [open, setOpen] = useState(false);
-    const [data, setData] = useState();
-    const [isValid, setIsValid] = useState(false);
-    const [mergeLevel, setMergeLevel] = useState(1);
-    const [firstDropdownValue, setFirstDropdownValue] = useState("");
-    const [cerror, setError] = useState(false);
-    let fileObj= ""
-    let sections = [
-      { label: 'ANY DOMAIN', keys: ['ANY DOMAIN'] },
-      { label: 'AREA to PPL', keys: ['AREA', 'ADM0', 'ADM1', 'ADM2', 'ADM3', 'ADM4', 'ADMD', 'ADME', 'ADML', 'ADMX', 'PPL','NATURAL'] },
-      { label: 'DATASET', keys: ['DATASET'] },
-      { label: 'LANGUOID to FAMILY', keys: ['LANGUOID', 'LANGUAGE', 'DIALECT', 'FAMILY'] },
-      { label: 'ETHNICITY', keys: ['ETHNICITY'] },
-      { label: 'GENERIC', keys: ['GENERIC'] },
-      { label: 'RELIGION', keys: ['RELIGION'] },
-      { label: 'VARIABLE', keys: ['VARIABLE'] }
-    ];
+  const [file, setFile] = useState(null);
+  const [file1, setFile1] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [inputValue, setInputValue] = useState('');
+  const [open, setOpen] = useState(false);
+  const [data, setData] = useState();
+  const [isValid, setIsValid] = useState(false);
+  const [mergeLevel, setMergeLevel] = useState(1);
+  const [firstDropdownValue, setFirstDropdownValue] = useState("");
+  let sections = [
+    { label: 'ANY DOMAIN', keys: ['ANY DOMAIN'] },
+    { label: 'AREA to PPL', keys: ['AREA', 'ADM0', 'ADM1', 'ADM2', 'ADM3', 'ADM4', 'ADMD', 'ADME', 'ADML', 'ADMX', 'PPL', 'NATURAL'] },
+    { label: 'DATASET', keys: ['DATASET'] },
+    { label: 'LANGUOID to FAMILY', keys: ['LANGUOID', 'LANGUAGE', 'DIALECT', 'FAMILY'] },
+    { label: 'ETHNICITY', keys: ['ETHNICITY'] },
+    { label: 'GENERIC', keys: ['GENERIC'] },
+    { label: 'RELIGION', keys: ['RELIGION'] },
+    { label: 'VARIABLE', keys: ['VARIABLE'] }
+  ];
 
-    let database = "SocioMap"
-    if (useLocation().pathname.includes("archamap")) {
+  let database = "SocioMap"
+  if (useLocation().pathname.includes("archamap")) {
     database = "ArchaMap"
     sections = [
       { label: 'ANY DOMAIN', keys: ['ANY DOMAIN'] },
@@ -39,13 +36,13 @@ const Propose_Merge = () => {
       { label: 'STONE', keys: ['STONE'] },
       { label: 'CULTURE', keys: ['CULTURE'] },
       { label: 'BOTANICAL to PHYTOLITH', keys: ['BOTANICAL', 'PHYTOLITH'] },
-      { label: 'CERAMIC to CERAMIC_WARE', keys: ['CERAMIC', 'CERAMIC_TYPE','CERAMIC_WARE'] },
+      { label: 'CERAMIC to CERAMIC_WARE', keys: ['CERAMIC', 'CERAMIC_TYPE', 'CERAMIC_WARE'] },
       { label: 'DATASET', keys: ['DATASET'] },
       { label: 'PERIOD', keys: ['PERIOD'] },
-      { label: 'PROJECTILE_POINT TO PROJECTILE_POINT_TYPE', keys: ['PROJECTILE_POINT','PROJECTILE_POINT_CLUSTER','PROJECTILE_POINT_TYPE'] },
+      { label: 'PROJECTILE_POINT TO PROJECTILE_POINT_TYPE', keys: ['PROJECTILE_POINT', 'PROJECTILE_POINT_CLUSTER', 'PROJECTILE_POINT_TYPE'] },
       { label: 'VARIABLE', keys: ['VARIABLE'] }
     ];
-  } 
+  }
 
   const menuItems = sections.flatMap((section, index) => [
     index > 0 ? <Divider key={`divider-${section.label}`} /> : null,
@@ -63,7 +60,7 @@ const Propose_Merge = () => {
   const [selectedOption, setSelectedOption] = useState('Standard');
 
   const handleRadioChange = (event) => {
-    setSelectedOption(event.target.value); 
+    setSelectedOption(event.target.value);
   };
 
   const [returnAllCategories, setReturnAllCategories] = useState(true);
@@ -72,91 +69,18 @@ const Propose_Merge = () => {
     setReturnAllCategories(event.target.checked);
   };
 
-    const handleFileChange = (e) => {
-        const fileType = e.target.files[0].type;
-          if (fileType === 'application/vnd.ms-excel' || fileType === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') {
-            fileObj = e.target.files[0];
-    
-    ExcelRenderer(fileObj, (err, resp) => {
-      if(err){
-        console.log(err);            
-      }
-      else{
-        const c = resp.rows[0];
-        const r = resp.rows.slice(1);       
-
-        const table = r.map((row, index) => {
-          const rowData = {};
-          c.forEach((column, columnIndex) => {
-            rowData[column] = row[columnIndex];
-          });
-          return rowData;
-        });
-        setFile(table)
-      }
-    });  
-          } else {
-            alert('Please upload a valid CSV or XLSX file.');
-            e.target.value = null;
-            setFile(null);
-          }
-      };
-    
-      const handleFileChange1 = (e) => {
-        const fileType = e.target.files[0].type;
-          if (fileType === 'application/vnd.ms-excel' || fileType === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') {
-            fileObj = e.target.files[0];
-    
-    ExcelRenderer(fileObj, (err, resp) => {
-      if(err){
-        console.log(err);            
-      }
-      else{
-        const c = resp.rows[0];
-        const r = resp.rows.slice(1);
-        
-        const table = r.map((row, index) => {
-          const rowData = {};
-          c.forEach((column, columnIndex) => {
-            rowData[column] = row[columnIndex];
-          });
-          return rowData;
-        });
-        setFile1(table)
-      }
-    });  
-          } else {
-            alert('Please upload a valid CSV or XLSX file.');
-            e.target.value = null;
-            setFile1(null);
-          }
-      };
-
-    const handleclear = () => {
-        setFile(null);
-        if (document.getElementById('fileInput')) {
-          document.getElementById('fileInput').value = '';
-        }}
-
-    const handleclear1 = () => {
-            setFile1(null);
-            if (document.getElementById('fileInput')) {
-              document.getElementById('fileInput').value = '';
-            }}
-
-    const handleMergeSubmit = async () => {
+  const handleMergeSubmit = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/joinDatasets`,{
-        //const response = await fetch("http://127.0.0.1:5001/joinDatasets", {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/joinDatasets`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          "joinLeft" : file,
-          "joinRight" : file1,
-          "database" : database,
+          "joinLeft": file,
+          "joinRight": file1,
+          "database": database,
         }),
       });
 
@@ -172,15 +96,14 @@ const Propose_Merge = () => {
 
   const handleValidate = async () => {
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/validateDatasets`,{
-        //const response = await fetch("http://127.0.0.1:5001/validateDatasets", {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/validateDatasets`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          "names" : inputValue,
-          "database" : database,
+          "names": inputValue,
+          "database": database,
         }),
       });
 
@@ -198,47 +121,29 @@ const Propose_Merge = () => {
   };
 
 
-
-  const handleJoinDownload = async () => {
-    const worksheet = XLSX.utils.json_to_sheet(data);
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
-      const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
-      const blob = new Blob([excelBuffer], { type: 'application/octet-stream' });
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'joined_data.xlsx';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      window.URL.revokeObjectURL(url);
-  };
-    
-    const handleSubmit = async () => {
-      setLoading(true)
-      if (!isValid) {
-        alert('Please validate successfully before submitting.');
-        return;
-      }
-      if (firstDropdownValue === "") {
-        alert("Please select a category domain to match")
-        return;
-      }
+  const handleSubmit = async () => {
+    setLoading(true)
+    if (!isValid) {
+      alert('Please validate successfully before submitting.');
+      return;
+    }
+    if (firstDropdownValue === "") {
+      alert("Please select a category domain to match")
+      return;
+    }
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/proposeMergeSubmit`,{
-        //const response = await fetch("http://127.0.0.1:5001/proposeMergeSubmit", {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/proposeMergeSubmit`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          "datasetChoices" : inputValue,
-          "categoryLabel" : firstDropdownValue,
-          "intersection"  : returnAllCategories,
-          "database" : database,
+          "datasetChoices": inputValue,
+          "categoryLabel": firstDropdownValue,
+          "intersection": returnAllCategories,
+          "database": database,
           "mergelevel": mergeLevel,
-          "equivalence" : selectedOption
+          "equivalence": selectedOption
         }),
       });
 
@@ -255,148 +160,150 @@ const Propose_Merge = () => {
 
   const downloadMerge = async () => {
     const worksheet = XLSX.utils.json_to_sheet(data);
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
-      const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
-      const blob = new Blob([excelBuffer], { type: 'application/octet-stream' });
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'merged_dataset.xlsx';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      window.URL.revokeObjectURL(url);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
+    const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+    const blob = new Blob([excelBuffer], { type: 'application/octet-stream' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'merged_dataset.xlsx';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
   };
 
-    return(
+  return (
 
-      <Box sx={{ height: '100%',              
-        overflow: 'auto',            
-        padding: '16px',}}>
+    <Box sx={{
+      height: '100%',
+      overflow: 'auto',
+      padding: '16px',
+    }}>
       <h2 style={{ color: 'black', padding: "1px" }}>Propose Merges</h2>
       <h4 style={{ color: 'black', padding: "1px" }}>Select Datasets for Merging</h4>
-    <Box sx={{ display: 'flex', alignItems: 'center', mt: 2 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', mt: 2 }}>
         <TextField
           label="Enter DatasetIDs seperated by commas"
           variant="outlined"
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
-          sx={{ mr: 2,width: '34vw'  }}
+          sx={{ mr: 2, width: '34vw' }}
         />
         <Button variant="contained" onClick={handleValidate}>
           Validate
         </Button>
       </Box>
 
-    <Snackbar
-      open={open}
-      autoHideDuration={3000}
-      onClose={() => setOpen(false)}
-      anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-    >
-      <Alert onClose={() => setOpen(false)} severity="success" sx={{ width: "100%" }}>
-        Merge proposal complete!
-      </Alert>
-    </Snackbar>
+      <Snackbar
+        open={open}
+        autoHideDuration={3000}
+        onClose={() => setOpen(false)}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert onClose={() => setOpen(false)} severity="success" sx={{ width: "100%" }}>
+          Merge proposal complete!
+        </Alert>
+      </Snackbar>
       <Divider sx={{ my: 2 }} />
       <h4 style={{ color: 'black', padding: "1px" }}>Choose Domain</h4>
       <Box display="flex" alignItems="center" gap={2}>
-      <Box>
-        <Typography variant="h7" style={{ color: 'black', padding: '1px' }}>
-          Select Category Domain
-        </Typography>
-        <Select
-          label="First Dropdown"
-          value={firstDropdownValue}
-          style={{ height: 40 }}
-          sx={{ m: 1, width: '12vw' }}
-          onChange={(event) => setFirstDropdownValue(event.target.value)}
-        >
-          {menuItems}
-        </Select>
-      </Box>
+        <Box>
+          <Typography variant="h7" style={{ color: 'black', padding: '1px' }}>
+            Select Category Domain
+          </Typography>
+          <Select
+            label="First Dropdown"
+            value={firstDropdownValue}
+            style={{ height: 40 }}
+            sx={{ m: 1, width: '12vw' }}
+            onChange={(event) => setFirstDropdownValue(event.target.value)}
+          >
+            {menuItems}
+          </Select>
+        </Box>
 
-      <Box>
-        <Typography variant="h7" style={{ color: 'black', padding: '1px' }}>
-          Choose Merge Level for Extended Merge
-        </Typography>
-        <Select
-          label="Merge Level"
-          value={mergeLevel}
-          style={{ height: 40 }}
-          sx={{ m: 1, width: '12vw' }}
-          onChange={(event) => setMergeLevel(event.target.value)}
-        >
-          {[1, 2, 3, 4].map((level) => (
-            <MenuItem key={level} value={level}>{level}</MenuItem>
-          ))}
-        </Select>
+        <Box>
+          <Typography variant="h7" style={{ color: 'black', padding: '1px' }}>
+            Choose Merge Level for Extended Merge
+          </Typography>
+          <Select
+            label="Merge Level"
+            value={mergeLevel}
+            style={{ height: 40 }}
+            sx={{ m: 1, width: '12vw' }}
+            onChange={(event) => setMergeLevel(event.target.value)}
+          >
+            {[1, 2, 3, 4].map((level) => (
+              <MenuItem key={level} value={level}>{level}</MenuItem>
+            ))}
+          </Select>
+        </Box>
       </Box>
-    </Box>
       <h5 style={{ color: 'black', padding: "1px" }}>Choose Equivalence Criteria</h5>
       <FormControl component="fieldset">
-      <RadioGroup
-        aria-label="category"
-        name="category"
-        value={selectedOption}
-        onChange={handleRadioChange}
-      >
-        <FormControlLabel
-          value="Standard"
-          control={<Radio />}
-          label="Exact: Categories are only equivalent if they point to the same node"
-        />
-        <FormControlLabel
-          value="Extended"
-          control={<Radio />}
-          label="Extended: Categories can be equivalent if they point to nodes that are connected by contains ties"
-        />
-        <FormControlLabel
-          value="Extended-languages"
-          control={<Radio />}
-          label="TBD - Extended-languages: Categories can be equivalent if they have languages that are connected via contains ties"
-          disabled
-        />
-        <FormControlLabel
-          value="Refined"
-          control={<Radio />}
-          label="TBD - Refined: Categories are only equivalent if they point to the same node and are within a specified window of time and distance"
-          disabled
-        />
-      </RadioGroup>
-    </FormControl>
-    <FormGroup>
-      <FormControlLabel
-        control={
-          <Checkbox
-            checked={returnAllCategories}
-            onChange={handleCheckChange}
-            name="returnAllCategories"
-            color="primary"
+        <RadioGroup
+          aria-label="category"
+          name="category"
+          value={selectedOption}
+          onChange={handleRadioChange}
+        >
+          <FormControlLabel
+            value="Standard"
+            control={<Radio />}
+            label="Exact: Categories are only equivalent if they point to the same node"
           />
-        }
-        label={`Return only categories matched across all datasets`}
-      />
-    </FormGroup>
+          <FormControlLabel
+            value="Extended"
+            control={<Radio />}
+            label="Extended: Categories can be equivalent if they point to nodes that are connected by contains ties"
+          />
+          <FormControlLabel
+            value="Extended-languages"
+            control={<Radio />}
+            label="TBD - Extended-languages: Categories can be equivalent if they have languages that are connected via contains ties"
+            disabled
+          />
+          <FormControlLabel
+            value="Refined"
+            control={<Radio />}
+            label="TBD - Refined: Categories are only equivalent if they point to the same node and are within a specified window of time and distance"
+            disabled
+          />
+        </RadioGroup>
+      </FormControl>
+      <FormGroup>
+        <FormControlLabel
+          control={
+            <Checkbox
+              checked={returnAllCategories}
+              onChange={handleCheckChange}
+              name="returnAllCategories"
+              color="primary"
+            />
+          }
+          label={`Return only categories matched across all datasets`}
+        />
+      </FormGroup>
 
-    <Button variant="contained" sx={{
+      <Button variant="contained" sx={{
         backgroundColor: 'black',
-        color: 'white', 
+        color: 'white',
         '&:hover': {
-          backgroundColor: 'green', 
+          backgroundColor: 'green',
         },
-        mr:4
-      }}  onClick={handleSubmit}>
+        mr: 4
+      }} onClick={handleSubmit}>
         Submit
       </Button>
-<Button variant="contained" sx={{
+      <Button variant="contained" sx={{
         backgroundColor: 'black',
-        color: 'white', 
+        color: 'white',
         '&:hover': {
-          backgroundColor: 'green', 
+          backgroundColor: 'green',
         },
-      }}  onClick={downloadMerge}>
+      }} onClick={downloadMerge}>
         Download Results
       </Button>
       <Backdrop
@@ -406,8 +313,8 @@ const Propose_Merge = () => {
         <CircularProgress color="inherit" />
         <span style={{ marginLeft: 16 }}>Processing...</span>
       </Backdrop>
-      </Box>
-    )
+    </Box>
+  )
 }
 
 export default Propose_Merge;
