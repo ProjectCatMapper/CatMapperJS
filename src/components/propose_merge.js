@@ -209,7 +209,7 @@ const Propose_Merge = () => {
             sx={{ m: 1, width: '12vw' }}
             onChange={(event) => setResultFormat(event.target.value)}
           >
-            {["key-to-key", "key-to-category", "category-level"].map((level) => (
+            {["key-to-key", "key-to-category", "category-to-category"].map((level) => (
               <MenuItem key={level} value={level}>{level}</MenuItem>
             ))}
           </Select>
