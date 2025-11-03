@@ -668,7 +668,7 @@ export default function Tableclick(props) {
                 value !== "" && value !== null && value !== undefined && value !== 0 ? (
                   <li key={key}>
                     <strong>{key}:</strong>{" "}
-                    {key === "Dataset Location" ? (
+                    {key === "Dataset Location" || key === "Merged_into_CMID" ? (
                       <a href={value} target="_blank" rel="noopener noreferrer">
                         {value}
                       </a>
