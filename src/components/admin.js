@@ -367,11 +367,13 @@ const Admin = () => {
     setTableDropdownValues((prev) => ({ ...prev, [idx]: value }));
   };
 
+  // trim immediately for textboxes, do not change this !!!
+  // used for Textfields, and Select
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prevFormData => ({
       ...prevFormData,
-      [name]: value
+      [name]: value.trim()
     }));
   };
 
@@ -389,13 +391,15 @@ const Admin = () => {
     return;
   }
 
+  console.log(formData)
+  const option = formData.s1_1
   const cmid = formData.s1_2.trim();
   const pattern = /^(AM|CP|CL|SM|AD|SD)\d+$/;
 
   if (pattern.test(cmid)) {
     const fetchData = async () => {
       try {
-        const res = await fetch(`${process.env.REACT_APP_API_URL}/admin_add_edit_delete_nodeproperties?CMID=`+cmid+"&database="+database,{
+        const res = await fetch(`${process.env.REACT_APP_API_URL}/admin_add_edit_delete_nodeproperties?CMID=`+cmid+"&database="+database+"&option="+option,{
       //const res = await fetch("http://127.0.0.1:5001/admin_add_edit_delete_nodeproperties?CMID="+cmid+"&database="+database, {
       method: "GET",
         });
