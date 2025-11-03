@@ -412,9 +412,24 @@ const handleFileChange = async (event) => {
         }
 
         const data = await response.json();
-        setDropdownData(data);
+        const updatedData = Array.isArray(data)
+        ? data.map((item) => {
+            if (item && typeof item === "object" && "group" in item) {
+              if (item.group === "DISTRICT") {
+                return {
+                  ...item,
+                  group: "AREA",
+                  nodes: item.nodes.map((n) => (n === "DISTRICT" ? "AREA" : n)),
+                };
+              }
+              return item;
+            }
+            return item;
+          })
+        : [];
+        setDropdownData(updatedData);
 
-        if (data.length > 0) setFirstDropdownValue(data[0].group);
+        if (updatedData.length > 0) setFirstDropdownValue(updatedData[0].group);
 
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -425,8 +440,19 @@ const handleFileChange = async (event) => {
   }, []); 
 
   const secondDropdownOptions = firstDropdownValue
-    ? dropdownData.find((item) => item.group === firstDropdownValue)?.nodes || []
-    : [];
+  ? (() => {
+      const options = dropdownData.find(
+        (item) => item.group === firstDropdownValue
+      )?.nodes || [];
+
+      const reordered = [
+        ...options.filter((opt) => opt === firstDropdownValue),
+        ...options.filter((opt) => opt !== firstDropdownValue),
+      ];
+
+      return reordered;
+    })()
+  : [];
 
   useEffect(() => {
     if (secondDropdownOptions.length > 0) {
