@@ -367,13 +367,12 @@ const Admin = () => {
     setTableDropdownValues((prev) => ({ ...prev, [idx]: value }));
   };
 
-  // trim immediately for textboxes, do not change this !!!
-  // used for Textfields, and Select
+  // trims strings immediately for textboxes and leaves objects coming from Select intact, do not change this !!!
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prevFormData => ({
       ...prevFormData,
-      [name]: value.trim()
+      [name]: typeof value === 'string' ? value.trim() : value
     }));
   };
 
