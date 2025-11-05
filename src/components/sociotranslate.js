@@ -715,15 +715,6 @@ const handleFileChange = async (event) => {
       />
       <br/>
       <br/>
-      <Backdrop style={{ color: '#fff', zIndex: 1300 }} open={loading}>
-        <div>
-          <CircularProgress color="inherit" />
-          <Typography variant="h6" align="center" style={{ marginTop: '10px' }}>
-            Translating...
-          </Typography>
-        </div>
-        {loading && <ProgressBar progress={progress} />}
-      </Backdrop>
       {/* Add row separator */}
       <Box sx={{ display: 'flex', alignItems: 'center' }}>
       <Typography variant="body1" sx={{ marginRight: 2, color: 'black', fontWeight: 500 }}>
@@ -811,6 +802,15 @@ const handleFileChange = async (event) => {
         </Tooltip>
       </Box>     
       <br/>
+      <Backdrop style={{ color: '#fff', zIndex: 1300 }} open={loading}>
+        <div>
+          <CircularProgress color="inherit" />
+          <Typography variant="h6" align="center" style={{ marginTop: '10px' }}>
+            Translating...
+          </Typography>
+        </div>
+        {loading && <ProgressBar progress={progress} />}
+      </Backdrop>
       <Button variant="contained" sx={{
         backgroundColor: 'black',
         color: 'white', 
