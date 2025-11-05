@@ -725,7 +725,7 @@ const handleFileChange = async (e) => {
   return (
     <Box sx={{ p: 4 }}>
       <Box sx={{ mb: 3 }} style={{marginBottom:"50px"}}>
-      <h4 style={{ color: 'black', padding: "2px" }}>Find upload templates here:</h4>
+      <h4 style={{ color: 'black', padding: "2px" }}>Download spreadsheet templates here for specific kinds of uploads (dataset nodes, category nodes, and adding and updating USES ties):</h4>
       <br />
       <FormControl sx={{width: "12vw", mr:"1vw" }}  variant="outlined">
       <InputLabel id="dropdown-label">Download:</InputLabel>
