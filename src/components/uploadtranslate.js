@@ -726,24 +726,24 @@ const UploadTranslat = () => {
 
   return (
     <Box sx={{ p: 4 }}>
-      <Box sx={{ mb: 3 }} style={{ marginBottom: "50px" }}>
-        <h4 style={{ color: 'black', padding: "2px" }}>Find upload templates here:</h4>
-        <br />
-        <FormControl sx={{ width: "12vw", mr: "1vw" }} variant="outlined">
-          <InputLabel id="dropdown-label">Download:</InputLabel>
-          <Select
-            labelId="dropdown-label"
-            id="dropdown-select"
-            value={fileDownload}
-            onChange={handlefileDownload}
-            label="Select Option"
-          >
-            <MenuItem value="dataset">New Dataset Nodes</MenuItem>
-            <MenuItem value="nodes">New Category Nodes</MenuItem>
-            <MenuItem value="uses">New Uses Ties</MenuItem>
-            <MenuItem value="update_uses">Update Uses Ties</MenuItem>
-          </Select>
-        </FormControl>
+      <Box sx={{ mb: 3 }} style={{marginBottom:"50px"}}>
+      <h4 style={{ color: 'black', padding: "2px" }}>Download spreadsheet templates here for specific kinds of uploads (dataset nodes, category nodes, and adding and updating USES ties):</h4>
+      <br />
+      <FormControl sx={{width: "12vw", mr:"1vw" }}  variant="outlined">
+      <InputLabel id="dropdown-label">Download:</InputLabel>
+      <Select
+        labelId="dropdown-label"
+        id="dropdown-select"
+        value={fileDownload}
+        onChange={handlefileDownload}
+        label="Select Option"
+      >
+        <MenuItem value="dataset">New Dataset Nodes</MenuItem>
+        <MenuItem value="nodes">New Category Nodes</MenuItem>
+        <MenuItem value="uses">New Uses Ties</MenuItem>
+        <MenuItem value="update_uses">Update Uses Ties</MenuItem>
+      </Select>
+    </FormControl>
 
         {/* <Button variant="contained" sx={{
         backgroundColor: 'black',
