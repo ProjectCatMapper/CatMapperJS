@@ -113,7 +113,6 @@ const Admin = () => {
 
   const handleSubmit = async () => {
     try {
-      console.log(ntableData)
       if (firstDropdownValue === "move USES tie"){
         handleClose();
       }
@@ -229,6 +228,12 @@ const Admin = () => {
     try {
       setLoading(true);
       setTableData([])
+
+      const cleanedData = {
+      ...formData,
+      s1_2: formData.s1_2.trim(),
+      s1_3: formData.s1_3.trim(),
+    };
     
       const response = await fetch(`${process.env.REACT_APP_API_URL}/check_ambiguous_usesties`, {
       //const response = await fetch("http://127.0.0.1:5001/check_ambiguous_usesties", {
@@ -239,7 +244,7 @@ const Admin = () => {
         body: JSON.stringify({
           database: database,
           cred: cred,
-          input: formData
+          input: cleanedData
         }),
       });
 
@@ -372,7 +377,7 @@ const Admin = () => {
     const { name, value } = e.target;
     setFormData(prevFormData => ({
       ...prevFormData,
-      [name]: typeof value === 'string' ? value.trim() : value
+      [name]: value
     }));
   };
 
@@ -390,7 +395,6 @@ const Admin = () => {
     return;
   }
 
-  console.log(formData)
   const option = formData.s1_1
   const cmid = formData.s1_2.trim();
   const pattern = /^(AM|CP|CL|SM|AD|SD)\d+$/;
