@@ -19,6 +19,7 @@ import { Link } from 'react-router-dom'
 import Tooltip from '@mui/material/Tooltip';
 import InfoIcon from '@mui/icons-material/Info';
 import { Dialog, DialogTitle, DialogContent, DialogActions} from "@mui/material";
+import infodata from './infodata.json';
 
 function Sociotranslate(){
 
@@ -486,6 +487,96 @@ const handleFileChange = async (event) => {
     return tooltipTexts[num];
   };
 
+  const [categories, setCategories] = useState([]);
+  
+    useEffect(() => {
+      fetch(`${process.env.REACT_APP_API_URL}/metadata/domainDescriptions/${database}`)
+        .then((res) => {
+          if (!res.ok) throw new Error("Failed to load domain descriptions");
+          return res.json();
+        })
+        .then((data) => {
+          setCategories(data);
+        })
+        .catch((err) => {
+          console.error("Error loading categories:", err);
+        });
+    }, [database]);
+
+    const [selectedCategory, setSelectedCategory] = useState({});
+    
+      useEffect(() => {
+        fetch(`${process.env.REACT_APP_API_URL}/metadata/subdomains/${database}`)
+          .then((res) => res.json())
+          .then((data) => {
+            const normalized = {};
+    
+            data.forEach(({ domain, subdomains }) => {
+              normalized[domain] = subdomains;
+            });
+    
+            setSelectedCategory(normalized);
+          })
+          .catch((err) => {
+            console.error("Error loading subdomains:", err);
+          });
+      }, [database]);
+
+    const tooltipContent = (
+      <div style={{ maxWidth: '400px' }}>
+        <h3>From which category domain do you want to find matches?</h3>
+        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <thead>
+            <tr>
+              <th style={{ borderBottom: '1px solid #ddd', textAlign: 'left', padding: '8px' }}>Label</th>
+              <th style={{ borderBottom: '1px solid #ddd', textAlign: 'left', padding: '8px' }}>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            {categories.map((category, index) => (
+              <tr key={index}>
+                <td style={{ borderBottom: '1px solid #ddd', padding: '8px' }}>{category.label}</td>
+                <td style={{ borderBottom: '1px solid #ddd', padding: '8px' }}>{category.description}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    );
+  
+    const tooltipContent2 = (
+      <div style={{ maxWidth: '400px' }}>
+        <h3>From which category sub-domain do you want to find matches?</h3>
+        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <thead>
+            <tr>
+              <th style={{ borderBottom: '1px solid #ddd', textAlign: 'left', padding: '8px' }}>Label</th>
+              <th style={{ borderBottom: '1px solid #ddd', textAlign: 'left', padding: '8px' }}>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+          {infodata && selectedCategory?.[(firstDropdownValue === "AREA" ? "DISTRICT" : firstDropdownValue)]?.length > 0 ? (
+            infodata
+              .filter(desc => selectedCategory[firstDropdownValue === "AREA" ? "DISTRICT" : firstDropdownValue].includes(desc.label))
+              .map((category, index) => (
+                <tr key={index}>
+                  <td style={{ borderBottom: '1px solid #ddd', padding: '8px' }}>{category.label}</td>
+                  <td style={{ borderBottom: '1px solid #ddd', padding: '8px' }}>{category.description}</td>
+                </tr>
+              ))
+          ) : (
+            <tr>
+              <td colSpan={2} style={{ padding: '8px', fontStyle: 'italic' }}>
+                Loading...
+              </td>
+            </tr>
+          )}
+  
+          </tbody>
+        </table>
+      </div>
+    );
+
   return (
     <Box sx={{ backgroundColor: 'black', opacity: 1,flexGrow: 1,display: 'flex',flexDirection: 'column' }}>
       <Box sx={{ display: 'flex', flexDirection: 'row', gap: 0.5, flexGrow: 1 }}>
@@ -531,7 +622,7 @@ const handleFileChange = async (event) => {
       )}
       <Box sx={{ display: 'flex', alignItems: 'center' }}>
         <p style={{ color: 'White', fontWeight: "bold", marginLeft: 7, padding: "2px" }}>Select category domain</p>
-        <Tooltip title={getTooltipContent(8)} arrow>
+        <Tooltip title={tooltipContent} arrow>
           <Button startIcon={<InfoIcon sx={{ height: '28px', width: '28px' }} />} />
         </Tooltip>
       </Box>
@@ -551,7 +642,7 @@ const handleFileChange = async (event) => {
         <>
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
         <p style={{ color: 'White', fontWeight: "bold", marginLeft: 7, padding: "2px" }}>Select category sub-domain</p>
-        <Tooltip title={getTooltipContent(3)} arrow>
+        <Tooltip title={tooltipContent2} arrow>
           <Button startIcon={<InfoIcon sx={{ height: '28px', width: '28px' }} />} />
         </Tooltip>
       </Box> 

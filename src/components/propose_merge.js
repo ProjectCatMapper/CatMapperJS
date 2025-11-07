@@ -96,7 +96,6 @@ const Propose_Merge = () => {
 
 
   const handleSubmit = async () => {
-    setLoading(true)
     if (!isValid) {
       alert('Please validate successfully before submitting.');
       return;
@@ -105,6 +104,7 @@ const Propose_Merge = () => {
       alert("Please select a category domain to match")
       return;
     }
+    setLoading(true)
     try {
       const response = await fetch(`${process.env.REACT_APP_API_URL}/proposeMergeSubmit`, {
         method: 'POST',
@@ -123,6 +123,14 @@ const Propose_Merge = () => {
       });
 
       const result = await response.json();
+      if (
+      !result || 
+      (Array.isArray(result) && result.length === 0) ||
+      (typeof result === "object" && Object.keys(result).length === 0)
+    ) {
+      alert("No results found. No merge results found.");
+      return;
+    }
       setData(result)
       setOpen(true);
     } catch (error) {
@@ -293,7 +301,12 @@ const Propose_Merge = () => {
         '&:hover': {
           backgroundColor: 'green',
         },
-      }} onClick={downloadMerge}>
+      }} onClick={downloadMerge}
+       disabled={
+    !data || 
+    (Array.isArray(data) && data.length === 0) || 
+    (typeof data === "object" && Object.keys(data).length === 0)
+  }>
         Download Results
       </Button>
       <Backdrop
