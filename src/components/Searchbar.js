@@ -219,7 +219,7 @@ const usersKey = `${database}_myData`;
 
   const tooltipContent = (
     <div style={{ maxWidth: '400px' }}>
-      <h4>Domain Descriptions</h4>
+      <h3>From which category domain do you want to find matches?</h3>
       <table style={{ width: '100%', borderCollapse: 'collapse' }}>
         <thead>
           <tr>
@@ -241,7 +241,7 @@ const usersKey = `${database}_myData`;
 
   const tooltipContent2 = (
     <div style={{ maxWidth: '400px' }}>
-      <h4>Domain Descriptions</h4>
+      <h3>From which category sub-domain do you want to find matches?</h3>
       <table style={{ width: '100%', borderCollapse: 'collapse' }}>
         <thead>
           <tr>
