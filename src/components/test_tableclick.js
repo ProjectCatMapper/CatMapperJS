@@ -466,15 +466,27 @@ export default function Tableclick(props) {
          {
           from: start_node_id,
           to: end_node_id,
-          eventType: eventType,
+          //eventType: eventType,
           ...rest,
           color: "black",
         };
 
-        if (event.target.value === "CONTAINS" && eventType && Array.isArray(eventType)) {
-          const filtered = eventType.filter(e => e !== "HIERARCHY");
-          if (filtered.length > 0) {
-            edge.label = filtered.join(", ");
+        // if (event.target.value === "CONTAINS" && eventType && Array.isArray(eventType)) {
+        //   const filtered = eventType.filter(e => e !== "HIERARCHY");
+        //   if (filtered.length > 0) {
+        //     edge.label = filtered.join(", ");
+        //   }
+        // }
+
+        if (event.target.value === "CONTAINS") {
+          if (eventType && Array.isArray(eventType)) {
+            const filtered = eventType.filter(e => e !== "HIERARCHY");
+            if (filtered.length > 0) {
+              edge.label = filtered.join(", ");
+              edge.eventType = eventType;
+            }
+          } else if (eventType) {
+            edge.eventType = eventType;
           }
         }
 
