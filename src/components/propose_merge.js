@@ -174,7 +174,7 @@ const Propose_Merge = () => {
         },
         body: JSON.stringify({
           "datasetChoices": inputValue,
-          "categoryLabel": firstDropdownValue,
+          "categoryLabel": advdomainDrop,
           "intersection": returnAllCategories,
           "database": database,
           "mergelevel": mergeLevel,
