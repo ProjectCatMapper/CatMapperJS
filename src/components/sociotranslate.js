@@ -535,7 +535,7 @@ const handleFileChange = async (event) => {
           <tbody>
             {categories.map((category, index) => (
               <tr key={index}>
-                <td style={{ borderBottom: '1px solid #ddd', padding: '8px' }}>{category.label}</td>
+                <td style={{ borderBottom: '1px solid #ddd', padding: '8px' }}>{category.label === "DISTRICT" ? "AREA" : category.label}</td>
                 <td style={{ borderBottom: '1px solid #ddd', padding: '8px' }}>{category.description}</td>
               </tr>
             ))}
