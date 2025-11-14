@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Box, Button, FormControlLabel, Radio, RadioGroup, Checkbox, Typography, Divider, Select, NativeSelect, TextField, MenuItem, FormControl, FormGroup, Snackbar, Alert, Paper, Tooltip} from '@mui/material';
+import { Box, Button, FormControlLabel, Radio, RadioGroup, Checkbox, Typography, Divider, Select, NativeSelect, TextField, MenuItem, FormControl, FormGroup, Snackbar, Alert, Paper, Tooltip, InputLabel} from '@mui/material';
 import { useLocation } from 'react-router-dom';
 import * as XLSX from 'xlsx';
 import CircularProgress from '@mui/material/CircularProgress';
@@ -17,6 +17,9 @@ const Propose_Merge = () => {
   const [firstDropdownValue, setFirstDropdownValue] = useState('ALL NODES');
   const [resultFormat, setResultFormat] = useState("key-to-key");
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [showKeys, setShowKeys] = useState(false);
+  const [keysByDataset , setkeysByDataset] = useState(false);
+  const [selectedKeyVariables, setSelectedKeyVariables] = useState({});
 
   let database = "SocioMap"
   if (useLocation().pathname.includes("archamap")) {
@@ -75,7 +78,7 @@ const Propose_Merge = () => {
             <tbody>
               {categories.map((category, index) => (
                 <tr key={index}>
-                  <td style={{ borderBottom: '1px solid #ddd', padding: '8px' }}>{category.label}</td>
+                  <td style={{ borderBottom: '1px solid #ddd', padding: '8px' }}>{category.label === "DISTRICT" ? "AREA" : category.label}</td>
                   <td style={{ borderBottom: '1px solid #ddd', padding: '8px' }}>{category.description}</td>
                 </tr>
               ))}
@@ -155,6 +158,34 @@ const Propose_Merge = () => {
     }
   };
 
+  const getKeys = async () => {
+    try {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/getKeys`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          "names": inputValue,
+          "database": database,
+          "subdomain": advdomainDrop
+        }),
+      });
+
+      const result = await response.json();
+      console.log(result)
+      if (result.success === true) {
+        alert(`Validation successful: ${result.message || "All nodes exist."}`);
+        setkeysByDataset(result.keysByDataset || {});
+        setIsValid(true);
+      } else {
+        alert(`Validation failed: ${result.message || "Some nodes are missing."}`);
+      }
+    } catch (error) {
+      alert('Validation failed. Please try again.');
+    }
+  };
+
 
   const handleSubmit = async () => {
     if (!isValid) {
@@ -180,6 +211,7 @@ const Propose_Merge = () => {
           "mergelevel": mergeLevel,
           "equivalence": selectedOption,
           "resultFormat": resultFormat,
+          "selectedKeyvariable": selectedKeyVariables
         }),
       });
 
@@ -211,7 +243,8 @@ const Propose_Merge = () => {
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'merged_dataset.xlsx';
+    const filename = inputValue.split(",").map(s => s.trim()).join("_");
+    a.download = `ProposedMerge_${filename}_${advdomainDrop}.xlsx`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -236,7 +269,7 @@ const Propose_Merge = () => {
           sx={{ mr: 2, width: '34vw' }}
         />
         <Button variant="contained" onClick={handleValidate}>
-          Validate
+          Validate DatasetIDs
         </Button>
       </Box>
 
@@ -363,6 +396,7 @@ const Propose_Merge = () => {
           elevation={3} 
           sx={{ mt: 1, p: 1, backgroundColor: 'rgba(0, 0, 0, 1)' }}
         >
+          <Box>
           <Typography variant="h7" style={{ color: 'white', padding: '1px' }}>
             Choose Result Format
           </Typography>
@@ -380,6 +414,60 @@ const Propose_Merge = () => {
           <Tooltip title={"The default key-to-key option exports a spreadsheet with rows showing how each key from one dataset corresponds to a key from another dataset. The key-to-category option exports a spreadsheet with one row per key and dataset pair and shows which CatMapper category the key points to.  The category-to-category option exports a spreadsheet showing how each category in one dataset is associated with a category in another dataset."} arrow>
             <Button startIcon={<InfoIcon sx={{ height: '28px', width: '28px' }} />} />
           </Tooltip>
+          </Box>
+          <br/>
+          <FormControlLabel
+          sx={{ color: "white" }}
+        control={
+          <Checkbox
+                checked={showKeys}
+                onChange={(e) =>{ const checked = e.target.checked;
+                  setShowKeys(checked)
+                  if (checked){
+                    getKeys();
+                  }
+                }}
+                sx={{
+                  color: "white", 
+                  "&.Mui-checked": {
+                    color: "white",
+                  },
+                }}
+              />
+            }
+            label="Select Key variables"
+          />
+          {showKeys && isValid && (
+              <Box sx={{ mt: 2 }}>
+                {Object.entries(keysByDataset).map(([datasetID, keys]) => (
+                  <Box key={datasetID} sx={{ mt: 2, display: 'flex',alignItems: 'center',gap: 2}}>
+                  <Box sx={{ color: 'white', minWidth: 150 }}>{`Key variables for ${datasetID}`}</Box>
+                  <FormControl sx={{ flex: 1 }} key={datasetID}>
+                    <Select
+                      value={selectedKeyVariables[datasetID] || ""}
+                      onChange={(e) =>
+                        setSelectedKeyVariables((prev) => ({
+                          ...prev,
+                          [datasetID]: e.target.value,
+                        }))
+                      }
+                      sx={{
+                        color: "white",
+                        ".MuiOutlinedInput-notchedOutline": { borderColor: "white" },
+                        "& .MuiSvgIcon-root": { color: "white" },
+                      }}
+                    >
+                      {keys.map((k) => (
+                        <MenuItem key={k} value={k}>
+                          {k}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                  </Box>
+                ))}
+              </Box>
+            )}
           </Paper>
         </Box>)}
       <h4 style={{ color: 'black', padding: "1px" }}>Choose Equivalence Criteria</h4>

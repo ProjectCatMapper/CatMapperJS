@@ -230,7 +230,7 @@ const usersKey = `${database}_myData`;
         <tbody>
           {categories.map((category, index) => (
             <tr key={index}>
-              <td style={{ borderBottom: '1px solid #ddd', padding: '8px' }}>{category.label}</td>
+              <td style={{ borderBottom: '1px solid #ddd', padding: '8px' }}>{category.label === "DISTRICT" ? "AREA" : category.label}</td>
               <td style={{ borderBottom: '1px solid #ddd', padding: '8px' }}>{category.description}</td>
             </tr>
           ))}
@@ -453,7 +453,7 @@ const usersKey = `${database}_myData`;
                 >
                   {Object.keys(selectedCategory).map((category, index) => (
                     <option key={index} value={category}>
-                      {category}
+                    {category === "DISTRICT" ? "AREA" : category}
                     </option>
                   ))}
                 </NativeSelect>
@@ -489,7 +489,7 @@ const usersKey = `${database}_myData`;
                 >
                   {advoptions.map((value, index) => (
                     <option key={index} value={value}>
-                      {value}
+                      {value === "DISTRICT" ? "AREA" : value}
                     </option>
                   ))}
                 </NativeSelect>
