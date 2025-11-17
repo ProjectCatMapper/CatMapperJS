@@ -14,7 +14,7 @@ const Propose_Merge = () => {
   const [data, setData] = useState();
   const [isValid, setIsValid] = useState(false);
   const [mergeLevel, setMergeLevel] = useState(1);
-  const [firstDropdownValue, setFirstDropdownValue] = useState('ALL NODES');
+  const [firstDropdownValue, setFirstDropdownValue] = useState('ANY DOMAIN');
   const [resultFormat, setResultFormat] = useState("key-to-key");
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [showKeys, setShowKeys] = useState(false);
@@ -27,9 +27,9 @@ const Propose_Merge = () => {
   }
   
   const [selectedCategory, setSelectedCategory] = useState({});
-   const [advdomainDrop, setadvdomainDrop] = React.useState('ALL NODES');
+   const [advdomainDrop, setadvdomainDrop] = React.useState('ANY DOMAIN');
   
-    const [advoptions, setadvoptions] = React.useState(['ALL NODES']);
+    const [advoptions, setadvoptions] = React.useState(['ANY DOMAIN']);
   
     useEffect(() => {
       fetch(`${process.env.REACT_APP_API_URL}/metadata/subdomains/${database}`)
@@ -40,6 +40,8 @@ const Propose_Merge = () => {
           data.forEach(({ domain, subdomains }) => {
             normalized[domain] = subdomains;
           });
+
+          delete normalized["ALL NODES"]
   
           setSelectedCategory(normalized);
         })
@@ -173,13 +175,14 @@ const Propose_Merge = () => {
       });
 
       const result = await response.json();
-      console.log(result)
       if (result.success === true) {
-        alert(`Validation successful: ${result.message || "All nodes exist."}`);
         setkeysByDataset(result.keysByDataset || {});
         setIsValid(true);
-      } else {
-        alert(`Validation failed: ${result.message || "Some nodes are missing."}`);
+      } 
+      else {
+        //alert(`Validation failed: ${result.message}`);
+        setIsValid(false);
+        setkeysByDataset(result.keysByDataset || {});
       }
     } catch (error) {
       alert('Validation failed. Please try again.');
@@ -439,9 +442,13 @@ const Propose_Merge = () => {
           />
           {showKeys && isValid && (
               <Box sx={{ mt: 2 }}>
-                {Object.entries(keysByDataset).map(([datasetID, keys]) => (
+                {Object.entries(keysByDataset).map(([datasetID, keys]) => {
+                  const hasKeys = keys && keys.length > 0;
+
+                  return (
                   <Box key={datasetID} sx={{ mt: 2, display: 'flex',alignItems: 'center',gap: 2}}>
                   <Box sx={{ color: 'white', minWidth: 150 }}>{`Key variables for ${datasetID}`}</Box>
+                  {hasKeys ? (
                   <FormControl sx={{ flex: 1 }} key={datasetID}>
                     <Select
                       value={selectedKeyVariables[datasetID] || ""}
@@ -464,8 +471,23 @@ const Propose_Merge = () => {
                       ))}
                     </Select>
                   </FormControl>
+                  ) : (
+                  <Box
+                    sx={{
+                      flex: 1,
+                      color: "gray",
+                      border: "1px solid gray",
+                      p: 1.2,
+                      borderRadius: 1,
+                      opacity: 0.7,
+                    }}
+                  >
+                    No keys exist
                   </Box>
-                ))}
+                  )}
+                  </Box>
+                );
+                })}
               </Box>
             )}
           </Paper>
