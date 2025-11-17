@@ -135,7 +135,8 @@ const UploadTranslat = () => {
     const fileType = file.type;
     if (
       fileType === 'application/vnd.ms-excel' ||
-      fileType === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      fileType === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
+      fileType === 'text/csv'
     ) {
       setFile(file);
       const fileObj = file;
@@ -383,9 +384,9 @@ const UploadTranslat = () => {
           const filteredItem = {};
 
           allowedColumns.forEach(col => {
-            if (item[col] !== undefined) {
+            //if (item[col] !== undefined) {
               filteredItem[col] = item[col];
-            }
+            //}
           });
 
           return filteredItem;
