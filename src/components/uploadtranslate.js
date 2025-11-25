@@ -35,7 +35,7 @@ const UploadTranslat = () => {
   const [openDialog, setOpenDialog] = useState(false);
   const [progress, setProgress] = useState(0);
   const [formData, setFormData] = useState({
-    domain: '',
+    domain: 'ALL NODES',
     datasetID: '',
     cmNameColumn: '',
     categoryNamesColumn: '',
@@ -515,7 +515,7 @@ const UploadTranslat = () => {
 
   let allowedExtraColumns = ["descriptor", "Dataset", "log", "country", "dateEnd", "dateStart", "district", "eventDate", "eventType",
     "geoCoords", "Key", "NewKey", "label", "latitude", "longitude", "ignoreNames", "Name", "parent", "period", "parentContext", "propertyValues",
-    "rawDate", "Rfunction", "Rtransform", "recordEnd", "recordStart", "sampleSize", "transform", "categoryType", "url", "variableDescription",
+    "rawDate", "Rfunction", "Rtransform", "recordEnd", "recordStart", "sampleSize", "transform", "categoryType", "url", "variableDescription", "variable",
     "yearEnd", "yearStart", "language", "populationEstimate", "religion", "geoPolygon", "glottocode", "FIPS", "ISO2", "ISO3", "ISONumeric", "comment", "polity", "occupation", "culture", "yearPublished"]
   let allowedDatasetColumns = []
 
@@ -573,6 +573,40 @@ const UploadTranslat = () => {
           allowedExtraColumns = ["CMName", "glottocode", "FIPS", "ISO2", "ISO3", "ISONumeric"]
         }
         break;
+      case 'add_merging':
+      case 'merging_add':
+      case 'merging_replace':
+        {
+
+          const cols = columns.map(c => c.trim());
+          let mergeType;
+
+          if (cols.includes("variableID")) {
+            mergeType = "2";
+            required = ["mergingID", "datasetID", "variableID", "Key", "VarName"];
+          }
+
+          else if (cols.includes("categoryID")) {
+            const keyColumns = cols.filter(c => c.startsWith("Key_"));
+
+            if (keyColumns.length === 2) {
+              mergeType = "3A";
+              const [key1, key2] = keyColumns;
+              required = ["mergingID", "categoryID", key1, key2];
+            } else {
+              mergeType = "3B";
+              required = ["mergingID", "categoryID", "Key", "datasetID"];
+            }
+          }
+          else {
+            mergeType = "1";
+            required = ["mergingID", "datasetID"];
+          }
+
+          break;
+        }
+
+
       default:
         required = [];
     }
@@ -614,7 +648,7 @@ const UploadTranslat = () => {
     setMissingColumns(notFoundColumns);
     setAllRequiredColumnsFound(notFoundColumns.length === 0);
 
-    if (['add_node', 'add_uses', 'update_add', 'update_replace', 'node_add', 'node_replace'].includes(advselectedOption)) {
+    if (['add_node', 'add_uses', 'update_add', 'update_replace', 'node_add', 'node_replace', 'add_merging', 'merging_add', 'merging_replace'].includes(advselectedOption)) {
       let extraCols = columns.filter((col) => {
         return !required.includes(col)
       });
@@ -983,12 +1017,18 @@ const UploadTranslat = () => {
             </Button>
           </Tooltip></h4>
           <RadioGroup defaultValue="add_node" name="advuploadOption" sx={{ mb: 2 }} onChange={handleadvOptionChange}>
+            <Typography variant="subtitle2" sx={{ mt: 2, color: "black", fontWeight: "bold" }}>Nodes</Typography>
             <FormControlLabel value="add_node" control={<Radio />} label="Adding new node for every row" />
+            <FormControlLabel value="node_add" control={<Radio />} label="Updating existing Node properties--add or add to properties" />
+            {authLevel === 2 && <FormControlLabel value="node_replace" control={<Radio />} label="Updating existing Node properties--replace one property" />}
+            <Typography variant="subtitle2" sx={{ mt: 2, color: "black", fontWeight: "bold" }}>Uses ties</Typography>
             <FormControlLabel value="add_uses" control={<Radio />} label="Adding new uses ties (with old or new nodes)" />
             <FormControlLabel value="update_add" control={<Radio />} label="Updating existing USES only--add or add to properties" />
             {authLevel === 2 && <FormControlLabel value="update_replace" control={<Radio />} label="Updating existing USES only--replace one property" />}
-            <FormControlLabel value="node_add" control={<Radio />} label="Updating existing Node properties--add or add to properties" />
-            {authLevel === 2 && <FormControlLabel value="node_replace" control={<Radio />} label="Updating existing Node properties--replace one property" />}
+            <Typography variant="subtitle2" sx={{ mt: 2, color: "black", fontWeight: "bold" }}>Merging & Equivalence ties</Typography>
+            <FormControlLabel value="add_merging" control={<Radio />} label="Adding new merging ties for every row" />
+            <FormControlLabel value="merging_add" control={<Radio />} label="Updating existing Merging tie properties--add or add to properties" />
+            {authLevel === 2 && <FormControlLabel value="merging_replace" control={<Radio />} label="Updating existing Merging tie properties--replace one property" />}
           </RadioGroup>
 
           <FormControl component="fieldset" sx={{ mb: 2 }}>
@@ -1040,7 +1080,7 @@ const UploadTranslat = () => {
           </Dialog>
 
           <br />
-          {["add_node", 'add_uses', 'update_add'].includes(advselectedOption) && extraColumns.length > 0 && allRequiredColumnsFound && (
+          {["add_node", 'add_uses', 'update_add','add_merging'].includes(advselectedOption) && extraColumns.length > 0 && allRequiredColumnsFound && (
             <div>
               <h4 style={{ color: 'black', padding: "2px" }}>Choose columns to enter as properties:</h4>
               <Select
@@ -1092,6 +1132,40 @@ const UploadTranslat = () => {
             </div>
           )}
           {advselectedOption === 'node_replace' && extraColumns.length > 0 && allRequiredColumnsFound && (
+            <div>
+              <h4 style={{ color: 'black', padding: "2px" }}>Choose column to replace property:</h4>
+              <br />
+              <Select
+                value={selectedExtraColumn}
+                onChange={handleSingleExtraColumnChange}
+                style={{ width: "7vw" }}
+              >
+                {extraColumns.map((col) => (
+                  <MenuItem key={col} value={col}>
+                    {col}
+                  </MenuItem>
+                ))}
+              </Select>
+            </div>
+          )}
+          {advselectedOption === 'merging_add' && extraColumns.length > 0 && IsDataset && allRequiredColumnsFound && (
+            <div>
+              <h4 style={{ color: 'black', padding: "2px" }}>Choose columns to enter as properties:</h4>
+              <Select
+                multiple
+                value={selectedExtraColumns}
+                onChange={handleExtraColumnsChange}
+                renderValue={(selected) => selected.join(', ')}
+              >
+                {extraColumns.map((col) => (
+                  <MenuItem key={col} value={col}>
+                    {col}
+                  </MenuItem>
+                ))}
+              </Select>
+            </div>
+          )}
+          {advselectedOption === 'merging_replace' && extraColumns.length > 0 && allRequiredColumnsFound && (
             <div>
               <h4 style={{ color: 'black', padding: "2px" }}>Choose column to replace property:</h4>
               <br />

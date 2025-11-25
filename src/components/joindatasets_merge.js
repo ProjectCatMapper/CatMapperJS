@@ -19,43 +19,56 @@ const JoinDatasets_Merge = () => {
   const location = useLocation();
   const [domain, setdomain] = useState('');
 
-
-  useEffect(() => {
-    const path = location.pathname.toLowerCase();
-    if (path.includes('archamap')) {
-      setDatabase('ArchaMap');
-    } else if (path.includes('sociomap')) {
-      setDatabase('SocioMap');
-    }
-  }, [location.pathname]);
-
-  const handleFileUpload = (e, side) => {
-    const fileObj = e.target.files[0];
-    if (!fileObj) return;
-
-    const fileType = fileObj.type;
-    const validExcelTypes = [
-      'application/vnd.ms-excel',
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    ];
-    const validCsvTypes = ['text/csv', 'application/csv'];
-
-    // Select which setter to use
-    const setFileData = side === 'right' ? setFileRight : setFileLeft;
-
-    // Excel (.xls/.xlsx)
-    if (validExcelTypes.includes(fileType)) {
-      ExcelRenderer(fileObj, (err, resp) => {
-        if (err) {
-          console.error(err);
-        } else {
-          const headers = resp.rows[0];
-          const dataRows = resp.rows.slice(1);
-
-          const table = dataRows.map((row) => {
-            const rowData = {};
-            headers.forEach((column, i) => {
-              rowData[column] = row[i];
+    const handleFileChange = (e) => {
+            const fileType = e.target.files[0].type;
+              if (fileType === 'application/vnd.ms-excel' || fileType === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') {
+                fileObj = e.target.files[0];
+        
+        ExcelRenderer(fileObj, (err, resp) => {
+          if(err){
+            console.log(err);            
+          }
+          else{
+            const c = resp.rows[0];
+            const r = resp.rows.slice(1);
+            
+            const table = r.map((row, index) => {
+              const rowData = {};
+              c.forEach((column, columnIndex) => {
+                rowData[column] = row[columnIndex];
+              });
+              return rowData;
+            });
+            setFile(table)
+          }
+        });  
+              } else {
+                alert('Please upload a valid CSV or XLSX file.');
+                e.target.value = null;
+                setFile(null);
+              }
+          };
+        
+          const handleFileChange1 = (e) => {
+            const fileType = e.target.files[0].type;
+              if (fileType === 'application/vnd.ms-excel' || fileType === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
+      fileType === 'text/csv') {
+                fileObj = e.target.files[0];
+        
+        ExcelRenderer(fileObj, (err, resp) => {
+          if(err){
+            console.log(err);            
+          }
+          else{
+            const c = resp.rows[0];
+            const r = resp.rows.slice(1);
+               
+            const table = r.map((row, index) => {
+              const rowData = {};
+              c.forEach((column, columnIndex) => {
+                rowData[column] = row[columnIndex];
+              });
+              return rowData;
             });
             return rowData;
           });
