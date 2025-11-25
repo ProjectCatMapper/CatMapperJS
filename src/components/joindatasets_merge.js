@@ -73,7 +73,8 @@ const JoinDatasets_Merge = () => {
         
           const handleFileChange1 = (e) => {
             const fileType = e.target.files[0].type;
-              if (fileType === 'application/vnd.ms-excel' || fileType === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') {
+              if (fileType === 'application/vnd.ms-excel' || fileType === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
+      fileType === 'text/csv') {
                 fileObj = e.target.files[0];
         
         ExcelRenderer(fileObj, (err, resp) => {
