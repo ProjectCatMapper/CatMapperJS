@@ -28,7 +28,7 @@ function Sociotranslate(){
   const [zeroDropdownValue, setZeroDropdownValue] = useState([]);
   const [firstDropdownValue, setFirstDropdownValue] = useState("ANY DOMAIN");
   const [dropdownData, setDropdownData] = useState([]);
-  const [subDomainValue, setsubDomain] = useState("");
+  const [subDomain, setsubDomain] = useState([]);
   const [secondDropdownValue, setsecondDropdownValue] = useState([]);
   const [thirdDropdownValue, setthirdDropdownValue] = useState([""]);
   const [fourthDropdownValue, setfourthDropdownValue] = useState([""]);
@@ -121,7 +121,7 @@ const handleClick = async () => {
       body: JSON.stringify({
         database : database,
         property : secondDropdownValue,
-        domain : subDomainValue,
+        domain : subDomain,
         key : String(isCheckedfour),
         term : zeroDropdownValue,
         country : thirdDropdownValue,
@@ -461,7 +461,7 @@ const handleFileChange = async (event) => {
     } else {
       setsubDomain("");
     }
-  }, [firstDropdownValue, secondDropdownOptions]);
+  }, [firstDropdownValue]);
 
 
   useEffect(() => {
@@ -648,11 +648,11 @@ const handleFileChange = async (event) => {
       </Box> 
       <Select
           label="Sub Dropdown"
-          value={subDomainValue}
+          value={subDomain}
           style={{height:40}}
           sx={{ m: 1, width: "12vw" }}
           onChange={(event) => setsubDomain(event.target.value)}>
-             {secondDropdownOptions.map((key, index) => (
+      {secondDropdownOptions.map((key, index) => (
         <MenuItem key={index} value={key}>
           {key}
         </MenuItem>
