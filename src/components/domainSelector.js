@@ -3,38 +3,40 @@ import { Box, Tooltip, Button, Select, MenuItem } from '@mui/material';
 import InfoIcon from '@mui/icons-material/Info';
 
 export default function DomainSelector({ database, orientation = 'vertical', domain, setdomain }) {
-    console.log("database in DomainSelector:", database);
-    const [domainsData, setDomainsData] = useState([]);          // raw API response
-    const [domainOptions, setDomainOptions] = useState([]);      // unique domains
-    const [subdomainOptions, setSubdomainOptions] = useState([]); // dynamic subdomains
-    const [selectedDomain, setSelectedDomain] = useState('');    // local selected domain
+    const [domainsData, setDomainsData] = useState([]);
+    const [domainOptions, setDomainOptions] = useState([]);
+    const [subdomainOptions, setSubdomainOptions] = useState([]);
+    const [selectedDomain, setSelectedDomain] = useState('');
     const [selectedSubdomain, setSelectedSubdomain] = useState(domain || '');
 
-    // --- Fetch domains on mount ---
+    // Fetch domains once database is ready
     useEffect(() => {
         if (!database) return;
+
         const getDomains = async () => {
             const response = await fetch(`${process.env.REACT_APP_API_URL}/getDomains/${database}`);
             const data = await response.json();
             setDomainsData(data);
 
-            // Extract unique domain names
             const uniqueDomains = [
                 ...new Map(
                     data
-                        .filter(item => item.display !== 'ALL NODES' && item.display !== 'ANY DOMAIN' && item.display !== 'DATASETS') // remove unwanted
-                        .sort((a, b) => a.order - b.order) // sort numerically
-                        .map(item => [item.display, item]) // deduplicate by display
+                        .filter(item =>
+                            item.display !== 'ALL NODES' &&
+                            item.display !== 'ANY DOMAIN' &&
+                            item.display !== 'DATASETS'
+                        )
+                        .sort((a, b) => a.order - b.order)
+                        .map(item => [item.display, item])
                 ).values()
             ].map(item => item.display);
 
             setDomainOptions(uniqueDomains);
-
         };
         getDomains();
     }, [database]);
 
-    // --- Update subdomains when a domain is selected ---
+    // Update subdomains when domain changes
     useEffect(() => {
         if (!selectedDomain) {
             setSubdomainOptions([]);
@@ -45,36 +47,89 @@ export default function DomainSelector({ database, orientation = 'vertical', dom
             .filter(item => item.display === selectedDomain)
             .map(item => item.subdisplay);
 
-        // Deduplicate subdomains
         const uniqueSubdomains = [...new Set(relatedSubdomains)];
         setSubdomainOptions(uniqueSubdomains);
-    }, [selectedDomain, domainsData]);
 
-    // --- Handlers ---
+        // Auto-set when only one subdomain exists
+        if (uniqueSubdomains.length === 1) {
+            const onlySub = uniqueSubdomains[0];
+            const match = domainsData.find(item => item.subdisplay === onlySub);
+            if (match) {
+                setdomain(match.subdomain);
+                setSelectedSubdomain(onlySub);
+            }
+        }
+    }, [selectedDomain, domainsData, setdomain]);
+
+    // Handlers
     const handleDomainChange = (event) => {
-        setSelectedDomain(event.target.value);
-        setSelectedSubdomain(event.target.value);
+        const value = event.target.value;
+        setSelectedDomain(value);
+        setSelectedSubdomain('');
     };
 
     const handleSubdomainChange = (event) => {
         const selectedDisplay = event.target.value;
+        const match = domainsData.find(item => item.subdisplay === selectedDisplay);
 
-        // Find matching object in domainsData
-        const match = domainsData.find(
-            (item) => item.subdisplay === selectedDisplay
-        );
+        if (match) setdomain(match.subdomain);
+        else setdomain(selectedDisplay);
 
-
-        // If found, set the true subdomain key; otherwise use the display value
-        if (match) {
-            setdomain(match.subdomain);
-        } else {
-            setdomain(selectedDisplay);
-        }
         setSelectedSubdomain(selectedDisplay);
     };
 
-    // --- Render ---
+    const tooltipDomain = (
+        <div style={{ maxWidth: '400px' }}>
+            <h3>From which category domain do you want to find matches?</h3>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                    <tr>
+                        <th style={{ borderBottom: '1px solid #ddd', textAlign: 'left', padding: '8px' }}>Domain</th>
+                        <th style={{ borderBottom: '1px solid #ddd', textAlign: 'left', padding: '8px' }}>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {domainsData.map((category, index) => (
+                        <tr key={index}>
+                            <td style={{ borderBottom: '1px solid #ddd', padding: '8px' }}>{category.display}</td>
+                            <td style={{ borderBottom: '1px solid #ddd', padding: '8px' }}>{category.description}</td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        </div>
+    );
+
+    const tooltipSubdomain = (
+        <div style={{ maxWidth: '400px' }}>
+            <h3>From which category sub-domain do you want to find matches?</h3>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                    <tr>
+                        <th style={{ borderBottom: '1px solid #ddd', textAlign: 'left', padding: '8px' }}>Sub-domain</th>
+                        <th style={{ borderBottom: '1px solid #ddd', textAlign: 'left', padding: '8px' }}>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {domainsData
+                        .filter(item => item.display === selectedDomain)
+                        .map((category, index) => (
+                            <tr key={index}>
+                                <td style={{ borderBottom: '1px solid #ddd', padding: '8px' }}>
+                                    {category.subdisplay}
+                                </td>
+                                <td style={{ borderBottom: '1px solid #ddd', padding: '8px' }}>
+                                    {category.description}
+                                </td>
+                            </tr>
+                        ))}
+                </tbody>
+            </table>
+        </div>
+    );
+
+
+    // Render
     return (
         <Box
             sx={{
@@ -84,12 +139,17 @@ export default function DomainSelector({ database, orientation = 'vertical', dom
                 gap: 2
             }}
         >
+            {/* Domain selector */}
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
                 <p style={{ color: 'white', fontWeight: 'bold', marginLeft: 7, padding: '2px' }}>
                     Select category domain
                 </p>
-                <Tooltip title="Select the main category domain" arrow>
-                    <Button startIcon={<InfoIcon sx={{ height: '28px', width: '28px' }} />} />
+                <Tooltip title={tooltipDomain} arrow>
+                    <Button
+                        startIcon={
+                            <InfoIcon sx={{ height: "28px", width: "28px" }} />
+                        }
+                    ></Button>
                 </Tooltip>
             </Box>
 
@@ -107,14 +167,19 @@ export default function DomainSelector({ database, orientation = 'vertical', dom
                 ))}
             </Select>
 
-            {subdomainOptions.length > 0 && (
+            {/* Show subdomain selector only if more than one option */}
+            {subdomainOptions.length > 1 && (
                 <>
                     <Box sx={{ display: 'flex', alignItems: 'center' }}>
                         <p style={{ color: 'white', fontWeight: 'bold', marginLeft: 7, padding: '2px' }}>
                             Select category sub-domain
                         </p>
-                        <Tooltip title="Select a sub-domain within the chosen category" arrow>
-                            <Button startIcon={<InfoIcon sx={{ height: '28px', width: '28px' }} />} />
+                        <Tooltip title={tooltipSubdomain} arrow>
+                            <Button
+                                startIcon={
+                                    <InfoIcon sx={{ height: "28px", width: "28px" }} />
+                                }
+                            ></Button>
                         </Tooltip>
                     </Box>
 

@@ -22,7 +22,6 @@ const JoinDatasets_Merge = () => {
 
   useEffect(() => {
     const path = location.pathname.toLowerCase();
-    console.log('Current path:', path);
     if (path.includes('archamap')) {
       setDatabase('ArchaMap');
     } else if (path.includes('sociomap')) {
