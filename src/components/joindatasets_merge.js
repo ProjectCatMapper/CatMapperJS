@@ -1,142 +1,123 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Box, Button, Typography, Divider, } from '@mui/material';
 import { ExcelRenderer } from 'react-excel-renderer';
+import Papa from 'papaparse';
 import { useLocation } from 'react-router-dom';
 import CircularProgress from '@mui/material/CircularProgress';
 import Backdrop from '@mui/material/Backdrop';
 import * as XLSX from 'xlsx';
+import DomainSelector from './domainSelector';
 
 const JoinDatasets_Merge = () => {
 
-  const [file, setFile] = useState(null);
-  const [file1, setFile1] = useState(null);
+  const [fileLeft, setFileLeft] = useState(null);
+  const [fileRight, setFileRight] = useState(null);
   let fileObj = ""
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState();
-  let sections = [
-    { label: 'ANY DOMAIN', keys: ['ANY DOMAIN'] },
-    { label: 'AREA to PPL', keys: ['AREA', 'ADM0', 'ADM1', 'ADM2', 'ADM3', 'ADM4', 'ADMD', 'ADME', 'ADML', 'ADMX', 'PPL', 'NATURAL'] },
-    { label: 'DATASET', keys: ['DATASET'] },
-    { label: 'LANGUOID to FAMILY', keys: ['LANGUOID', 'LANGUAGE', 'DIALECT', 'FAMILY'] },
-    { label: 'ETHNICITY', keys: ['ETHNICITY'] },
-    { label: 'GENERIC', keys: ['GENERIC'] },
-    { label: 'RELIGION', keys: ['RELIGION'] },
-    { label: 'VARIABLE', keys: ['VARIABLE'] }
-  ];
-  let database = "SocioMap"
-  if (useLocation().pathname.includes("archamap")) {
-    database = "ArchaMap"
-    sections = [
-      { label: 'ANY DOMAIN', keys: ['ANY DOMAIN'] },
-      { label: 'KINGDOM to SUBSPECIES', keys: ['KINGDOM', 'FAUNA', 'PHYLUM', 'CLASS', 'ORDER', 'FAMILY', 'GENUS', 'SPECIES', 'SUBGENUS', 'SUBSPECIES'] },
-      { label: 'FEATURE to SITE', keys: ['FEATURE', 'ADM0', 'ADM1', 'ADM2', 'ADM3', 'AREA', 'REGION', 'SITE'] },
-      { label: 'STONE', keys: ['STONE'] },
-      { label: 'CULTURE', keys: ['CULTURE'] },
-      { label: 'BOTANICAL to PHYTOLITH', keys: ['BOTANICAL', 'PHYTOLITH'] },
-      { label: 'CERAMIC to CERAMIC_WARE', keys: ['CERAMIC', 'CERAMIC_TYPE', 'CERAMIC_WARE'] },
-      { label: 'DATASET', keys: ['DATASET'] },
-      { label: 'PERIOD', keys: ['PERIOD'] },
-      { label: 'PROJECTILE_POINT TO PROJECTILE_POINT_TYPE', keys: ['PROJECTILE_POINT', 'PROJECTILE_POINT_CLUSTER', 'PROJECTILE_POINT_TYPE'] },
-      { label: 'VARIABLE', keys: ['VARIABLE'] }
+  const [database, setDatabase] = useState(null);
+  const location = useLocation();
+  const [domain, setdomain] = useState('');
+
+
+  useEffect(() => {
+    const path = location.pathname.toLowerCase();
+    console.log('Current path:', path);
+    if (path.includes('archamap')) {
+      setDatabase('ArchaMap');
+    } else if (path.includes('sociomap')) {
+      setDatabase('SocioMap');
+    }
+  }, [location.pathname]);
+
+  const handleFileUpload = (e, side) => {
+    const fileObj = e.target.files[0];
+    if (!fileObj) return;
+
+    const fileType = fileObj.type;
+    const validExcelTypes = [
+      'application/vnd.ms-excel',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     ];
-  }
+    const validCsvTypes = ['text/csv', 'application/csv'];
 
-  const handleFileChange = (e) => {
-    const fileType = e.target.files[0].type;
-    if (fileType === 'application/vnd.ms-excel' || fileType === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') {
-      fileObj = e.target.files[0];
+    // Select which setter to use
+    const setFileData = side === 'right' ? setFileRight : setFileLeft;
 
+    // Excel (.xls/.xlsx)
+    if (validExcelTypes.includes(fileType)) {
       ExcelRenderer(fileObj, (err, resp) => {
         if (err) {
-          console.log(err);
-        }
-        else {
-          const c = resp.rows[0];
-          const r = resp.rows.slice(1);
+          console.error(err);
+        } else {
+          const headers = resp.rows[0];
+          const dataRows = resp.rows.slice(1);
 
-          const table = r.map((row, index) => {
+          const table = dataRows.map((row) => {
             const rowData = {};
-            c.forEach((column, columnIndex) => {
-              rowData[column] = row[columnIndex];
+            headers.forEach((column, i) => {
+              rowData[column] = row[i];
             });
             return rowData;
           });
-          setFile(table)
+
+          setFileData(table);
         }
       });
-    } else {
-      alert('Please upload a valid CSV or XLSX file.');
-      e.target.value = null;
-      setFile(null);
-    }
-  };
 
-  const handleFileChange1 = (e) => {
-    const fileType = e.target.files[0].type;
-    if (fileType === 'application/vnd.ms-excel' || fileType === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') {
-      fileObj = e.target.files[0];
-
-      ExcelRenderer(fileObj, (err, resp) => {
-        if (err) {
-          console.log(err);
-        }
-        else {
-          const c = resp.rows[0];
-          const r = resp.rows.slice(1);
-
-          const table = r.map((row, index) => {
-            const rowData = {};
-            c.forEach((column, columnIndex) => {
-              rowData[column] = row[columnIndex];
-            });
-            return rowData;
-          });
-          setFile1(table)
-        }
+      // CSV (.csv)
+    } else if (validCsvTypes.includes(fileType)) {
+      Papa.parse(fileObj, {
+        header: true,
+        skipEmptyLines: true,
+        complete: (results) => setFileData(results.data),
+        error: (err) => console.error('CSV parse error:', err),
       });
+
+      // Invalid type
     } else {
-      alert('Please upload a valid CSV or XLSX file.');
+      alert('Please upload a valid CSV (.csv) or Excel (.xlsx, .xls) file.');
       e.target.value = null;
-      setFile1(null);
+      setFileData(null);
     }
   };
-
-  const handleclear = () => {
-    setFile(null);
-    if (document.getElementById('fileInput')) {
-      document.getElementById('fileInput').value = '';
-    }
-  }
-
-  const handleclear1 = () => {
-    setFile1(null);
-    if (document.getElementById('fileInput')) {
-      document.getElementById('fileInput').value = '';
-    }
-  }
 
   const handleMergeSubmit = async () => {
     setLoading(true);
     try {
       const response = await fetch(`${process.env.REACT_APP_API_URL}/joinDatasets`, {
-        //const response = await fetch("http://127.0.0.1:5001/joinDatasets", {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          "joinLeft": file,
-          "joinRight": file1,
-          "database": database,
+          joinLeft: fileLeft,
+          joinRight: fileRight,
+          database: database,
+          domain: domain
         }),
       });
 
       const result = await response.json();
-      setData(result)
+      console.log('Merge response:', result);
+
+      // Handle 500s or explicit error responses
+      if (!response.ok) {
+        throw new Error(result?.message || result?.[0]?.error || 'Failed to merge datasets');
+      }
+
+      // Handle logical errors even if status is 200
+      if (Array.isArray(result) && result.length && result[0]?.error) {
+        throw new Error(result[0].error);
+      }
+
+      if (result.error) {
+        throw new Error(result.error);
+      }
+
+      setData(result[0] || result.mergedData || []);
     } catch (error) {
       console.error('Error submitting form:', error);
-    }
-    finally {
+      alert(`Merge failed: ${error.message}`);
+    } finally {
       setLoading(false);
     }
   };
@@ -187,22 +168,12 @@ const JoinDatasets_Merge = () => {
             style={{ color: 'black', fontWeight: "bold", marginLeft: 7, padding: "2px" }}
             type="file"
             accept=".csv, .xlsx"
-            onChange={handleFileChange}
-          />
-          <Button
-            variant="contained"
-            sx={{
-              backgroundColor: 'black',
-              color: 'white',
-              '&:hover': {
-                backgroundColor: 'green',
-              },
-              mt: 1,
+            onClick={(e) => {
+              e.target.value = null;       // clears previous selection in the browser
+              setFileLeft(null);           // resets React state
             }}
-            onClick={handleclear}
-          >
-            Reset imported file
-          </Button>
+            onChange={(e) => handleFileUpload(e, 'left')}
+          />
         </Box>
 
         <Box>
@@ -212,27 +183,23 @@ const JoinDatasets_Merge = () => {
             style={{ color: 'black', fontWeight: "bold", marginLeft: 7, padding: "2px" }}
             type="file"
             accept=".csv, .xlsx"
-            onChange={handleFileChange1}
-          />
-          <Button
-            variant="contained"
-            sx={{
-              backgroundColor: 'black',
-              color: 'white',
-              '&:hover': {
-                backgroundColor: 'green',
-              },
-              mt: 1,
+            onClick={(e) => {
+              e.target.value = null;       // clears previous selection in the browser
+              setFileRight(null);           // resets React state
             }}
-            onClick={handleclear1}
-          >
-            Reset imported file
-          </Button>
+            onChange={(e) => handleFileUpload(e, 'right')}
+          />
         </Box>
       </Box>
       <Box>
-
-
+        {database && (
+          <DomainSelector
+            database={database}
+            orientation="horizontal"
+            domain={domain}
+            setdomain={setdomain}
+          />
+        )}
       </Box>
       <Button variant="contained" sx={{
         backgroundColor: 'black',
@@ -241,7 +208,8 @@ const JoinDatasets_Merge = () => {
           backgroundColor: 'green',
         },
         mr: 4
-      }} onClick={handleMergeSubmit}>
+      }} onClick={handleMergeSubmit}
+        disabled={!fileLeft || !fileRight || !domain}>
         Merge Datasets
       </Button>
       <Backdrop
@@ -257,7 +225,9 @@ const JoinDatasets_Merge = () => {
         '&:hover': {
           backgroundColor: 'green',
         },
-      }} onClick={handleJoinDownload}>
+      }} onClick={handleJoinDownload}
+        disabled={!data || (Array.isArray(data) && data.length === 0)}
+      >
         Download Results
       </Button>
     </Box>
