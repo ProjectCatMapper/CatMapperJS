@@ -157,7 +157,7 @@ const JoinDatasets_Merge = () => {
       <Divider sx={{ my: 1 }} />
 
       <Typography>
-        Upload two datasets to merge...
+        Upload two datasets to merge. Both datasets must have a `datasetID` column with a valid ID for each row. Both datasets must have the original `Key` columns specified in the database translation that was previously uploaded to the dataset with the matching CMID. If you have not yet translated and uploaded your dataset, please do so now.
       </Typography>
 
       <br />
