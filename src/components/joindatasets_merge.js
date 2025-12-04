@@ -16,6 +16,7 @@ const JoinDatasets_Merge = () => {
   const [data, setData] = useState();
   const [database, setDatabase] = useState(null);
   const [domain, setdomain] = useState('');
+  const validCsvTypes = ['text/csv', 'application/csv'];
   const location = useLocation();
 
     const handleFileChange = (e) => {
@@ -75,16 +76,16 @@ const JoinDatasets_Merge = () => {
       
 
       // CSV (.csv)
-    //  else if (validCsvTypes.includes(fileType)) {
-    //   Papa.parse(fileObj, {
-    //     header: true,
-    //     skipEmptyLines: true,
-    //     complete: (results) => setFileRight(results.data),
-    //     error: (err) => console.error('CSV parse error:', err),
-    //   });
+     else if (validCsvTypes.includes(fileType)) {
+      Papa.parse(fileObj, {
+        header: true,
+        skipEmptyLines: true,
+        complete: (results) => setFileRight(results.data),
+        error: (err) => console.error('CSV parse error:', err),
+      });
 
     //   // Invalid type
-    // } s
+     } 
     else {
       alert('Please upload a valid CSV (.csv) or Excel (.xlsx, .xls) file.');
       e.target.value = null;
