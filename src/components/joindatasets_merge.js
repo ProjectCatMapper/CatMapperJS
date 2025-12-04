@@ -18,62 +18,77 @@ const JoinDatasets_Merge = () => {
   const [domain, setdomain] = useState('');
   const location = useLocation();
 
-  // ------------------------------------------------------------
-  // Detect database from URL
-  // ------------------------------------------------------------
-  useEffect(() => {
-    const path = location.pathname.toLowerCase();
-    if (path.includes('archamap')) setDatabase('ArchaMap');
-    else if (path.includes('sociomap')) setDatabase('SocioMap');
-  }, [location.pathname]);
+    const handleFileChange = (e) => {
+            const fileType = e.target.files[0].type;
+              if (fileType === 'application/vnd.ms-excel' || fileType === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') {
+                fileObj = e.target.files[0];
+        
+        ExcelRenderer(fileObj, (err, resp) => {
+          if(err){
+            console.log(err);            
+          }
+          else{
+            const c = resp.rows[0];
+            const r = resp.rows.slice(1);
+            
+            const table = r.map((row, index) => {
+              const rowData = {};
+              c.forEach((column, columnIndex) => {
+                rowData[column] = row[columnIndex];
+              });
+              return rowData;
+            });
+            setFileLeft(table)
+          }
+        });  
+              } else {
+                alert('Please upload a valid CSV or XLSX file.');
+                e.target.value = null;
+                setFileLeft(null);
+              }
+          };
+        
+          const handleFileChange1 = (e) => {
+            const fileType = e.target.files[0].type;
+              if (fileType === 'application/vnd.ms-excel' || fileType === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
+      fileType === 'text/csv') {
+                fileObj = e.target.files[0];
+        
+        ExcelRenderer(fileObj, (err, resp) => {
+          if(err){
+            console.log(err);            
+          }
+          else{
+            const c = resp.rows[0];
+            const r = resp.rows.slice(1);
+               
+            const table = r.map((row, index) => {
+              const rowData = {};
+              c.forEach((column, columnIndex) => {
+                rowData[column] = row[columnIndex];
+              });
+              return rowData;
+            });
+          setFileRight(table);          
+          }});
+        }
+      
 
-  // ------------------------------------------------------------
-  // Generic file upload handler
-  // ------------------------------------------------------------
-  const handleFileUpload = (e, side) => {
-    const fileObj = e.target.files[0];
-    if (!fileObj) return;
+      // CSV (.csv)
+    //  else if (validCsvTypes.includes(fileType)) {
+    //   Papa.parse(fileObj, {
+    //     header: true,
+    //     skipEmptyLines: true,
+    //     complete: (results) => setFileRight(results.data),
+    //     error: (err) => console.error('CSV parse error:', err),
+    //   });
 
-    const fileType = fileObj.type;
-
-    const validExcelTypes = [
-      'application/vnd.ms-excel',
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-    ];
-    const validCsvTypes = ['text/csv', 'application/csv'];
-
-    const setFileData = side === 'right' ? setFileRight : setFileLeft;
-
-    // Excel
-    if (validExcelTypes.includes(fileType)) {
-      ExcelRenderer(fileObj, (err, resp) => {
-        if (err) return console.error(err);
-
-        const headers = resp.rows[0];
-        const rows = resp.rows.slice(1);
-
-        const table = rows.map((row) => {
-          const rowData = {};
-          headers.forEach((col, idx) => {
-            rowData[col] = row[idx];
-          });
-          return rowData;
-        });
-
-        setFileData(table);
-      });
-      return;
-    }
-
-    // CSV
-    if (validCsvTypes.includes(fileType)) {
-      Papa.parse(fileObj, {
-        header: true,
-        skipEmptyLines: true,
-        complete: (results) => setFileData(results.data),
-        error: (err) => console.error('CSV parse error:', err),
-      });
-      return;
+    //   // Invalid type
+    // } s
+    else {
+      alert('Please upload a valid CSV (.csv) or Excel (.xlsx, .xls) file.');
+      e.target.value = null;
+      setFileRight(null);
     }
 
     // Invalid type
@@ -178,8 +193,11 @@ const JoinDatasets_Merge = () => {
           <input
             type="file"
             accept=".csv, .xlsx"
-            onClick={(e) => { e.target.value = null; setFileLeft(null); }}
-            onChange={(e) => handleFileUpload(e, 'left')}
+            onClick={(e) => {
+              e.target.value = null;       // clears previous selection in the browser
+              setFileLeft(null);           // resets React state
+            }}
+            onChange={(e) => handleFileChange(e, 'left')}
           />
         </Box>
 
@@ -189,8 +207,11 @@ const JoinDatasets_Merge = () => {
           <input
             type="file"
             accept=".csv, .xlsx"
-            onClick={(e) => { e.target.value = null; setFileRight(null); }}
-            onChange={(e) => handleFileUpload(e, 'right')}
+            onClick={(e) => {
+              e.target.value = null;       // clears previous selection in the browser
+              setFileRight(null);           // resets React state
+            }}
+            onChange={(e) => handleFileChange1(e, 'right')}
           />
         </Box>
       </Box>

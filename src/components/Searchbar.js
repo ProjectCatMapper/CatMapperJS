@@ -97,7 +97,10 @@ export default function Searchbar() {
 
   useEffect(() => {
     fetch(`${process.env.REACT_APP_API_URL}/metadata/subdomains/${database}`)
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) throw new Error(`Server error: ${res.status}`);
+        return res.json();
+      })
       .then((data) => {
         const normalized = {};
 
@@ -109,6 +112,10 @@ export default function Searchbar() {
       })
       .catch((err) => {
         console.error("Error loading subdomains:", err);
+
+        if (err.message.includes("NetworkError when attempting to fetch resource.")){
+            alert("We’re very sorry, but the server is currently down.  Please check back in a few minutes (or email dhruschk@asu.edu).")
+        }
       });
   }, [database]);
 

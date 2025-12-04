@@ -1,6 +1,7 @@
 {
     "ALL NODES": [
         "Name",
+        "Key",
         "CatMapper ID (CMID)"
     ],
     "ANY DOMAIN": [
