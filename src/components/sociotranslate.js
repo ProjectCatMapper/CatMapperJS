@@ -121,7 +121,7 @@ const handleClick = async () => {
       body: JSON.stringify({
         database : database,
         property : secondDropdownValue,
-        domain : subDomain,
+        domain : subDomain && subDomain.length > 0 ? subDomain : firstDropdownValue,
         key : String(isCheckedfour),
         term : zeroDropdownValue,
         country : thirdDropdownValue,
