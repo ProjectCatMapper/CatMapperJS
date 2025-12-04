@@ -39,13 +39,13 @@ const JoinDatasets_Merge = () => {
               });
               return rowData;
             });
-            setFile(table)
+            setFileLeft(table)
           }
         });  
               } else {
                 alert('Please upload a valid CSV or XLSX file.');
                 e.target.value = null;
-                setFile(null);
+                setFileLeft(null);
               }
           };
         
@@ -70,27 +70,26 @@ const JoinDatasets_Merge = () => {
               });
               return rowData;
             });
-            return rowData;
-          });
-
-          setFileData(table);
+          setFileRight(table);          
+          }});
         }
-      });
+      
 
       // CSV (.csv)
-    } else if (validCsvTypes.includes(fileType)) {
-      Papa.parse(fileObj, {
-        header: true,
-        skipEmptyLines: true,
-        complete: (results) => setFileData(results.data),
-        error: (err) => console.error('CSV parse error:', err),
-      });
+    //  else if (validCsvTypes.includes(fileType)) {
+    //   Papa.parse(fileObj, {
+    //     header: true,
+    //     skipEmptyLines: true,
+    //     complete: (results) => setFileRight(results.data),
+    //     error: (err) => console.error('CSV parse error:', err),
+    //   });
 
-      // Invalid type
-    } else {
+    //   // Invalid type
+    // } s
+    else {
       alert('Please upload a valid CSV (.csv) or Excel (.xlsx, .xls) file.');
       e.target.value = null;
-      setFileData(null);
+      setFileRight(null);
     }
   };
 
@@ -184,7 +183,7 @@ const JoinDatasets_Merge = () => {
               e.target.value = null;       // clears previous selection in the browser
               setFileLeft(null);           // resets React state
             }}
-            onChange={(e) => handleFileUpload(e, 'left')}
+            onChange={(e) => handleFileChange(e, 'left')}
           />
         </Box>
 
@@ -199,7 +198,7 @@ const JoinDatasets_Merge = () => {
               e.target.value = null;       // clears previous selection in the browser
               setFileRight(null);           // resets React state
             }}
-            onChange={(e) => handleFileUpload(e, 'right')}
+            onChange={(e) => handleFileChange1(e, 'right')}
           />
         </Box>
       </Box>
