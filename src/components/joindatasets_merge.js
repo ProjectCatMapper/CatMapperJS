@@ -12,6 +12,7 @@ const JoinDatasets_Merge = () => {
 
   const [fileLeft, setFileLeft] = useState(null);
   const [fileRight, setFileRight] = useState(null);
+  let fileObj = ""
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState();
   const [database, setDatabase] = useState(null);
@@ -91,11 +92,6 @@ const JoinDatasets_Merge = () => {
       e.target.value = null;
       setFileRight(null);
     }
-
-    // Invalid type
-    alert('Please upload a valid CSV or Excel file.');
-    e.target.value = null;
-    setFileData(null);
   };
 
   // ------------------------------------------------------------
