@@ -497,9 +497,9 @@ export default function Tableclick(props) {
       domains = Array.from(new Set(domains.flat())).filter(
         (value) => value !== "CATEGORY"
       );
-      domains = Array.from(new Set(domains.flat())).filter(
-        (value) => value !== "DISTRICT"
-      );
+      // domains = Array.from(new Set(domains.flat())).filter(
+      //   (value) => value !== "DISTRICT"
+      // );
       setSelectedValues(domains);
       setdomains(domains);
 
