@@ -32,6 +32,7 @@ const UploadTranslat = () => {
   const [fileDownload, setfileDownload] = useState('');
   const [loading, setLoading] = useState(false);
   const [missingCount, setMissingCount] = useState(0);
+  const [missingCol, setMissingCol] = useState(0);
   const [openDialog, setOpenDialog] = useState(false);
   const [progress, setProgress] = useState(0);
   const [formData, setFormData] = useState({
@@ -44,6 +45,7 @@ const UploadTranslat = () => {
     keyColumn: '',
   });
   const [CMIDText, setCMIDText] = useState('The new dataset CMID is pending.');
+  const [mergingType, setMergingType] = useState("0");
   let required = [];
   let finalProduct = [];
   const foundColumns = [];
@@ -210,13 +212,26 @@ const UploadTranslat = () => {
 
   // Checks for:
   // - Duplicate column name values
-  // - Missing values for datasetID,Key,label and CMID(except for function 1)
+  // - Missing values for datasetID,Key,label,CMID(except for function 1),mergingID,variableID,varName,categoryID
   // - Missing values for complex properties
 
   const validateColumns = () => {
 
     const seen = new Set();
     const duplicates = new Set();
+    const emptyColumnCheck = ['datasetID','label','Key','mergingID','variableID','varName','categoryID']
+
+    for (const col of emptyColumnCheck) {
+      if (columns.includes(col)) {
+        const colIndex = columns.indexOf(col);
+        const hasMissing = rows.some(row => !row[colIndex]);
+
+        if (hasMissing) {
+          setError(`${col} column contains missing values.`);
+          return false;
+        }
+      }
+    }
 
     columns.forEach((item) => {
       if (seen.has(item)) {
@@ -232,50 +247,6 @@ const UploadTranslat = () => {
     }
 
 
-    if (columns.includes('datasetID')) {
-      const datasetIDIndex = columns.indexOf('datasetID');
-      const missingValues = rows.some(row => !row[datasetIDIndex]);
-      if (missingValues) {
-        setError('datasetID column contains missing values.');
-        return false;
-      }
-    }
-
-    if (columns.includes('label')) {
-      const labelIndex = columns.indexOf('label');
-      const missingValues = rows.some(row => !row[labelIndex]);
-      if (missingValues) {
-        setError('label column contains missing values.');
-        return false;
-      }
-    }
-
-    if (advselectedOption !== "add_node") {
-
-      if (columns.includes('CMID')) {
-        const CMIDIndex = columns.indexOf('CMID');
-        const count = rows.filter(row => !row[CMIDIndex]).length;
-
-        if (advselectedOption === "add_uses") {
-          return count;
-        }
-
-        if (count > 0) {
-          setError('CMID column contains missing values.');
-          return false;
-        }
-      }
-
-    }
-
-    if (columns.includes('Key')) {
-      const KeyIndex = columns.indexOf('Key');
-      const missingValues = rows.some(row => !row[KeyIndex]);
-      if (missingValues) {
-        setError('Key column contains missing values.');
-        return false;
-      }
-    }
 
     if (["add_node", 'add_uses', 'update_add'].includes(advselectedOption)) {
       if (selectedExtraColumns.includes('longitude') && !selectedExtraColumns.includes('latitude')) {
@@ -318,6 +289,37 @@ const UploadTranslat = () => {
         }
       }
     }
+
+    if (advselectedOption !== "add_node") {
+
+      if (columns.includes('CMID')) {
+        const CMIDIndex = columns.indexOf('CMID');
+        const count = rows.filter(row => !row[CMIDIndex]).length;
+
+        if (advselectedOption === "add_uses") {
+          setMissingCol("CMID")
+          return count;
+        }
+
+        if (count > 0) {
+          setError('CMID column contains missing values.');
+          return false;
+        }
+      }
+
+    }
+
+    if (advselectedOption == "add_merging" && mergingType == "merging_ties_to_datasets") {
+
+      if (columns.includes('stackID')) {
+        const stackIDIndex = columns.indexOf('stackID');
+        const count = rows.filter(row => !row[stackIDIndex]).length;
+        setMissingCol("stackID")
+        return count;
+      }
+
+    }
+
     setError('');
     return true;
   };
@@ -408,7 +410,8 @@ const UploadTranslat = () => {
           ao: advselectedOption,
           addoptions: addiColumns,
           user: user,
-          allContext: columnsToUse
+          allContext: columnsToUse,
+          mergingType: mergingType
         }),
       });
 
@@ -518,7 +521,8 @@ const UploadTranslat = () => {
   let allowedExtraColumns = ["descriptor", "Dataset", "log", "country", "dateEnd", "dateStart", "district", "eventDate", "eventType",
     "geoCoords", "Key", "NewKey", "label", "latitude", "longitude", "ignoreNames", "Name", "parent", "period", "parentContext", "propertyValues",
     "rawDate", "Rfunction", "Rtransform", "recordEnd", "recordStart", "sampleSize", "transform", "categoryType", "url", "variableDescription", "variable",
-    "yearEnd", "yearStart", "language", "populationEstimate", "religion", "geoPolygon", "glottocode", "FIPS", "ISO2", "ISO3", "ISONumeric", "comment", "polity", "occupation", "culture", "yearPublished"]
+    "yearEnd", "yearStart", "language", "populationEstimate", "religion", "geoPolygon", "glottocode", "FIPS", "ISO2", "ISO3", "ISONumeric", "comment", 
+    "polity", "occupation", "culture", "yearPublished","stackID","stackTransform","summaryStatistic","datasetTransform"]
   let allowedDatasetColumns = []
 
   useEffect(() => {
@@ -576,39 +580,76 @@ const UploadTranslat = () => {
         }
         break;
       case 'add_merging':
+        {
+
+          const cols = columns.map(c => c.trim());
+
+          if (cols.includes("variableID")) {
+            setMergingType("merging_ties_to_variables")
+            required = ["mergingID", "datasetID", "variableID", "varName"];
+          }
+
+          else if (cols.includes("categoryID")) {
+            setMergingType("equivalence_ties")
+
+            const keyColumns = cols.filter(c => c.startsWith("Key_"));
+
+            if (keyColumns.length === 2) {
+              const [key1, key2] = keyColumns;
+              required = ["stackID", "categoryID", key1, key2];
+            } else if (cols.includes("datasetID")) {
+              required = ["stackID", "categoryID", "Key", "datasetID"];
+            }
+            else{
+              setError("Not all required columns are present.");
+              return false;
+            }
+          }
+          else  {
+            setMergingType("merging_ties_to_datasets")
+            required = ["mergingID", "datasetID"];
+          }
+          break;
+        }
       case 'merging_add':
       case 'merging_replace':
         {
 
           const cols = columns.map(c => c.trim());
-          let mergeType;
-
+       
           if (cols.includes("variableID")) {
-            mergeType = "2";
-            required = ["mergingID", "datasetID", "variableID", "Key", "VarName"];
+
+            setMergingType("merging_ties_to_variables");
+            required = ["variableID","stackID"]
+
+             if (cols.includes("datasetTransform")) {
+              required = ["datasetID", "variableID","stackID"];              
+            }
           }
 
-          else if (cols.includes("categoryID")) {
+          else if (cols.includes("categoryID1") && cols.includes("categoryID2")) {
+
+            setError("Adding or replacing proeprties for existing equivalence ties is not permitted for now.");
+            return false;
+
+            setMergingType("equivalence_ties")
             const keyColumns = cols.filter(c => c.startsWith("Key_"));
 
             if (keyColumns.length === 2) {
-              mergeType = "3A";
-              const [key1, key2] = keyColumns;
-              required = ["mergingID", "categoryID", key1, key2];
+              required = [ "categoryID1", "categoryID2","Key","datasetID","stackID"];
             } else {
-              mergeType = "3B";
-              required = ["mergingID", "categoryID", "Key", "datasetID"];
+              required = [ "categoryID1", "categoryID2","Key","datasetID","stackID"];
+            }
+
+          }
+          else  {
+            if (advselectedOption !== 'add_merging'){
+              setError("Nothing to update for this type of merging tie.");
+              return false;
             }
           }
-          else {
-            mergeType = "1";
-            required = ["mergingID", "datasetID"];
-
-          }
-
           break;
         }
-
 
       default:
         required = [];
@@ -716,21 +757,6 @@ const UploadTranslat = () => {
     setLinkContext([event.target.value])
   };
 
-  const convertToCSV = (data) => {
-    const csvRows = [];
-    const headers = Object.keys(data[0]);
-    csvRows.push(headers.join(','));
-
-    for (const row of data) {
-      const values = headers.map(header => {
-        const escaped = ('' + row[header]).replace(/"/g, '\\"');
-        return `"${escaped}"`;
-      });
-      csvRows.push(values.join(','));
-    }
-    return csvRows.join('\n');
-  };
-
   const handleDownload = () => {
     if (!download) {
       setError('No file data available for download.');
@@ -748,14 +774,6 @@ const UploadTranslat = () => {
     const a = document.createElement('a');
     a.href = url;
     a.download = 'uploaded_Dataset.xlsx';
-
-    // const csvData = convertToCSV(download);
-    // const blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' });
-    // const url = window.URL.createObjectURL(blob);
-    // const a = document.createElement('a');
-    // a.href = url;
-    // a.download = 'uploaded_Dataset.csv';
-
     document.body.appendChild(a);
     a.click();
     a.remove();
@@ -1070,10 +1088,10 @@ const UploadTranslat = () => {
           {error && <p style={{ color: 'red' }}>{error}</p>}
 
           <Dialog open={openDialog} onClose={() => handleConfirm(false)}>
-            <DialogTitle>Missing CMID Values</DialogTitle>
+            <DialogTitle>Missing {missingCol} Values</DialogTitle>
             <DialogContent>
               <DialogContentText>
-                CMID column contains {missingCount} missing values, hence {missingCount} new nodes will be created. Do you want to proceed?
+                {missingCol} column contains {missingCount} missing values, hence {missingCount} new nodes will be created. Do you want to proceed?
               </DialogContentText>
             </DialogContent>
             <DialogActions>
