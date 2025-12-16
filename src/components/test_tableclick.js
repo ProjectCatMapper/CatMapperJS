@@ -88,6 +88,8 @@ export default function Tableclick(props) {
   const [selectedValues, setSelectedValues] = useState([]);
   const [selectedNodes, setSelectedNodes] = useState([]);
   const [selectedDatasets, setSelectedDatasets] = useState([]);
+  const [eventTypes, setEventTypes] = useState([]);
+  const [selectedEventTypes, setSelectedEventTypes] = useState(["All"]);
   const [originaldata, setoriginaldata] = useState(null);
   const [visData, setVisData] = useState(null);
   const [domains, setdomains] = useState([]);
@@ -466,17 +468,9 @@ export default function Tableclick(props) {
          {
           from: start_node_id,
           to: end_node_id,
-          //eventType: eventType,
           ...rest,
           color: "black",
         };
-
-        // if (event.target.value === "CONTAINS" && eventType && Array.isArray(eventType)) {
-        //   const filtered = eventType.filter(e => e !== "HIERARCHY");
-        //   if (filtered.length > 0) {
-        //     edge.label = filtered.join(", ");
-        //   }
-        // }
 
         if (event.target.value === "CONTAINS") {
           if (eventType && Array.isArray(eventType)) {
@@ -544,6 +538,21 @@ export default function Tableclick(props) {
       setFirstDropdownValue(event.target.value);
       setoriginaldata({ nodes, edges });
       setVisData({ nodes, edges });
+
+      if (event.target.value === "CONTAINS") {
+          let eventSet = new Set();
+
+          edges.forEach((edge) => {
+            if (Array.isArray(edge.eventType)) {
+              edge.eventType.forEach((ev) => eventSet.add(ev));
+            }
+          });
+
+          const evTypes = Array.from(eventSet).sort();
+          evTypes.unshift("All");
+          setEventTypes(evTypes);
+          setSelectedEventTypes(["All"]);
+        }
     } catch (error) {
       console.error("Error fetching data:", error);
     }
@@ -602,6 +611,36 @@ export default function Tableclick(props) {
     }
     setFourthDropdownValue(event.target.value);
   };
+
+  const updateEventTypeData = (event) => {
+    const value = event.target.value;
+    const lastSelected = value[value.length - 1];
+
+    // If user clicked "All"
+    if (lastSelected === "All") {
+      setSelectedEventTypes(["All"]);
+      setVisData(originaldata);
+      return;
+    }
+
+    // User clicked something else → remove "All"
+    const selected = value.filter((v) => v !== "All");
+
+    const edges = originaldata.edges.filter(
+      (edge) =>
+        Array.isArray(edge.eventType) &&
+        edge.eventType.some((ev) => selected.includes(ev))
+    );
+
+    const nodeIds = new Set(edges.flatMap((e) => [e.from, e.to]));
+
+    const nodes = originaldata.nodes.filter(
+      (node, index) => index === 0 || nodeIds.has(node.id)
+    );
+
+    setSelectedEventTypes(selected);
+    setVisData({ nodes, edges });
+};
 
   const handleChange = (event, newValue) => {
     setValue(newValue);
@@ -1023,6 +1062,23 @@ export default function Tableclick(props) {
                       >
                         {selectedDatasets.map((option) => (
                           <MenuItem value={option}>{option}</MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  )}
+                  {firstDropdownValue === "CONTAINS" && (
+                    <FormControl sx={{ m: 1, width: 300 }}>
+                      <InputLabel htmlFor="fourth-dropdown">Event Type</InputLabel>
+                      <Select
+                        multiple
+                        value={selectedEventTypes}
+                        onChange={updateEventTypeData}
+                        label="Event Type"
+                      >
+                        {eventTypes.map((option) => (
+                          <MenuItem key={option} value={option}>
+                            {option}
+                          </MenuItem>
                         ))}
                       </Select>
                     </FormControl>
