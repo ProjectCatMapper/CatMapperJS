@@ -1169,7 +1169,7 @@ const UploadTranslat = () => {
               </Select>
             </div>
           )}
-          {advselectedOption === 'merging_add' && extraColumns.length > 0 && IsDataset && allRequiredColumnsFound && (
+          {advselectedOption === 'merging_add' && extraColumns.length > 0 && allRequiredColumnsFound && (
             <div>
               <h4 style={{ color: 'black', padding: "2px" }}>Choose columns to enter as properties:</h4>
               <Select

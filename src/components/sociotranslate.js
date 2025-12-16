@@ -280,10 +280,10 @@ const handleFileChange = async (event) => {
 
     try {
       for (let i = 0; i < firstRow.length; i++) {
-        if (firstRow[i] === undefined || firstRow[i].trim() === "") {
+        if (String(firstRow[i]) === undefined || String(firstRow[i]).trim() === "") {
           throw new Error(`Missing column name at index ${i}`);
         }
-        column_check.push(firstRow[i]);
+        column_check.push(String(firstRow[i]));
       }
     } catch (err) {
       setError(err.message);
