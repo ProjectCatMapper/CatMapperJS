@@ -7,7 +7,7 @@ import cvideo from "../assets/new.mp4"
 const video = () => {
   return (
     <div className='hero'>
-        <video autoPlay loop muted id='video'>
+        <video autoPlay loop muted playsInline controls={false} id='video'>
             <source src={cvideo} type='video/mp4' />
         </video>
     <div className='content'>
