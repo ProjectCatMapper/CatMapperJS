@@ -20,7 +20,7 @@ const Video = () => {
 
   return (
     <div className='hero' style={{marginBottom:"2rem"}}>
-        <video autoPlay loop muted id='video'>
+        <video autoPlay loop muted playsInline controls={false} id='video'>
             <source src={cvideo} type='video/mp4' />
         </video>
     <div className='sociocontent'>
