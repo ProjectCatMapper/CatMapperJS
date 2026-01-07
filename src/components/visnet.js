@@ -190,8 +190,26 @@ const filteredData = Array.from(filteredMap.entries()).map(([domain, color]) => 
       const edge = visData["edges"].find(edge => edge["id"] === edgeId);
       switch (edge.type) {
         case 'CONTAINS':
-          tooltipText = `eventDate: ${edge.eventDate} <br> eventType: ${edge.eventType} <br> referenceKey: ${edge.referenceKey} <br> type: ${edge.type}`;
-          break;
+                    {
+            const parts = [];
+
+            if (edge.eventDate != null && edge.eventDate != undefined  && edge.eventDate != "NULL" ) {
+              parts.push(`eventDate: ${edge.eventDate}`);
+            }
+
+            if (edge.eventType != null && edge.eventType != undefined  && edge.eventType != "NULL") {
+              parts.push(`eventType: ${edge.eventType}`);
+            }
+
+            if (edge.referenceKey != null) {
+              parts.push(`referenceKey: ${edge.referenceKey}`);
+            }
+
+            parts.push(`type: ${edge.type}`);
+
+            tooltipText = parts.join(' <br> ');
+            break;
+          }
         case 'USES':
           {
             const { from, to, color, id, ...rest } = edge;
