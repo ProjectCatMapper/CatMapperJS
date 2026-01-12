@@ -13,14 +13,19 @@ import {
   Divider,
   FormControl,
   FormControlLabel,
+  Grid,
   InputLabel,
+  NativeSelect,
   MenuItem,
   Select,
   Tab,
   Tabs,
+  Tooltip,
   Typography,
   Tooltip as MuiTool,
 } from "@mui/material";
+import { styled } from '@mui/material/styles';
+import InputBase from '@mui/material/InputBase';
 import InfoIcon from "@mui/icons-material/Info";
 
 import PropTypes from "prop-types";
@@ -34,6 +39,9 @@ import TimespanTable from "./timespantable";
 import MapComponent from './Map_component';
 
 import image from "../assets/white.png";
+
+import infodata from './infodata.json';
+
 
 import "./tableclick.css";
 import "./LoadingSpinner.css";
@@ -71,6 +79,38 @@ function a11yProps(index) {
     "aria-controls": `simple-tabpanel-${index}`,
   };
 }
+
+const BootstrapInput = styled(InputBase)(({ theme }) => ({
+  'label + &': {
+    marginTop: theme.spacing(3),
+  },
+  '& .MuiInputBase-input': {
+    borderRadius: 4,
+    position: 'relative',
+    backgroundColor: "white",
+    border: '1px solid #ced4da',
+    fontSize: 16,
+    padding: '10px 26px 10px 12px',
+    transition: theme.transitions.create(['border-color', 'box-shadow']),
+    fontFamily: [
+      '-apple-system',
+      'BlinkMacSystemFont',
+      '"Segoe UI"',
+      'Roboto',
+      '"Helvetica Neue"',
+      'Arial',
+      'sans-serif',
+      '"Apple Color Emoji"',
+      '"Segoe UI Emoji"',
+      '"Segoe UI Symbol"',
+    ].join(','),
+    '&:focus': {
+      borderRadius: 4,
+      borderColor: '#80bdff',
+      boxShadow: '0 0 0 0.2rem rgba(255,255,255,.25)',
+    },
+  },
+}));
 
 export default function Tableclick(props) {
   const [value, setValue] = useState(Number(props.cmid.tabval) || 0);
@@ -110,6 +150,10 @@ export default function Tableclick(props) {
   const [rememberChoice, setRememberChoice] = useState(false);
   const [loading, setLoading] = useState(false);
   const [badsources, setbadsources] = useState([]);
+  const [domainDrop, setdomainDrop] = React.useState('ALL NODES');
+  const [advdomainDrop, setadvdomainDrop] = React.useState('ALL NODES');
+  const [advoptions, setadvoptions] = React.useState(['ALL NODES']);
+  const [selectedCategory, setSelectedCategory] = useState({});
 
   const [open, setOpen] = useState(false);
 
@@ -270,8 +314,6 @@ export default function Tableclick(props) {
         setfdrop(data.relnames);
         setbadsources(data.badsources);
         setOpen(Boolean(data.badsources?.length));
-
-        console.log(data.info)
         
         const maptFeatures = data.polygons?.features?.length
           ? data.polygons.features
@@ -298,6 +340,85 @@ export default function Tableclick(props) {
     });
   }, []);
 
+  const tooltipContent = (
+      <div style={{ maxWidth: '400px' }}>
+        <h3>From which category domain do you want to find matches?</h3>
+        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <thead>
+            <tr>
+              <th style={{ borderBottom: '1px solid #ddd', textAlign: 'left', padding: '8px' }}>Label</th>
+              <th style={{ borderBottom: '1px solid #ddd', textAlign: 'left', padding: '8px' }}>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            {categories.map((category, index) => (
+              <tr key={index}>
+                <td style={{ borderBottom: '1px solid #ddd', padding: '8px' }}>{category.label === "DISTRICT" ? "AREA" : category.label}</td>
+                <td style={{ borderBottom: '1px solid #ddd', padding: '8px' }}>{category.description}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    );
+  
+    const tooltipContent2 = (
+      <div style={{ maxWidth: '400px' }}>
+        <h3>From which category sub-domain do you want to find matches?</h3>
+        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <thead>
+            <tr>
+              <th style={{ borderBottom: '1px solid #ddd', textAlign: 'left', padding: '8px' }}>Label</th>
+              <th style={{ borderBottom: '1px solid #ddd', textAlign: 'left', padding: '8px' }}>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            {infodata && selectedCategory?.[domainDrop]?.length > 0 ? (
+              infodata
+                .filter(desc => selectedCategory[domainDrop].includes(desc.label))
+                .map((category, index) => (
+                  <tr key={index}>
+                    <td style={{ borderBottom: '1px solid #ddd', padding: '8px' }}>{category.label}</td>
+                    <td style={{ borderBottom: '1px solid #ddd', padding: '8px' }}>{category.description}</td>
+                  </tr>
+                ))
+            ) : (
+              <tr>
+                <td colSpan={2} style={{ padding: '8px', fontStyle: 'italic' }}>
+                  Loading...
+                </td>
+              </tr>
+            )}
+  
+          </tbody>
+        </table>
+      </div>
+    );
+  
+    useEffect(() => {
+      fetch(`${process.env.REACT_APP_API_URL}/metadata/subdomains/${database}`)
+        .then((res) => {
+          if (!res.ok) throw new Error(`Server error: ${res.status}`);
+          return res.json();
+        })
+        .then((data) => {
+          const normalized = {};
+  
+          data.forEach(({ domain, subdomains }) => {
+            normalized[domain] = subdomains;
+          });
+  
+          setSelectedCategory(normalized);
+        })
+        .catch((err) => {
+          console.error("Error loading subdomains:", err);
+  
+          if (err.message.includes("NetworkError when attempting to fetch resource.")){
+              alert("We’re very sorry, but the server is currently down.  Please check back in a few minutes (or email dhruschk@asu.edu).")
+          }
+        });
+    }, [database]);
+    
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -322,7 +443,19 @@ export default function Tableclick(props) {
         }
 
         const result = await response.json();
-        setDatasetDropdown(["ANY DOMAIN", ...result.map((item) => item.label)]);
+
+        const allowedKeys = new Set(result.map(item => item.label));
+
+        setSelectedCategory(prev =>
+          Object.fromEntries(
+            Object.entries(prev).filter(
+              ([key]) => key === "ANY DOMAIN" || allowedKeys.has(key)
+            )
+          )
+        );
+  
+        setadvoptions(["ANY DOMAIN"]);
+
       } catch (error) {
         console.error("Error fetching data:", error);
       }
@@ -748,7 +881,77 @@ export default function Tableclick(props) {
                 margin: "2 2",
               }}
             >
-              <Select
+                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    <FormControl sx={{ width: 320 }} variant="standard" size="small">
+                      <Typography variant="subtitle2" gutterBottom>Category Domain</Typography>
+                      <NativeSelect
+                        value={domainDrop}
+                        label=""
+                        sx={{
+                          fontSize: 14, letterSpacing: 0.5, borderRadius: 1, backgroundColor: "white", "& .MuiNativeSelect-select": {
+                            padding: "4px 8px",
+                          },
+                        }}
+                        onChange={(event) => {
+                          const newDomain = event.target.value;
+                          const subdomains = selectedCategory[newDomain] || [];
+  
+                          setdomainDrop(newDomain);
+                          setadvoptions(subdomains);
+                          setadvdomainDrop(subdomains[0] || '');
+                        }}
+                        input={<BootstrapInput />}
+                      >
+                        {Object.keys(selectedCategory).map((category, index) => (
+                          <option key={index} value={category}>
+                            {category === "DISTRICT" ? "AREA" : category}
+                          </option>
+                        ))}
+                      </NativeSelect>
+                    </FormControl>
+                    <Tooltip title={tooltipContent} arrow>
+                      <Button
+                        startIcon={
+                          <InfoIcon sx={{ height: "28px", width: "28px" }} />
+                        }
+                      ></Button>
+                    </Tooltip>
+                  </Box>
+  
+                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    <FormControl sx={{ width: 300 }} variant="standard">
+                      <Typography variant="subtitle2" gutterBottom>Category Subdomain</Typography>
+                      <NativeSelect
+                        id="demo-customized-select-native"
+                        value={advdomainDrop}
+                        label=""
+                        sx={{
+                          fontSize: 14, letterSpacing: 0.5, borderRadius: 1, backgroundColor: "white", "& .MuiNativeSelect-select": {
+                            padding: "4px 8px",
+                          },
+                        }}
+                        onChange={(event) => {
+                          setadvdomainDrop(event.target.value);
+                        }}
+                        input={<BootstrapInput />}
+                      >
+                        {advoptions.map((value, index) => (
+                          <option key={index} value={value}>
+                            {value === "DISTRICT" ? "AREA" : value}
+                          </option>
+                        ))}
+                      </NativeSelect>
+                    </FormControl>
+                    <Tooltip title={tooltipContent2} arrow>
+                      <Button
+                        startIcon={
+                          <InfoIcon sx={{ height: "28px", width: "28px" }} />
+                        }
+                      ></Button>
+                    </Tooltip>
+                  </Box>
+                
+              {/* <Select
                 multiple
                 value={datasetdomainValue}
                 onChange={datasetDropdownChange}
@@ -763,7 +966,7 @@ export default function Tableclick(props) {
                     {option}
                   </MenuItem>
                 ))}
-              </Select>
+              </Select> */}
               <Button
                 variant="contained"
                 sx={{
