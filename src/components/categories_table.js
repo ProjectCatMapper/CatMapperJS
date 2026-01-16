@@ -10,37 +10,28 @@ export default function CategoriesTable(props) {
     { field: 'Domain', headerName: 'Domain', width: 500 },
     { field: 'Count', headerName: 'Categories', width: 200 },
     { field: 'useskeys', headerName: 'Keys', width: 200 },
+    { field: 'ChildCount', headerName: 'Child Dataset Categories', width: 200 },
+    { field: 'childuseskeys', headerName: 'Child Dataset Keys', width: 200 },
   ];
   const [rows, setRows] = useState([]);
-  const navigate = useNavigate();
-  const tabval = ""
-
   let path = "sociomap"
 
   if (useLocation().pathname.includes("archamap")) {
     path = "archamap"
   } 
   
-  // const handleRowClick = (
-  //   params,
-  // ) => {
-  //   navigate({pathname:`/${path}/${params.row.cmid}`,});
-  // };
-
   React.useEffect(() => {
     setRows(props.categories.map((value, key) => {
       return {
         id: key + 1,
         Domain: value.Domain,
         Count: value.Count,
-        useskeys: value.TotalUses
+        useskeys: value.TotalUses,
+        ChildCount: value.UnderChildCount,
+        childuseskeys: value.TotalChildUses
       }
     }))
   }, [props.categories])
-
-  // React.useEffect(() => {
-  //   console.log(rows)
-  // }, [rows])
 
   return (
     <div style={{ height: 700, width: '100%' }}>
@@ -54,7 +45,6 @@ export default function CategoriesTable(props) {
           },
         }}
         pageSizeOptions={[10, 30, 50]}
-        //onRowClick={handleRowClick}
         localeText={{ noRowsLabel: "No results to display" }} />
     </div>
   );
