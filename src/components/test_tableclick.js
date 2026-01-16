@@ -883,7 +883,7 @@ export default function Tableclick(props) {
             >
                   <Box sx={{ display: 'flex', alignItems: 'center' }}>
                     <FormControl sx={{ width: 320 }} variant="standard" size="small">
-                      <Typography variant="subtitle2" gutterBottom>Category Domain</Typography>
+                      <Typography variant="subtitle2" gutterBottom>Select Category Domains for downloading</Typography>
                       <NativeSelect
                         value={domainDrop}
                         label=""
@@ -989,7 +989,7 @@ export default function Tableclick(props) {
                 sx={{ marginLeft: 2, marginBottom: 2 }}
                 control={<Checkbox />}
                 onChange={handleDatasetCheckbox}
-                label="Download connected datasets?"
+                label="Include connected datasets?"
               />
             </Box>
           )}
