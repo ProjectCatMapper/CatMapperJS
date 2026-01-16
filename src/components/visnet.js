@@ -231,7 +231,7 @@ tooltipText = [...tooltipText.top, ...tooltipText.middle, ...tooltipText.bottom]
             break;
           }
         case 'EQUIVALENT':
-          tooltipText = `merging: ${edge.Merging}`;
+          tooltipText = `stack: ${edge.stack} <br> dataset: ${edge.dataset} <br> Key: ${edge.Key}`;
           break;
         default:
           tooltipText = `referenceKey: ${edge.referenceKey} <br> type: ${edge.type}`;
