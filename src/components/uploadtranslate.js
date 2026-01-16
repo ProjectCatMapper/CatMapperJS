@@ -226,6 +226,10 @@ const UploadTranslat = () => {
         const colIndex = columns.indexOf(col);
         const hasMissing = rows.some(row => !row[colIndex]);
 
+        console.log(col)
+        console.log(colIndex)
+        console.log(hasMissing)
+
         if (hasMissing) {
           setError(`${col} column contains missing values.`);
           return false;
@@ -544,7 +548,8 @@ const UploadTranslat = () => {
         required = ['CMName', 'Name', 'Key', 'label', 'datasetID'];
         const labelIndex = columns.indexOf('label');
         if (labelIndex !== -1) {
-          const datasetValueFound = rows.some(row => row[labelIndex] === 'DATASET');
+          const allowedDatasetLabels = ['DATASET', 'MERGING', 'STACK'];
+          const datasetValueFound = rows.some(row => allowedDatasetLabels.includes(row[labelIndex]));
           if (datasetValueFound) {
             required = ['CMName', 'label', 'shortName', 'DatasetCitation'];
             allowedDatasetColumns = ["CMID", "CMName", "DatasetCitation", "DatasetLocation", "DatasetScope", "DatasetVersion",
@@ -584,11 +589,13 @@ const UploadTranslat = () => {
 
           const cols = columns.map(c => c.trim());
 
+          // if variableID is present, then uploading merging ties to variables
           if (cols.includes("variableID")) {
             setMergingType("merging_ties_to_variables")
             required = ["mergingID", "datasetID", "variableID", "varName"];
           }
 
+          // if categoryID is present, but no variableID then assume equivalence ties
           else if (cols.includes("categoryID")) {
             setMergingType("equivalence_ties")
 
@@ -596,15 +603,17 @@ const UploadTranslat = () => {
 
             if (keyColumns.length === 2) {
               const [key1, key2] = keyColumns;
-              required = ["stackID", "categoryID", key1, key2];
+              required = ["mergingID", "categoryID", key1, key2];
             } else if (cols.includes("datasetID")) {
-              required = ["stackID", "categoryID", "Key", "datasetID"];
+              required = ["mergingID", "categoryID", "Key", "datasetID"];
             }
             else{
               setError("Not all required columns are present.");
               return false;
             }
           }
+
+          // if neither variableID or categoryID are present, then uploading merging ties to datasets
           else  {
             setMergingType("merging_ties_to_datasets")
             required = ["mergingID", "datasetID"];
