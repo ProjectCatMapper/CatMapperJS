@@ -385,7 +385,7 @@ const UploadTranslat = () => {
         allowedColumns.add("CMName");
       }
 
-      const finalProduct = selectedOption === "advanced"
+      const finalProduct = selectedOption === "standard"
         ? jsonData.map(item => {
           const filteredItem = {};
 
@@ -902,10 +902,10 @@ const UploadTranslat = () => {
       <h4 style={{ color: 'black', padding: "2px" }}>Choose :</h4>
       <RadioGroup defaultValue="standard" name="uploadOption" sx={{ mb: 2 }} onChange={handleOptionChange}>
         <FormControlLabel value="standard" control={<Radio />} label="Standard" />
-        <FormControlLabel value="advanced" control={<Radio />} label="Advanced" />
+        <FormControlLabel value="simple" control={<Radio />} label="Simple" />
       </RadioGroup>
 
-      {showFields && selectedOption === "standard" && (
+      {showFields && selectedOption === "simple" && (
         <Box sx={{ mt: 3 }}>
           <Box sx={{ mb: 2 }}>
             <InputLabel id="domain-label" style={{ color: "black " }}>Please select the <strong>domain of categories</strong> to be uploaded:</InputLabel>
@@ -1040,7 +1040,7 @@ const UploadTranslat = () => {
           </Box>
         </Box>
       )}
-      {showFields && selectedOption === "advanced" && (
+      {showFields && selectedOption === "standard" && (
         <Box sx={{ mb: 2 }}>
           <h4 style={{ color: 'black', padding: "2px" }}>Select option<Tooltip title={tooltipContent} arrow>
             <Button startIcon={<InfoIcon sx={{ height: '24px', width: '24px' }} />}>
