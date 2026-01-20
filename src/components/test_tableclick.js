@@ -1,4 +1,4 @@
-import React, { useState, useEffect} from "react";
+import React, { useState, useEffect, useRef} from "react";
 
 import { Link, useLocation } from "react-router-dom";
 
@@ -118,6 +118,7 @@ export default function Tableclick(props) {
   const [mapt, setMapt] = useState([]);
   const [rev, setrev] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [childcategories, setChildCategories] = useState([]);
   const [points, setPoints] = useState([]);
   const [datasetpoints, setDatasetPoints] = useState([]);
   const [fdrop, setfdrop] = useState(["CONTAINS"]);
@@ -145,8 +146,7 @@ export default function Tableclick(props) {
     "USES",
     "EQUIVALENT"
   ];
-  const [datasetdomainValue, setdatasetdomainValue] = useState([]);
-  const [datasetdropdown, setDatasetDropdown] = useState(["ANY DOMAIN"]);
+  
   const [rememberChoice, setRememberChoice] = useState(false);
   const [loading, setLoading] = useState(false);
   const [badsources, setbadsources] = useState([]);
@@ -154,6 +154,7 @@ export default function Tableclick(props) {
   const [advdomainDrop, setadvdomainDrop] = React.useState('ALL NODES');
   const [advoptions, setadvoptions] = React.useState(['ALL NODES']);
   const [selectedCategory, setSelectedCategory] = useState({});
+  const normalizedRef = useRef({});
 
   const [open, setOpen] = useState(false);
 
@@ -170,14 +171,10 @@ export default function Tableclick(props) {
   };
 
   useEffect(() => {
-    if (datasetdropdown.length > 0) {
-      setdatasetdomainValue([datasetdropdown[0]]);
+    if (advoptions.length > 0) {
+      setadvdomainDrop([advoptions[0]]);
     }
-  }, [datasetdropdown]);
-
-  const datasetDropdownChange = (event) => {
-    setdatasetdomainValue(event.target.value);
-  };
+  }, [advoptions]);
 
   const generateTooltipContent = (properties) => {
     return Object.entries(properties).map(
@@ -307,6 +304,7 @@ export default function Tableclick(props) {
       .then((data) => {
         setUsert(data.samples);
         setCategories(data.categories);
+        setChildCategories(data.childcategories);
         setMapt(data.polygons);
         setrev(data.info);
         setPoints(data.points);
@@ -403,10 +401,12 @@ export default function Tableclick(props) {
         })
         .then((data) => {
           const normalized = {};
-  
+
           data.forEach(({ domain, subdomains }) => {
             normalized[domain] = subdomains;
           });
+
+          normalizedRef.current = normalized;
   
           setSelectedCategory(normalized);
         })
@@ -446,14 +446,24 @@ export default function Tableclick(props) {
 
         const allowedKeys = new Set(result.map(item => item.label));
 
-        setSelectedCategory(prev =>
-          Object.fromEntries(
-            Object.entries(prev).filter(
-              ([key]) => key === "ANY DOMAIN" || allowedKeys.has(key)
-            )
-          )
-        );
-  
+        console.log(allowedKeys)
+
+        console.log(normalizedRef)
+
+        const matchingDomains = Object.fromEntries([
+          ["ANY DOMAIN", ["ANY DOMAIN"]],
+          ...Object.entries(normalizedRef.current)
+            .map(([domain, values]) => {
+              const found = values.filter(v => allowedKeys.has(v));
+              return [domain, found];
+            })
+            .filter(([_, found]) => found.length > 0) // only keep domains with matches
+        ]);
+
+        console.log(matchingDomains)
+
+        setSelectedCategory(matchingDomains)
+       
         setadvoptions(["ANY DOMAIN"]);
 
       } catch (error) {
@@ -466,12 +476,12 @@ export default function Tableclick(props) {
 
   const datasetButtonClick = async (event) => {
     setLoading(true);
-    const adjustedDomain = datasetdomainValue.includes("ANY DOMAIN")
+    const adjustedDomain = advdomainDrop.includes("ANY DOMAIN")
       ? ["CATEGORY"]
-      : datasetdomainValue;
+      : advdomainDrop;
     try {
       let response;
-      if (Array.isArray(datasetdomainValue) && datasetdomainValue.length > 1) {
+      if (Array.isArray(advdomainDrop) && advdomainDrop.length > 1) {
         response = await fetch(`${process.env.REACT_APP_API_URL}/dataset`, {
           // response = await fetch("http://127.0.0.1:5001/dataset", {
           method: "POST",
@@ -1041,9 +1051,7 @@ export default function Tableclick(props) {
                 >
                   <Tab label="Network Explorer" {...a11yProps(0)} />
                   <Tab label="Map" {...a11yProps(1)} />
-                  {categories.length !== 0 ? (
-                    <Tab label="Categories" {...a11yProps(2)} />
-                  ) : null}
+                  <Tab label="Categories" {...a11yProps(2)} />
                 </Tabs>
               </Box>
 
@@ -1141,7 +1149,7 @@ export default function Tableclick(props) {
                 </div>
               </CustomTabPanel>
               <CustomTabPanel value={value} index={2}>
-                <CategoriesTable categories={categories} />
+                <CategoriesTable categories={categories} childcategories = {childcategories} rememberChoice={rememberChoice} normalized={normalizedRef.current} />
               </CustomTabPanel>
             </React.Fragment>
           ) : (
