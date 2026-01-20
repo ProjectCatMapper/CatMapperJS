@@ -265,7 +265,7 @@ const Propose_Merge = () => {
       <h4 style={{ color: 'black', padding: "1px" }}>Select Datasets for Merging</h4>
       <Box sx={{ display: 'flex', alignItems: 'center', mt: 2 }}>
         <TextField
-          label="Enter DatasetIDs seperated by commas"
+          label="Enter DatasetIDs separated by commas"
           variant="outlined"
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
