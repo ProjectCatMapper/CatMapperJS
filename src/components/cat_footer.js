@@ -4,9 +4,10 @@ import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import Typography from "@mui/material/Typography";
 import image from "../assets/white.png";
-import { Link } from "react-router-dom";
+import Link from "@mui/material/Link";
 import "./cat_footer.css";
 import Divider from "@mui/material/Divider";
+import FAQButton from "./FAQbutton";
 
 const footer = () => {
   return (
@@ -19,14 +20,7 @@ const footer = () => {
               style={{ backgroundColor: "black", border: "1px solid white" }}
             >
               <CardContent>
-                <Typography
-                  sx={{ fontSize: 30 }}
-                  color="#fff"
-                  gutterBottom
-                  id="catmapperfooter"
-                >
-                  Description
-                </Typography>
+                <FAQButton title="Description" />
                 <Typography
                   variant="p"
                   color="#fff"
