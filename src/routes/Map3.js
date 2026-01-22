@@ -1,14 +1,13 @@
-import React from 'react'
-import Navbar from '../components/Navbar'
-import Sociomap_2 from '../components/map2';
+import Navbar from '../components/NavbarApp'
+import Sociomap_3 from '../components/Map3';
 
 const Map3 = () => {
-    return (
-      <div>
-        <Navbar />
-        <Sociomap_2 />
-      </div>
-    )
-  }
-  
+  return (
+    <div>
+      <Navbar />
+      <Sociomap_3 />
+    </div>
+  )
+}
+
 export default Map3

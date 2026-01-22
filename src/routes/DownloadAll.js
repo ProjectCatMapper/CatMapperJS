@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import Navbar from '../components/footer_navbar';
+import Navbar from '../components/NavbarHome';
 import {
   Tabs,
   Tab,
@@ -14,7 +14,7 @@ import {
   CircularProgress,
 } from '@mui/material';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
-import './../components/funding.css';
+import './../components/Funding.css';
 
 const theme = createTheme({
   typography: {
@@ -33,31 +33,31 @@ const DownloadAll = () => {
   };
 
   const fetchData = async (db) => {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/CSVURLs/${db}?mostRecent=False`);
-      const data = await response.json();
-  
-      const files = Array.isArray(data.urls)
-        ? data.urls.map(([url, size]) => ({ url, size }))
-        : [];
-  
-      return files.sort((a, b) => {
-        const dateA = new Date(a.url.match(/\d{4}-\d{2}-\d{2}/)?.[0] || 0);
-        const dateB = new Date(b.url.match(/\d{4}-\d{2}-\d{2}/)?.[0] || 0);
-        return dateB - dateA;
-      });
+    const response = await fetch(`${process.env.REACT_APP_API_URL}/CSVURLs/${db}?mostRecent=False`);
+    const data = await response.json();
+
+    const files = Array.isArray(data.urls)
+      ? data.urls.map(([url, size]) => ({ url, size }))
+      : [];
+
+    return files.sort((a, b) => {
+      const dateA = new Date(a.url.match(/\d{4}-\d{2}-\d{2}/)?.[0] || 0);
+      const dateB = new Date(b.url.match(/\d{4}-\d{2}-\d{2}/)?.[0] || 0);
+      return dateB - dateA;
+    });
+  };
+  useEffect(() => {
+    const loadData = async () => {
+      const [archamap, sociomap] = await Promise.all([
+        fetchData('ArchaMap'),
+        fetchData('SocioMap'),
+      ]);
+      setUrls({ ArchaMap: archamap, SocioMap: sociomap });
+      setLoading(false);
     };
-    useEffect(() => {
-      const loadData = async () => {
-        const [archamap, sociomap] = await Promise.all([
-          fetchData('ArchaMap'),
-          fetchData('SocioMap'),
-        ]);
-        setUrls({ ArchaMap: archamap, SocioMap: sociomap });
-        setLoading(false);
-      };
-      loadData();
-    }, []);
-  
+    loadData();
+  }, []);
+
   const renderList = (items) =>
     items.length === 0 ? (
       <Typography variant="body2">No files available.</Typography>
@@ -80,7 +80,7 @@ const DownloadAll = () => {
         })}
       </List>
     );
-  
+
 
   return (
     <div style={{ backgroundColor: 'white' }}>
