@@ -16,10 +16,11 @@ import TableRow from '@mui/material/TableRow';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import './footer.css'
-import image from '../assets/white.png'
-import Divider from '@mui/material/Divider';
-import Link from "@mui/material/Link";
+// import image from '../assets/white.png'
+// import Divider from '@mui/material/Divider';
+// import Link from "@mui/material/Link";
 import FAQButton from "./FAQbutton";
+import FooterLinks from "./FooterLinks";
 
 function createData(names, nodes, encodings, contains, context) {
   return { names, nodes, encodings, contains, context };
@@ -243,20 +244,9 @@ const Footer = () => {
 
         </Grid>
       </Box>
-      <Divider sx={{ marginTop: 3, marginBottom: 7, marginLeft: 1, marginRight: 1, backgroundColor: 'white' }} />
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 2, mb: 0 }}>
-        <img src={image} alt="CatMapper Logo" style={{ height: 80 }} />
-        <Box>
-          <Link id="catmapperfooter" to="/people" underline="none" style={{ color: 'white', textDecoration: 'none', margin: '0 8px' }}>People</Link>
-          <Link to="/news" id="catmapperfooter" underline="none" style={{ color: 'white', textDecoration: 'none', margin: '0 8px' }}>News</Link>
-          <Link to="/funding" id="catmapperfooter" underline="none" style={{ color: 'white', textDecoration: 'none', margin: '0 8px' }}>Funding</Link>
-          <Link to="/citation" id="catmapperfooter" underline="none" style={{ color: 'white', textDecoration: 'none', margin: '0 8px' }}>Citation</Link>
-          <Link to="/terms" id="catmapperfooter" underline="none" style={{ color: 'white', textDecoration: 'none', margin: '0 8px' }}>Terms</Link>
-          <Link to="/contact" id="catmapperfooter" underline="none" style={{ color: 'white', textDecoration: 'none', margin: '0 8px' }}>Contact</Link>
-          <Link to="/download" id="catmapperfooter" underline="none" style={{ color: 'white', textDecoration: 'none', margin: '0 8px' }}>Download</Link>
-        </Box>
-      </Box>
-
+      <CardContent>
+        <FooterLinks />
+      </CardContent>
 
     </div>
   )
