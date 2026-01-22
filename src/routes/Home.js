@@ -5,10 +5,10 @@ import Footer from '../components/footer'
 const Home = () => {
   return (
     <div style={{
-        display: "flex",
-        flexDirection: "column",
-        minHeight: "100vh",
-      }}>
+      display: "flex",
+      flexDirection: "column",
+      minHeight: "100vh",
+    }}>
       <Navbar />
       <Video />
       <Footer />

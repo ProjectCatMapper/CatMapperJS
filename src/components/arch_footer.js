@@ -1,5 +1,5 @@
 import React from 'react'
-import { useEffect,useState } from 'react';
+import { useEffect, useState } from 'react';
 import Box from '@mui/material/Box';
 import Paper from '@mui/material/Paper';
 import Grid from '@mui/material/Grid';
@@ -17,46 +17,47 @@ import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import './footer.css'
 import image from '../assets/white.png'
-import { Link } from 'react-router-dom'
 import Divider from '@mui/material/Divider';
+import Link from "@mui/material/Link";
+import FAQButton from "./FAQbutton";
 
-function createData(names,nodes, encodings, contains,context ) {
+function createData(names, nodes, encodings, contains, context) {
   return { names, nodes, encodings, contains, context };
 }
 
-  // function createFoci(Focus, Datasets, Areas, Ethnicities, Languages, Religions) {
-  //   return { Focus, Datasets, Areas, Ethnicities, Languages, Religions  };
-  // }
+// function createFoci(Focus, Datasets, Areas, Ethnicities, Languages, Religions) {
+//   return { Focus, Datasets, Areas, Ethnicities, Languages, Religions  };
+// }
 
-  const handleButtonClick = async () => {
-    try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/allDatasets?database=archamap`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-      const data = await response.json();
-      const worksheet = XLSX.utils.json_to_sheet(data);
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
-
-      const excelBuffer = XLSX.write(workbook, {
-        bookType: 'xlsx',
-        type: 'array',
-      });
-
-      const blob = new Blob([excelBuffer], { type: 'application/octet-stream' });
-
-      saveAs(blob, 'data.xlsx');
-    } catch (error) {
-      console.error('There was a problem with the fetch operation:', error);
+const handleButtonClick = async () => {
+  try {
+    const response = await fetch(`${process.env.REACT_APP_API_URL}/allDatasets?database=archamap`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    if (!response.ok) {
+      throw new Error('Network response was not ok');
     }
-  };
-  
+    const data = await response.json();
+    const worksheet = XLSX.utils.json_to_sheet(data);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
+
+    const excelBuffer = XLSX.write(workbook, {
+      bookType: 'xlsx',
+      type: 'array',
+    });
+
+    const blob = new Blob([excelBuffer], { type: 'application/octet-stream' });
+
+    saveAs(blob, 'data.xlsx');
+  } catch (error) {
+    console.error('There was a problem with the fetch operation:', error);
+  }
+};
+
 
 const Footer = () => {
 
@@ -86,94 +87,93 @@ const Footer = () => {
   useEffect(() => {
 
     fetch(`${process.env.REACT_APP_API_URL}/progress?database=archamap`,
-        // fetch("http://127.0.0.1:5001/progress?database=archamap",
-            {
-                method: "GET"
-            })
-            .then(response => {
-                return response.json()
-            })
-            .then(data => {const nodeMap = {};
-      const encodingMap = {};
-      const relationMap = {};
+      // fetch("http://127.0.0.1:5001/progress?database=archamap",
+      {
+        method: "GET"
+      })
+      .then(response => {
+        return response.json()
+      })
+      .then(data => {
+        const nodeMap = {};
+        const encodingMap = {};
+        const relationMap = {};
 
-      data.nodes.forEach(n => { nodeMap[n.label] = n.current; });
-      data.encodings.forEach(e => { encodingMap[e.label] = e.current; });
-      data.relations.forEach(r => { relationMap[r.label] = r.current; });
+        data.nodes.forEach(n => { nodeMap[n.label] = n.current; });
+        data.encodings.forEach(e => { encodingMap[e.label] = e.current; });
+        data.relations.forEach(r => { relationMap[r.label] = r.current; });
 
-      // Define explicit relation mapping
-      const nodeToRelationMap = {
-        "AREAS": "AREA OF",
-        "PERIODS": "PERIOD OF",
-        "CULTURES": "CULTURE OF",
-        // Add more mappings if new types gain relations
-      };
+        // Define explicit relation mapping
+        const nodeToRelationMap = {
+          "AREAS": "AREA OF",
+          "PERIODS": "PERIOD OF",
+          "CULTURES": "CULTURE OF",
+          // Add more mappings if new types gain relations
+        };
 
-      const rows = [];
+        const rows = [];
 
-      // Add DATASETS row if present
-      if (nodeMap["DATASETS"] !== undefined) {
-        rows.push(createData("Datasets", nodeMap["DATASETS"], "", "", ""));
-      }
+        // Add DATASETS row if present
+        if (nodeMap["DATASETS"] !== undefined) {
+          rows.push(createData("Datasets", nodeMap["DATASETS"], "", "", ""));
+        }
 
-      let totalNodes = 0;
+        let totalNodes = 0;
 
-      Object.entries(nodeMap).forEach(([label, count]) => {
-        if (label === "DATASETS") return;
+        Object.entries(nodeMap).forEach(([label, count]) => {
+          if (label === "DATASETS") return;
 
-        const encoding = encodingMap[label] || 0;
-        const encodingPerNode = count > 0 ? (encoding / count).toFixed(2) : "0.00";
-        const relationLabel = nodeToRelationMap[label];
-        const relation = relationLabel ? (relationMap[relationLabel] || "") : "";
+          const encoding = encodingMap[label] || 0;
+          const encodingPerNode = count > 0 ? (encoding / count).toFixed(2) : "0.00";
+          const relationLabel = nodeToRelationMap[label];
+          const relation = relationLabel ? (relationMap[relationLabel] || "") : "";
+
+          rows.push(
+            createData(label, count, encodingPerNode, "x", relation)
+          );
+
+          totalNodes += count;
+        });
+
+        const totalContains = relationMap["CONTAINS"] || 0;
+
+        const totalRelationSum = Object.entries(nodeToRelationMap).reduce((sum, [, relationLabel]) => {
+          return sum + (relationMap[relationLabel] || 0);
+        }, 0);
 
         rows.push(
-          createData(label, count, encodingPerNode, "x", relation)
+          createData(
+            "Total",
+            totalNodes,
+            totalNodes > 0 ? (totalContains / totalNodes).toFixed(2) : "0.00",
+            totalContains,
+            totalRelationSum
+          )
         );
 
-        totalNodes += count;
-      });
-
-      const totalContains = relationMap["CONTAINS"] || 0;
-
-      const totalRelationSum = Object.entries(nodeToRelationMap).reduce((sum, [, relationLabel]) => {
-        return sum + (relationMap[relationLabel] || 0);
-      }, 0);
-
-      rows.push(
-        createData(
-          "Total",
-          totalNodes,
-          totalNodes > 0 ? (totalContains / totalNodes).toFixed(2) : "0.00",
-          totalContains,
-          totalRelationSum
-        )
-      );
-
-      setrows(rows);
-            })
-            .catch(err => console.error("Failed to fetch progress", err));
-    },[])
+        setrows(rows);
+      })
+      .catch(err => console.error("Failed to fetch progress", err));
+  }, [])
 
   return (
     <div className='footer'>
 
-<Box sx={{ flexGrow: 1 ,marginLeft:1,marginRight:1,}}>
-      <Grid container spacing={2}>
-        <Grid item xs={6}>
-        <Card variant="outlined" style={{backgroundColor: 'black',border: '1px solid white',}}>
-        <CardContent>
-      <Typography id ='sociomapfooter' sx={{ fontSize: 20 }} color="#fff" gutterBottom>
-        Description
-      </Typography>
-      <Typography variant="p" color="#fff" component="div">
-     
-      ArchaMap is an open-source tool designed to aid in the integration of multiple complex data sets with different sources, data ontologies, and resolutions. ArchaMap is designed to save time, increase consistency, and document complex data merging processes among multiple sources. This application stores and suggests past translations to build an ever-expanding list of associations to aid in connecting categorical data across different sources. ArchaMap uses previously uploaded categories to build a database of potential category names and includes contextual information to help users find the appropriate match.
-      </Typography>
-    </CardContent>
-    </Card >
-      </Grid>
+      <Box sx={{ flexGrow: 1, marginLeft: 1, marginRight: 1, }}>
+        <Grid container spacing={2}>
+          <Grid item xs={6}>
+            <Card variant="outlined" style={{ backgroundColor: 'black', border: '1px solid white', }}>
+              <CardContent>
+                <FAQButton title="Description" />
+                <Typography variant="p" color="#fff" component="div">
 
-      <Grid item xs={12} md={6}>
+                  ArchaMap is an open-source tool designed to aid in the integration of multiple complex data sets with different sources, data ontologies, and resolutions. ArchaMap is designed to save time, increase consistency, and document complex data merging processes among multiple sources. This application stores and suggests past translations to build an ever-expanding list of associations to aid in connecting categorical data across different sources. ArchaMap uses previously uploaded categories to build a database of potential category names and includes contextual information to help users find the appropriate match.
+                </Typography>
+              </CardContent>
+            </Card >
+          </Grid>
+
+          <Grid item xs={12} md={6}>
             <Card
               variant="outlined"
               sx={{
@@ -241,19 +241,19 @@ const Footer = () => {
             </Card>
           </Grid>
 
-      </Grid>        
-    </Box>
-    <Divider sx={{ marginTop: 3, marginBottom: 7, marginLeft:1,marginRight:1, backgroundColor: 'white' }} />
-    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 2, mb:0 }}>
+        </Grid>
+      </Box>
+      <Divider sx={{ marginTop: 3, marginBottom: 7, marginLeft: 1, marginRight: 1, backgroundColor: 'white' }} />
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 2, mb: 0 }}>
         <img src={image} alt="CatMapper Logo" style={{ height: 80 }} />
         <Box>
-          <Link  id="catmapperfooter" to="/people"  underline="none" style={{ color: 'white', textDecoration: 'none', margin: '0 8px' }}>People</Link>
-          <Link to="/news" id="catmapperfooter"  underline="none" style={{ color: 'white', textDecoration: 'none', margin: '0 8px' }}>News</Link>
-          <Link to="/funding" id="catmapperfooter"  underline="none" style={{ color: 'white', textDecoration: 'none', margin: '0 8px' }}>Funding</Link>
-          <Link to="/citation" id="catmapperfooter"  underline="none" style={{ color: 'white', textDecoration: 'none', margin: '0 8px' }}>Citation</Link>
-          <Link to="/terms" id="catmapperfooter"  underline="none" style={{ color: 'white', textDecoration: 'none', margin: '0 8px' }}>Terms</Link>
-          <Link to="/contact" id="catmapperfooter"  underline="none" style={{ color: 'white', textDecoration: 'none', margin: '0 8px' }}>Contact</Link>
-          <Link to="/download" id="catmapperfooter"  underline="none" style={{ color: 'white', textDecoration: 'none', margin: '0 8px' }}>Download</Link>
+          <Link id="catmapperfooter" to="/people" underline="none" style={{ color: 'white', textDecoration: 'none', margin: '0 8px' }}>People</Link>
+          <Link to="/news" id="catmapperfooter" underline="none" style={{ color: 'white', textDecoration: 'none', margin: '0 8px' }}>News</Link>
+          <Link to="/funding" id="catmapperfooter" underline="none" style={{ color: 'white', textDecoration: 'none', margin: '0 8px' }}>Funding</Link>
+          <Link to="/citation" id="catmapperfooter" underline="none" style={{ color: 'white', textDecoration: 'none', margin: '0 8px' }}>Citation</Link>
+          <Link to="/terms" id="catmapperfooter" underline="none" style={{ color: 'white', textDecoration: 'none', margin: '0 8px' }}>Terms</Link>
+          <Link to="/contact" id="catmapperfooter" underline="none" style={{ color: 'white', textDecoration: 'none', margin: '0 8px' }}>Contact</Link>
+          <Link to="/download" id="catmapperfooter" underline="none" style={{ color: 'white', textDecoration: 'none', margin: '0 8px' }}>Download</Link>
         </Box>
       </Box>
 
