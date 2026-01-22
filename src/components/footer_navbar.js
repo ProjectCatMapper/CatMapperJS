@@ -33,7 +33,7 @@ const Navbar = () => {
                     <Link id='sociomapnavbar' to='/citation'>Citation</Link>
                 </li>
                 <li >
-                    <Link id='sociomapnavbar' to='/contact'>Contact Us</Link>
+                    <Link id='sociomapnavbar' to='/contact'>Contact</Link>
                 </li>
                 <li >
                     <Link id='sociomapnavbar' to='/download'>Download</Link>

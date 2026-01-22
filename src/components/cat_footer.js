@@ -3,11 +3,12 @@ import Grid from "@mui/material/Grid";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import Typography from "@mui/material/Typography";
-import image from "../assets/white.png";
-import Link from "@mui/material/Link";
+// import image from "../assets/white.png";
+// import Link from "@mui/material/Link";
 import "./cat_footer.css";
-import Divider from "@mui/material/Divider";
+// import Divider from "@mui/material/Divider";
 import FAQButton from "./FAQbutton";
+import FooterLinks from "./FooterLinks";
 
 const footer = () => {
   return (
@@ -90,85 +91,9 @@ const footer = () => {
           </Grid>
         </Grid>
       </Box>
-      <Divider
-        sx={{
-          marginTop: 3,
-          marginBottom: 7,
-          marginLeft: 1,
-          marginRight: 1,
-          backgroundColor: "white",
-        }}
-      />
-
-      <Box
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          mt: 2,
-          mb: 0,
-        }}
-      >
-        <img src={image} alt="CatMapper Logo" style={{ height: 80 }} />
-        <Box>
-          <Link
-            id="catmapperfooter"
-            to="/people"
-            underline="none"
-            style={{ color: "white", textDecoration: "none", margin: "0 8px" }}
-          >
-            People
-          </Link>
-          <Link
-            to="/news"
-            id="catmapperfooter"
-            underline="none"
-            style={{ color: "white", textDecoration: "none", margin: "0 8px" }}
-          >
-            News
-          </Link>
-          <Link
-            to="/funding"
-            id="catmapperfooter"
-            underline="none"
-            style={{ color: "white", textDecoration: "none", margin: "0 8px" }}
-          >
-            Funding
-          </Link>
-          <Link
-            to="/citation"
-            id="catmapperfooter"
-            underline="none"
-            style={{ color: "white", textDecoration: "none", margin: "0 8px" }}
-          >
-            Citation
-          </Link>
-          <Link
-            to="/terms"
-            id="catmapperfooter"
-            underline="none"
-            style={{ color: "white", textDecoration: "none", margin: "0 8px" }}
-          >
-            Terms
-          </Link>
-          <Link
-            to="/contact"
-            id="catmapperfooter"
-            underline="none"
-            style={{ color: "white", textDecoration: "none", margin: "0 8px" }}
-          >
-            Contact
-          </Link>
-          <Link
-            to="/download"
-            id="catmapperfooter"
-            underline="none"
-            style={{ color: "white", textDecoration: "none", margin: "0 8px" }}
-          >
-            Download
-          </Link>
-        </Box>
-      </Box>
+      <CardContent>
+        <FooterLinks />
+      </CardContent>
     </div>
   );
 };
