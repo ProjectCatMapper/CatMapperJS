@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import Navbar from '../components/footer_navbar';
+import Navbar from '../components/NavbarHome';
 import {
   Tabs,
   Tab,
@@ -14,7 +14,7 @@ import {
   CircularProgress,
 } from '@mui/material';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
-import './../components/funding.css';
+import './../components/Funding.css';
 
 const theme = createTheme({
   typography: {
@@ -58,28 +58,28 @@ const Download = () => {
     loadData();
   }, []);
 
-const renderList = (items) =>
-  items.length === 0 ? (
-    <Typography variant="body2">No files available.</Typography>
-  ) : (
-    <List>
-      {items.map(({ url, size }) => {
-        const filename = url.split('/').pop();
-        return (
-          <ListItem key={url}>
-            <ListItemText
-              primary={
-                <Link href={url} target="_blank" rel="noopener noreferrer">
-                  {filename}
-                </Link>
-              }
-              secondary={`${size.toFixed(2)} MB`}
-            />
-          </ListItem>
-        );
-      })}
-    </List>
-  );
+  const renderList = (items) =>
+    items.length === 0 ? (
+      <Typography variant="body2">No files available.</Typography>
+    ) : (
+      <List>
+        {items.map(({ url, size }) => {
+          const filename = url.split('/').pop();
+          return (
+            <ListItem key={url}>
+              <ListItemText
+                primary={
+                  <Link href={url} target="_blank" rel="noopener noreferrer">
+                    {filename}
+                  </Link>
+                }
+                secondary={`${size.toFixed(2)} MB`}
+              />
+            </ListItem>
+          );
+        })}
+      </List>
+    );
 
 
   return (
