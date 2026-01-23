@@ -18,13 +18,27 @@ const NavbarApp = () => {
 
     return (
         <div className='header' style={{ position: "relative", minHeight: "10vh" }}>
-            <div className='image' style={{ margin: 0, paddingTop: 20, border: 0, }}>
-                <Link to='/'><img src={image} width="100vw" height="70vh"></img></Link>
+            {/* LEFT SECTION: Main Catmapper Logo */}
+            <div className='image'>
+                <Link to='/'>
+                    <img src={image} style={{ height: "50px", width: "auto" }} alt="Catmapper" />
+                </Link>
             </div>
-            <div className='logo' style={{ margin: 0, paddingTop: 20, paddingLeft: 300, border: 0, }}>
-                <Link to={`/${database}`}><img src={currentLogo} width="150vw" height="70vh"></img></Link>
+
+            {/* MIDDLE SECTION: Database Specific Logo */}
+            <div className='logo' style={{ flexGrow: 1, textAlign: 'center' }}>
+                <Link to={`/${database}`}>
+                    <img src={currentLogo} style={{ height: "50px", width: "auto" }} alt="App Logo" />
+                </Link>
             </div>
-            <ul className={click ? 'nav-menu active' : 'nav-menu'} style={{ color: "white" }}>
+
+            {/* RIGHT SECTION: Navigation */}
+            <ul className={click ? 'nav-menu active' : 'nav-menu'} style={{
+                display: "flex",
+                listStyle: "none",
+                alignItems: "center",
+                margin: 0
+            }}>
                 <li>
                     <Link id='navbar' to={`/${database}`}>Home</Link>
                 </li>
@@ -40,7 +54,7 @@ const NavbarApp = () => {
                 {authLevel > 0 && <li className='dropdown' >
                     <Link id='navbar' > Edit <span className="dropdown-arrow">&#x25BC;</span></Link>
                     <div className='dropdown-content' style={{ whiteSpace: 'nowrap' }} >
-                        <Link to={`/${database}/bulkedit`}>Bulk Edit</Link>
+                        <Link to={`/${database}/edit`}>Bulk Edit</Link>
                         {authLevel > 1 && <Link to={`/${database}/admin`}>Admin</Link>}
                     </div>
                 </li>}
@@ -58,7 +72,7 @@ const NavbarApp = () => {
                 {authLevel > 0 && <Button variant="outlined" onClick={logout}>Logout</Button>}
             </ul>
             <div className='hamburger' onClick={handleClick}>
-                {click ? (<FaTimes size={20} style={{ color: '#fff' }} />) : (<FaBars size={20} style={{ color: '#fff' }} />)}
+                {click ? <FaTimes size={20} style={{ color: '#fff' }} /> : <FaBars size={20} style={{ color: '#fff' }} />}
             </div>
 
         </div>

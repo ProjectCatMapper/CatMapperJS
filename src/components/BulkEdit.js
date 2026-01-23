@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogActions, DialogContentText, DialogTitle } 
 import * as XLSX from 'xlsx';
 import { useLocation } from 'react-router-dom';
 
-const UploadTranslat = () => {
+const BulkEdit = () => {
 
   const [file, setFile] = useState(null);
   const { user, authLevel } = useAuth();
@@ -1278,4 +1278,4 @@ const UploadTranslat = () => {
   );
 }
 
-export default UploadTranslat;
+export default BulkEdit;

@@ -1,14 +1,14 @@
 import React from 'react'
 import Navbar from '../components/NavbarApp'
-import UploadTranslat from '../components/BulkEdit'
+import BulkEdit from '../components/BulkEdit'
 
-const BulkEdit = () => {
+const BulkEditPage = () => {
   return (
     <div style={{ backgroundColor: "white" }}>
       <Navbar />
-      <UploadTranslat />
+      <BulkEdit />
     </div>
   )
 }
 
-export default BulkEdit;
+export default BulkEditPage;
