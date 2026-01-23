@@ -64,7 +64,7 @@ const handleButtonClick = async () => {
   }
 };
 
-const Footer = () => {
+const FooterSocioMap = () => {
   const [rows, setrows] = useState([]);
 
   const [foci, setfoci] = useState([]);
@@ -346,4 +346,4 @@ const Footer = () => {
   );
 };
 
-export default Footer;
+export default FooterSocioMap;
