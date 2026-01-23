@@ -6,7 +6,7 @@ import Map3 from './routes/Map3';
 import Map4 from './routes/Map4';
 import Explore from './routes/Explore'
 import Translate from './routes/Translate'
-import BulkEdit from './routes/BulkEdit'
+import BulkEditPage from './routes/BulkEdit'
 import Catmapper from "./routes/Catmapper";
 import ExploreNode from "./routes/ExploreNode";
 import Merge from "./routes/Merge";
@@ -74,8 +74,8 @@ function App() {
       <Route path='/map3' element={<Map3 />} />
       <Route path='/map4' element={<Map4 />} />
       <Route path='/FAQ' element={<FAQ />} />
-      <Route path="sociomap/edit" element={<ProtectedRoute requiredLevel={1}><BulkEdit /></ProtectedRoute>} />
-      <Route path="archamap/edit" element={<ProtectedRoute requiredLevel={1}><BulkEdit /></ProtectedRoute>} />
+      <Route path="sociomap/edit" element={<ProtectedRoute requiredLevel={1}><BulkEditPage /></ProtectedRoute>} />
+      <Route path="archamap/edit" element={<ProtectedRoute requiredLevel={1}><BulkEditPage /></ProtectedRoute>} />
       <Route path="/sociomap/admin" element={<ProtectedRoute requiredLevel={2}><AdminPage /></ProtectedRoute>} />
       <Route path="/archamap/admin" element={<ProtectedRoute requiredLevel={2}><AdminPage /></ProtectedRoute>} />
     </Routes>

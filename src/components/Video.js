@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import './video.css'
 
-import cvideo from "../assets/world.mp4"
+import mainvideo from "../assets/world.mp4"
 
 const Video = () => {
     const location = useLocation();
@@ -25,31 +25,28 @@ const Video = () => {
 
     const archamaptext = "ArchaMap organizes categories of material objects used in archaeology, including sites, ceramic types, lithic and projectile point types, and faunal types. Our hope in the future is to extend CatMapper’s capabilities to other classes of complex, dynamic categories."
 
-    const sociomap = "SocioMap organizes dynamic and complex category systems commonly used by social scientists and policymakers, including ethnicities, languages, religions, and political districts. Each of these systems includes thousands of categories encoded in diverse, dynamic and incompatible ways across a growing corpus of thousands of datasets. SocioMap helps organize these categories so that users can merge diverse datasets for novel analyses."
+    const sociomaptext = "SocioMap organizes dynamic and complex category systems commonly used by social scientists and policymakers, including ethnicities, languages, religions, and political districts. Each of these systems includes thousands of categories encoded in diverse, dynamic and incompatible ways across a growing corpus of thousands of datasets. SocioMap helps organize these categories so that users can merge diverse datasets for novel analyses."
 
-    const catmapper = "atMapper organizes dynamic and complex category systems commonly used by scientists and policymakers, including ethnicities, languages, religions, political districts, political parties, and technologies. Each of these systems includes thousands of categories encoded in diverse, dynamic and incompatible ways across a growing corpus of thousands of datasets."
+    const maintext = database == "archamap" ?
+        archamaptext
+        : sociomaptext
 
-    const catmapperHeader = "Bringing Data Together."
-
-    const maintext = archamaptext
-
-    // const archamapHeader = {
-    //     displayData.length > 0 &&
-    //         (
-    //             <div>{Math.floor(displayData[0].node_count / 1000) * 1000}+ Sites</div>
-    //             <div>{Math.floor(displayData[3].node_count / 1000) * 1000}+ Artifact Types</div>
-    //             <div>{Math.floor(displayData[1].node_count / 1000) * 1000}+ Periods</div>
-    //             <div>{Math.floor(displayData[2].node_count / 1000) * 1000}+ Cultures</div>
-
-    // }
-
-    const mainHeader = catmapperHeader
+    const mainHeader = displayData.length > 0 && (
+        <div className="header-stats" style={{ display: 'flex', gap: '20px' }}>
+            {displayData.map((item) => (
+                <div key={item.label}>
+                    {/* Rounds down to nearest 1000 and adds the display name */}
+                    {Math.floor(item.node_count / 1000) * 1000}+ {item.display}
+                </div>
+            ))}
+        </div>
+    );
 
 
     return (
         <div className='hero' style={{ marginBottom: "2rem" }}>
             <video autoPlay loop muted playsInline controls={false} id='video'>
-                <source src={cvideo} type='video/mp4' />
+                <source src={mainvideo} type='video/mp4' />
             </video>
             <div className='maincontent'>
                 <h1 id="mainvideo" className="stacked">{mainHeader}</h1>
