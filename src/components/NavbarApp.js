@@ -1,15 +1,17 @@
 import React, { useState } from 'react'
-import { useParams, Link } from 'react-router-dom';
 import { FaBars, FaTimes } from 'react-icons/fa'
 import './NavbarApp.css'
 import image from '../assets/catmapperWhite.png'
 import Button from '@mui/material/Button';
 import { useAuth } from './AuthContext';
 import { APP_LOGOS } from './Logos';
+import { useLocation, Link } from 'react-router-dom';
 
 const NavbarApp = () => {
-    const { appType } = useParams(); // Returns "sociomap" or "archamap"
-    const currentLogo = APP_LOGOS[appType] || APP_LOGOS['sociomap'];
+    const location = useLocation();
+    const database = location.pathname.includes("archamap") ? "archamap" : "sociomap";
+
+    const currentLogo = APP_LOGOS[database] || APP_LOGOS[database];
     const [click, setClick] = useState(false)
     const handleClick = () => setClick(!click)
     const { authLevel, logout } = useAuth();
@@ -20,26 +22,26 @@ const NavbarApp = () => {
                 <Link to='/'><img src={image} width="100vw" height="70vh"></img></Link>
             </div>
             <div className='logo' style={{ margin: 0, paddingTop: 20, paddingLeft: 300, border: 0, }}>
-                <Link to={`/${appType}`}><img src={currentLogo} width="150vw" height="70vh"></img></Link>
+                <Link to={`/${database}`}><img src={currentLogo} width="150vw" height="70vh"></img></Link>
             </div>
             <ul className={click ? 'nav-menu active' : 'nav-menu'} style={{ color: "white" }}>
                 <li>
-                    <Link id='navbar' to={`/${appType}`}>Home</Link>
+                    <Link id='navbar' to={`/${database}`}>Home</Link>
                 </li>
                 <li>
-                    <Link id='navbar' to={`/${appType}/explore`}>Explore</Link>
+                    <Link id='navbar' to={`/${database}/explore`}>Explore</Link>
                 </li>
                 <li>
-                    <Link id='navbar' to={`/${appType}/translate`}>Translate</Link>
+                    <Link id='navbar' to={`/${database}/translate`}>Translate</Link>
                 </li>
                 <li >
-                    <Link id='navbar' to={`/${appType}/merge`}>Merge</Link>
+                    <Link id='navbar' to={`/${database}/merge`}>Merge</Link>
                 </li>
                 {authLevel > 0 && <li className='dropdown' >
                     <Link id='navbar' > Edit <span className="dropdown-arrow">&#x25BC;</span></Link>
                     <div className='dropdown-content' style={{ whiteSpace: 'nowrap' }} >
-                        <Link to={`/${appType}/bulkedit`}>Bulk Edit</Link>
-                        {authLevel > 1 && <Link to={`/${appType}/admin`}>Admin</Link>}
+                        <Link to={`/${database}/bulkedit`}>Bulk Edit</Link>
+                        {authLevel > 1 && <Link to={`/${database}/admin`}>Admin</Link>}
                     </div>
                 </li>}
                 <li className='dropdown'>

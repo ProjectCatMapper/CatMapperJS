@@ -5,6 +5,7 @@ import * as XLSX from 'xlsx';
 import CircularProgress from '@mui/material/CircularProgress';
 import Backdrop from '@mui/material/Backdrop';
 import InfoIcon from '@mui/icons-material/Info';
+import { useMetadata } from './UseMetadata';
 // import infodata from './infodata.json';
 
 const Propose_Merge = () => {
@@ -25,7 +26,7 @@ const Propose_Merge = () => {
   if (useLocation().pathname.includes("archamap")) {
     database = "ArchaMap"
   }
-
+  const { infodata, loading: metadataLoading } = useMetadata(database);
   const [selectedCategory, setSelectedCategory] = useState({});
   const [advdomainDrop, setadvdomainDrop] = React.useState('ANY DOMAIN');
 
