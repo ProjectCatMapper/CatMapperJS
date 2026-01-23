@@ -1,5 +1,6 @@
 import Navbar from '../components/NavbarApp';
 import Video from '../components/Video';
+import DynamicFooter from "../components/Footer";
 
 const AppHome = () => {
     return (
@@ -10,6 +11,7 @@ const AppHome = () => {
         }}>
             <Navbar />
             <Video />
+            <DynamicFooter />
         </div>
     );
 };
