@@ -18,10 +18,9 @@ import { useMetadata } from './UseMetadata';
 const fallbackOptions = ["Name", "Key", "CatMapper ID (CMID)"];
 
 function TranslateComponent() {
-  const { appType } = useParams();
   const location = useLocation();
 
-  const database = appType === 'archamap' || location.pathname.includes("archamap") ? "ArchaMap" : "SocioMap";
+  const database = location.pathname.includes("archamap") ? "ArchaMap" : "SocioMap";
 
   // --- State Hooks ---
   const [zeroDropdownValue, setZeroDropdownValue] = useState("");

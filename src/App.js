@@ -25,7 +25,7 @@ import RegisterPage from './routes/RegisterPage';
 import AdminPage from './routes/Admin';
 import ProtectedRoute from './components/ProtectedRoute';
 import FAQ from "./routes/FAQ";
-import AppHome from './routes/HomeApp';
+import AppHome from './routes/AppHome';
 
 function App() {
   useEffect(() => {
@@ -42,13 +42,11 @@ function App() {
     };
   }, []);
 
-  let SociomapRoute = AppHome('sociomap')
-  let ArchamapRoute = AppHome('archamap')
   return (
     <Routes>
       <Route path='/' element={<Catmapper />} />
-      <Route path='/sociomap' element={<SociomapRoute.element />} />
-      <Route path='/archamap' element={<ArchamapRoute.element />} />
+      <Route path='/sociomap' element={<AppHome />} />
+      <Route path='/archamap' element={<AppHome />} />
       <Route path='/login' element={<Logins />} />
       <Route path="/register" element={<RegisterPage />} />
       <Route path='/sociomap/explore' element={<Explore />} />
