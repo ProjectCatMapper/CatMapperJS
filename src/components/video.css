@@ -6,7 +6,7 @@
     z-index: -1;
 }
 
-#sociomapvideo{
+#mainvideo{
     color: white !important;
 }
 
@@ -27,13 +27,13 @@
     position: relative;
 }
 
-.hero .sociocontent {
+.hero .maincontent {
     max-width: 90%;
     padding: 1rem;
     color: white;
 }
 
-.hero .sociocontent h1{
+.hero .maincontent h1{
     font-size: 3rem;
 }
 
@@ -48,11 +48,11 @@
 }
 
 @media (max-width: 768px) {
-    .hero .sociocontent h1#sociomapvideo{
+    .hero .maincontent h1#mainvideo{
         font-size: 1.8rem !important;
     }
 
-    .sociocontent p{
+    .maincontent p{
         font-size: 1rem;
         margin-bottom: 1.6rem;
     }

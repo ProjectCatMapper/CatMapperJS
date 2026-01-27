@@ -1,15 +1,14 @@
-import React from 'react'
-import Navbar from '../components/Navbar'
-import Searchbar from '../components/Searchbar'
+import Navbar from '../components/NavbarApp'
+import Searchbar from '../components/ExploreSearch'
 
- const Explore = () => {
-   return (
-     <div style={{backgroundColor:"white"}}>
-         <Navbar />
-         <Searchbar />
-     </div>
-   )
- }
+const explore = () => {
+    return (
+        <div style={{ backgroundColor: "white" }}>
+            <Navbar />
+            <Searchbar />
+        </div>
+    )
+}
 
 
-export default Explore;
+export default explore;

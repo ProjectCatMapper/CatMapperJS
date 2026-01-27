@@ -1,5 +1,5 @@
-import CatHome from '../components/cat_home'
-import Cat_footer from '../components/cat_footer'
+import CatHome from '../components/LandingCatMapper'
+import Cat_footer from '../components/BodyCatMapper'
 
 const Catmapper = () => {
   return (

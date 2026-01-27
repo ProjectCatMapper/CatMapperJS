@@ -1,5 +1,4 @@
-import React from 'react'
-import Navbar from '../components/Navbar'
+import Navbar from '../components/NavbarHome'
 import FAQContent from '../components/FAQ'
 
 const FAQPage = () => {
