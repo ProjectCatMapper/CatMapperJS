@@ -1,6 +1,5 @@
-import React from 'react'
-import Navbar from '../components/footer_navbar'
-import '../components/people.css'
+import Navbar from '../components/NavbarHome'
+import '../components/People.css'
 
 
 const People = () => {

@@ -1,14 +1,14 @@
 import React from 'react'
 import Navbar from '../components/NavbarApp'
-import Register from '../components/RegisterPage'
+import BulkEdit from '../components/BulkEdit'
 
-const RegisterPage = () => {
+const BulkEditPage = () => {
   return (
     <div style={{ backgroundColor: "white" }}>
       <Navbar />
-      <Register />
+      <BulkEdit />
     </div>
   )
 }
 
-export default RegisterPage
+export default BulkEditPage;

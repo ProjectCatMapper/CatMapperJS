@@ -1,14 +1,13 @@
-import React from 'react'
-import Navbar from '../components/Navbar'
-import Mergelayout from "../components/merge"
+import Navbar from '../components/NavbarApp'
+import Mergelayout from "../components/Merge"
 
- const Merge = () => {
-   return (
-     <div style={{backgroundColor:"white",minHeight: "100vh"}}>
-         <Navbar />
-         <Mergelayout />
-     </div>
-   )
- }
+const Archamap_Merge = () => {
+  return (
+    <div style={{ backgroundColor: "white", minHeight: "100vh", display: "flex", flexDirection: "column" }}>
+      <Navbar />
+      <Mergelayout />
+    </div>
+  )
+}
 
-export default Merge;
+export default Archamap_Merge;
