@@ -421,6 +421,7 @@ export default function Searchbar() {
             </div>
           )}
           <DownloadDialogButton users={users} database={database} domain={advdomainDrop} count={qcount} cmid_download={cmid_download} />
+          {/* Need to make the label it's own button/link */}
           <label
             style={{
               display: "flex",
