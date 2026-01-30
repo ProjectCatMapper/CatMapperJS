@@ -4,6 +4,10 @@ import { red } from '@mui/material/colors';
 import Neo4jVisualization from "./VisNet";
 import "./ExploreNode.css";
 
+import Tooltip from '@mui/material/Tooltip';
+import WarningIcon from '@mui/icons-material/Warning'; // or HelpOutline
+import IconButton from '@mui/material/IconButton';
+
 const NetworkExplorerView = ({
     domainType,
     limit,
@@ -28,18 +32,28 @@ const NetworkExplorerView = ({
 }) => {
     return (
         <div>
-            <Typography variant="p" sx={{ mb: 1, display: 'block' }}>
+            <Typography variant="p" sx={{ mb: 1, display: 'flex', alignItems: 'center' }}>
                 Double click on node to move to that node's info page.
-            </Typography>
 
-            <Typography variant="p" sx={{
-                color: red[500],
-                mb: 1,
-                display: 'block',
-                maxWidth: '400px', // Limits the width
-                lineHeight: 1.4    // Optional: Improves readability when text wraps
-            }}>
-                No more than {dropdownNodeLimit} nodes are shown in the network (Use "Limit Display Nodes" dropdown to increase this up to 50). Use the "Nodes" dropdown to select specific nodes (only {limit} total nodes are returned. Additional nodes cannot be selected).
+                <Tooltip
+                    title={
+                        <span style={{ fontSize: '14px', lineHeight: '1.4' }}>
+                            No more than {dropdownNodeLimit} nodes are shown in the network (Use "Limit Display Nodes" dropdown to increase this up to 50).
+                            Use the "Nodes" dropdown to select specific nodes (only {limit} total nodes are returned. Additional nodes cannot be selected).
+                        </span>
+                    }
+                    arrow
+                    placement="top"
+                >
+                    <WarningIcon
+                        sx={{
+                            ml: 1,
+                            color: red[500],
+                            fontSize: '1.2rem',
+                            cursor: 'pointer'
+                        }}
+                    />
+                </Tooltip>
             </Typography>
 
             <FormControl sx={{ m: 1, width: 300 }}>
