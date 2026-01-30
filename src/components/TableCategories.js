@@ -1,67 +1,141 @@
 import * as React from 'react';
 import { useState } from 'react'
 import { DataGrid } from '@mui/x-data-grid';
-// import "./TableCategories.css"
+import { useLocation } from 'react-router-dom';
 
-export default function TranslateTable(props) {
-  const columns = [
-    { field: 'Type', headerName: 'Type', width: 150 },
-    { field: 'Count', headerName: 'Count', width: 100 },
-  ];
-  const [rows, setRows] = useState([]);
-  const matchTypes = [
-    { id: 1, Type: "Total matches", Count: "0%" },
-    { id: 2, Type: "exact match", Count: "0%" },
-    { id: 3, Type: "fuzzy match", Count: "0%" },
-    { id: 4, Type: "one-to-many", Count: "0%" },
-    { id: 5, Type: "many-to-one", Count: "0%" },
-    { id: 6, Type: "No matches", Count: "0%" }
-  ];
 
-  React.useEffect(() => {
-    let totalPercentage = 0;
-    const updatedMatchTypes = matchTypes.map(match => {
-      if (match.Type === "Total matches" || match.Type === "No matches") {
-        return match;
-      }
+export default function CategoriesTable(props) {
+    const { categories, childcategories, rememberChoice, normalized } = props;
+    const [rows, setRows] = useState([]);
 
-      const count = props.categories[match.Type] || "0%";
-      if (count !== "0%") {
-        totalPercentage += parseFloat(count.replace('%', ''));
-      }
-      return { ...match, Count: count };
+    childcategories.forEach(c => {
+        console.log(c.Domain);
+        console.log(c.ChildCount);
     });
 
-    const totalMatchesIndex = updatedMatchTypes.findIndex(match => match.Type === "Total matches");
-    updatedMatchTypes[totalMatchesIndex].Count = totalPercentage.toFixed(2) + "%";
+    React.useEffect(() => {
+        // ---- build maps by Domain ----
+        const parentMap = {};
+        categories.forEach(c => {
+            parentMap[c.Domain] = {
+                Count: c.Count,
+                useskeys: c.TotalUses
+            };
+        });
 
-    const noMatchesIndex = updatedMatchTypes.findIndex(match => match.Type === "No matches");
-    updatedMatchTypes[noMatchesIndex].Count = (100 - totalPercentage).toFixed(2) + "%";
-    console.log(updatedMatchTypes)
+        const childMap = {};
+        childcategories.forEach(c => {
+            console.log(c);
+            childMap[c.Domain] = {
+                ChildCount: c.ChildCount,
+                childuseskeys: c.TotalChildUses
+            };
+        });
 
-    setRows(updatedMatchTypes);
-  }, [props.categories])
+        // ---- union of all domains ----
+        const domains = new Set([
+            ...Object.keys(parentMap),
+            ...Object.keys(childMap)
+        ]);
 
-  const getRowClassName = (params) => {
-    if (params.row.id === 1) {
-      return '';
-    } else {
-      const colorIndex = params.row.id;
-      return `row-color-${colorIndex}`;
+        // ---- build rows ----
+        let mergedRows = Array.from(domains)
+            .filter(domain => {
+                const hasParent = parentMap[domain] != null;
+                const hasChild = childMap[domain] != null;
+
+                // hide child-only domains unless rememberChoice is true
+                if (!hasParent && hasChild && !rememberChoice) return false;
+                return true;
+            })
+            .map((Domain, index) => ({
+                id: index + 1,
+                Domain,
+                Count: parentMap[Domain]?.Count ?? null,
+                useskeys: parentMap[Domain]?.useskeys ?? null,
+                ChildCount: childMap[Domain]?.ChildCount ?? null,
+                childuseskeys: childMap[Domain]?.childuseskeys ?? null
+            }));
+
+        const domainToNormalizedKey = {};
+        Object.entries(normalized).forEach(([key, values]) => {
+            values.forEach(domain => {
+                domainToNormalizedKey[domain] = key;
+            });
+        });
+
+        mergedRows.sort((a, b) => {
+            const keyA = domainToNormalizedKey[a.Domain] || "";
+            const keyB = domainToNormalizedKey[b.Domain] || "";
+            // sort first by normalized key order, then alphabetically by domain
+            const keyOrder = Object.keys(normalized);
+            const idxA = keyOrder.indexOf(keyA);
+            const idxB = keyOrder.indexOf(keyB);
+            if (idxA !== idxB) return idxA - idxB;
+            return a.Domain.localeCompare(b.Domain);
+        });
+
+        setRows(mergedRows);
+    }, [categories, childcategories, rememberChoice]);
+
+    const hasParentData =
+        categories.some(
+            c => (c.Count && c.Count > 0) || (c.TotalUses && c.TotalUses > 0)
+        );
+
+    const hasChildData =
+        childcategories?.some(
+            c =>
+                (c.ChildCount && c.ChildCount > 0) ||
+                (c.TotalChildUses && c.TotalChildUses > 0)
+        );
+
+
+    const columns = [
+        { field: 'Domain', headerName: 'Domain', width: 500 },
+    ];
+
+    if (hasParentData) {
+        columns.push(
+            { field: 'Count', headerName: 'Categories', width: 200 },
+            { field: 'useskeys', headerName: 'Keys', width: 200 }
+        );
     }
-  };
 
-  return (
-    <div className="translate-table-container">
-      <DataGrid
-        rows={rows}
-        columns={columns}
-        getRowClassName={getRowClassName}
-        localeText={{ noRowsLabel: "No results to display" }}
-        rowHeight={25}
-        pagination={false}
-        hideFooter={true}
-      />
-    </div>
-  );
+    if (rememberChoice && hasChildData) {
+        columns.push(
+            {
+                field: 'ChildCount',
+                headerName: 'Child Dataset Categories',
+                width: 200
+            },
+            {
+                field: 'childuseskeys',
+                headerName: 'Child Dataset Keys',
+                width: 200
+            }
+        );
+    }
+
+    // let path = "sociomap"
+
+    // if (useLocation().pathname.includes("archamap")) {
+    //     path = "archamap"
+    // }
+
+    return (
+        <div style={{ height: 700, width: '100%' }}>
+            <DataGrid
+                style={{ Color: "pink" }}
+                rows={rows}
+                columns={columns}
+                initialState={{
+                    pagination: {
+                        paginationModel: { page: 0, pageSize: 10 },
+                    },
+                }}
+                pageSizeOptions={[10, 30, 50]}
+                localeText={{ noRowsLabel: "If nothing is displayed, try including connected datasets." }} />
+        </div>
+    );
 }
