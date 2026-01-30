@@ -2,11 +2,11 @@ import { useEffect, useState, useRef } from 'react';
 import { Network } from 'vis-network';
 import { useNavigate, useLocation } from 'react-router-dom'
 
-const Neo4jVisualization = ({ visData }) => {
+const Neo4jVisualization = ({ visData, dropdownNodeLimit }) => {
   const navigate = useNavigate();
   const loc = useLocation();
   const valuesToRemove = ['DISTRICT', 'CATEGORY'];
-  const nodes = visData["nodes"].length > 10 ? visData["nodes"].slice(0, 10) : visData["nodes"];
+  const nodes = visData["nodes"].length > dropdownNodeLimit ? visData["nodes"].slice(0, dropdownNodeLimit) : visData["nodes"];
   const domainHierarchy = [
     "PROJECTILE_POINT_TYPE",
     "PROJECTILE_POINT_CLUSTER",
@@ -274,7 +274,7 @@ const Neo4jVisualization = ({ visData }) => {
       document.removeEventListener('mousedown', handleClickOutside);
       network.destroy();
     };
-  }, [visData]);
+  }, [visData, dropdownNodeLimit]);
 
   const handleTooltipClose = () => {
     setTooltipContent(null);
