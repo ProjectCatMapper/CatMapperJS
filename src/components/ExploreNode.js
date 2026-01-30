@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 
-import { Link, useLocation } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 
 import {
   Box,
@@ -10,7 +10,6 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  Divider,
   FormControl,
   FormControlLabel,
   InputLabel,
@@ -36,8 +35,6 @@ import LoadingSpinner from "./LoadingSpinner";
 import Neo4jVisualization from "./VisNet";
 import TimespanTable from "./TimeSpanTable";
 import MapComponent from './MapComponent';
-
-import image from "../assets/catmapperWhite.png";
 
 import { useMetadata } from './UseMetadata';
 
@@ -1307,105 +1304,7 @@ export default function Tableclick(props) {
             </React.Fragment>
           )}
         </Box>
-        <div
-          style={{
-            width: "100%",
-            backgroundColor: "black",
-            padding: "20px",
-            position: "relative",
-          }}
-        >
-          <Divider
-            sx={{ marginLeft: 1, marginRight: 1, backgroundColor: "white" }}
-          />
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              mt: 2,
-              mb: 0,
-            }}
-          >
-            <img src={image} alt="CatMapper Logo" style={{ height: 80 }} />
-            <Box>
-              <Link
-                id="catmapperfooter"
-                to="/people"
-                underline="none"
-                style={{
-                  color: "white",
-                  textDecoration: "none",
-                  margin: "0 8px",
-                }}
-              >
-                People
-              </Link>
-              <Link
-                to="/news"
-                id="catmapperfooter"
-                underline="none"
-                style={{
-                  color: "white",
-                  textDecoration: "none",
-                  margin: "0 8px",
-                }}
-              >
-                News
-              </Link>
-              <Link
-                to="/funding"
-                id="catmapperfooter"
-                underline="none"
-                style={{
-                  color: "white",
-                  textDecoration: "none",
-                  margin: "0 8px",
-                }}
-              >
-                Funding
-              </Link>
-              <Link
-                to="/citation"
-                id="catmapperfooter"
-                underline="none"
-                style={{
-                  color: "white",
-                  textDecoration: "none",
-                  margin: "0 8px",
-                }}
-              >
-                Citation
-              </Link>
-              <Link
-                to="/terms"
-                id="catmapperfooter"
-                underline="none"
-                style={{
-                  color: "white",
-                  textDecoration: "none",
-                  margin: "0 8px",
-                }}
-              >
-                Terms
-              </Link>
-              <Link
-                to="/contact"
-                id="catmapperfooter"
-                underline="none"
-                style={{
-                  color: "white",
-                  textDecoration: "none",
-                  margin: "0 8px",
-                }}
-              >
-                Contact
-              </Link>
-              <Link to="/download" id="catmapperfooter" underline="none" style={{ color: "white", textDecoration: "none", margin: "0 8px" }}> Download</Link>
-            </Box>
-          </Box>{" "}
-        </div>
-      </div>
+      </div >
     );
   } catch (error) {
     alert(error);

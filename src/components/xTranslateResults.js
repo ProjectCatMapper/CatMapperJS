@@ -3,20 +3,22 @@ import { useState } from 'react'
 import { DataGrid } from '@mui/x-data-grid';
 import "./TranslateResults.css"
 
+const matchTypes = [
+  { id: 1, Type: "Total matches", Count: "0%" },
+  { id: 2, Type: "exact match", Count: "0%" },
+  { id: 3, Type: "fuzzy match", Count: "0%" },
+  { id: 4, Type: "one-to-many", Count: "0%" },
+  { id: 5, Type: "many-to-one", Count: "0%" },
+  { id: 6, Type: "No matches", Count: "0%" }
+];
+
 export default function TranslateTable(props) {
   const columns = [
     { field: 'Type', headerName: 'Type', width: 150 },
     { field: 'Count', headerName: 'Count', width: 100 },
   ];
   const [rows, setRows] = useState([]);
-  const matchTypes = [
-    { id: 1, Type: "Total matches", Count: "0%" },
-    { id: 2, Type: "exact match", Count: "0%" },
-    { id: 3, Type: "fuzzy match", Count: "0%" },
-    { id: 4, Type: "one-to-many", Count: "0%" },
-    { id: 5, Type: "many-to-one", Count: "0%" },
-    { id: 6, Type: "No matches", Count: "0%" }
-  ];
+
 
   React.useEffect(() => {
     let totalPercentage = 0;

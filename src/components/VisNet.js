@@ -138,10 +138,20 @@ const Neo4jVisualization = ({ visData }) => {
     const data = { nodes, edges: visData.edges };
     const network = new Network(container, data, options);
 
-    network.once("stabilizationIterationsDone", function () {
+    let isMounted = true;
+
+    network.once("stabilizationFinished", function () {
+      // Small delay to let the final positions settle
       setTimeout(() => {
-        network.setOptions({ physics: false });
-      }, 1000);
+        // Check if network hasn't been destroyed by a re-render/unmount
+        if (isMounted && network && typeof network.setOptions === 'function') {
+          try {
+            network.setOptions({ physics: false });
+          } catch (e) {
+            console.warn("Physics disable failed:", e);
+          }
+        }
+      }, 500); // 500ms is usually enough
     });
 
     let singleClickTimer = null;
@@ -260,6 +270,7 @@ const Neo4jVisualization = ({ visData }) => {
     document.addEventListener('mousedown', handleClickOutside);
 
     return () => {
+      isMounted = false; // Mark as unmounted
       document.removeEventListener('mousedown', handleClickOutside);
       network.destroy();
     };
