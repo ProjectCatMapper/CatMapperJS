@@ -1,67 +1,51 @@
 import * as React from 'react';
 import { useState } from 'react'
 import { DataGrid } from '@mui/x-data-grid';
-// import "./TableCategories.css"
+import { useNavigate } from 'react-router-dom'
+import { useLocation } from 'react-router-dom';
 
-export default function TranslateTable(props) {
-  const columns = [
-    { field: 'Type', headerName: 'Type', width: 150 },
-    { field: 'Count', headerName: 'Count', width: 100 },
-  ];
-  const [rows, setRows] = useState([]);
-  const matchTypes = [
-    { id: 1, Type: "Total matches", Count: "0%" },
-    { id: 2, Type: "exact match", Count: "0%" },
-    { id: 3, Type: "fuzzy match", Count: "0%" },
-    { id: 4, Type: "one-to-many", Count: "0%" },
-    { id: 5, Type: "many-to-one", Count: "0%" },
-    { id: 6, Type: "No matches", Count: "0%" }
-  ];
 
-  React.useEffect(() => {
-    let totalPercentage = 0;
-    const updatedMatchTypes = matchTypes.map(match => {
-      if (match.Type === "Total matches" || match.Type === "No matches") {
-        return match;
-      }
+export default function CategoriesTable(props) {
+    const columns = [
+        { field: 'Domain', headerName: 'Domain', width: 500 },
+        { field: 'Count', headerName: 'Categories', width: 200 },
+        { field: 'useskeys', headerName: 'Keys', width: 200 },
+        { field: 'ChildCount', headerName: 'Child Dataset Categories', width: 200 },
+        { field: 'childuseskeys', headerName: 'Child Dataset Keys', width: 200 },
+    ];
+    const [rows, setRows] = useState([]);
+    let path = "sociomap"
 
-      const count = props.categories[match.Type] || "0%";
-      if (count !== "0%") {
-        totalPercentage += parseFloat(count.replace('%', ''));
-      }
-      return { ...match, Count: count };
-    });
-
-    const totalMatchesIndex = updatedMatchTypes.findIndex(match => match.Type === "Total matches");
-    updatedMatchTypes[totalMatchesIndex].Count = totalPercentage.toFixed(2) + "%";
-
-    const noMatchesIndex = updatedMatchTypes.findIndex(match => match.Type === "No matches");
-    updatedMatchTypes[noMatchesIndex].Count = (100 - totalPercentage).toFixed(2) + "%";
-    console.log(updatedMatchTypes)
-
-    setRows(updatedMatchTypes);
-  }, [props.categories])
-
-  const getRowClassName = (params) => {
-    if (params.row.id === 1) {
-      return '';
-    } else {
-      const colorIndex = params.row.id;
-      return `row-color-${colorIndex}`;
+    if (useLocation().pathname.includes("archamap")) {
+        path = "archamap"
     }
-  };
 
-  return (
-    <div className="translate-table-container">
-      <DataGrid
-        rows={rows}
-        columns={columns}
-        getRowClassName={getRowClassName}
-        localeText={{ noRowsLabel: "No results to display" }}
-        rowHeight={25}
-        pagination={false}
-        hideFooter={true}
-      />
-    </div>
-  );
+    React.useEffect(() => {
+        setRows(props.categories.map((value, key) => {
+            return {
+                id: key + 1,
+                Domain: value.Domain,
+                Count: value.Count,
+                useskeys: value.TotalUses,
+                ChildCount: value.UnderChildCount,
+                childuseskeys: value.TotalChildUses
+            }
+        }))
+    }, [props.categories])
+
+    return (
+        <div style={{ height: 700, width: '100%' }}>
+            <DataGrid
+                style={{ Color: "pink" }}
+                rows={rows}
+                columns={columns}
+                initialState={{
+                    pagination: {
+                        paginationModel: { page: 0, pageSize: 10 },
+                    },
+                }}
+                pageSizeOptions={[10, 30, 50]}
+                localeText={{ noRowsLabel: "No results to display" }} />
+        </div>
+    );
 }

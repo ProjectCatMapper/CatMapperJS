@@ -8,7 +8,7 @@ import { Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow
 import { useLocation } from 'react-router-dom';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
-import TranslateTable from './TableCategories';
+import TranslateTable from './TranslateResults';
 import Backdrop from '@mui/material/Backdrop';
 import LinearProgress from '@mui/material/LinearProgress';
 import CircularProgress from '@mui/material/CircularProgress';

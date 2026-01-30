@@ -257,20 +257,20 @@ export default function Searchbar() {
   }
 
   const tooltipContent = (
-    <div style={{ maxWidth: '400px' }}>
+    <div className="tooltip-width">
       <h3>From which category domain do you want to find matches?</h3>
-      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+      <table className="full-width-table">
         <thead>
           <tr>
-            <th style={{ borderBottom: '1px solid #ddd', textAlign: 'left', padding: '8px' }}>Label</th>
-            <th style={{ borderBottom: '1px solid #ddd', textAlign: 'left', padding: '8px' }}>Description</th>
+            <th className="table-header">Label</th>
+            <th className="table-header">Description</th>
           </tr>
         </thead>
         <tbody>
           {categories.map((category, index) => (
             <tr key={index}>
-              <td style={{ borderBottom: '1px solid #ddd', padding: '8px' }}>{category.label === "DISTRICT" ? "AREA" : category.label}</td>
-              <td style={{ borderBottom: '1px solid #ddd', padding: '8px' }}>{category.description}</td>
+              <td className="table-cell">{category.label === "DISTRICT" ? "AREA" : category.label}</td>
+              <td className="table-cell">{category.description}</td>
             </tr>
           ))}
         </tbody>
@@ -279,13 +279,13 @@ export default function Searchbar() {
   );
 
   const tooltipContent2 = (
-    <div style={{ maxWidth: '400px' }}>
+    <div className="tooltip-width">
       <h3>From which category sub-domain do you want to find matches?</h3>
-      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+      <table className="full-width-table">
         <thead>
           <tr>
-            <th style={{ borderBottom: '1px solid #ddd', textAlign: 'left', padding: '8px' }}>Label</th>
-            <th style={{ borderBottom: '1px solid #ddd', textAlign: 'left', padding: '8px' }}>Description</th>
+            <th className="table-header">Label</th>
+            <th className="table-header">Description</th>
           </tr>
         </thead>
         <tbody>
@@ -294,8 +294,8 @@ export default function Searchbar() {
               .filter(desc => selectedCategory[domainDrop].includes(desc.label))
               .map((category, index) => (
                 <tr key={index}>
-                  <td style={{ borderBottom: '1px solid #ddd', padding: '8px' }}>{category.label}</td>
-                  <td style={{ borderBottom: '1px solid #ddd', padding: '8px' }}>{category.description}</td>
+                  <td className="table-cell">{category.label}</td>
+                  <td className="table-cell">{category.description}</td>
                 </tr>
               ))
           ) : (
@@ -312,13 +312,13 @@ export default function Searchbar() {
   );
 
   const tooltipContent3 = (
-    <div style={{ maxWidth: '400px' }}>
+    <div className="tooltip-width">
       <h4>Property Descriptions</h4>
-      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+      <table className="full-width-table">
         <thead>
           <tr>
-            <th style={{ borderBottom: '1px solid #ddd', textAlign: 'left', padding: '8px' }}>Label</th>
-            <th style={{ borderBottom: '1px solid #ddd', textAlign: 'left', padding: '8px' }}>Description</th>
+            <th className="table-header">Label</th>
+            <th className="table-header">Description</th>
           </tr>
         </thead>
         <tbody>
@@ -327,8 +327,8 @@ export default function Searchbar() {
               .filter(desc => (domainOptions[advdomainDrop] || fallbackOptions).includes(desc.label))
               .map((category, index) => (
                 <tr key={index}>
-                  <td style={{ borderBottom: '1px solid #ddd', padding: '8px' }}>{category.label}</td>
-                  <td style={{ borderBottom: '1px solid #ddd', padding: '8px' }}>{category.description}</td>
+                  <td className="table-cell">{category.label}</td>
+                  <td className="table-cell">{category.description}</td>
                 </tr>
               ))
           ) : (
@@ -345,7 +345,6 @@ export default function Searchbar() {
 
   function handleClick(tvalue, domain) {
     setLoading(true);
-    //fetch("http://127.0.0.1:5001/search?domain=" + domain + "&property=" + selectedOption + "&term=" + encodeURIComponent(tvalue) + "&database=" +database+  "&query=false" + "&yearStart=" + yearStart + "&yearEnd=" + yearEnd + "&country=" + selectedcountry + "&context=" + contextID + "&dataset=" + datasetID,
     fetch(`${process.env.REACT_APP_API_URL}/search?domain=` + domain + "&property=" + selectedOption + "&term=" + encodeURIComponent(tvalue) + "&database=" + database + "&query=false" + "&yearStart=" + yearStart + "&yearEnd=" + yearEnd + "&country=" + selectedcountry + "&context=" + contextID + "&dataset=" + datasetID,
       {
         method: "GET"
@@ -615,7 +614,7 @@ export default function Searchbar() {
                       placeholder='From'
                       value={yearStart}
                       maxLength={10}
-                      style={{ flex: '1 1 0', minWidth: 0, maxWidth: 100, height: 30, padding: "0 6px", borderRadius: 4, border: "1px solid #ccc" }}
+                      className="flex-item-fixed"
                       onChange={(event) => {
                         setyearStart(event.target.value);
                       }}
@@ -626,7 +625,7 @@ export default function Searchbar() {
                       placeholder='To'
                       value={yearEnd}
                       maxLength={10}
-                      style={{ flex: '1 1 0', minWidth: 0, maxWidth: 100, height: 30, padding: "0 6px", borderRadius: 4, border: "1px solid #ccc" }}
+                      className="flex-item-fixed"
                       onChange={(event) => {
                         setyearEnd(event.target.value);
                       }}
@@ -679,113 +678,6 @@ export default function Searchbar() {
               setSnackbarOpen={setSnackbarOpen}
             />
           }
-        </Box>
-        <Divider
-          sx={{
-            marginTop: 3,
-            marginBottom: 7,
-            marginLeft: 1,
-            marginRight: 1,
-            backgroundColor: "white",
-          }}
-        />
-
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            mt: 2,
-            mb: 0,
-          }}
-        >
-          <img src={image} alt="CatMapper Logo" style={{ height: 80 }} />
-          <Box>
-            <Link
-              id="catmapperfooter"
-              to="/people"
-              underline="none"
-              style={{
-                color: "white",
-                textDecoration: "none",
-                margin: "0 8px",
-              }}
-            >
-              People
-            </Link>
-            <Link
-              to="/news"
-              id="catmapperfooter"
-              underline="none"
-              style={{
-                color: "white",
-                textDecoration: "none",
-                margin: "0 8px",
-              }}
-            >
-              News
-            </Link>
-            <Link
-              to="/funding"
-              id="catmapperfooter"
-              underline="none"
-              style={{
-                color: "white",
-                textDecoration: "none",
-                margin: "0 8px",
-              }}
-            >
-              Funding
-            </Link>
-            <Link
-              to="/citation"
-              id="catmapperfooter"
-              underline="none"
-              style={{
-                color: "white",
-                textDecoration: "none",
-                margin: "0 8px",
-              }}
-            >
-              Citation
-            </Link>
-            <Link
-              to="/terms"
-              id="catmapperfooter"
-              underline="none"
-              style={{
-                color: "white",
-                textDecoration: "none",
-                margin: "0 8px",
-              }}
-            >
-              Terms
-            </Link>
-            <Link
-              to="/contact"
-              id="catmapperfooter"
-              underline="none"
-              style={{
-                color: "white",
-                textDecoration: "none",
-                margin: "0 8px",
-              }}
-            >
-              Contact
-            </Link>
-            <Link
-              to="/download"
-              id="catmapperfooter"
-              underline="none"
-              style={{
-                color: "white",
-                textDecoration: "none",
-                margin: "0 8px",
-              }}
-            >
-              Download
-            </Link>
-          </Box>
         </Box>
       </div>
     </div>

@@ -1,8 +1,8 @@
-#sociomappersearchpagetext{
+/* #sociomappersearchpagetext{
     color: #fff;
     font-weight: bold;
     font-size: large;
-}
+} */
 
 #filters{
     background-color: black;
@@ -19,3 +19,36 @@
       flex-direction: column;
     }
   }
+
+.full-width-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.tooltip-width {
+  max-width: 400px;
+}
+
+.table-header {
+  border-bottom: 1px solid #ddd;
+  text-align: left;
+  padding: 8px;
+}
+
+.table-cell {
+  border-bottom: '1px solid #ddd';
+  padding: '8px';
+}
+
+.flex-item-fixed {
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: 100px;
+  height: 30px;
+  padding: 0 6px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  /* Optional: keeps content centered if this is a box */
+  /* display: flex;
+  align-items: center; */
+}

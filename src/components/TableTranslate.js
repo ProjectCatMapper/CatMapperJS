@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { useState } from 'react'
 import { DataGrid } from '@mui/x-data-grid';
-import "./TranslateResults.css"
+// import "./TableCategories.css"
 
 export default function TranslateTable(props) {
   const columns = [
