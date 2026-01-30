@@ -143,6 +143,14 @@ export default function Tableclick(props) {
     "EQUIVALENT"
   ];
 
+  //   const orderOfProperties = [
+  //   "CONTAINS",
+  //   "DISTRICT_OF",
+  //   "*_OF",
+  //   "USES",
+  //   "EQUIVALENT"
+  // ];
+
   const [rememberChoice, setRememberChoice] = useState(false);
   const [loading, setLoading] = useState(false);
   const [badsources, setbadsources] = useState([]);
