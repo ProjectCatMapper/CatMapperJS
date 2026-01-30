@@ -12,10 +12,7 @@ import {
   DialogTitle,
   FormControl,
   FormControlLabel,
-  InputLabel,
   NativeSelect,
-  MenuItem,
-  Select,
   Tab,
   Tabs,
   Tooltip,
@@ -31,16 +28,18 @@ import * as XLSX from "xlsx";
 
 import CategoriesTable from "./TableCategories";
 import ClickTable from "./TableClickView";
+import NetworkExplorerView from "./ExploreNetwork";
 import LoadingSpinner from "./LoadingSpinner";
-import Neo4jVisualization from "./VisNet";
+
 import TimespanTable from "./TimeSpanTable";
 import MapComponent from './MapComponent';
 
 import { useMetadata } from './UseMetadata';
 
 
-import "./TableClick.css";
+import "./ExploreNode.css";
 import "./LoadingSpinner.css";
+
 
 
 function CustomTabPanel(props) {
@@ -123,8 +122,9 @@ export default function Tableclick(props) {
   const [thirdDropdownValue, setThirdDropdownValue] = useState("All");
   const [fourthDropdownValue, setFourthDropdownValue] = useState("All");
   const [selectedValues, setSelectedValues] = useState([]);
-  const [selectedNodes, setSelectedNodes] = useState([]);
+  const [selectedNodes, setSelectedNodes] = useState(["All"]);
   const [selectedDatasets, setSelectedDatasets] = useState([]);
+  const [dropdownNodeLimit, setDropdownNodeLimit] = useState(10);
   const [eventTypes, setEventTypes] = useState([]);
   const [selectedEventTypes, setSelectedEventTypes] = useState(["All"]);
   const [originaldata, setoriginaldata] = useState(null);
@@ -154,9 +154,10 @@ export default function Tableclick(props) {
 
   const [open, setOpen] = useState(false);
 
-  let database = "SocioMap";
+
   let limit = 300;
 
+  let database = "SocioMap";
   if (useLocation().pathname.includes("archamap")) {
     database = "ArchaMap";
   }
@@ -734,6 +735,7 @@ export default function Tableclick(props) {
   };
 
   const updateDatasetNodeData = (event) => {
+
     if (event.target.value === "All") {
       setVisData(originaldata);
     } else {
@@ -1035,6 +1037,7 @@ export default function Tableclick(props) {
             top: boxHeight + 100,
           }}
         >
+          {/* Render tabs here--first check for DATASET view, otherwise use CATEGORY view */}
           {props.cmid.cmid.startsWith("SD") ||
             props.cmid.cmid.startsWith("AD") ? (
             <React.Fragment>
@@ -1043,13 +1046,38 @@ export default function Tableclick(props) {
                   sx={{ maxHeight: 700 }}
                   value={value}
                   onChange={handleChange}
-                  aria-label="basic tabs example"
+                  aria-label="tab layout"
                 >
                   <Tab label="Network Explorer" {...a11yProps(0)} />
                   <Tab label="Map" {...a11yProps(1)} />
                   <Tab label="Categories" {...a11yProps(2)} />
                 </Tabs>
               </Box>
+
+              <CustomTabPanel value={value} index={0}>
+                <NetworkExplorerView
+                  domainType="DATASET"
+                  limit={limit}
+                  dropdownNodeLimit={dropdownNodeLimit}
+                  setDropdownNodeLimit={setDropdownNodeLimit}
+                  firstDropdownValue={firstDropdownValue}
+                  fetchData={fetchData}
+                  orderedProperties={orderedProperties}
+                  selectedValues={selectedValues}
+                  updateData={updateData}
+                  domains={domains}
+                  thirdDropdownValue={thirdDropdownValue}
+                  updateNodeData={updateNodeData}
+                  selectedNodes={selectedNodes}
+                  visData={visData}
+                  fourthDropdownValue={fourthDropdownValue}
+                  updateDatasetNodeData={updateDatasetNodeData}
+                  selectedDatasets={selectedDatasets}
+                  eventTypes={eventTypes}
+                  selectedEventTypes={selectedEventTypes}
+                  updateEventTypeData={updateEventTypeData}
+                />
+              </CustomTabPanel>
 
               <CustomTabPanel value={value} index={1}>
                 <div
@@ -1091,64 +1119,13 @@ export default function Tableclick(props) {
                   </Dialog>
                 </div>
               </CustomTabPanel>
-              <CustomTabPanel value={value} index={0}>
-                <div>
-                  <Typography variant="p" sx={{ mb: 1 }}>
-                    Double click on node to move to that node's info page.No more than ten nodes are shown in the network, use the Nodes dropdown to view up to {limit} nodes.
-                  </Typography>
-                  <br />
-                  <FormControl sx={{ m: 1, width: 300 }}>
-                    <InputLabel htmlFor="first-dropdown">
-                      Relationship
-                    </InputLabel>
-                    <Select
-                      label="First Dropdown"
-                      value={firstDropdownValue}
-                      onChange={fetchData}
-                    >
-                      {orderedProperties.map((property) => (
-                        <MenuItem key={property} value={property}>
-                          {property}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                  <FormControl sx={{ m: 1, width: 300 }}>
-                    <InputLabel htmlFor="second-dropdown">Domain</InputLabel>
-                    <Select
-                      multiple
-                      value={selectedValues}
-                      onChange={updateData}
-                      label="Select Multiple Items"
-                    >
-                      {domains &&
-                        domains.map((option) => (
-                          <MenuItem value={option}>{option}</MenuItem>
-                        ))}
-                    </Select>
-                  </FormControl>
-                  <FormControl sx={{ m: 1, width: 300 }}>
-                    <InputLabel htmlFor="third-dropdown">Nodes</InputLabel>
-                    <Select
-                      label="Third Dropdown"
-                      value={thirdDropdownValue}
-                      onChange={updateNodeData}
-                    >
-                      {selectedNodes.map((option) => (
-                        <MenuItem value={option}>{option}</MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                  <div style={{ width: "100%", height: "500px" }}>
-                    {visData && <Neo4jVisualization visData={visData} />}
-                  </div>
-                </div>
-              </CustomTabPanel>
+
               <CustomTabPanel value={value} index={2}>
                 <CategoriesTable categories={categories} childcategories={childcategories} rememberChoice={rememberChoice} normalized={normalizedRef.current} />
               </CustomTabPanel>
             </React.Fragment>
           ) : (
+            // Render for category view
             <React.Fragment>
               <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
                 <Tabs
@@ -1166,8 +1143,29 @@ export default function Tableclick(props) {
                   ) : null}
                 </Tabs>
               </Box>
-              <CustomTabPanel value={value} index={3}>
-                <ClickTable usert={usert} />
+              <CustomTabPanel value={value} index={0}>
+                <NetworkExplorerView
+                  domainType="CATEGORY"
+                  limit={limit}
+                  dropdownNodeLimit={dropdownNodeLimit}
+                  setDropdownNodeLimit={setDropdownNodeLimit}
+                  firstDropdownValue={firstDropdownValue}
+                  fetchData={fetchData}
+                  orderedProperties={orderedProperties}
+                  selectedValues={selectedValues}
+                  updateData={updateData}
+                  domains={domains}
+                  thirdDropdownValue={thirdDropdownValue}
+                  updateNodeData={updateNodeData}
+                  selectedNodes={selectedNodes}
+                  visData={visData}
+                  fourthDropdownValue={fourthDropdownValue}
+                  updateDatasetNodeData={updateDatasetNodeData}
+                  selectedDatasets={selectedDatasets}
+                  eventTypes={eventTypes}
+                  selectedEventTypes={selectedEventTypes}
+                  updateEventTypeData={updateEventTypeData}
+                />
               </CustomTabPanel>
               <CustomTabPanel value={value} index={1}>
                 <div
@@ -1209,94 +1207,11 @@ export default function Tableclick(props) {
                   </Dialog>
                 </div>
               </CustomTabPanel>
-              <CustomTabPanel value={value} index={0}>
-                <div>
-                  <Typography variant="p" sx={{ mb: 1 }}>
-                    Double click on node to move to that node's info page.No more than ten nodes are shown in the network, use the Nodes dropdown to view up to {limit} nodes.
-                  </Typography>
-                  <br />
-                  <FormControl sx={{ m: 1, width: 300 }}>
-                    <InputLabel htmlFor="first-dropdown">
-                      Relationship
-                    </InputLabel>
-                    <Select
-                      label="First Dropdown"
-                      value={firstDropdownValue}
-                      onChange={fetchData}
-                    >
-                      {orderedProperties.map((property) => (
-                        <MenuItem key={property} value={property}>
-                          {property}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                  <FormControl sx={{ m: 1, width: 300 }}>
-                    <InputLabel htmlFor="second-dropdown">Domain</InputLabel>
-                    <Select
-                      multiple
-                      value={selectedValues}
-                      onChange={updateData}
-                      label="Select Multiple Items"
-                    >
-                      {domains &&
-                        domains.map((option) => (
-                          <MenuItem value={option}>{option}</MenuItem>
-                        ))}
-                    </Select>
-                  </FormControl>
-                  <FormControl sx={{ m: 1, width: 300 }}>
-                    <InputLabel htmlFor="third-dropdown">Nodes</InputLabel>
-                    <Select
-                      label="Third Dropdown"
-                      value={thirdDropdownValue}
-                      onChange={updateNodeData}
-                    >
-                      {selectedNodes.map((option) => (
-                        <MenuItem value={option}>{option}</MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                  {firstDropdownValue !== "USES" && (
-                    <FormControl sx={{ m: 1, width: 300 }}>
-                      <InputLabel htmlFor="fourth-dropdown">
-                        Dataset Filter
-                      </InputLabel>
-                      <Select
-                        label="Fourth Dropdown"
-                        value={fourthDropdownValue}
-                        onChange={updateDatasetNodeData}
-                      >
-                        {selectedDatasets.map((option) => (
-                          <MenuItem value={option}>{option}</MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
-                  )}
-                  {firstDropdownValue === "CONTAINS" && (
-                    <FormControl sx={{ m: 1, width: 300 }}>
-                      <InputLabel htmlFor="fourth-dropdown">Event Type</InputLabel>
-                      <Select
-                        multiple
-                        value={selectedEventTypes}
-                        onChange={updateEventTypeData}
-                        label="Event Type"
-                      >
-                        {eventTypes.map((option) => (
-                          <MenuItem key={option} value={option}>
-                            {option}
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
-                  )}
-                  <div style={{ width: "100%", height: "500px" }}>
-                    {visData && <Neo4jVisualization visData={visData} />}
-                  </div>
-                </div>
-              </CustomTabPanel>
               <CustomTabPanel value={value} index={2}>
                 {usert ? (<TimespanTable data={usert} />) : (<p> No Timespan available for this category.</p>)}
+              </CustomTabPanel>
+              <CustomTabPanel value={value} index={3}>
+                <ClickTable usert={usert} />
               </CustomTabPanel>
               <CustomTabPanel value={value} index={4}>
                 <CategoriesTable categories={categories} />
