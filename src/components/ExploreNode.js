@@ -296,47 +296,61 @@ export default function Tableclick(props) {
   };
 
   useEffect(() => {
+    if (!props.cmid?.cmid || !database) {
+      console.warn("Skipping fetch: cmid or database is missing", { cmid: props.cmid?.cmid, database });
+      return;
+    }
     setLoading(true);
-    fetch(`${process.env.REACT_APP_API_URL}/category?cmid=` + props.cmid.cmid + "&database=" + database,
-      //fetch("http://127.0.0.1:5001/category?cmid=" + props.cmid.cmid + "&database="+ database,
-      {
-        method: "GET",
-      }
-    )
-      .then((response) => {
-        return response.json();
-      })
-      .then((data) => {
-        setUsert(data.samples);
-        setCategories(data.categories);
-        setChildCategories(data.childcategories);
-        setMapt(data.polygons);
-        setrev(data.info);
-        setPoints(data.points);
-        setDatasetPoints(data.datasetpoints);
-        setfdrop(data.relnames);
-        setbadsources(data.badsources);
-        setOpen(Boolean(data.badsources?.length));
 
-        const maptFeatures = data.polygons?.features?.length
-          ? data.polygons.features
-          : data.polygons;
+    const baseUrl = process.env.REACT_APP_API_URL;
+    const cmid = props.cmid.cmid;
 
-        const pointsToUse = data.datasetpoints && data.datasetpoints.length > 0 ? data.datasetpoints : data.points;
+    // Define the two API endpoints
+    const categoryUrl = `${baseUrl}/category/${database}/${cmid}`;
+    const geometryUrl = `${baseUrl}/exploreGeometry/${database}/${cmid}`;
+
+    Promise.all([
+      fetch(categoryUrl).then(res => res.json()),
+      fetch(geometryUrl).then(res => res.json())
+    ])
+      .then(([categoryData, geometryData]) => {
+        // 1. Data from /category
+        setrev(categoryData.info);
+        setUsert(categoryData.samples);
+        setCategories(categoryData.categories);
+        setChildCategories(categoryData.childcategories);
+        setfdrop(categoryData.relnames);
+
+        // 2. Data from /exploreGeometry
+        setMapt(geometryData.polygons);
+        setPoints(geometryData.points);
+        setDatasetPoints(geometryData.datasetpoints);
+        setbadsources(geometryData.badsources);
+        setOpen(Boolean(geometryData.badsources?.length));
+
+        // 3. Logic for Shared/Derived State (Sources)
+        const maptFeatures = geometryData.polygons?.features?.length
+          ? geometryData.polygons.features
+          : geometryData.polygons;
+
+        const pointsToUse = (geometryData.datasetpoints && geometryData.datasetpoints.length > 0)
+          ? geometryData.datasetpoints
+          : geometryData.points;
 
         const uniqueSources = [
           ...new Set([
-            ...pointsToUse.map((point) => point.source),
-            ...(maptFeatures.features
-              ? maptFeatures.features.map((feature) => feature.source)
-              : maptFeatures.map((feature) => feature.source)),
+            ...(pointsToUse || []).map((point) => point.source),
+            ...(Array.isArray(maptFeatures)
+              ? maptFeatures.map((f) => f.source)
+              : (maptFeatures.features || []).map((f) => f.source)
+            ),
           ]),
         ];
 
         setsources(uniqueSources);
       })
       .catch((err) => {
-        console.error("Error fetching category:", err);
+        console.error("Error fetching data:", err);
       })
       .finally(() => {
         setLoading(false);
