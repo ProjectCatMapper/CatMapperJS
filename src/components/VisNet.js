@@ -154,13 +154,27 @@ const Neo4jVisualization = ({ visData, dropdownNodeLimit }) => {
       }, 500); // 500ms is usually enough
     });
 
-    let singleClickTimer = null;
+
+    let clickTimeout = null;
     let lastClickedNode = null;
 
     network.on('click', (params) => {
+      if (params.nodes.length === 0) return;
 
-      if (!singleClickTimer) {
-        singleClickTimer = setTimeout(() => {
+      if (clickTimeout !== null) {
+        // DOUBLE CLICK DETECTED
+        clearTimeout(clickTimeout);
+        clickTimeout = null;
+
+        const clickedNodeId = params.nodes[0];
+        const nodeData = visData.nodes.find(obj => obj.id === clickedNodeId);
+        if (nodeData.CMID !== currentid) {
+          navigate({ pathname: `/${path}/${nodeData.CMID}/0` });
+          window.location.reload();
+        }
+      } else {
+        // SINGLE CLICK START
+        clickTimeout = setTimeout(() => {
           if (params.nodes.length > 0 && params.nodes[0].length > -1) {
             let tooltipContent = visData.nodes.find(obj => obj.id === params.nodes[0]).tooltipcon.filter(item => item !== 'SocioMapID' && item !== 'SocioMapName');
             const cmItems = tooltipContent.filter(item => ['CMID', 'CMName'].includes(item.split(':')[0].trim()));
@@ -174,27 +188,12 @@ const Neo4jVisualization = ({ visData, dropdownNodeLimit }) => {
             setTooltipContent(tooltipContent.map((item, index) => <span key={index}>{item}<br /></span>));
             setTooltipPosition({ x: params.pointer.DOM.x, y: params.pointer.DOM.y });
           }
-          singleClickTimer = null; lastClickedNode = null;
-        }, 200);
+          clickTimeout = null;
+        }, 350); // Increased to 300ms for touchpad friendliness
         lastClickedNode = params.nodes[0];
-      } else {
-        clearTimeout(singleClickTimer);
-        singleClickTimer = null;
-        if (params.nodes.length > 0) {
-          var clickedNodeId = params.nodes[0];
-          if (clickedNodeId === lastClickedNode) {
-
-            var clickedNodeData = visData["nodes"].find(obj => obj["id"] === clickedNodeId)
-            if (clickedNodeData["CMID"] !== currentid) {
-              const tabval = clickedNodeData["CMID"].startsWith("SD") || clickedNodeData["CMID"].startsWith("AD") ? 0 : 0;
-              navigate({ pathname: `/${path}/${clickedNodeData["CMID"]}/${tabval}`, });
-              window.location.reload();
-            }
-          }
-          lastClickedNode = null;
-        }
       }
     });
+
 
     network.on("hoverEdge", function (params) {
       const edgeId = params.edge;
