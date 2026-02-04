@@ -189,7 +189,7 @@ const Neo4jVisualization = ({ visData, dropdownNodeLimit }) => {
             setTooltipPosition({ x: params.pointer.DOM.x, y: params.pointer.DOM.y });
           }
           clickTimeout = null;
-        }, 350); // Increased to 300ms for touchpad friendliness
+        }, 750); // Increased to 750ms for touchpad friendliness
         lastClickedNode = params.nodes[0];
       }
     });
