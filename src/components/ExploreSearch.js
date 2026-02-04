@@ -8,9 +8,6 @@ import domainOptions from "./../assets/dropdown.json"
 import InfoIcon from '@mui/icons-material/Info';
 import { useLocation } from 'react-router-dom';
 import "./ExploreSearch.css";
-import image from '../assets/catmapperWhite.png'
-import { Link } from 'react-router-dom'
-import Divider from '@mui/material/Divider';
 import NeonButton from './Button';
 import DownloadDialogButton from './BulkEditAdvanced';
 import CircularProgress from '@mui/material/CircularProgress';
