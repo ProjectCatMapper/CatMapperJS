@@ -12,7 +12,8 @@ import NeonButton from './Button';
 import DownloadDialogButton from './BulkEditAdvanced';
 import CircularProgress from '@mui/material/CircularProgress';
 import { useMetadata } from './UseMetadata';
-
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 
 const BootstrapInput = styled(InputBase)(({ theme }) => ({
   'label + &': {
@@ -236,7 +237,7 @@ export default function Searchbar() {
     sessionStorage.setItem(usersKey, JSON.stringify(users));
   }, [usersKey, users]);
 
-  const handleCheckboxChange = () => {
+  const handleAdvancedSearchChange = () => {
     setIsChecked(!isChecked);
     setSelectedCountry(countries[0].code)
   };
@@ -417,33 +418,24 @@ export default function Searchbar() {
             </div>
           )}
           <DownloadDialogButton users={users} database={database} domain={advdomainDrop} count={qcount} cmid_download={cmid_download} />
-          {/* Need to make the label it's own button/link */}
-          <label
-            style={{
-              display: "flex",
-              alignItems: "center",
-              cursor: "pointer",
-              userSelect: "none",
+          <Button
+            onClick={handleAdvancedSearchChange} // Toggles your existing isChecked state
+            startIcon={isChecked ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
+            disableRipple
+            sx={{
+              textTransform: "none", // Keeps natural capitalization like "Advanced Search"
+              backgroundColor: "transparent",
+              color: "white", // Adjust if your background is light
+              fontSize: "14px", // Match your previous label size
+              padding: "4px 8px",
+              minWidth: "auto",
+              "&:hover": {
+                backgroundColor: "rgba(255, 255, 255, 0.08)", // Subtle hover effect
+              },
             }}
           >
-            Advanced Search:
-          </label>
-          <label
-            style={{
-              display: "flex",
-              alignItems: "center",
-              cursor: "pointer",
-              userSelect: "none",
-            }}
-          >
-            <Checkbox
-              checked={isChecked}
-              onChange={handleCheckboxChange}
-              style={{ color: "white" }}
-            />
-            Show
-          </label>
-          <NeonButton label="Reset" onClick={handleReset} />
+            Advanced Search
+          </Button>
         </Box>
         {isChecked && (
           <Box
@@ -647,7 +639,7 @@ export default function Searchbar() {
               </Grid>
 
 
-              <Grid item xs={12} sm={6} md={3}>
+              <Grid >
                 <FormControl variant="standard">
                   <Typography variant="subtitle2" gutterBottom>Dataset ID</Typography>
                   <input
@@ -661,6 +653,11 @@ export default function Searchbar() {
                   />
                 </FormControl>
               </Grid>
+
+              <Grid item xs={12} sm={6} md={3}>
+                <NeonButton label="Reset" onClick={handleReset} />
+              </Grid>
+
             </Grid>
           </Box>
         )}
