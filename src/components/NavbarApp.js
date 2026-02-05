@@ -54,7 +54,7 @@ const NavbarApp = () => {
                 {authLevel > 0 && <li className='dropdown' >
                     <Link id='navbar' > Edit <span className="dropdown-arrow">&#x25BC;</span></Link>
                     <div className='dropdown-content' style={{ whiteSpace: 'nowrap' }} >
-                        <Link to={`/${database}/edit`}>Bulk Edit</Link>
+                        <Link to={`/${database}/edit`}>Edit</Link>
                         {authLevel > 1 && <Link to={`/${database}/admin`}>Admin</Link>}
                     </div>
                 </li>}
