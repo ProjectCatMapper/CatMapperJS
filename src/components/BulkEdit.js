@@ -126,6 +126,7 @@ const BulkEdit = () => {
 
   const handleFileChange = async (e) => {
     setError("")
+    setFile(null);
     const file = e.target.files[0];
     if (!file) return;
 
@@ -465,13 +466,6 @@ const BulkEdit = () => {
   const handlePclose = () => {
     setPopen(false);
   };
-
-  const handleclear = () => {
-    setFile(null);
-    if (document.getElementById('fileInput')) {
-      document.getElementById('fileInput').value = '';
-    }
-  }
 
   const [selectedOption, setSelectedOption] = useState('standard');
   const [advselectedOption, setadvSelectedOption] = useState('add_node');
@@ -841,15 +835,6 @@ const BulkEdit = () => {
         <h3 style={{ color: 'black', fontWeight: "bold", padding: "2px" }}> Choose file to import</h3>
 
         <input id="fileInput" style={{ color: 'black', fontWeight: "bold", marginLeft: 7, padding: "2px" }} type="file" accept=".csv, .xlsx" onChange={handleFileChange} />
-        <Button variant="contained" sx={{
-          backgroundColor: 'black',
-          color: 'white',
-          '&:hover': {
-            backgroundColor: 'green',
-          },
-        }} onClick={handleclear}>
-          Reset imported file
-        </Button>
       </Box>
       {showFields && <Typography variant="body2">{`Number of nodes to import: ${nodecount}`}</Typography>}
       <FormControlLabel
