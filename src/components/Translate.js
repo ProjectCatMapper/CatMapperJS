@@ -21,6 +21,25 @@ import InfoIcon from '@mui/icons-material/Info';
 import { Dialog, DialogTitle, DialogContent, DialogActions } from "@mui/material";
 import infodata from './infodata.json';
 
+const getTooltipContent = (nm) => {
+  const tooltipTexts = {
+    UPLOAD_INSTRUCTION: 'Upload a spreadsheet of category names for an automated proposal of matches to CatMapper categories". See <https://catmapper.org/help/> for more information.',
+    INPUT_COLUMN: 'Column in input spreadsheet you want to find matches for in CatMapper?',
+    DOMAIN_SELECTION: 'From which category domain do you want to find matches?',
+    MATCH_PROPERTY: 'Usually this will be Name. This allows advanced users to mach by other category properties in CatMapper, such as CatMapper ID or Key.',
+    FILTER_BY_COUNTRY: 'This permits only finding matches to categories associated with a specific country.  This requires an additional spreadsheet column with the CatMapper ID for the country.',
+    FILTER_BY_CONTEXT: "This permits only finding matches to categories that are contained by specific contexts (e.g., only counties in Ohio).  This requires an additional spreadsheet column with the CatMapper ID for the context (e.g., Ohio's CatMapper ID in SocioMap is SM2577)",
+    FILTER_BY_DATASET: "This permits only finding matches to categories that are used by a specific dataset (e.g., only language categories used by glottolog 4.4).  This requires an additional spreadsheet column with the CatMapper ID for the dataset (e.g., the CatMapper ID for glottolog 4.4 is SD20)",
+    TIME_RANGE: 'Specify a time range which matching categories need to fall within.  This uses  information about the years for which a category was observed.',
+    TBD_OPTION: 'Checking this button… TBD',
+    MATCH_STATISTICS: "This table provides statistics on the matches, including what % were **exact matches** to only one CatMapper category, **fuzzy matches** to only on CatMapper category, matches to more than one CatMapper category (**one-to-many**), multiple matches to a single CatMapper category (**many-to-one**), and no match found.",
+    SPLIT_CATEGORIES: "Press apply to split categories in the selected category domain by the selected separator.  This will create new rows for each split category, and will assign them the same context (e.g., country) as the combined category.",
+    COMBINE_IDENTICAL: "Checking this button will combine identical categories from the selected column into a single row for matching, although it will preserve other information if selected. For example, if Country, Context, and/or Dataset is checked then categories will be considered identical only if they have the same spelling and are associated with the same Country, Context, and/or Dataset.  This is useful if your spreadsheet has many identical categories that you want to match only once to speed up processing time and make corrections easier.",
+  };
+
+  return tooltipTexts[nm];
+};
+
 function TranslateComponent() {
 
   const [selectedFile, setSelectedFile] = useState(null);
@@ -29,7 +48,7 @@ function TranslateComponent() {
   const [firstDropdownValue, setFirstDropdownValue] = useState("ANY DOMAIN");
   const [dropdownData, setDropdownData] = useState([]);
   const [subDomain, setsubDomain] = useState([]);
-  const [secondDropdownValue, setsecondDropdownValue] = useState([]);
+  const [secondDropdownValue, setsecondDropdownValue] = useState(["Name"]);
   const [thirdDropdownValue, setthirdDropdownValue] = useState([""]);
   const [fourthDropdownValue, setfourthDropdownValue] = useState([""]);
   const [fifthDropdownValue, setfifthDropdownValue] = useState([""]);
@@ -218,14 +237,6 @@ function TranslateComponent() {
     saveAs(blob, customFileName);
   };
 
-  const handleclear = () => {
-    setSelectedFile(null);
-    if (document.getElementById('fileInput')) {
-      document.getElementById('fileInput').value = '';
-    }
-  }
-
-
   const [inputValue, setinputValue] = useState(-4000);
   const [inputValuetwo, setinputValuetwo] = useState(2024);
   const [inputValueSep, setinputValueSep] = useState(';');
@@ -259,6 +270,7 @@ function TranslateComponent() {
   };
 
   const handleFileChange = async (event) => {
+    setSelectedFile(null);
     const file = event.target.files[0];
     if (!file) return;
 
@@ -472,25 +484,6 @@ function TranslateComponent() {
     setsvalues(domainOptions[firstDropdownValue] || fallbackOptions);
   }, [firstDropdownValue]);
 
-  const getTooltipContent = (num) => {
-    const tooltipTexts = {
-      1: 'Upload a spreadsheet of category names for an automated proposal of matches to CatMapper categories". See <https://catmapper.org/help/> for more information.',
-      2: 'Column in input spreadsheet you want to find matches for in CatMapper?',
-      3: 'From which category domain do you want to find matches?',
-      4: 'For beginners this will be Name. This allows advanced users to mach by other category properties in CatMapper, such as CatMapper ID or Key.',
-      5: 'This permits only finding matches to categories associated with a specific country.  This requires an additional spreadsheet column with the CatMapper ID for the country.',
-      6: "This permits only finding matches to categories that are contained by specific contexts (e.g., only counties in Ohio).  This requires an additional spreadsheet column with the CatMapper ID for the context (e.g., Ohio's CatMapper ID in SocioMap is SM2577)",
-      7: "This permits only finding matches to categories that are used by a specific dataset (e.g., only language categories used by glottolog 4.4).  This requires an additional spreadsheet column with the CatMapper ID for the dataset (e.g., the CatMapper ID for glottolog 4.4 is SD20)",
-      8: 'Specify a time range which matching categories need to fall within.  This uses  information about the years for which a category was observed.',
-      9: 'Checking this button… TBD',
-      10: "This table provides statistics on the matches, including what % were **exact matches** to only one CatMapper category, **fuzzy matches** to only on CatMapper category, matches to more than one CatMapper category (**one-to-many**), multiple matches to a single CatMapper category (**many-to-one**), and no match found.",
-      11: "Press apply to split categories in the selected category domain by the selected separator.  This will create new rows for each split category, and will assign them the same context (e.g., country) as the combined category.",
-      12: "Checking this button will combine identical categories from the selected column into a single row for matching, although it will preserve other information if selected. For example, if Country, Context, and/or Dataset is checked then categories will be considered identical only if they have the same spelling and are associated with the same Country, Context, and/or Dataset.  This is useful if your spreadsheet has many identical categories that you want to match only once to speed up processing time and make corrections easier.",
-    };
-
-    return tooltipTexts[num];
-  };
-
   const [categories, setCategories] = useState([]);
 
   useEffect(() => {
@@ -587,26 +580,17 @@ function TranslateComponent() {
         <div style={{ width: "26%", backgroundColor: '#e0e0e0', padding: '20px', border: '1px solid #ccc', borderRadius: '10px', overflow: "auto" }}>
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <p style={{ fontWeight: "bold", marginLeft: 7, padding: "2px" }}>Choose spreadsheet to match</p>
-            <Tooltip title={getTooltipContent(1)} arrow>
+            <Tooltip title={getTooltipContent('UPLOAD_INSTRUCTION')} arrow>
               <Button startIcon={<InfoIcon sx={{ height: '28px', width: '28px' }} />} />
             </Tooltip>
           </Box>
           <input id="fileInput" style={{ color: 'black', fontWeight: "bold", marginLeft: 7, padding: "2px" }} type="file" accept=".csv, .xlsx" onChange={handleFileChange} />
-          <Button variant="contained" sx={{
-            backgroundColor: 'black',
-            color: 'white',
-            '&:hover': {
-              backgroundColor: 'green',
-            },
-          }} onClick={handleclear}>
-            Reset imported file
-          </Button>
           <br />
           {selectedFile !== null && (
             <div>
               <Box sx={{ display: 'flex', alignItems: 'center' }}>
                 <p style={{ color: 'White', fontWeight: "bold", marginLeft: 7, padding: "2px" }}>Choose spreadsheet column to match</p>
-                <Tooltip title={getTooltipContent(2)} arrow>
+                <Tooltip title={getTooltipContent("INPUT_COLUMN")} arrow>
                   <Button startIcon={<InfoIcon sx={{ height: '28px', width: '28px' }} />} />
                 </Tooltip>
               </Box>
@@ -666,7 +650,7 @@ function TranslateComponent() {
           )}
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <p style={{ color: 'White', fontWeight: "bold", marginLeft: 7, padding: "2px" }}>CatMapper Property to Search</p>
-            <Tooltip title={getTooltipContent(4)} arrow>
+            <Tooltip title={getTooltipContent("MATCH_PROPERTY")} arrow>
               <Button startIcon={<InfoIcon sx={{ height: '28px', width: '28px' }} />} />
             </Tooltip>
           </Box>
@@ -707,7 +691,7 @@ function TranslateComponent() {
                   <input type="checkbox" checked={isChecked} onChange={handleCheckboxChange} />
                   Limit by Country?
                 </label>
-                <Tooltip title={getTooltipContent(5)} arrow>
+                <Tooltip title={getTooltipContent("FILTER_BY_COUNTRY")} arrow>
                   <Button startIcon={<InfoIcon sx={{ height: '28px', width: '28px' }} />} />
                 </Tooltip>
               </Box>
@@ -733,7 +717,7 @@ function TranslateComponent() {
                   <input type="checkbox" checked={isCheckedtwo} onChange={handleCheckboxChangetwo} />
                   Limit by Context?
                 </label>
-                <Tooltip title={getTooltipContent(6)} arrow>
+                <Tooltip title={getTooltipContent("FILTER_BY_CONTEXT")} arrow>
                   <Button startIcon={<InfoIcon sx={{ height: '28px', width: '28px' }} />} />
                 </Tooltip>
               </Box>
@@ -759,7 +743,7 @@ function TranslateComponent() {
                   <input type="checkbox" checked={isCheckedthree} onChange={handleCheckboxChangethree} />
                   Limit by Dataset?
                 </label>
-                <Tooltip title={getTooltipContent(7)} arrow>
+                <Tooltip title={getTooltipContent("FILTER_BY_DATASET")} arrow>
                   <Button startIcon={<InfoIcon sx={{ height: '28px', width: '28px' }} />} />
                 </Tooltip>
               </Box>
@@ -789,7 +773,7 @@ function TranslateComponent() {
               <br />
               <Box sx={{ display: 'flex', alignItems: 'center' }}>
                 <p style={{ color: 'White', fontWeight: "bold", marginLeft: 7, padding: "2px" }}>Time range (years)</p>
-                <Tooltip title={getTooltipContent(8)} arrow>
+                <Tooltip title={getTooltipContent("TIME_RANGE")} arrow>
                   <Button startIcon={<InfoIcon sx={{ height: '28px', width: '28px' }} />} />
                 </Tooltip>
               </Box>
@@ -831,7 +815,7 @@ function TranslateComponent() {
                 }} onClick={handleClickSeparator}>
                   Apply
                 </Button>
-                <Tooltip title={getTooltipContent(11)} arrow>
+                <Tooltip title={getTooltipContent("SPLIT_CATEGORIES")} arrow>
                   <Button startIcon={<InfoIcon sx={{ height: '28px', width: '28px' }} />} />
                 </Tooltip>
               </Box>
@@ -853,7 +837,7 @@ function TranslateComponent() {
                   }
                   label=""
                 />
-                <Tooltip title={getTooltipContent(12)} arrow>
+                <Tooltip title={getTooltipContent("COMBINE_IDENTICAL")} arrow>
                   <Button startIcon={<InfoIcon sx={{ height: '28px', width: '28px' }} />} />
                 </Tooltip>
               </Box>
@@ -874,7 +858,7 @@ function TranslateComponent() {
                   }
                   label=""
                 />
-                <Tooltip title={getTooltipContent(9)} arrow>
+                <Tooltip title={getTooltipContent("TBD_OPTION")} arrow>
                   <Button startIcon={<InfoIcon sx={{ height: '28px', width: '28px' }} />} />
                 </Tooltip>
               </Box>
