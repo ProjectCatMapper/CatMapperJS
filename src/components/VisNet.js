@@ -112,7 +112,9 @@ const Neo4jVisualization = ({ visData, dropdownNodeLimit }) => {
           avoidOverlap: 1,
         },
         stabilization: {
-          iterations: 7,
+          iterations: 100,
+          enabled: true,
+          updateInterval: 25,
         }
       },
 
@@ -140,19 +142,33 @@ const Neo4jVisualization = ({ visData, dropdownNodeLimit }) => {
 
     let isMounted = true;
 
+    const freezeNetwork = () => {
+      if (isMounted && network) {
+        network.setOptions({ physics: { enabled: false } });
+      }
+    };
+
     network.once("stabilizationFinished", function () {
-      // Small delay to let the final positions settle
-      setTimeout(() => {
-        // Check if network hasn't been destroyed by a re-render/unmount
-        if (isMounted && network && typeof network.setOptions === 'function') {
-          try {
-            network.setOptions({ physics: false });
-          } catch (e) {
-            console.warn("Physics disable failed:", e);
-          }
-        }
-      }, 500); // 500ms is usually enough
+      freezeNetwork();
     });
+
+    const safetyTimer = setTimeout(() => {
+      freezeNetwork();
+    }, 800);
+
+    // network.once("stabilizationFinished", function () {
+    //   // Small delay to let the final positions settle
+    //   setTimeout(() => {
+    //     // Check if network hasn't been destroyed by a re-render/unmount
+    //     if (isMounted && network && typeof network.setOptions === 'function') {
+    //       try {
+    //         network.setOptions({ physics: false });
+    //       } catch (e) {
+    //         console.warn("Physics disable failed:", e);
+    //       }
+    //     }
+    //   }, 500); // 500ms is usually enough
+    // });
 
 
     let clickTimeout = null;
