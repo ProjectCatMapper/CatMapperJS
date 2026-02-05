@@ -26,6 +26,7 @@ import AdminPage from './routes/Admin';
 import ProtectedRoute from './components/ProtectedRoute';
 import FAQ from "./routes/FAQ";
 import AppHome from './routes/AppHome';
+import LogsViewer from './routes/LogsViewer';
 
 function App() {
   useEffect(() => {
@@ -55,6 +56,7 @@ function App() {
       <Route path='/archamap/translate' element={<Translate />} />
       <Route path='/sociomap/:cmid' element={<ExploreNode />} />
       <Route path='/archamap/:cmid' element={<ExploreNode />} />
+      <Route path='/:database/:cmid/logs' element={<LogsViewer />} />
       <Route path='/sociomap/:cmid/:tabval' element={<ExploreNode />} />
       <Route path='/archamap/:cmid/:tabval' element={<ExploreNode />} />
       <Route path='/sociomap/merge' element={<Merge />} />

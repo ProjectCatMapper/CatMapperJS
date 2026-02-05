@@ -152,7 +152,6 @@ export default function Tableclick(props) {
   const [rememberChoice, setRememberChoice] = useState(false);
   const [loadingInfo, setLoadingInfo] = useState(false);
   const [loadingDownload, setLoadingDownload] = useState(false);
-  const [loadingDownloadLog, setLoadingDownloadLog] = useState(false);
   const abortControllerRef = useRef(null);
   const [badsources, setbadsources] = useState([]);
   const [domainDrop, setdomainDrop] = React.useState('ALL NODES');
@@ -597,38 +596,16 @@ export default function Tableclick(props) {
     }
   };
 
-  const handleLogsDownload = async () => {
-    setLoadingDownloadLog(true);
-    try {
-      const response = await fetch(`https://catmapper.org/api/logs/${encodeURIComponent(database)}/${encodeURIComponent(props.cmid.cmid)}`,
-        { method: "GET" }
-      );
+  const handleOpenLogs = async () => {
 
-      if (!response.ok) throw new Error("Failed to download file.");
+    const url = `/${database.toLowerCase()}/${props.cmid.cmid}/logs`;
 
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-
-      link.href = url;
-      link.setAttribute("download", `logs_${props.cmid.cmid}.json`);
-      document.body.appendChild(link);
-      link.click();
-
-      link.remove();
-      window.URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error("Download failed:", error);
-      alert("Failed to download file.");
-    } finally {
-      setLoadingDownloadLog(false); // Stop spinner (whether success or fail)
-    }
+    window.open(url, '_blank');
   };
 
 
   const fetchData = async (event) => {
     try {
-      //const response = await fetch("http://127.0.0.1:5001/networksjs?cmid=" + props.cmid.cmid + "&database=" +database+ "&relation=" + event.target.value + "&response=records" + "&limit=" +limit);
       const response = await fetch(
         `${process.env.REACT_APP_API_URL}/networksjs?cmid=` +
         props.cmid.cmid +
@@ -1068,8 +1045,7 @@ export default function Tableclick(props) {
             )}
           <Button
             variant="outlined"
-            onClick={handleLogsDownload}
-            disabled={loadingDownloadLog} // Optional: Disable button while loading to prevent double clicks
+            onClick={handleOpenLogs}
             sx={{
               marginLeft: "auto",
               marginRight: 2,
@@ -1095,11 +1071,7 @@ export default function Tableclick(props) {
               },
             }}
           >
-            {loadingDownloadLog ? (
-              <CircularProgress size={20} sx={{ color: "#000" }} />
-            ) : (
-              "Download Logs"
-            )}
+            View Logs
           </Button>
         </Box>
         {/* {loading && <LoadingSpinner />} */}
