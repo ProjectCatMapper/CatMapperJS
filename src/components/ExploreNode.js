@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 
 import { useLocation } from "react-router-dom";
-
+import CircularProgress from "@mui/material/CircularProgress";
 import {
   Box,
   Button,
@@ -29,16 +29,14 @@ import * as XLSX from "xlsx";
 import CategoriesTable from "./TableCategories";
 import ClickTable from "./TableClickView";
 import NetworkExplorerView from "./ExploreNetwork";
-import LoadingSpinner from "./LoadingSpinner";
+// import LoadingSpinner from "./LoadingSpinner";
 
 import TimespanTable from "./TimeSpanTable";
 import MapComponent from './MapComponent';
 
 import { useMetadata } from './UseMetadata';
 
-
 import "./ExploreNode.css";
-import "./LoadingSpinner.css";
 
 
 
@@ -152,7 +150,10 @@ export default function Tableclick(props) {
   // ];
 
   const [rememberChoice, setRememberChoice] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [loadingInfo, setLoadingInfo] = useState(false);
+  const [loadingDownload, setLoadingDownload] = useState(false);
+  const [loadingDownloadLog, setLoadingDownloadLog] = useState(false);
+  const abortControllerRef = useRef(null);
   const [badsources, setbadsources] = useState([]);
   const [domainDrop, setdomainDrop] = React.useState('ALL NODES');
   const [advdomainDrop, setadvdomainDrop] = React.useState('ALL NODES');
@@ -169,7 +170,7 @@ export default function Tableclick(props) {
   if (useLocation().pathname.includes("archamap")) {
     database = "ArchaMap";
   }
-  const { infodata, loading: metadataLoading } = useMetadata(database);
+  const { infodata, loadingInfo: metadataLoading } = useMetadata(database);
   // dialog box for bad sources
   const handleClose = () => {
     setOpen(false);
@@ -300,7 +301,7 @@ export default function Tableclick(props) {
       console.warn("Skipping fetch: cmid or database is missing", { cmid: props.cmid?.cmid, database });
       return;
     }
-    setLoading(true);
+    setLoadingInfo(true);
 
     const baseUrl = process.env.REACT_APP_API_URL;
     const cmid = props.cmid.cmid;
@@ -353,7 +354,7 @@ export default function Tableclick(props) {
         console.error("Error fetching data:", err);
       })
       .finally(() => {
-        setLoading(false);
+        setLoadingInfo(false);
       });
   }, []);
 
@@ -494,28 +495,28 @@ export default function Tableclick(props) {
   }, [rememberChoice]);
 
   const datasetButtonClick = async (event) => {
-    setLoading(true);
+    if (loadingDownload) {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort(); // Cancel the fetch
+      }
+      setLoadingDownload(false);
+      console.log("Process cancelled by user.");
+      return;
+    }
+    setLoadingDownload(true);
+    console.log("Started dataset download process");
+
+    // Create a new AbortController for this specific request
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+    const signal = controller.signal;
+
     const adjustedDomain = advdomainDrop.includes("ANY DOMAIN")
       ? ["CATEGORY"]
       : advdomainDrop;
     try {
       let response;
       if (Array.isArray(advdomainDrop) && advdomainDrop.length > 1) {
-        response = await fetch(`${process.env.REACT_APP_API_URL}/dataset`, {
-          // response = await fetch("http://127.0.0.1:5001/dataset", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            cmid: props.cmid.cmid,
-            database: database,
-            domain: adjustedDomain,
-            children: rememberChoice,
-          }),
-        });
-      } else {
-        //response = await fetch("http://127.0.0.1:5001/dataset?cmid=" + props.cmid.cmid + "&database=" +database+ "&domain=" + adjustedDomain+ "&children=" + rememberChoice,{method: "GET"})
         response = await fetch(
           `${process.env.REACT_APP_API_URL}/dataset?cmid=` +
           props.cmid.cmid +
@@ -525,13 +526,38 @@ export default function Tableclick(props) {
           adjustedDomain +
           "&children=" +
           rememberChoice,
-          { method: "GET" }
+          {
+            method: "GET",
+            signal: signal, // <--- Connects the abort controller
+          }
+        );
+      } else {
+        response = await fetch(
+          `${process.env.REACT_APP_API_URL}/dataset?cmid=` +
+          props.cmid.cmid +
+          "&database=" +
+          database +
+          "&domain=" +
+          adjustedDomain +
+          "&children=" +
+          rememberChoice,
+          {
+            signal: signal // <--- Connects the abort controller
+          }
         );
       }
 
       const result = await response.json();
 
+      if (!Array.isArray(result)) {
+        console.error("CRITICAL ERROR: Data is still not an array. It is:", typeof result);
+        console.log(result); // Inspect this in console to see what it really is
+        return;
+      }
+      console.log(result);
+      console.log(0)
       const worksheet = XLSX.utils.json_to_sheet(result);
+      console.log(1)
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet1");
 
@@ -560,13 +586,19 @@ export default function Tableclick(props) {
       a.click();
       window.URL.revokeObjectURL(url);
     } catch (error) {
-      console.error("Error fetching data:", error);
+      if (error.name === 'AbortError') {
+        console.log("Fetch successfully aborted");
+      } else {
+        console.error("Error fetching data:", error);
+      }
     } finally {
-      setLoading(false);
+      setLoadingDownload(false);
+      console.log("Finished dataset download process");
     }
   };
 
   const handleLogsDownload = async () => {
+    setLoadingDownloadLog(true);
     try {
       const response = await fetch(`https://catmapper.org/api/logs/${encodeURIComponent(database)}/${encodeURIComponent(props.cmid.cmid)}`,
         { method: "GET" }
@@ -579,7 +611,7 @@ export default function Tableclick(props) {
       const link = document.createElement("a");
 
       link.href = url;
-      link.setAttribute("download", `logs_${props.cmid.cmid}.txt`);
+      link.setAttribute("download", `logs_${props.cmid.cmid}.json`);
       document.body.appendChild(link);
       link.click();
 
@@ -588,6 +620,8 @@ export default function Tableclick(props) {
     } catch (error) {
       console.error("Download failed:", error);
       alert("Failed to download file.");
+    } finally {
+      setLoadingDownloadLog(false); // Stop spinner (whether success or fail)
     }
   };
 
@@ -999,22 +1033,31 @@ export default function Tableclick(props) {
               </Select> */}
                 <Button
                   variant="contained"
+                  onClick={datasetButtonClick}
                   sx={{
                     backgroundColor: "black",
                     color: "white",
+                    // Change hover color based on loading state (Green for normal, Red for cancel)
                     "&:hover": {
-                      backgroundColor: "green",
+                      backgroundColor: loadingDownload ? "#d32f2f" : "green",
                     },
                     marginLeft: 2,
                     width: 250,
                     fontSize: 12,
                     marginBottom: 2,
+                    // Prevents the button from changing size when the spinner appears
+                    minHeight: "36px",
                   }}
-                  onClick={datasetButtonClick}
                 >
-                  Download Dataset Categories and Metadata
+                  {loadingDownload ? (
+                    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                      <CircularProgress size={14} color="inherit" />
+                      <span>Cancel Download</span>
+                    </div>
+                  ) : (
+                    "Download Dataset Categories and Metadata"
+                  )}
                 </Button>
-                {loading && <LoadingSpinner />}
                 <FormControlLabel
                   sx={{ marginLeft: 2, marginBottom: 2 }}
                   control={<Checkbox />}
@@ -1026,6 +1069,7 @@ export default function Tableclick(props) {
           <Button
             variant="outlined"
             onClick={handleLogsDownload}
+            disabled={loadingDownloadLog} // Optional: Disable button while loading to prevent double clicks
             sx={{
               marginLeft: "auto",
               marginRight: 2,
@@ -1033,13 +1077,16 @@ export default function Tableclick(props) {
               fontSize: 12,
               color: "#000",
               borderColor: "#00BFFF",
-              background: "linear-gradient(135deg, rgba(0,191,255,0.1), rgba(255,255,255,0.05))",
+              background:
+                "linear-gradient(135deg, rgba(0,191,255,0.1), rgba(255,255,255,0.05))",
               backdropFilter: "blur(4px)",
               boxShadow: "0 0 8px rgba(0,191,255,0.5)",
               textTransform: "uppercase",
               fontWeight: 600,
               letterSpacing: 1,
               transition: "0.3s ease-in-out",
+              // Ensure button doesn't shrink when text is replaced by spinner
+              minWidth: "140px",
               "&:hover": {
                 backgroundColor: "#00BFFF",
                 color: "#000",
@@ -1048,10 +1095,14 @@ export default function Tableclick(props) {
               },
             }}
           >
-            Download Logs
+            {loadingDownloadLog ? (
+              <CircularProgress size={20} sx={{ color: "#000" }} />
+            ) : (
+              "Download Logs"
+            )}
           </Button>
         </Box>
-        {loading && <LoadingSpinner />}
+        {/* {loading && <LoadingSpinner />} */}
         <Box
           sx={{
             position: "relative",
