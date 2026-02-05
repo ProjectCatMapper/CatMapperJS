@@ -53,7 +53,7 @@ const handleButtonClick = async () => {
 
     const blob = new Blob([excelBuffer], { type: 'application/octet-stream' });
 
-    saveAs(blob, 'data.xlsx');
+    saveAs(blob, 'dataset_list.xlsx');
   } catch (error) {
     console.error('There was a problem with the fetch operation:', error);
   }

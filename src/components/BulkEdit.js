@@ -11,6 +11,15 @@ import { Dialog, DialogContent, DialogActions, DialogContentText, DialogTitle } 
 import * as XLSX from 'xlsx';
 import { useLocation } from 'react-router-dom';
 
+const TEMPLATE_FILES = {
+  dataset: { label: "New Dataset Nodes", file: "upload_new_datasets_template.xlsx" },
+  nodes: { label: "New Category Nodes", file: "upload_new_categories_template.xlsx" },
+  uses: { label: "New Uses Ties", file: "upload_new_uses_template.xlsx" },
+  update_uses: { label: "Update Uses Ties", file: "update_uses_template.xlsx" },
+};
+
+
+
 const BulkEdit = () => {
 
   const [file, setFile] = useState(null);
@@ -29,7 +38,7 @@ const BulkEdit = () => {
   const [linkContext, setLinkContext] = useState([]);
   const [download, setDownload] = useState(null);
   const [error, setError] = useState(null);
-  const [fileDownload, setfileDownload] = useState('');
+  const [fileDownload, setFileDownload] = useState('');
   const [loading, setLoading] = useState(false);
   const [missingCount, setMissingCount] = useState(0);
   const [missingCol, setMissingCol] = useState(0);
@@ -67,62 +76,22 @@ const BulkEdit = () => {
     setOpenSnackbar(false); // Close the snackbar after user interaction
   };
 
-  const handlefileDownload = (event) => {
-    const value = event.target.value;
-    setfileDownload(value);
 
-    switch (value) {
-      case 'dataset':
-        window.open('https://catmapper.org/templates/dataset.xlsx', '_blank');
-        break;
-      case 'nodes':
-        window.open('https://catmapper.org/templates/nodes.xlsx', '_blank');
-        break;
-      case 'update_uses':
-        window.open('https://catmapper.org/templates/update_uses.xlsx', '_blank');
-        break;
-      case 'uses':
-        window.open('https://catmapper.org/templates/uses.xlsx', '_blank');
-        break;
-      default:
-        break;
+  const handleFileDownload = (event) => {
+    const key = event.target.value;
+    setFileDownload(key);
+
+    // 2. AUTOMATIC LOGIC: Look up the filename and download
+    const selectedTemplate = TEMPLATE_FILES[key];
+    if (selectedTemplate) {
+      // Constructs the URL dynamically using the configured filename
+      window.open(`/templates/${selectedTemplate.file}`, '_blank');
     }
+    setTimeout(() => {
+      setFileDownload("");
+    }, 100);
   };
 
-  //   const handleFileChange = (e) => {
-  //     const fileType = e.target.files[0].type;
-  //       if (fileType === 'application/vnd.ms-excel' || fileType === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') {
-  //         setFile(e.target.files[0]);
-  //         fileObj = e.target.files[0];
-
-  // ExcelRenderer(fileObj, (err, resp) => {
-  //   if(err){
-  //     console.log(err);            
-  //   }
-  //   else{
-  //     setNodeCount(resp.rows.length)
-  //     setColumns(resp.rows[0])
-  //     setRows(resp.rows.slice(1));
-  //     const table = rows.map((row, index) => {
-  //       const rowData = {};
-  //       columns.forEach((column, columnIndex) => {
-  //         rowData[column] = row[columnIndex];
-  //       });
-  //       rowData['key'] = index + 1;
-  //       return rowData;
-  //     });
-  //     console.log(table)
-  //     setJsondata(table)
-  //     setViewUploadedData(true);
-  //     setShowFields(true);
-  //   }
-  // });  
-  //       } else {
-  //         alert('Please upload a valid CSV or XLSX file.');
-  //         e.target.value = null;
-  //         setFile(null);
-  //       }
-  //   };
 
   const handleFileChange = async (e) => {
     setError("")
@@ -794,13 +763,15 @@ const BulkEdit = () => {
             labelId="dropdown-label"
             id="dropdown-select"
             value={fileDownload}
-            onChange={handlefileDownload}
-            label="Select Option"
+            onChange={handleFileDownload}
+            label="Download:"
           >
-            <MenuItem value="dataset">New Dataset Nodes</MenuItem>
-            <MenuItem value="nodes">New Category Nodes</MenuItem>
-            <MenuItem value="uses">New Uses Ties</MenuItem>
-            <MenuItem value="update_uses">Update Uses Ties</MenuItem>
+            {/* 3. DYNAMIC RENDER: Generate MenuItems from your config */}
+            {Object.entries(TEMPLATE_FILES).map(([key, data]) => (
+              <MenuItem key={key} value={key}>
+                {data.label}
+              </MenuItem>
+            ))}
           </Select>
         </FormControl>
 
