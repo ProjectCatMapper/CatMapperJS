@@ -306,19 +306,25 @@ export default function Tableclick(props) {
     const cmid = props.cmid.cmid;
 
     // Define the two API endpoints
+    const infoUrl = `${baseUrl}/info/${database}/${cmid}`;
     const categoryUrl = `${baseUrl}/category/${database}/${cmid}`;
     const geometryUrl = `${baseUrl}/exploreGeometry/${database}/${cmid}`;
 
     Promise.all([
+      fetch(infoUrl).then(res => res.json()),
       fetch(categoryUrl).then(res => res.json()),
       fetch(geometryUrl).then(res => res.json())
     ])
-      .then(([categoryData, geometryData]) => {
+      .then(([infoData, categoryData, geometryData]) => {
         // 1. Data from /category
-        setrev(categoryData.info);
+        setrev(infoData);
         setUsert(categoryData.samples);
         setCategories(categoryData.categories);
         setChildCategories(categoryData.childcategories);
+        if (!childcategories && !childcategories.length > 0) {
+          setChildCategories([]);
+        }
+
         setfdrop(categoryData.relnames);
 
         // 2. Data from /exploreGeometry
@@ -553,10 +559,9 @@ export default function Tableclick(props) {
         console.log(result); // Inspect this in console to see what it really is
         return;
       }
-      console.log(result);
-      console.log(0)
+
       const worksheet = XLSX.utils.json_to_sheet(result);
-      console.log(1)
+
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet1");
 
