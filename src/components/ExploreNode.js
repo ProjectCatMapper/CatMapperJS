@@ -446,7 +446,7 @@ export default function Tableclick({ cmid, database, tabval }) {
         console.error("Error loading subdomains:", err);
 
         if (err.message.includes("NetworkError when attempting to fetch resource.")) {
-          alert("We’re very sorry, but the server is currently down.  Please check back in a few minutes (or email dhruschk@asu.edu).")
+          alert("We’re very sorry, but the server is currently down.  Please check back in a few minutes (email admin@catmapper.org for assistance).")
         }
       });
   }, [database]);
@@ -457,7 +457,6 @@ export default function Tableclick({ cmid, database, tabval }) {
         const response = await fetch(
           `${process.env.REACT_APP_API_URL}/datasetDomains`,
           {
-            //const response = await fetch("http://127.0.0.1:5001/datasetDomains", {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -478,9 +477,9 @@ export default function Tableclick({ cmid, database, tabval }) {
 
         const allowedKeys = new Set(result.map(item => item.label));
 
-        console.log(allowedKeys)
+        // console.log(allowedKeys)
 
-        console.log(normalizedRef)
+        // console.log(normalizedRef)
 
         const matchingDomains = Object.fromEntries([
           ["ANY DOMAIN", ["ANY DOMAIN"]],
@@ -492,7 +491,7 @@ export default function Tableclick({ cmid, database, tabval }) {
             .filter(([_, found]) => found.length > 0) // only keep domains with matches
         ]);
 
-        console.log(matchingDomains)
+        // console.log(matchingDomains)
 
         setSelectedCategory(matchingDomains)
 
@@ -635,8 +634,8 @@ export default function Tableclick({ cmid, database, tabval }) {
         ...Object.entries(result["node"]),
         ...Object.entries(result["relNodes"]),
       ].map((node) => ({
-        id: node["1"].id, // Adjust this based on your node structure
-        label: node["1"].CMName, // Adjust this based on your node structure
+        id: node["1"].id,
+        label: node["1"].CMName,
         domain: node["1"].labels,
         CMID: node["1"].CMID,
         tooltipcon: generateTooltipContent(node["1"]),
