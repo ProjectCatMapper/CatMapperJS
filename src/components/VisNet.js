@@ -3,6 +3,7 @@ import { Network } from 'vis-network';
 import { useNavigate } from 'react-router-dom'
 
 const Neo4jVisualization = ({ visData, dropdownNodeLimit, database }) => {
+  console.log(database)
   const navigate = useNavigate();
   const valuesToRemove = ['DISTRICT', 'CATEGORY'];
   const nodes = visData["nodes"].length > dropdownNodeLimit ? visData["nodes"].slice(0, dropdownNodeLimit) : visData["nodes"];
@@ -180,7 +181,7 @@ const Neo4jVisualization = ({ visData, dropdownNodeLimit, database }) => {
         const clickedNodeId = params.nodes[0];
         const nodeData = visData.nodes.find(obj => obj.id === clickedNodeId);
         if (nodeData.CMID !== currentid) {
-          navigate({ pathname: `/${database}/${nodeData.CMID}/0` });
+          navigate({ pathname: `/${database}/${nodeData.CMID}/network` });
           window.location.reload();
         }
       } else {

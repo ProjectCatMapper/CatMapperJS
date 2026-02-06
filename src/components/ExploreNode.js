@@ -106,9 +106,9 @@ const BootstrapInput = styled(InputBase)(({ theme }) => ({
   },
 }));
 
-export default function Tableclick(props) {
+export default function Tableclick({ cmid, database, tabval }) {
   const navigate = useNavigate();
-  const [value, setValue] = useState(props.tabval || "network");
+  const [value, setValue] = useState(tabval || "network");
   const [usert, setUsert] = useState([]);
   const [mapt, setMapt] = useState([]);
   const [rev, setrev] = useState([]);
@@ -166,10 +166,8 @@ export default function Tableclick(props) {
 
   const [open, setOpen] = useState(false);
 
-
   let limit = 300;
 
-  let database = props.database || "SocioMap";
   const { infodata, loadingInfo: metadataLoading } = useMetadata(database);
   // dialog box for bad sources
   const handleClose = () => {
@@ -297,12 +295,11 @@ export default function Tableclick(props) {
   };
 
   useEffect(() => {
-    if (!props?.cmid || !database) {
-      console.warn("Skipping fetch: cmid or database is missing", { cmid: props?.cmid, database });
+    if (!cmid || !database) {
+      console.warn("Skipping fetch: cmid or database is missing", { cmid, database });
       return;
     }
     const baseUrl = process.env.REACT_APP_API_URL;
-    const cmid = props.cmid;
     const infoUrl = `${baseUrl}/info/${database}/${cmid}`;
     const categoryUrl = `${baseUrl}/category/${database}/${cmid}`;
     const geometryUrl = `${baseUrl}/exploreGeometry/${database}/${cmid}`;
@@ -371,7 +368,7 @@ export default function Tableclick(props) {
         setLoadingBackground(false); // <--- Stop background tab loading
       });
 
-  }, [props.cmid, database]);
+  }, [cmid, database]);
 
   const tooltipContent = (
     <div style={{ maxWidth: '400px' }}>
@@ -466,7 +463,7 @@ export default function Tableclick(props) {
               "Content-Type": "application/json",
             },
             body: JSON.stringify({
-              cmid: props.cmid,
+              cmid: cmid,
               database: database,
               children: rememberChoice,
             }),
@@ -534,7 +531,7 @@ export default function Tableclick(props) {
       if (Array.isArray(advdomainDrop) && advdomainDrop.length > 1) {
         response = await fetch(
           `${process.env.REACT_APP_API_URL}/dataset?cmid=` +
-          props.cmid +
+          cmid +
           "&database=" +
           database +
           "&domain=" +
@@ -549,7 +546,7 @@ export default function Tableclick(props) {
       } else {
         response = await fetch(
           `${process.env.REACT_APP_API_URL}/dataset?cmid=` +
-          props.cmid +
+          cmid +
           "&database=" +
           database +
           "&domain=" +
@@ -613,7 +610,7 @@ export default function Tableclick(props) {
 
   const handleOpenLogs = async () => {
 
-    const url = `/${database.toLowerCase()}/${props.cmid}/logs`;
+    const url = `/${database.toLowerCase()}/${cmid}/logs`;
 
     window.open(url, '_blank');
   };
@@ -624,7 +621,7 @@ export default function Tableclick(props) {
     try {
       const response = await fetch(
         `${process.env.REACT_APP_API_URL}/networksjs?cmid=` +
-        props.cmid +
+        cmid +
         "&database=" +
         database +
         "&relation=" +
@@ -695,8 +692,8 @@ export default function Tableclick(props) {
 
       if (
         event.target.value !== "USES" &&
-        !props.cmid.startsWith("SD") &&
-        !props.cmid.startsWith("AD")
+        !cmid.startsWith("SD") &&
+        !cmid.startsWith("AD")
       ) {
         let datasetvalues = new Set();
         edges.forEach((object) => {
@@ -836,7 +833,7 @@ export default function Tableclick(props) {
 
   const handleChange = (event, newValue) => {
     setValue(newValue);
-    const newPath = `/${database.toLowerCase()}/${props.cmid}/${newValue}`;
+    const newPath = `/${database.toLowerCase()}/${cmid}/${newValue}`;
     navigate(newPath, { replace: true });
   };
 
@@ -853,12 +850,12 @@ export default function Tableclick(props) {
   // Sync URL with Tab State on Load/Change
   useEffect(() => {
     // If the tab in the URL doesn't match the current active tab state...
-    if (props.tabval !== value) {
+    if (tabval !== value) {
       // ...update the URL to match the current state.
-      const newPath = `/${database.toLowerCase()}/${props.cmid}/${value}`;
+      const newPath = `/${database.toLowerCase()}/${cmid}/${value}`;
       navigate(newPath, { replace: true });
     }
-  }, [value, props.tabval, props.cmid, database, navigate]);
+  }, [value, tabval, cmid, database, navigate]);
 
   const [boxHeight, setBoxHeight] = useState("auto");
 
@@ -958,8 +955,8 @@ export default function Tableclick(props) {
               <p>No data</p>
             )}
           </ul>
-          {(props.cmid.startsWith("SD") ||
-            props.cmid.startsWith("AD")) && (
+          {(cmid.startsWith("SD") ||
+            cmid.startsWith("AD")) && (
               <Box
                 sx={{
                   gridColumn: "1",
@@ -1131,8 +1128,8 @@ export default function Tableclick(props) {
           }}
         >
           {/* Render tabs here--first check for DATASET view, otherwise use CATEGORY view */}
-          {props.cmid.startsWith("SD") ||
-            props.cmid.startsWith("AD") ? (
+          {cmid.startsWith("SD") ||
+            cmid.startsWith("AD") ? (
             <React.Fragment>
               <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
                 <Tabs
@@ -1151,6 +1148,7 @@ export default function Tableclick(props) {
                 {/* Show loading bar only if fetching network data */}
                 {loadingNetwork && <LinearProgress sx={{ marginBottom: 2 }} />}
                 <NetworkExplorerView
+                  database={database}
                   domainType="DATASET"
                   limit={limit}
                   dropdownNodeLimit={dropdownNodeLimit}
@@ -1248,6 +1246,7 @@ export default function Tableclick(props) {
                 {/* Show loading bar if background data is loading */}
                 {loadingBackground && <LinearProgress sx={{ marginBottom: 2 }} />}
                 <NetworkExplorerView
+                  database={database}
                   domainType="CATEGORY"
                   limit={limit}
                   dropdownNodeLimit={dropdownNodeLimit}
