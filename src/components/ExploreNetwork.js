@@ -6,7 +6,6 @@ import "./ExploreNode.css";
 
 import Tooltip from '@mui/material/Tooltip';
 import WarningIcon from '@mui/icons-material/Warning'; // or HelpOutline
-import IconButton from '@mui/material/IconButton';
 
 const NetworkExplorerView = ({
     database,
