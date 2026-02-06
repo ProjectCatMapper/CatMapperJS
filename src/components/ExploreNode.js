@@ -145,6 +145,13 @@ export default function Tableclick({ cmid, database, tabval }) {
     "EQUIVALENT"
   ];
 
+  const [activeFilters, setActiveFilters] = useState({
+    domain: [],      // From updateData (was string, now array for safety)
+    nodeLabel: "All",// From updateNodeData
+    dataset: "All",  // From updateDatasetNodeData
+    eventType: ["All"] // From updateEventTypeData
+  });
+
   //   const orderOfProperties = [
   //   "CONTAINS",
   //   "DISTRICT_OF",
@@ -745,89 +752,144 @@ export default function Tableclick({ cmid, database, tabval }) {
     }
   };
 
-  const updateData = (event) => {
-    const nodes = originaldata["nodes"].filter((item, index) => {
-      if (index === 0) {
-        return true;
+  const applyFilters = (filters) => {
+    // Always start fresh from originaldata
+    let currentEdges = originaldata.edges;
+    let currentNodes = originaldata.nodes;
+
+    // --- STEP 1: FILTER EDGES ---
+
+    // A. Filter by Dataset (Reference Key)
+    if (filters.dataset !== "All") {
+      currentEdges = currentEdges.filter((edge) =>
+        edge.referenceKey?.some((key) => key.includes(filters.dataset))
+      );
+    }
+
+    // B. Filter by Event Type
+    // Note: We check if "All" is NOT in the array
+    if (!filters.eventType.includes("All")) {
+      currentEdges = currentEdges.filter((edge) =>
+        Array.isArray(edge.eventType) &&
+        edge.eventType.some((ev) => filters.eventType.includes(ev))
+      );
+    }
+
+    // --- STEP 2: CALCULATE VALID NODES FROM EDGES ---
+    // If we filtered edges, we must ensure we only show nodes attached to them.
+    // If we didn't filter edges, we consider all nodes valid candidates so far.
+    let validNodeIds = new Set(currentNodes.map(n => n.id)); // Default: all nodes
+
+    if (filters.dataset !== "All" || !filters.eventType.includes("All")) {
+      validNodeIds = new Set(currentEdges.flatMap((edge) => [edge.from, edge.to]));
+    }
+
+    // --- STEP 3: FILTER NODES ---
+
+    currentNodes = currentNodes.filter((node, index) => {
+      // Rule 1: Always keep the root node (index 0)
+      if (index === 0) return true;
+
+      // Rule 2: Must be part of the valid edge structure (from Step 2)
+      if (!validNodeIds.has(node.id)) return false;
+
+      // Rule 3: Filter by Node Label (Specific Name)
+      if (filters.nodeLabel !== "All") {
+        if (node.label !== filters.nodeLabel) return false;
       }
-      return item.domain.some((tag) => event.target.value.includes(tag));
+
+      // Rule 4: Filter by Domain (Category)
+      // filters.domain can be a string or array, handle both
+      if (filters.domain && filters.domain.length > 0 && filters.domain !== "All") {
+        // If the node's domain list doesn't overlap with selected domains, hide it
+        // (Assuming filters.domain is the value from the dropdown)
+        const searchDomains = Array.isArray(filters.domain) ? filters.domain : [filters.domain];
+        // Special check: If "All" or empty is passed, ignore
+        const validSearch = searchDomains.filter(d => d !== "All");
+
+        if (validSearch.length > 0) {
+          const hasMatch = node.domain.some(tag =>
+            validSearch.some(s => s.includes(tag) || tag.includes(s))
+          );
+          if (!hasMatch) return false;
+        }
+      }
+
+      return true;
     });
-    const edges = originaldata["edges"];
-    let nodevalues = nodes
-      .map((object) => object.label)
-      .slice(1)
-      .sort();
-    nodevalues.unshift("All");
-    setSelectedNodes([...nodevalues]);
-    setVisData({ nodes, edges });
-    setSelectedValues(event.target.value);
+
+    // --- STEP 4: CLEANUP EDGES ---
+    // If we removed nodes in Step 3 (e.g., by Domain), we must remove edges 
+    // that now point to non-existent nodes.
+    const finalNodeIds = new Set(currentNodes.map(n => n.id));
+    currentEdges = currentEdges.filter(e =>
+      finalNodeIds.has(e.from) && finalNodeIds.has(e.to)
+    );
+
+    // --- STEP 5: UPDATE DERIVED UI STATE ---
+    // Update the "Node Select" dropdown based on what's currently visible
+    if (filters.domain !== "All") {
+      let nodevalues = currentNodes.map((object) => object.label).slice(1).sort();
+      nodevalues.unshift("All");
+      setSelectedNodes([...nodevalues]);
+    }
+
+    // Finally, update the graph
+    setVisData({ nodes: currentNodes, edges: currentEdges });
   };
 
+  // 1. Domain Handler
+  const updateData = (event) => {
+    const newVal = event.target.value; // Likely a string or array of strings
+    const newFilters = { ...activeFilters, domain: newVal };
+
+    setActiveFilters(newFilters);
+
+    setSelectedValues(newVal);     // Update UI Dropdown
+
+    applyFilters(newFilters);
+  };
+
+  // 2. Node Label Handler
   const updateNodeData = (event) => {
-    if (event.target.value === "All") {
-      setVisData(originaldata);
-    } else {
-      const nodes = originaldata["nodes"].filter((item, index) => {
-        if (index === 0) {
-          return true;
-        }
-        if (item.label === event.target.value) {
-          return item;
-        }
-      });
-      const edges = originaldata["edges"];
-      setVisData({ nodes, edges });
-    }
-    setThirdDropdownValue(event.target.value);
+    const newVal = event.target.value;
+    const newFilters = { ...activeFilters, nodeLabel: newVal };
+
+    setActiveFilters(newFilters);
+    setThirdDropdownValue(newVal); // Update UI Dropdown
+
+    applyFilters(newFilters);
   };
 
+  // 3. Dataset Handler
   const updateDatasetNodeData = (event) => {
+    const newVal = event.target.value;
+    const newFilters = { ...activeFilters, dataset: newVal };
 
-    if (event.target.value === "All") {
-      setVisData(originaldata);
-    } else {
-      const edges = originaldata["edges"].filter((edge) =>
-        edge.referenceKey?.some((key) => key.includes(event.target.value))
-      );
+    setActiveFilters(newFilters);
+    setFourthDropdownValue(newVal); // Update UI Dropdown
 
-      const nodeIds = new Set(edges.flatMap((edge) => [edge.from, edge.to]));
-
-      const nodes = originaldata["nodes"].filter(
-        (node, index) => index === 0 || nodeIds.has(node.id)
-      );
-      setVisData({ nodes, edges });
-    }
-    setFourthDropdownValue(event.target.value);
+    applyFilters(newFilters);
   };
 
+  // 4. Event Type Handler
   const updateEventTypeData = (event) => {
-    const value = event.target.value;
+    const value = event.target.value; // This is an array
     const lastSelected = value[value.length - 1];
 
-    // If user clicked "All"
+    let newSelection;
     if (lastSelected === "All") {
-      setSelectedEventTypes(["All"]);
-      setVisData(originaldata);
-      return;
+      newSelection = ["All"];
+    } else {
+      newSelection = value.filter((v) => v !== "All");
     }
 
-    // User clicked something else → remove "All"
-    const selected = value.filter((v) => v !== "All");
+    const newFilters = { ...activeFilters, eventType: newSelection };
 
-    const edges = originaldata.edges.filter(
-      (edge) =>
-        Array.isArray(edge.eventType) &&
-        edge.eventType.some((ev) => selected.includes(ev))
-    );
+    setActiveFilters(newFilters);
+    setSelectedEventTypes(newSelection); // Update UI Dropdown
 
-    const nodeIds = new Set(edges.flatMap((e) => [e.from, e.to]));
-
-    const nodes = originaldata.nodes.filter(
-      (node, index) => index === 0 || nodeIds.has(node.id)
-    );
-
-    setSelectedEventTypes(selected);
-    setVisData({ nodes, edges });
+    applyFilters(newFilters);
   };
 
   const handleChange = (event, newValue) => {
