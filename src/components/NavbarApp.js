@@ -65,7 +65,7 @@ const NavbarApp = ({ database }) => {
                         Help
                     </a>
                 </li>
-                {authLevel === 0 && <Link to="/login"><Button variant="outlined">Login</Button></Link>}
+                {authLevel === 0 && <Link to={`/${database}/login`}><Button variant="outlined">Login</Button></Link>}
                 {authLevel > 0 && <Button variant="outlined" onClick={logout}>Logout</Button>}
             </ul>
             <div className='hamburger' onClick={handleClick}>
