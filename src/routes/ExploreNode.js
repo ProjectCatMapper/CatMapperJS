@@ -11,7 +11,7 @@ const ExploreNode = () => {
         flexDirection: 'column'
       }}>
         <Navbar />
-        <Tableclick cmid={useParams()} />
+        <Tableclick {...useParams()} />
       </div>
       <FooterLinks />
     </>

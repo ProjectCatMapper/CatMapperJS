@@ -56,11 +56,9 @@ function App() {
       <Route path='/archamap/explore' element={<Explore />} />
       <Route path='/sociomap/translate' element={<Translate />} />
       <Route path='/archamap/translate' element={<Translate />} />
-      <Route path='/sociomap/:cmid' element={<ExploreNode />} />
-      <Route path='/archamap/:cmid' element={<ExploreNode />} />
+      <Route path='/:database/:cmid' element={<ExploreNode />} />
       <Route path='/:database/:cmid/logs' element={<LogsViewer />} />
-      <Route path='/sociomap/:cmid/:tabval' element={<ExploreNode />} />
-      <Route path='/archamap/:cmid/:tabval' element={<ExploreNode />} />
+      <Route path='/:database/:cmid/:tabval' element={<ExploreNode />} />
       <Route path='/sociomap/merge' element={<Merge />} />
       <Route path='/archamap/merge' element={<Merge />} />
       <Route path='/sociomap/help/api-guide' element={<ApiGuide />} />

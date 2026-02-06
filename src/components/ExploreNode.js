@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 
-import { useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import CircularProgress from "@mui/material/CircularProgress";
 import {
   Box,
@@ -18,6 +18,7 @@ import {
   Tooltip,
   Typography,
   Tooltip as MuiTool,
+  LinearProgress,
 } from "@mui/material";
 import { styled } from '@mui/material/styles';
 import InputBase from '@mui/material/InputBase';
@@ -29,7 +30,7 @@ import * as XLSX from "xlsx";
 import CategoriesTable from "./TableCategories";
 import ClickTable from "./TableClickView";
 import NetworkExplorerView from "./ExploreNetwork";
-// import LoadingSpinner from "./LoadingSpinner";
+import LoadingSpinner from "./LoadingSpinner";
 
 import TimespanTable from "./TimeSpanTable";
 import MapComponent from './MapComponent';
@@ -106,7 +107,8 @@ const BootstrapInput = styled(InputBase)(({ theme }) => ({
 }));
 
 export default function Tableclick(props) {
-  const [value, setValue] = useState(Number(props.cmid.tabval) || 0);
+  const navigate = useNavigate();
+  const [value, setValue] = useState(props.tabval || "network");
   const [usert, setUsert] = useState([]);
   const [mapt, setMapt] = useState([]);
   const [rev, setrev] = useState([]);
@@ -129,6 +131,8 @@ export default function Tableclick(props) {
   const [visData, setVisData] = useState(null);
   const [domains, setdomains] = useState([]);
   const [sources, setsources] = useState([]);
+  const [loadingNetwork, setLoadingNetwork] = useState(false);
+  const [loadingBackground, setLoadingBackground] = useState(false);
   const orderOfProperties = [
     "CONTAINS",
     "DISTRICT_OF",
@@ -165,10 +169,7 @@ export default function Tableclick(props) {
 
   let limit = 300;
 
-  let database = "SocioMap";
-  if (useLocation().pathname.includes("archamap")) {
-    database = "ArchaMap";
-  }
+  let database = props.database || "SocioMap";
   const { infodata, loadingInfo: metadataLoading } = useMetadata(database);
   // dialog box for bad sources
   const handleClose = () => {
@@ -296,72 +297,81 @@ export default function Tableclick(props) {
   };
 
   useEffect(() => {
-    if (!props.cmid?.cmid || !database) {
-      console.warn("Skipping fetch: cmid or database is missing", { cmid: props.cmid?.cmid, database });
+    if (!props?.cmid || !database) {
+      console.warn("Skipping fetch: cmid or database is missing", { cmid: props?.cmid, database });
       return;
     }
-    setLoadingInfo(true);
-
     const baseUrl = process.env.REACT_APP_API_URL;
-    const cmid = props.cmid.cmid;
-
-    // Define the two API endpoints
+    const cmid = props.cmid;
     const infoUrl = `${baseUrl}/info/${database}/${cmid}`;
     const categoryUrl = `${baseUrl}/category/${database}/${cmid}`;
     const geometryUrl = `${baseUrl}/exploreGeometry/${database}/${cmid}`;
 
-    Promise.all([
-      fetch(infoUrl).then(res => res.json()),
-      fetch(categoryUrl).then(res => res.json()),
-      fetch(geometryUrl).then(res => res.json())
-    ])
-      .then(([infoData, categoryData, geometryData]) => {
-        // 1. Data from /category
+    // Start spinner
+    setLoadingInfo(true);
+
+    fetch(infoUrl)
+      .then((res) => res.json())
+      .then((infoData) => {
         setrev(infoData);
+        // We have the info, so we can show the page now!
+        setLoadingInfo(false);
+      })
+      .catch((err) => {
+        console.error("Error fetching info:", err);
+        // Even if it fails, we must turn off the spinner so the user isn't stuck
+        setLoadingInfo(false);
+      });
+
+    setLoadingBackground(true);
+    Promise.all([
+      fetch(categoryUrl).then((res) => res.json()),
+      fetch(geometryUrl).then((res) => res.json())
+    ])
+      .then(([categoryData, geometryData]) => {
+        // --- Process Category Data ---
         setUsert(categoryData.samples);
         setCategories(categoryData.categories);
-        setChildCategories(categoryData.childcategories);
-        if (!childcategories && !childcategories.length > 0) {
-          setChildCategories([]);
-        }
+
+        // Safety check for child categories
+        const children = categoryData.childcategories || [];
+        setChildCategories(children);
 
         setfdrop(categoryData.relnames);
 
-        // 2. Data from /exploreGeometry
+        // --- Process Geometry Data ---
         setMapt(geometryData.polygons);
         setPoints(geometryData.points);
         setDatasetPoints(geometryData.datasetpoints);
         setbadsources(geometryData.badsources);
         setOpen(Boolean(geometryData.badsources?.length));
 
-        // 3. Logic for Shared/Derived State (Sources)
+        // --- Process Sources (Dependent on Geometry) ---
         const maptFeatures = geometryData.polygons?.features?.length
           ? geometryData.polygons.features
-          : geometryData.polygons;
+          : geometryData.polygons || [];
 
-        const pointsToUse = (geometryData.datasetpoints && geometryData.datasetpoints.length > 0)
-          ? geometryData.datasetpoints
-          : geometryData.points;
+        const pointsToUse =
+          geometryData.datasetpoints && geometryData.datasetpoints.length > 0
+            ? geometryData.datasetpoints
+            : geometryData.points || [];
 
         const uniqueSources = [
           ...new Set([
-            ...(pointsToUse || []).map((point) => point.source),
-            ...(Array.isArray(maptFeatures)
-              ? maptFeatures.map((f) => f.source)
-              : (maptFeatures.features || []).map((f) => f.source)
-            ),
+            ...pointsToUse.map((point) => point.source),
+            ...maptFeatures.map((f) => f.source),
           ]),
         ];
 
         setsources(uniqueSources);
       })
       .catch((err) => {
-        console.error("Error fetching data:", err);
-      })
-      .finally(() => {
-        setLoadingInfo(false);
+        console.error("Error fetching background data:", err);
+      }).finally(() => {
+        setLoadingBackground(false); // <--- Stop background tab loading
       });
-  }, []);
+
+  }, [props.cmid, database]);
 
   const tooltipContent = (
     <div style={{ maxWidth: '400px' }}>
@@ -456,7 +466,7 @@ export default function Tableclick(props) {
               "Content-Type": "application/json",
             },
             body: JSON.stringify({
-              cmid: props.cmid.cmid,
+              cmid: props.cmid,
               database: database,
               children: rememberChoice,
             }),
@@ -524,7 +534,7 @@ export default function Tableclick(props) {
       if (Array.isArray(advdomainDrop) && advdomainDrop.length > 1) {
         response = await fetch(
           `${process.env.REACT_APP_API_URL}/dataset?cmid=` +
-          props.cmid.cmid +
+          props.cmid +
           "&database=" +
           database +
           "&domain=" +
@@ -539,7 +549,7 @@ export default function Tableclick(props) {
       } else {
         response = await fetch(
           `${process.env.REACT_APP_API_URL}/dataset?cmid=` +
-          props.cmid.cmid +
+          props.cmid +
           "&database=" +
           database +
           "&domain=" +
@@ -603,17 +613,18 @@ export default function Tableclick(props) {
 
   const handleOpenLogs = async () => {
 
-    const url = `/${database.toLowerCase()}/${props.cmid.cmid}/logs`;
+    const url = `/${database.toLowerCase()}/${props.cmid}/logs`;
 
     window.open(url, '_blank');
   };
 
 
   const fetchData = async (event) => {
+    setLoadingNetwork(true);
     try {
       const response = await fetch(
         `${process.env.REACT_APP_API_URL}/networksjs?cmid=` +
-        props.cmid.cmid +
+        props.cmid +
         "&database=" +
         database +
         "&relation=" +
@@ -684,8 +695,8 @@ export default function Tableclick(props) {
 
       if (
         event.target.value !== "USES" &&
-        !props.cmid.cmid.startsWith("SD") &&
-        !props.cmid.cmid.startsWith("AD")
+        !props.cmid.startsWith("SD") &&
+        !props.cmid.startsWith("AD")
       ) {
         let datasetvalues = new Set();
         edges.forEach((object) => {
@@ -733,6 +744,8 @@ export default function Tableclick(props) {
       }
     } catch (error) {
       console.error("Error fetching data:", error);
+    } finally {
+      setLoadingNetwork(false); // <--- Stop loading regardless of success/fail
     }
   };
 
@@ -823,6 +836,8 @@ export default function Tableclick(props) {
 
   const handleChange = (event, newValue) => {
     setValue(newValue);
+    const newPath = `/${database.toLowerCase()}/${props.cmid}/${newValue}`;
+    navigate(newPath, { replace: true });
   };
 
   useEffect(() => {
@@ -835,17 +850,46 @@ export default function Tableclick(props) {
     }
   }, [fdrop]);
 
+  // Sync URL with Tab State on Load/Change
+  useEffect(() => {
+    // If the tab in the URL doesn't match the current active tab state...
+    if (props.tabval !== value) {
+      // ...update the URL to match the current state.
+      const newPath = `/${database.toLowerCase()}/${props.cmid}/${value}`;
+      navigate(newPath, { replace: true });
+    }
+  }, [value, props.tabval, props.cmid, database, navigate]);
+
   const [boxHeight, setBoxHeight] = useState("auto");
 
   useEffect(() => {
-    const contentHeight = document.getElementById("content").offsetHeight;
-    setBoxHeight(contentHeight + "px");
-  }, [rev]);
+    const element = document.getElementById("content");
+
+    // Only calculate height if the element exists in the DOM
+    if (element) {
+      setBoxHeight(element.offsetHeight + "px");
+    }
+  }, [rev, loadingInfo]);
 
   const handleDatasetCheckbox = () => {
     setRememberChoice((prev) => !prev);
   };
-
+  if (loadingInfo) {
+    return (
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100vh", // Full viewport height
+          width: "100%",
+          backgroundColor: "white",
+        }}
+      >
+        <LoadingSpinner />
+      </Box>
+    );
+  };
   try {
     return (
       <div
@@ -914,8 +958,8 @@ export default function Tableclick(props) {
               <p>No data</p>
             )}
           </ul>
-          {(props.cmid.cmid.startsWith("SD") ||
-            props.cmid.cmid.startsWith("AD")) && (
+          {(props.cmid.startsWith("SD") ||
+            props.cmid.startsWith("AD")) && (
               <Box
                 sx={{
                   gridColumn: "1",
@@ -1079,7 +1123,6 @@ export default function Tableclick(props) {
             View Logs
           </Button>
         </Box>
-        {/* {loading && <LoadingSpinner />} */}
         <Box
           sx={{
             position: "relative",
@@ -1088,8 +1131,8 @@ export default function Tableclick(props) {
           }}
         >
           {/* Render tabs here--first check for DATASET view, otherwise use CATEGORY view */}
-          {props.cmid.cmid.startsWith("SD") ||
-            props.cmid.cmid.startsWith("AD") ? (
+          {props.cmid.startsWith("SD") ||
+            props.cmid.startsWith("AD") ? (
             <React.Fragment>
               <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
                 <Tabs
@@ -1098,13 +1141,15 @@ export default function Tableclick(props) {
                   onChange={handleChange}
                   aria-label="tab layout"
                 >
-                  <Tab label="Network Explorer" {...a11yProps(0)} />
-                  <Tab label="Map" {...a11yProps(1)} />
-                  <Tab label="Categories" {...a11yProps(2)} />
+                  <Tab label="Network Explorer" value="network" {...a11yProps("network")} />
+                  <Tab label="Map" value="map" {...a11yProps("map")} />
+                  <Tab label="Categories" value="categories" {...a11yProps("categories")} />
                 </Tabs>
               </Box>
 
-              <CustomTabPanel value={value} index={0}>
+              <CustomTabPanel value={value} index={"network"}>
+                {/* Show loading bar only if fetching network data */}
+                {loadingNetwork && <LinearProgress sx={{ marginBottom: 2 }} />}
                 <NetworkExplorerView
                   domainType="DATASET"
                   limit={limit}
@@ -1129,7 +1174,9 @@ export default function Tableclick(props) {
                 />
               </CustomTabPanel>
 
-              <CustomTabPanel value={value} index={1}>
+              <CustomTabPanel value={value} index={"map"}>
+                {/* Show loading bar if background data is loading */}
+                {loadingBackground && <LinearProgress sx={{ marginBottom: 2 }} />}
                 <div
                   style={{
                     position: "relative",
@@ -1139,10 +1186,12 @@ export default function Tableclick(props) {
                     height: "80vh",
                   }}
                 >
-                  {mapt.length !== 0 || datasetpoints.length !== 0 ? (
-                    <MapComponent points={datasetpoints} mapt={mapt} sources={sources} />
-                  ) : (
-                    <p>No map available for this dataset.</p>
+                  {loadingBackground ? null : (
+                    mapt.length !== 0 || datasetpoints.length !== 0 ? (
+                      <MapComponent points={datasetpoints} mapt={mapt} sources={sources} />
+                    ) : (
+                      <p>No map available for this dataset.</p>
+                    )
                   )}
                   <Dialog open={open} onClose={handleClose}>
                     <DialogTitle>Alert</DialogTitle>
@@ -1170,7 +1219,9 @@ export default function Tableclick(props) {
                 </div>
               </CustomTabPanel>
 
-              <CustomTabPanel value={value} index={2}>
+              <CustomTabPanel value={value} index={"categories"}>
+                {/* Show loading bar if background data is loading */}
+                {loadingBackground && <LinearProgress sx={{ marginBottom: 2 }} />}
                 <CategoriesTable categories={categories} childcategories={childcategories} rememberChoice={rememberChoice} normalized={normalizedRef.current} />
               </CustomTabPanel>
             </React.Fragment>
@@ -1184,16 +1235,18 @@ export default function Tableclick(props) {
                   onChange={handleChange}
                   aria-label="basic tabs example"
                 >
-                  <Tab label="Network Explorer" {...a11yProps(0)} />
-                  <Tab label="Map" {...a11yProps(1)} />
-                  <Tab label="Timespan" {...a11yProps(2)} />
-                  <Tab label="Datasets" {...a11yProps(3)} />
+                  <Tab label="Network Explorer" value="network" {...a11yProps("network")} />
+                  <Tab label="Map" value="map" {...a11yProps("map")} />
+                  <Tab label="Timespan" value="timespan" {...a11yProps("timespan")} />
+                  <Tab label="Datasets" value="datasets" {...a11yProps("datasets")} />
                   {categories.length !== 0 ? (
-                    <Tab label="Categories" {...a11yProps(4)} />
+                    <Tab label="Categories" value="categories" {...a11yProps("categories")} />
                   ) : null}
                 </Tabs>
               </Box>
-              <CustomTabPanel value={value} index={0}>
+              <CustomTabPanel value={value} index={"network"}>
+                {/* Show loading bar if background data is loading */}
+                {loadingBackground && <LinearProgress sx={{ marginBottom: 2 }} />}
                 <NetworkExplorerView
                   domainType="CATEGORY"
                   limit={limit}
@@ -1217,7 +1270,7 @@ export default function Tableclick(props) {
                   updateEventTypeData={updateEventTypeData}
                 />
               </CustomTabPanel>
-              <CustomTabPanel value={value} index={1}>
+              <CustomTabPanel value={value} index={"map"}>
                 <div
                   style={{
                     position: "relative",
@@ -1257,13 +1310,13 @@ export default function Tableclick(props) {
                   </Dialog>
                 </div>
               </CustomTabPanel>
-              <CustomTabPanel value={value} index={2}>
+              <CustomTabPanel value={value} index={"timespan"}>
                 {usert ? (<TimespanTable data={usert} />) : (<p> No Timespan available for this category.</p>)}
               </CustomTabPanel>
-              <CustomTabPanel value={value} index={3}>
+              <CustomTabPanel value={value} index={"datasets"}>
                 <ClickTable usert={usert} />
               </CustomTabPanel>
-              <CustomTabPanel value={value} index={4}>
+              <CustomTabPanel value={value} index={"categories"}>
                 <CategoriesTable categories={categories} />
               </CustomTabPanel>
             </React.Fragment>
