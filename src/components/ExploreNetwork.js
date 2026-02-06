@@ -159,6 +159,7 @@ const NetworkExplorerView = ({
             )}
 
             <div style={{ width: "100%", height: "500px", marginTop: '20px' }}>
+                {console.log(database)}
                 {visData && <Neo4jVisualization
                     database={database}
                     visData={visData}
