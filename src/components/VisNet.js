@@ -3,7 +3,6 @@ import { Network } from 'vis-network';
 import { useNavigate } from 'react-router-dom'
 
 const Neo4jVisualization = ({ visData, dropdownNodeLimit, database }) => {
-  console.log(database)
   const navigate = useNavigate();
   const valuesToRemove = ['DISTRICT', 'CATEGORY'];
   const nodes = visData["nodes"].length > dropdownNodeLimit ? visData["nodes"].slice(0, dropdownNodeLimit) : visData["nodes"];
