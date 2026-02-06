@@ -3,7 +3,7 @@ import Searchbar from '../components/ExploreSearch'
 import FooterLinks from '../components/FooterLinks'
 import { useParams } from 'react-router-dom';
 
-const explore = () => {
+const Explore = () => {
     return (
         <>
             <div style={{ backgroundColor: "white" }}>
@@ -15,4 +15,4 @@ const explore = () => {
     );
 };
 
-export default explore;
+export default Explore;
