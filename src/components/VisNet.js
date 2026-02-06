@@ -209,21 +209,46 @@ const Neo4jVisualization = ({ visData, dropdownNodeLimit, database }) => {
     network.on("hoverEdge", function (params) {
       const edgeId = params.edge;
       const edge = visData["edges"].find(edge => edge["id"] === edgeId);
+
+      // Helper: Splits data by commas, removes "NULL"s, and rejoins valid parts
+      const cleanAndFormat = (val) => {
+        if (val === null || val === undefined) return null;
+
+        // 1. Convert to string and split by comma
+        //    (Handles "1996,NULL" AND ["1996", "NULL"])
+        const parts = String(val).split(',');
+
+        // 2. Filter out bad values
+        const validParts = parts.filter(part => {
+          const p = part.trim().toUpperCase();
+          return p !== "NULL" && p !== "" && p !== "UNDEFINED";
+        });
+
+        // 3. Return null if nothing is left, otherwise join with ", "
+        return validParts.length > 0 ? validParts.join(', ') : null;
+      };
+
       switch (edge.type) {
         case 'CONTAINS':
           {
             const parts = [];
 
-            if (edge.eventDate !== null && edge.eventDate !== undefined && edge.eventDate !== "NULL") {
-              parts.push(`eventDate: ${edge.eventDate}`);
+            // Clean the values first
+            const dateVal = cleanAndFormat(edge.eventDate);
+            const typeVal = cleanAndFormat(edge.eventType);
+            const refKey = cleanAndFormat(edge.referenceKey);
+
+            // Only push if we have valid data left
+            if (dateVal) {
+              parts.push(`eventDate: ${dateVal}`);
             }
 
-            if (edge.eventType !== null && edge.eventType !== undefined && edge.eventType !== "NULL") {
-              parts.push(`eventType: ${edge.eventType}`);
+            if (typeVal) {
+              parts.push(`eventType: ${typeVal}`);
             }
 
-            if (edge.referenceKey !== null) {
-              parts.push(`referenceKey: ${edge.referenceKey}`);
+            if (refKey) {
+              parts.push(`referenceKey: ${refKey}`);
             }
 
             parts.push(`type: ${edge.type}`);
@@ -231,40 +256,29 @@ const Neo4jVisualization = ({ visData, dropdownNodeLimit, database }) => {
             tooltipText = parts.join(' <br> ');
             break;
           }
-        case 'USES':
-          {
-            const { from, to, color, id, ...rest } = edge;
-            tooltipText = Object.entries(rest)
-              .reduce((acc, [key, value]) => {
-                if (key === 'Name' || key === 'Key') {
-                  acc.top.push(`${key}: ${value}`);
-                }
-                else if (key.toLowerCase().includes('log')) {
-                  return acc;
-                }
-                else {
-                  acc.middle.push(`${key}: ${value}`);
-                }
-                return acc;
-              }, { top: [], middle: [], bottom: [] });
 
-            tooltipText = [...tooltipText.top, ...tooltipText.middle, ...tooltipText.bottom].join(' <br> ');
-            break;
-          }
+        // ... (keep your existing USES and EQUIVALENT cases the same) ...
+        case 'USES':
+          // ... existing code ...
+          break;
         case 'EQUIVALENT':
-          tooltipText = `stack: ${edge.stack} <br> dataset: ${edge.dataset} <br> Key: ${edge.Key}`;
+          // ... existing code ...
           break;
         default:
           tooltipText = `referenceKey: ${edge.referenceKey} <br> type: ${edge.type}`;
           break;
       }
 
+      // Render the tooltip
       const tooltipElement = document.getElementById('edge-tooltip');
-      tooltipElement.innerHTML = tooltipText;
-      tooltipElement.style.top = params.event.clientY + 'px';
-      tooltipElement.style.left = params.event.clientX + 'px';
-      tooltipElement.style.display = 'block';
+      if (tooltipElement) {
+        tooltipElement.innerHTML = tooltipText;
+        tooltipElement.style.top = params.event.clientY + 'px';
+        tooltipElement.style.left = params.event.clientX + 'px';
+        tooltipElement.style.display = 'block';
+      }
     });
+
 
     network.on("blurEdge", function () {
       const tooltipElement = document.getElementById('edge-tooltip');

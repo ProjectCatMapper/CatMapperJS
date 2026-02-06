@@ -181,9 +181,9 @@ export default function Tableclick({ cmid, database, tabval }) {
   }, [advoptions]);
 
   const generateTooltipContent = (properties) => {
-    return Object.entries(properties).map(
-      ([key, value]) => `${key}: ${value}\n`
-    );
+    return Object.entries(properties)
+      .filter(([key, value]) => value != null && value !== "" && value !== "NULL" && value !== "null") // Skip null, undefined, or empty strings
+      .map(([key, value]) => `${key}: ${value}\n`);
   };
 
   const getColorBasedOnValue = (value) => {
