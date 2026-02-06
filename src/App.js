@@ -27,6 +27,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import FAQ from "./routes/FAQ";
 import AppHome from './routes/AppHome';
 import LogsViewer from './routes/LogsViewer';
+import DynamicPropertiesForm from './components/EditMetadata';
 
 function App() {
   useEffect(() => {
@@ -46,6 +47,7 @@ function App() {
   return (
     <Routes>
       <Route path='/' element={<Catmapper />} />
+      <Route path='/editMetadata/:cmid' element={<DynamicPropertiesForm />} />
       <Route path='/sociomap' element={<AppHome />} />
       <Route path='/archamap' element={<AppHome />} />
       <Route path='/login' element={<Logins />} />
