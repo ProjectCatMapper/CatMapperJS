@@ -9,6 +9,7 @@ import WarningIcon from '@mui/icons-material/Warning'; // or HelpOutline
 import IconButton from '@mui/material/IconButton';
 
 const NetworkExplorerView = ({
+    database,
     domainType,
     limit,
     dropdownNodeLimit,
@@ -159,6 +160,7 @@ const NetworkExplorerView = ({
 
             <div style={{ width: "100%", height: "500px", marginTop: '20px' }}>
                 {visData && <Neo4jVisualization
+                    database={database}
                     visData={visData}
                     dropdownNodeLimit={dropdownNodeLimit}
                     setDropdownNodeLimit={setDropdownNodeLimit}

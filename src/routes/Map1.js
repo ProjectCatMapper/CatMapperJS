@@ -4,7 +4,7 @@ import Sociomap_1 from '../components/Map1';
 const Map1 = () => {
   return (
     <div>
-      <Navbar />
+      <Navbar database="sociomap" />
       <Sociomap_1 />
     </div>
   )

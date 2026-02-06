@@ -1,13 +1,15 @@
+import React from 'react'
 import Navbar from '../components/NavbarApp'
-import TranslateComponent from '../components/Translate'
+import Edit from '../components/Edit'
 import { useParams } from 'react-router-dom';
-const Translate = () => {
+
+const EditPage = () => {
   return (
     <div style={{ backgroundColor: "white" }}>
       <Navbar {...useParams()} />
-      <TranslateComponent {...useParams()} />
+      <Edit {...useParams()} />
     </div>
   )
 }
 
-export default Translate;
+export default EditPage;

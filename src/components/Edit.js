@@ -2,14 +2,14 @@ import { useState, useEffect } from 'react'
 import { Box, Button, FormControlLabel, Radio, RadioGroup, Checkbox, Typography, Divider, Select, TextField, MenuItem, InputLabel, FormControl, FormGroup, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TablePagination, Paper, Snackbar, Alert } from '@mui/material';
 import DatasetForm from './DatasetCreate';
 import { ExcelRenderer } from 'react-excel-renderer';
-import domainOptions from "../assets/dropdown.json";
 import Tooltip from '@mui/material/Tooltip';
 import InfoIcon from '@mui/icons-material/Info';
 import { useAuth } from './AuthContext';
 import { CircularProgress } from '@mui/material';
 import { Dialog, DialogContent, DialogActions, DialogContentText, DialogTitle } from '@mui/material';
 import * as XLSX from 'xlsx';
-import { useLocation } from 'react-router-dom';
+import domainOptions from "./dropdown.json";
+
 
 const TEMPLATE_FILES = {
   dataset: { label: "New Dataset Nodes", file: "upload_new_datasets_template.xlsx" },
@@ -20,7 +20,7 @@ const TEMPLATE_FILES = {
 
 
 
-const BulkEdit = () => {
+const Edit = ({ database }) => {
 
   const [file, setFile] = useState(null);
   const { user, authLevel } = useAuth();
@@ -305,14 +305,8 @@ const BulkEdit = () => {
     }
   };
 
-  let database = "SocioMap"
-  let dropoptions = domainOptions
-  if (useLocation().pathname.includes("archamap")) {
-    database = "ArchaMap"
-  }
-
   const fallbackOptions = ["Name", "Key", "CatMapper ID (CMID)"];
-  const fieldOptions = dropoptions[formData.domain] || fallbackOptions;
+  const fieldOptions = domainOptions[formData.domain] || fallbackOptions;
 
   const handleSubmit = async () => {
 
@@ -1234,4 +1228,4 @@ const BulkEdit = () => {
   );
 }
 
-export default BulkEdit;
+export default Edit;

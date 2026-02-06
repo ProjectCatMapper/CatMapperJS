@@ -5,18 +5,13 @@ import Alert from '@mui/material/Alert';
 import * as XLSX from 'xlsx';
 import { ExcelRenderer } from 'react-excel-renderer';
 
-let database = "SocioMap";
-if (window.location.pathname.includes("archamap")) {
-  database = "ArchaMap";
-}
 
-const Download_Merge = () => {
+const Download_Merge = ({ database }) => {
 
   const [inputValue, setInputValue] = useState('');
   const [file, setFile] = useState(null);
   const [columns, setColumns] = useState();
   const [rows, setRows] = useState([]);
-  let fileObj = ""
   const [jsonData, setJsondata] = useState();
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [message, setMessage] = useState('');
@@ -29,7 +24,7 @@ const Download_Merge = () => {
 
   const handleSubmit = async () => {
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}//merge/syntax/SocioMap`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}//merge/syntax/${database}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

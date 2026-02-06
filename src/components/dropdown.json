@@ -1,0 +1,86 @@
+{
+    "ALL NODES": [
+        "Name",
+        "Key",
+        "CatMapper ID (CMID)"
+    ],
+    "ANY DOMAIN": [
+        "Name",
+        "Key",
+        "CatMapper ID (CMID)",
+        "glottocode",
+        "FIPS",
+        "ISO2",
+        "ISO3",
+        "ISONumeric"
+    ],
+    "AREA": [
+        "Name",
+        "Key",
+        "CatMapper ID (CMID)",
+        "FIPS",
+        "ISO2",
+        "ISO3",
+        "ISONumeric"
+    ],
+    "ADM0": [
+        "Name",
+        "Key",
+        "CatMapper ID (CMID)",
+        "FIPS",
+        "ISO2",
+        "ISO3",
+        "ISONumeric"
+    ],
+    "ADM1": [
+        "Name",
+        "Key",
+        "CatMapper ID (CMID)",
+        "FIPS",
+        "ISO2",
+        "ISO3",
+        "ISONumeric"
+    ],
+    "ADM2": [
+        "Name",
+        "Key",
+        "CatMapper ID (CMID)",
+        "FIPS",
+        "ISO2",
+        "ISO3",
+        "ISONumeric"
+    ],
+    "DATASET": [
+        "Name",
+        "CatMapper ID (CMID)",
+        "project"
+    ],
+    "LANGUOID": [
+        "Name",
+        "Key",
+        "CatMapper ID (CMID)",
+        "glottocode",
+        "ISO3"
+    ],
+    "LANGUAGE": [
+        "Name",
+        "Key",
+        "CatMapper ID (CMID)",
+        "glottocode",
+        "ISO3"
+    ],
+    "DIALECT": [
+        "Name",
+        "Key",
+        "CatMapper ID (CMID)",
+        "glottocode",
+        "ISO3"
+    ],
+    "FAMILY": [
+        "Name",
+        "Key",
+        "CatMapper ID (CMID)",
+        "glottocode",
+        "ISO3"
+    ]
+}

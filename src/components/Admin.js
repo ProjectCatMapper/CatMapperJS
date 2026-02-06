@@ -25,16 +25,15 @@ import {
 } from "@mui/material";
 import { useAuth } from './AuthContext';
 import { DataGrid } from '@mui/x-data-grid';
-import { useLocation } from 'react-router-dom';
 import CircularProgress from "@mui/material/CircularProgress";
 import FooterLinks from "./FooterLinks";
 import CardContent from '@mui/material/CardContent';
 
-const Admin = () => {
+const Admin = ({ database }) => {
+  const { user, cred, authLevel } = useAuth();
   const [firstDropdownValue, setFirstDropdownValue] = useState(
     "add/edit/delete USES property"
   );
-  const { user, cred, authLevel } = useAuth();
   const [users, setUsers] = useState([]);
   const [selectedUserIds, setSelectedUserIds] = useState([]);
   const [CMIDText, setCMIDText] = useState('');
@@ -48,12 +47,6 @@ const Admin = () => {
 
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
-
-  let database = "SocioMap"
-  if (useLocation().pathname.includes("archamap")) {
-    database = "ArchaMap"
-  }
-
 
   const sections = [
     {

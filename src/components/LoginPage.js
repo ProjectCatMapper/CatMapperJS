@@ -5,21 +5,19 @@ import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
 import { useAuth } from './AuthContext';
 
-const LoginPage = () => {
+const LoginPage = ({ database }) => {
     const { login } = useAuth();
     const history = useNavigate();
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
-    const currentPath = window.location.pathname;
-    console.log(currentPath)
 
     const handleLogin = async () => {
         await login(username, password);
-        history('/');
+        history(`/${database}`);
     };
 
     const handleNavigateToRegister = () => {
-        history('/register');
+        history(`/${database}/register`);
     };
 
     return (
@@ -40,19 +38,19 @@ const LoginPage = () => {
                 sx={{ mb: 2 }}
             />
             <Button variant="contained" sx={{
-        backgroundColor: 'black',
-        color: 'white', 
-        '&:hover': {
-          backgroundColor: 'green', 
-        },
-      }} onClick={handleLogin}>Login</Button>
+                backgroundColor: 'black',
+                color: 'white',
+                '&:hover': {
+                    backgroundColor: 'green',
+                },
+            }} onClick={handleLogin}>Login</Button>
             <Button variant="contained" sx={{
-        backgroundColor: 'black',
-        color: 'white', 
-        '&:hover': {
-          backgroundColor: 'green', 
-        }, mt:2
-      }} onClick={handleNavigateToRegister}>Register</Button>
+                backgroundColor: 'black',
+                color: 'white',
+                '&:hover': {
+                    backgroundColor: 'green',
+                }, mt: 2
+            }} onClick={handleNavigateToRegister}>Register</Button>
         </Box>
     );
 };

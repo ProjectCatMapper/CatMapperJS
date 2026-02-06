@@ -2,14 +2,13 @@ import React from 'react';
 import { useState, useEffect } from 'react'
 import { styled } from '@mui/material/styles';
 import InputBase from '@mui/material/InputBase';
-import { Box, Button, Checkbox, FormControl, Grid, NativeSelect, Tooltip, Typography } from "@mui/material";
-import DataTable from './TableView';
+import { Box, Button, FormControl, Grid, NativeSelect, Tooltip, Typography } from "@mui/material";
+import DataTable from './ExploreSearchTable';
 import domainOptions from "./../assets/dropdown.json"
 import InfoIcon from '@mui/icons-material/Info';
-import { useLocation } from 'react-router-dom';
 import "./ExploreSearch.css";
 import NeonButton from './Button';
-import DownloadDialogButton from './BulkEditAdvanced';
+import DownloadDialogButton from './EditAdvanced';
 import CircularProgress from '@mui/material/CircularProgress';
 import { useMetadata } from './UseMetadata';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
@@ -47,12 +46,8 @@ const BootstrapInput = styled(InputBase)(({ theme }) => ({
   },
 }));
 
-export default function Searchbar() {
-  let database = "SocioMap"
+export default function Searchbar({ database }) {
 
-  if (useLocation().pathname.includes("archamap")) {
-    database = "ArchaMap"
-  }
   const [domainDrop, setdomainDrop] = React.useState('ALL NODES');
 
   const [advdomainDrop, setadvdomainDrop] = React.useState('ALL NODES');
@@ -95,10 +90,8 @@ export default function Searchbar() {
   useEffect(() => {
     const fetchCountries = async () => {
       try {
-        // 2. Format the database variable for the API (lowercase)
-        const dbParam = database.toLowerCase();
 
-        const response = await fetch(`https://api.catmapper.org/metadata/getCountries/${dbParam}`);
+        const response = await fetch(`${process.env.REACT_APP_API_URL}/metadata/getCountries/${database}`);
 
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
@@ -106,8 +99,6 @@ export default function Searchbar() {
 
         const data = await response.json();
 
-        // 3. Combine your default empty option with the API results
-        // Assuming API returns: [{"name": "Afghanistan", "code": "SM1"}, ...]
         setCountries([
           { "name": "", "code": "" },
           ...data
@@ -670,6 +661,7 @@ export default function Searchbar() {
               label={domainDrop}
               snackbarOpen={snackbarOpen}
               setSnackbarOpen={setSnackbarOpen}
+              database={database}
             />
           }
         </Box>

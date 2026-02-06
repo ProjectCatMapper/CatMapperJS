@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react'
 import { Box, Button, FormControlLabel, Radio, RadioGroup, Checkbox, Typography, Divider, Select, NativeSelect, TextField, MenuItem, FormControl, FormGroup, Snackbar, Alert, Paper, Tooltip, InputLabel } from '@mui/material';
-import { useLocation } from 'react-router-dom';
 import * as XLSX from 'xlsx';
 import CircularProgress from '@mui/material/CircularProgress';
 import Backdrop from '@mui/material/Backdrop';
@@ -8,7 +7,7 @@ import InfoIcon from '@mui/icons-material/Info';
 import { useMetadata } from './UseMetadata';
 // import infodata from './infodata.json';
 
-const Propose_Merge = () => {
+const Propose_Merge = ({ database }) => {
   const [loading, setLoading] = useState(false);
   const [inputValue, setInputValue] = useState('');
   const [open, setOpen] = useState(false);
@@ -21,11 +20,6 @@ const Propose_Merge = () => {
   const [showKeys, setShowKeys] = useState(false);
   const [keysByDataset, setkeysByDataset] = useState(false);
   const [selectedKeyVariables, setSelectedKeyVariables] = useState({});
-
-  let database = "SocioMap"
-  if (useLocation().pathname.includes("archamap")) {
-    database = "ArchaMap"
-  }
   const { infodata, loading: metadataLoading } = useMetadata(database);
   const [selectedCategory, setSelectedCategory] = useState({});
   const [advdomainDrop, setadvdomainDrop] = React.useState('ANY DOMAIN');

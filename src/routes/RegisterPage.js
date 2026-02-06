@@ -1,12 +1,13 @@
 import React from 'react'
 import Navbar from '../components/NavbarApp'
 import Register from '../components/RegisterPage'
+import { useParams } from 'react-router-dom'
 
 const RegisterPage = () => {
   return (
     <div style={{ backgroundColor: "white" }}>
-      <Navbar />
-      <Register />
+      <Navbar {...useParams()} />
+      <Register {...useParams()} />
     </div>
   )
 }

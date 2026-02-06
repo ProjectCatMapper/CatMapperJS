@@ -5,7 +5,6 @@ import { ExcelRenderer } from 'react-excel-renderer';
 import Papa from 'papaparse';
 import Button from '@mui/material/Button';
 import { Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TablePagination, Typography, Box, FormControlLabel, Checkbox } from '@mui/material';
-import { useLocation } from 'react-router-dom';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import TranslateTable from './TranslateResults';
@@ -40,7 +39,7 @@ const getTooltipContent = (nm) => {
   return tooltipTexts[nm];
 };
 
-function TranslateComponent() {
+function TranslateComponent({ database }) {
 
   const [selectedFile, setSelectedFile] = useState(null);
   const [error, setError] = useState(null);
@@ -121,10 +120,6 @@ function TranslateComponent() {
   }
 
   const [data, setData] = useState({});
-  let database = "SocioMap"
-  if (useLocation().pathname.includes("archamap")) {
-    database = "ArchaMap"
-  }
 
   const handleClick = async () => {
     setLoading(true);

@@ -10,7 +10,7 @@ const ExploreNode = () => {
         minHeight: "100vh", display: 'flex',
         flexDirection: 'column'
       }}>
-        <Navbar />
+        <Navbar {...useParams()} />
         <Tableclick {...useParams()} />
       </div>
       <FooterLinks />

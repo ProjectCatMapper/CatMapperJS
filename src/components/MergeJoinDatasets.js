@@ -2,23 +2,20 @@ import React, { useState, useEffect } from 'react';
 import { Box, Button, Typography, Divider } from '@mui/material';
 import { ExcelRenderer } from 'react-excel-renderer';
 import Papa from 'papaparse';
-import { useLocation } from 'react-router-dom';
 import CircularProgress from '@mui/material/CircularProgress';
 import Backdrop from '@mui/material/Backdrop';
 import * as XLSX from 'xlsx';
 import DomainSelector from './DomainSelector';
 
-const JoinDatasets_Merge = () => {
+const JoinDatasets_Merge = ({ database }) => {
 
   const [fileLeft, setFileLeft] = useState(null);
   const [fileRight, setFileRight] = useState(null);
   let fileObj = ""
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState();
-  const [database, setDatabase] = useState(null);
   const [domain, setdomain] = useState('');
   const validCsvTypes = ['text/csv', 'application/csv'];
-  const location = useLocation();
 
   const handleFileChange = (e) => {
     const fileType = e.target.files[0].type;

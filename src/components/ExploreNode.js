@@ -28,7 +28,7 @@ import PropTypes from "prop-types";
 import * as XLSX from "xlsx";
 
 import CategoriesTable from "./TableCategories";
-import ClickTable from "./TableClickView";
+import ClickTable from "./ExploreTabs";
 import NetworkExplorerView from "./ExploreNetwork";
 import LoadingSpinner from "./LoadingSpinner";
 
