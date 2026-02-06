@@ -1,6 +1,7 @@
 import Navbar from '../components/NavbarApp';
 import Video from '../components/Video';
-import DynamicFooter from "../components/Footer";
+import DynamicBody from "../components/AppHome";
+import { useParams } from 'react-router-dom';
 
 const AppHome = () => {
     return (
@@ -9,9 +10,9 @@ const AppHome = () => {
             flexDirection: "column",
             minHeight: "100vh",
         }}>
-            <Navbar />
-            <Video />
-            <DynamicFooter />
+            <Navbar {...useParams()} />
+            <Video {...useParams()} />
+            <DynamicBody {...useParams()} />
         </div>
     );
 };

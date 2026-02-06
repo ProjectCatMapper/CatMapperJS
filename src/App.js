@@ -6,10 +6,10 @@ import Map3 from './routes/Map3';
 import Map4 from './routes/Map4';
 import Explore from './routes/Explore'
 import Translate from './routes/Translate'
-import BulkEditPage from './routes/BulkEdit'
+import EditPage from './routes/Edit'
 import Catmapper from "./routes/Catmapper";
 import ExploreNode from "./routes/ExploreNode";
-import Merge from "./routes/Merge";
+import MergePage from "./routes/Merge";
 import People from "./routes/People"
 import News from "./routes/News"
 import Funding from "./routes/Funding"
@@ -47,22 +47,17 @@ function App() {
   return (
     <Routes>
       <Route path='/' element={<Catmapper />} />
-      <Route path='/editMetadata/:cmid' element={<DynamicPropertiesForm />} />
-      <Route path='/sociomap' element={<AppHome />} />
-      <Route path='/archamap' element={<AppHome />} />
-      <Route path='/login' element={<Logins />} />
-      <Route path="/register" element={<RegisterPage />} />
-      <Route path='/sociomap/explore' element={<Explore />} />
-      <Route path='/archamap/explore' element={<Explore />} />
-      <Route path='/sociomap/translate' element={<Translate />} />
-      <Route path='/archamap/translate' element={<Translate />} />
+      <Route path='/:database' element={<AppHome />} />
+      <Route path='/:database/login' element={<Logins />} />
+      <Route path="/:database/register" element={<RegisterPage />} />
+      <Route path='/:database/explore' element={<Explore />} />
+      <Route path='/:database/translate' element={<Translate />} />
       <Route path='/:database/:cmid' element={<ExploreNode />} />
       <Route path='/:database/:cmid/logs' element={<LogsViewer />} />
       <Route path='/:database/:cmid/:tabval' element={<ExploreNode />} />
-      <Route path='/sociomap/merge' element={<Merge />} />
-      <Route path='/archamap/merge' element={<Merge />} />
-      <Route path='/sociomap/help/api-guide' element={<ApiGuide />} />
-      <Route path='/sociomap/help/user-guide' element={<UserGuide />} />
+      <Route path='/:database/merge' element={<MergePage />} />
+      <Route path='/help/api-guide' element={<ApiGuide />} />
+      <Route path='/help/user-guide' element={<UserGuide />} />
       <Route path='/people' element={<People />} />
       <Route path='/news' element={<News />} />
       <Route path='/funding' element={<Funding />} />
@@ -76,11 +71,11 @@ function App() {
       <Route path='/map3' element={<Map3 />} />
       <Route path='/map4' element={<Map4 />} />
       <Route path='/FAQ' element={<FAQ />} />
-      <Route path="sociomap/edit" element={<ProtectedRoute requiredLevel={1}><BulkEditPage /></ProtectedRoute>} />
-      <Route path="archamap/edit" element={<ProtectedRoute requiredLevel={1}><BulkEditPage /></ProtectedRoute>} />
-      <Route path="/sociomap/admin" element={<ProtectedRoute requiredLevel={2}><AdminPage /></ProtectedRoute>} />
-      <Route path="/archamap/admin" element={<ProtectedRoute requiredLevel={2}><AdminPage /></ProtectedRoute>} />
-    </Routes>
+      <Route path='/:database/edit' element={<ProtectedRoute requiredLevel={1}><EditPage /></ProtectedRoute>} />
+      <Route path='/:database/admin' element={<ProtectedRoute requiredLevel={2}><AdminPage /></ProtectedRoute>} />
+      <Route path='/editMetadata/:cmid' element={<ProtectedRoute requiredLevel={2}><DynamicPropertiesForm /></ProtectedRoute>} />
+
+    </Routes >
   );
 }
 

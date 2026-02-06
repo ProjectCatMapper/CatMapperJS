@@ -2,20 +2,13 @@ import * as React from 'react';
 import { useState } from 'react'
 import { DataGrid } from '@mui/x-data-grid';
 import { useNavigate } from 'react-router-dom'
-import { useLocation } from 'react-router-dom';
 import { Snackbar, Alert } from "@mui/material";
 import "./TableClickViewSC.css"
 
-export default function DataTable({ users, snackbarOpen, setSnackbarOpen }) {
+export default function DataTable({ users, snackbarOpen, setSnackbarOpen, database }) {
   const [rows, setRows] = useState([]);
   const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 10 });
   const navigate = useNavigate();
-
-  let path = "sociomap"
-
-  if (useLocation().pathname.includes("archamap")) {
-    path = "archamap"
-  }
 
   const columns = [
     {
@@ -48,7 +41,7 @@ export default function DataTable({ users, snackbarOpen, setSnackbarOpen }) {
   const handleRowClick = (
     params,
   ) => {
-    navigate({ pathname: `/${path}/${params.row.cmid}`, });
+    navigate({ pathname: `/${database}/${params.row.cmid}`, });
   };
 
   React.useEffect(() => {

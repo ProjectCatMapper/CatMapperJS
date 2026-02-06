@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom'
 import Divider from '@mui/material/Divider';
 import Propose_Merge from "./MergePropose"
 import JoinDatasets_Merge from "./MergeJoinDatasets"
-import Download_Merge from "./DownloadMergeTemplate"
+import Download_Merge from "./MergeDownload"
 
 function TabPanel(props) {
   const { children, value, index, ...other } = props;
@@ -34,7 +34,7 @@ function a11yProps(index) {
   };
 }
 
-export default function VerticalTabs() {
+export default function Mergelayout({ database }) {
   const [value, setValue] = useState(0);
 
   const handleChange = (event, newValue) => {
@@ -59,13 +59,13 @@ export default function VerticalTabs() {
           <Tab label="Download merge template" {...a11yProps(2)} sx={{ alignItems: 'flex-end', justifyContent: 'center', textAlign: 'right' }} />
         </Tabs>
         <TabPanel value={value} index={0}>
-          <Propose_Merge />
+          <Propose_Merge database={database} />
         </TabPanel>
         <TabPanel value={value} index={1}>
-          <JoinDatasets_Merge />
+          <JoinDatasets_Merge database={database} />
         </TabPanel>
         <TabPanel value={value} index={2}>
-          <Download_Merge />
+          <Download_Merge database={database} />
         </TabPanel>
       </Box>
       <Divider sx={{ marginTop: 3, marginBottom: 7, marginLeft: 1, marginRight: 1, backgroundColor: 'white' }} />

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { DataGrid } from '@mui/x-data-grid';
-import './TableClickView.css'
+import './ExploreTabs.css'
 
 export default function ClickTable(props) {
   const ccolumns = [

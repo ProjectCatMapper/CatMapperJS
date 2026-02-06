@@ -1,5 +1,6 @@
 import Navbar from '../components/NavbarApp'
 import Admin from '../components/Admin';
+import { useParams } from 'react-router-dom';
 
 const AdminPage = () => {
   return (
@@ -7,8 +8,8 @@ const AdminPage = () => {
       backgroundColor: "white", height: "100vh", display: 'flex',
       flexDirection: 'column'
     }}>
-      <Navbar />
-      <Admin />
+      <Navbar {...useParams()} />
+      <Admin {...useParams()} />
     </div>
   )
 }

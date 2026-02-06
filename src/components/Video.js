@@ -1,17 +1,11 @@
 import { useEffect, useState } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import './video.css'
 
 import mainvideo from "../assets/world.mp4"
 
-const Video = () => {
-    const location = useLocation();
+const Video = ({ database }) => {
     const [displayData, setDisplayData] = useState([]);
-    const database = location.pathname.includes("archamap")
-        ? "archamap"
-        : location.pathname.includes("sociomap")
-            ? "sociomap"
-            : "catmapper";
     useEffect(() => {
         fetch(`${process.env.REACT_APP_API_URL}/homepagecount?database=${database}`, {
             method: "GET"
@@ -21,7 +15,7 @@ const Video = () => {
                 setDisplayData(data)
             })
             .catch(err => console.error("Failed to fetch progress", err));
-    }, []);
+    }, [database]);
 
     const archamaptext = "ArchaMap organizes categories of material objects used in archaeology, including sites, ceramic types, lithic and projectile point types, and faunal types. Our hope in the future is to extend CatMapper’s capabilities to other classes of complex, dynamic categories."
 

@@ -5,12 +5,9 @@ import image from '../assets/catmapperWhite.png'
 import Button from '@mui/material/Button';
 import { useAuth } from './AuthContext';
 import { APP_LOGOS } from './Logos';
-import { useLocation, Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 
-const NavbarApp = () => {
-    const location = useLocation();
-    const database = location.pathname.includes("archamap") ? "archamap" : "sociomap";
-
+const NavbarApp = ({ database }) => {
     const currentLogo = APP_LOGOS[database] || APP_LOGOS[database];
     const [click, setClick] = useState(false)
     const handleClick = () => setClick(!click)

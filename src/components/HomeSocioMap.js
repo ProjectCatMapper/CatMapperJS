@@ -64,6 +64,7 @@ const handleButtonClick = async () => {
   }
 };
 
+const database = "sociomap";
 const FooterSocioMap = () => {
   const [rows, setrows] = useState([]);
 

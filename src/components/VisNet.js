@@ -1,10 +1,9 @@
 import { useEffect, useState, useRef } from 'react';
 import { Network } from 'vis-network';
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 
-const Neo4jVisualization = ({ visData, dropdownNodeLimit }) => {
+const Neo4jVisualization = ({ visData, dropdownNodeLimit, database }) => {
   const navigate = useNavigate();
-  const loc = useLocation();
   const valuesToRemove = ['DISTRICT', 'CATEGORY'];
   const nodes = visData["nodes"].length > dropdownNodeLimit ? visData["nodes"].slice(0, dropdownNodeLimit) : visData["nodes"];
   const domainHierarchy = [
@@ -132,10 +131,6 @@ const Neo4jVisualization = ({ visData, dropdownNodeLimit }) => {
       },
 
     };
-    let path = "sociomap"
-    if (loc.pathname.includes("archamap")) {
-      path = "archamap"
-    }
 
     const data = { nodes, edges: visData.edges };
     const network = new Network(container, data, options);
@@ -185,7 +180,7 @@ const Neo4jVisualization = ({ visData, dropdownNodeLimit }) => {
         const clickedNodeId = params.nodes[0];
         const nodeData = visData.nodes.find(obj => obj.id === clickedNodeId);
         if (nodeData.CMID !== currentid) {
-          navigate({ pathname: `/${path}/${nodeData.CMID}/0` });
+          navigate({ pathname: `/${database}/${nodeData.CMID}/0` });
           window.location.reload();
         }
       } else {

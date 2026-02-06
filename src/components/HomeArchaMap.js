@@ -60,35 +60,14 @@ const handleButtonClick = async () => {
 };
 
 
+const database = "archamap"
 const FooterArchaMap = () => {
 
   const [rows, setrows] = useState([]);
 
-  // const [foci,setfoci] = useState([])
-
-  // useEffect(() => {
-  //   fetch(`${process.env.REACT_APP_API_URL}/foci?database=archamap`,
-  //       // fetch("http://127.0.0.1:5001/foci?database=archamap",
-  //           {
-  //               method: "GET"
-  //           })
-  //           .then(response => {
-  //               return response.json()
-  //           })
-  //           .then(data => {setfoci([
-  //             createFoci(data[0].Focus,data[0].Datasets,data[0].AREAS,data[0].ETHNICITIES,data[0]["LANGUAGES, DIALECTS, and FAMILIES"],data[0].RELIGIONS),
-  //             createFoci(data[1].Focus,data[1].Datasets,data[1].AREAS,data[1].ETHNICITIES,data[1]["LANGUAGES, DIALECTS, and FAMILIES"],data[1].RELIGIONS),
-  //             createFoci(data[2].Focus,data[2].Datasets,data[2].AREAS,data[2].ETHNICITIES,data[2]["LANGUAGES, DIALECTS, and FAMILIES"],data[2].RELIGIONS),
-  //             createFoci(data[3].Focus,data[3].Datasets,data[3].AREAS,data[3].ETHNICITIES,data[3]["LANGUAGES, DIALECTS, and FAMILIES"],data[3].RELIGIONS),
-  //             createFoci(data[4].Focus,data[4].Datasets,data[4].AREAS,data[4].ETHNICITIES,data[4]["LANGUAGES, DIALECTS, and FAMILIES"],data[4].RELIGIONS),
-  //           ]);
-  //           })
-  //   },[])
-
   useEffect(() => {
 
-    fetch(`${process.env.REACT_APP_API_URL}/progress?database=archamap`,
-      // fetch("http://127.0.0.1:5001/progress?database=archamap",
+    fetch(`${process.env.REACT_APP_API_URL}/progress?database=${database}`,
       {
         method: "GET"
       })

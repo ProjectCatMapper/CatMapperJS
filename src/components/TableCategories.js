@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { useState, useEffect } from 'react'; // Added useEffect to import
 import { DataGrid } from '@mui/x-data-grid';
-// import { useLocation } from 'react-router-dom'; // Unused, but kept if you need it elsewhere
 
 export default function CategoriesTable(props) {
     const { categories, childcategories, rememberChoice, normalized } = props;
