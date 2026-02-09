@@ -151,21 +151,6 @@ const Neo4jVisualization = ({ visData, dropdownNodeLimit, database }) => {
       freezeNetwork();
     }, 800);
 
-    // network.once("stabilizationFinished", function () {
-    //   // Small delay to let the final positions settle
-    //   setTimeout(() => {
-    //     // Check if network hasn't been destroyed by a re-render/unmount
-    //     if (isMounted && network && typeof network.setOptions === 'function') {
-    //       try {
-    //         network.setOptions({ physics: false });
-    //       } catch (e) {
-    //         console.warn("Physics disable failed:", e);
-    //       }
-    //     }
-    //   }, 500); // 500ms is usually enough
-    // });
-
-
     let clickTimeout = null;
     let lastClickedNode = null;
 
@@ -259,24 +244,38 @@ const Neo4jVisualization = ({ visData, dropdownNodeLimit, database }) => {
 
         // ... (keep your existing USES and EQUIVALENT cases the same) ...
         case 'USES':
-          // ... existing code ...
-          break;
+          {
+            const { from, to, color, id, ...rest } = edge;
+            tooltipText = Object.entries(rest)
+              .reduce((acc, [key, value]) => {
+                if (key === 'Name' || key === 'Key') {
+                  acc.top.push(`${key}: ${value}`);
+                }
+                else if (key.toLowerCase().includes('log')) {
+                  return acc;
+                }
+                else {
+                  acc.middle.push(`${key}: ${value}`);
+                }
+                return acc;
+              }, { top: [], middle: [], bottom: [] });
+
+            tooltipText = [...tooltipText.top, ...tooltipText.middle, ...tooltipText.bottom].join(' <br> ');
+            break;
+          }
         case 'EQUIVALENT':
-          // ... existing code ...
+          tooltipText = `stack: ${edge.stack} <br> dataset: ${edge.dataset} <br> Key: ${edge.Key}`;
           break;
         default:
           tooltipText = `referenceKey: ${edge.referenceKey} <br> type: ${edge.type}`;
           break;
       }
 
-      // Render the tooltip
       const tooltipElement = document.getElementById('edge-tooltip');
-      if (tooltipElement) {
-        tooltipElement.innerHTML = tooltipText;
-        tooltipElement.style.top = params.event.clientY + 'px';
-        tooltipElement.style.left = params.event.clientX + 'px';
-        tooltipElement.style.display = 'block';
-      }
+      tooltipElement.innerHTML = tooltipText;
+      tooltipElement.style.top = params.event.clientY + 'px';
+      tooltipElement.style.left = params.event.clientX + 'px';
+      tooltipElement.style.display = 'block';
     });
 
 
