@@ -241,8 +241,6 @@ const Neo4jVisualization = ({ visData, dropdownNodeLimit, database }) => {
             tooltipText = parts.join(' <br> ');
             break;
           }
-
-        // ... (keep your existing USES and EQUIVALENT cases the same) ...
         case 'USES':
           {
             const { from, to, color, id, ...rest } = edge;

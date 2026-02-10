@@ -1,7 +1,8 @@
+import React from 'react';
 import Navbar from '../components/NavbarApp';
 import Video from '../components/Video';
-import DynamicBody from "../components/AppHome";
 import { useParams } from 'react-router-dom';
+import AppBody from "../components/AppBody";
 
 const AppHome = () => {
     return (
@@ -12,7 +13,7 @@ const AppHome = () => {
         }}>
             <Navbar {...useParams()} />
             <Video {...useParams()} />
-            <DynamicBody {...useParams()} />
+            <AppBody {...useParams()} />
         </div>
     );
 };

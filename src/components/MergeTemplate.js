@@ -6,7 +6,7 @@ import * as XLSX from 'xlsx';
 import { ExcelRenderer } from 'react-excel-renderer';
 
 
-const Download_Merge = ({ database }) => {
+const MergeTemplate = ({ database }) => {
 
   const [inputValue, setInputValue] = useState('');
   const [file, setFile] = useState(null);
@@ -245,4 +245,4 @@ const Download_Merge = ({ database }) => {
   )
 }
 
-export default Download_Merge;
+export default MergeTemplate;

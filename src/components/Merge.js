@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom'
 import Divider from '@mui/material/Divider';
 import Propose_Merge from "./MergePropose"
 import JoinDatasets_Merge from "./MergeJoinDatasets"
-import Download_Merge from "./MergeDownload"
+import MergeTemplate from "./MergeTemplate"
 
 function TabPanel(props) {
   const { children, value, index, ...other } = props;
@@ -65,7 +65,7 @@ export default function Mergelayout({ database }) {
           <JoinDatasets_Merge database={database} />
         </TabPanel>
         <TabPanel value={value} index={2}>
-          <Download_Merge database={database} />
+          <MergeTemplate database={database} />
         </TabPanel>
       </Box>
       <Divider sx={{ marginTop: 3, marginBottom: 7, marginLeft: 1, marginRight: 1, backgroundColor: 'white' }} />
