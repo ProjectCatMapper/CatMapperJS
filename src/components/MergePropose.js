@@ -224,6 +224,7 @@ const Propose_Merge = ({ database }) => {
       }
       setData(result)
       setOpen(true);
+      downloadMerge(result);
     } catch (error) {
       console.error('Error submitting form:', error);
     }
@@ -232,8 +233,17 @@ const Propose_Merge = ({ database }) => {
     }
   };
 
-  const downloadMerge = async () => {
-    const worksheet = XLSX.utils.json_to_sheet(data);
+  const downloadMerge = (resultData) => {
+    const isInvalid = !resultData ||
+      (Array.isArray(resultData) && resultData.length === 0) ||
+      (typeof resultData === "object" && Object.keys(resultData).length === 0);
+
+    if (isInvalid) {
+      console.warn("Download aborted: No valid data provided.");
+      alert("There is no data available to download.");
+      return; // Exit the function early
+    }
+    const worksheet = XLSX.utils.json_to_sheet(resultData);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
     const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
@@ -568,20 +578,7 @@ const Propose_Merge = ({ database }) => {
       }} onClick={handleSubmit}>
         Submit
       </Button>
-      <Button variant="contained" sx={{
-        backgroundColor: 'black',
-        color: 'white',
-        '&:hover': {
-          backgroundColor: 'green',
-        },
-      }} onClick={downloadMerge}
-        disabled={
-          !data ||
-          (Array.isArray(data) && data.length === 0) ||
-          (typeof data === "object" && Object.keys(data).length === 0)
-        }>
-        Download Results
-      </Button>
+
       <Backdrop
         open={loading}
         style={{ color: '#fff', zIndex: 1200 }}
