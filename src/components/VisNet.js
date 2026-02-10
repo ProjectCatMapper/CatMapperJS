@@ -69,11 +69,17 @@ const Neo4jVisualization = ({ visData, dropdownNodeLimit, database }) => {
   };
 
   const filteredMap = new Map();
+  const currentid = visData["nodes"][0].CMID;
 
   visData["nodes"].forEach((item) => {
     const mostSpecific = getMostSpecificDomain(item.domain || []);
     if (mostSpecific && !filteredMap.has(mostSpecific)) {
       filteredMap.set(mostSpecific, item.color);
+    }
+    if (item.CMID === currentid) {
+      item.shape = 'triangle';
+    } else {
+      item.shape = 'dot';
     }
   });
 
@@ -95,7 +101,7 @@ const Neo4jVisualization = ({ visData, dropdownNodeLimit, database }) => {
   const tooltipRef = useRef(null);
 
   useEffect(() => {
-    const currentid = visData["nodes"][0].CMID
+
     const container = document.getElementById('network');
     const options = {
       nodes: {
