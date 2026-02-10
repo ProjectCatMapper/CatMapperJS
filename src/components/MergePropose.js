@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react'
-import { Box, Button, FormControlLabel, Radio, RadioGroup, Checkbox, Typography, Divider, Select, NativeSelect, TextField, MenuItem, FormControl, FormGroup, Snackbar, Alert, Paper, Tooltip, InputLabel } from '@mui/material';
+import { Box, Button, FormControlLabel, Radio, RadioGroup, Checkbox, Typography, Divider, Select, NativeSelect, TextField, MenuItem, FormControl, FormGroup, Snackbar, Alert, Paper, Tooltip } from '@mui/material';
 import * as XLSX from 'xlsx';
 import CircularProgress from '@mui/material/CircularProgress';
 import Backdrop from '@mui/material/Backdrop';
 import InfoIcon from '@mui/icons-material/Info';
 import { useMetadata } from './UseMetadata';
+import DownloadDatasetButton from './DownloadDatasetListButton';
 // import infodata from './infodata.json';
 
 const Propose_Merge = ({ database }) => {
@@ -54,7 +55,6 @@ const Propose_Merge = ({ database }) => {
         return res.json();
       })
       .then((data) => {
-        // Assuming data is in the format [{ label: "X", description: "Y" }, ...]
         setCategories(data);
       })
       .catch((err) => {
@@ -257,7 +257,10 @@ const Propose_Merge = ({ database }) => {
       padding: '16px',
     }}>
       <h2 style={{ color: 'black', padding: "1px" }}>Propose Merges</h2>
-      <h4 style={{ color: 'black', padding: "1px" }}>Select Datasets for Merging</h4>
+      <h4 style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        Select Datasets for Merging
+        <DownloadDatasetButton databaseName={database} fileName="dataset_list.xlsx" />
+      </h4>
       <Box sx={{ display: 'flex', alignItems: 'center', mt: 2 }}>
         <TextField
           label="Enter DatasetIDs separated by commas"

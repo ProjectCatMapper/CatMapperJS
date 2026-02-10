@@ -1,14 +1,14 @@
-#sociomapfooter{
+#appbody #focitable{
     color: white !important;
 }
 
-.footer{
+.body{
     width: 100%;
     padding: 6rem 0;
     background: rgba(0, 0, 0, .9);
 }
 
-.footer-container{
+.body-container{
     max-width: 1140px;
     margin: auto;
     display: grid;
@@ -21,12 +21,12 @@
     display: flex;
 }
 
-.footer h4{
+.body h4{
     font-size: 1.4rem;
     padding: 1rem 0;
 }
 
-.footer p{
+.body p{
     font-size: 1rem;
     padding: 1rem 0;
 }
