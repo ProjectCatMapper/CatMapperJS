@@ -1,7 +1,7 @@
 import React from 'react';
 import { Box, Divider, Link } from "@mui/material";
 import { Link as RouterLink } from 'react-router-dom';
-import image from "../assets/catmapperWhite.png";
+import image from "../assets/catmapperWhite.webp";
 
 const FooterLinks = () => {
     const linkStyle = {

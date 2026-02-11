@@ -13,7 +13,7 @@ import LinearProgress from '@mui/material/LinearProgress';
 import CircularProgress from '@mui/material/CircularProgress';
 import './Translate.css'
 import Divider from '@mui/material/Divider';
-import image from '../assets/catmapperWhite.png'
+import image from '../assets/catmapperWhite.webp'
 import { Link } from 'react-router-dom'
 import Tooltip from '@mui/material/Tooltip';
 import InfoIcon from '@mui/icons-material/Info';
@@ -410,7 +410,6 @@ function TranslateComponent({ database }) {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        //const response = await fetch("http://127.0.0.1:5001/getTranslatedomains?database=" +database,{
 
         const response = await fetch(`${process.env.REACT_APP_API_URL}/getTranslatedomains?database=` + database, {
           method: "GET",
@@ -520,15 +519,15 @@ function TranslateComponent({ database }) {
       <table style={{ width: '100%', borderCollapse: 'collapse' }}>
         <thead>
           <tr>
-            <th style={{ borderBottom: '1px solid #ddd', textAlign: 'left', padding: '8px' }}>Label</th>
-            <th style={{ borderBottom: '1px solid #ddd', textAlign: 'left', padding: '8px' }}>Description</th>
+            <th id="tooltip-table">Label</th>
+            <th id="tooltip-table">Description</th>
           </tr>
         </thead>
         <tbody>
           {categories.map((category, index) => (
             <tr key={index}>
-              <td style={{ borderBottom: '1px solid #ddd', padding: '8px' }}>{category.label === "DISTRICT" ? "AREA" : category.label}</td>
-              <td style={{ borderBottom: '1px solid #ddd', padding: '8px' }}>{category.description}</td>
+              <td id="tooltip-table">{category.label === "DISTRICT" ? "AREA" : category.label}</td>
+              <td id="tooltip-table">{category.description}</td>
             </tr>
           ))}
         </tbody>
@@ -542,8 +541,8 @@ function TranslateComponent({ database }) {
       <table style={{ width: '100%', borderCollapse: 'collapse' }}>
         <thead>
           <tr>
-            <th style={{ borderBottom: '1px solid #ddd', textAlign: 'left', padding: '8px' }}>Label</th>
-            <th style={{ borderBottom: '1px solid #ddd', textAlign: 'left', padding: '8px' }}>Description</th>
+            <th id="tooltip-table">Label</th>
+            <th id="tooltip-table">Description</th>
           </tr>
         </thead>
         <tbody>
@@ -552,8 +551,8 @@ function TranslateComponent({ database }) {
               .filter(desc => selectedCategory[firstDropdownValue === "AREA" ? "DISTRICT" : firstDropdownValue].includes(desc.label))
               .map((category, index) => (
                 <tr key={index}>
-                  <td style={{ borderBottom: '1px solid #ddd', padding: '8px' }}>{category.label}</td>
-                  <td style={{ borderBottom: '1px solid #ddd', padding: '8px' }}>{category.description}</td>
+                  <td id="tooltip-table">{category.label}</td>
+                  <td id="tooltip-table">{category.description}</td>
                 </tr>
               ))
           ) : (
@@ -574,7 +573,7 @@ function TranslateComponent({ database }) {
       <Box sx={{ display: 'flex', flexDirection: 'row', gap: 0.5, flexGrow: 1 }}>
         <div style={{ width: "26%", backgroundColor: '#e0e0e0', padding: '20px', border: '1px solid #ccc', borderRadius: '10px', overflow: "auto" }}>
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <p style={{ fontWeight: "bold", marginLeft: 7, padding: "2px" }}>Choose spreadsheet to match</p>
+            <p class="dropdown-labels">Choose spreadsheet to match</p>
             <Tooltip title={getTooltipContent('UPLOAD_INSTRUCTION')} arrow>
               <Button startIcon={<InfoIcon sx={{ height: '28px', width: '28px' }} />} />
             </Tooltip>
@@ -584,7 +583,7 @@ function TranslateComponent({ database }) {
           {selectedFile !== null && (
             <div>
               <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                <p style={{ color: 'White', fontWeight: "bold", marginLeft: 7, padding: "2px" }}>Choose spreadsheet column to match</p>
+                <p class="dropdown-labels">Choose spreadsheet column to match</p>
                 <Tooltip title={getTooltipContent("INPUT_COLUMN")} arrow>
                   <Button startIcon={<InfoIcon sx={{ height: '28px', width: '28px' }} />} />
                 </Tooltip>
@@ -604,7 +603,7 @@ function TranslateComponent({ database }) {
             </div>
           )}
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <p style={{ color: 'White', fontWeight: "bold", marginLeft: 7, padding: "2px" }}>Select category domain</p>
+            <p class="dropdown-labels">Select category domain</p>
             <Tooltip title={tooltipContent} arrow>
               <Button startIcon={<InfoIcon sx={{ height: '28px', width: '28px' }} />} />
             </Tooltip>
@@ -624,7 +623,7 @@ function TranslateComponent({ database }) {
           {secondDropdownOptions.length > 1 && (
             <>
               <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                <p style={{ color: 'White', fontWeight: "bold", marginLeft: 7, padding: "2px" }}>Select category sub-domain</p>
+                <p class="dropdown-labels">Select category sub-domain</p>
                 <Tooltip title={tooltipContent2} arrow>
                   <Button startIcon={<InfoIcon sx={{ height: '28px', width: '28px' }} />} />
                 </Tooltip>
@@ -644,7 +643,7 @@ function TranslateComponent({ database }) {
             </>
           )}
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <p style={{ color: 'White', fontWeight: "bold", marginLeft: 7, padding: "2px" }}>CatMapper Property to Search</p>
+            <p class="dropdown-labels">CatMapper Property to Search</p>
             <Tooltip title={getTooltipContent("MATCH_PROPERTY")} arrow>
               <Button startIcon={<InfoIcon sx={{ height: '28px', width: '28px' }} />} />
             </Tooltip>
@@ -692,7 +691,7 @@ function TranslateComponent({ database }) {
               </Box>
               {selectedFile !== null && isChecked && (
                 <div>
-                  <p style={{ color: 'White', fontWeight: "bold", marginLeft: 7, padding: "2px" }}>Select column with Country IDs</p>
+                  <p class="dropdown-labels">Select column with Country IDs</p>
                   <Select
                     label="Third Dropdown"
                     style={{ height: 40 }}
@@ -718,7 +717,7 @@ function TranslateComponent({ database }) {
               </Box>
               {selectedFile !== null && isCheckedtwo && (
                 <div>
-                  <p style={{ color: 'White', fontWeight: "bold", marginLeft: 7, padding: "2px" }}>Select Column with context IDs</p>
+                  <p class="dropdown-labels">Select Column with context IDs</p>
                   <Select
                     label="Fourth Dropdown"
                     style={{ height: 40 }}
@@ -744,7 +743,7 @@ function TranslateComponent({ database }) {
               </Box>
               {selectedFile !== null && isCheckedthree && (
                 <div>
-                  <p style={{ color: 'White', fontWeight: "bold", marginLeft: 7, padding: "2px" }}>Select column with Dataset IDs</p>
+                  <p class="dropdown-labels">Select column with Dataset IDs</p>
                   <Select
                     label="Fifth Dropdown"
                     style={{ height: 40 }}
@@ -767,12 +766,12 @@ function TranslateComponent({ database }) {
               )}
               <br />
               <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                <p style={{ color: 'White', fontWeight: "bold", marginLeft: 7, padding: "2px" }}>Time range (years)</p>
+                <p class="dropdown-labels">Time range (years)</p>
                 <Tooltip title={getTooltipContent("TIME_RANGE")} arrow>
                   <Button startIcon={<InfoIcon sx={{ height: '28px', width: '28px' }} />} />
                 </Tooltip>
               </Box>
-              <p style={{ color: 'White', fontWeight: "bold", marginLeft: 7, padding: "2px" }}>from &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; to</p>
+              <p class="dropdown-labels">from &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; to</p>
               <input
                 type="text"
                 id="myTextbox"

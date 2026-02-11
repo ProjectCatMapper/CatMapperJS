@@ -1,5 +1,5 @@
-import archamapLogo from '../assets/archamapLogo.png'
-import sociomapLogo from '../assets/sociomapLogo.png'
+import archamapLogo from '../assets/archamapLogo.webp'
+import sociomapLogo from '../assets/sociomapLogo.webp'
 
 export const APP_LOGOS = {
     sociomap: sociomapLogo,

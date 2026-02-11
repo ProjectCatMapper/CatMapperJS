@@ -2,8 +2,8 @@ import React from 'react'
 import Navbar from '../components/NavbarHome'
 import { createTheme, ThemeProvider, styled } from '@mui/material/styles';
 import { Container, Typography, Link, Box, Grid } from '@mui/material';
-import lic from "./../assets/GNUlicense.png"
-import lic1 from "./../assets/CClicense.png"
+import lic from "./../assets/GNUlicense.webp"
+import lic1 from "./../assets/CClicense.webp"
 
 const theme = createTheme({
   spacing: 4,

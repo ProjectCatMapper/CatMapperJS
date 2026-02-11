@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { FaBars, FaTimes } from 'react-icons/fa'
 import './NavbarApp.css'
-import image from '../assets/catmapperWhite.png'
+import image from '../assets/catmapperWhite.webp'
 import Button from '@mui/material/Button';
 import { useAuth } from './AuthContext';
 import { APP_LOGOS } from './Logos';

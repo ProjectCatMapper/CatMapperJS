@@ -222,7 +222,7 @@ const Sociomap_UserGuide = () => {
         Greenland.</p>
       <p><strong>Figure 1. Contents of the USES tie from Geonames to
         Greenland.</strong></p>
-      <p><img src="media/image1.png"
+      <p><img src="media/image1.webp"
         style={{ width: 5.79167, height: 3.23342 }} /></p>
       <p>Indeed, whenever CatMapper catalogues how a dataset uses a specific
         category, it stores this in such a <strong>USES tie</strong> from the
@@ -272,7 +272,7 @@ const Sociomap_UserGuide = () => {
         Yoruba.</p>
       <ol type="1">
         <li><p>Go to https://www.catmapper.org/js/sociomap</p></li>
-        <li><p>Click on the <em>Explore</em> button.<img src="media/image2.png"
+        <li><p>Click on the <em>Explore</em> button.<img src="media/image2.webp"
           style={{ width: 6.5, height: 3.18472 }}
           alt="A screenshot of a website Description automatically generated" /></p></li>
         <li><p>Under <em>Select category domain</em>, choose which type of
@@ -292,13 +292,13 @@ const Sociomap_UserGuide = () => {
         <li><p>Once you press the <em>Search</em> icon, a set of search results
           will appear below. </p></li>
       </ol>
-      <p><img src="media/image3.png"
+      <p><img src="media/image3.webp"
         style={{ width: 6.52083, height: 2.53472 }} /></p>
       <ol start="7" type="1">
         <li>Click on the row for the search result you would like to explore,
           and a <em>Info page</em> will open. </li>
       </ol>
-      <p><img src="media/image4.png"
+      <p><img src="media/image4.webp"
         style={{ width: 6.54167, height: 2.84028 }} /></p>
       <p>The page that opens will include contextual information about the
         category, including the relevant countries and languages, datasets
@@ -323,7 +323,7 @@ const Sociomap_UserGuide = () => {
         places or times. In those cases, there may be multiple rows for the same
         ethnicity from the same dataset.</p>
       <blockquote>
-        <p><img src="media/image5.png"
+        <p><img src="media/image5.webp"
           style={{ width: 6.5, height: 2.82219 }} /></p>
       </blockquote>
       <p>In this case, there are many different datasets that contain
@@ -341,7 +341,7 @@ const Sociomap_UserGuide = () => {
       <p>This will show links to all datasets with data relevant to the
         category.</p>
       <figure>
-        <img src="media/image6.png" style={{ width: 6.5, height: 4.23611 }}
+        <img src="media/image6.webp" style={{ width: 6.5, height: 4.23611 }}
           alt="A screenshot of a computer Description automatically generated" />
         <figcaption aria-hidden="true">A screenshot of a computer Description
           automatically generated</figcaption>
@@ -356,7 +356,7 @@ const Sociomap_UserGuide = () => {
         view it from the ‘Network Explorer’ tab for Yoruba. If you hover over
         the node, a summary of the dataset will be displayed.</p>
       <figure>
-        <img src="media/image7.png" style={{ width: 5.81308, height: 3.94681 }}
+        <img src="media/image7.webp" style={{ width: 5.81308, height: 3.94681 }}
           alt="A screenshot of a computer Description automatically generated" />
         <figcaption aria-hidden="true">A screenshot of a computer Description
           automatically generated</figcaption>
@@ -365,7 +365,7 @@ const Sociomap_UserGuide = () => {
         dataset. Here you can see all the other categories that are also
         described within that dataset.</p>
       <figure>
-        <img src="media/image8.png" style={{ width: 5.84079, height: 4.03738 }}
+        <img src="media/image8.webp" style={{ width: 5.84079, height: 4.03738 }}
           alt="A screenshot of a computer Description automatically generated" />
         <figcaption aria-hidden="true">A screenshot of a computer Description
           automatically generated</figcaption>
@@ -392,7 +392,7 @@ const Sociomap_UserGuide = () => {
           with the Key V131: 298</p></li>
       </ol>
       <blockquote>
-        <p><img src="media/image9.png"
+        <p><img src="media/image9.webp"
           style={{ width: 6.49306, height: 2.93056 }} /></p>
       </blockquote>
       <h2
@@ -409,7 +409,7 @@ const Sociomap_UserGuide = () => {
         ties, and USES ties which describe how different datasets encode the
         category.</p>
       <figure>
-        <img src="media/image10.png" style={{ width: 5.20729, height: 5.01869 }}
+        <img src="media/image10.webp" style={{ width: 5.20729, height: 5.01869 }}
           alt="A screenshot of a computer Description automatically generated" />
         <figcaption aria-hidden="true">A screenshot of a computer Description
           automatically generated</figcaption>
@@ -420,7 +420,7 @@ const Sociomap_UserGuide = () => {
         and Ede Ije are visible). You can also see that Yoruba is contained
         within the broader <em>Southeastern</em> category.</p>
       <figure>
-        <img src="media/image11.png" style={{ width: 6.48611, height: 5.02778 }}
+        <img src="media/image11.webp" style={{ width: 6.48611, height: 5.02778 }}
           alt="A screenshot of a computer Description automatically generated" />
         <figcaption aria-hidden="true">A screenshot of a computer Description
           automatically generated</figcaption>
@@ -428,7 +428,7 @@ const Sociomap_UserGuide = () => {
       <p>Changing the <em>Relationship</em> dropdown to RELIGION_OF, you can
         see that the religion practiced by the Yoruba is Isese.</p>
       <figure>
-        <img src="media/image12.png" style={{ width: 6.48611, height: 5.91667 }}
+        <img src="media/image12.webp" style={{ width: 6.48611, height: 5.91667 }}
           alt="A screenshot of a computer Description automatically generated" />
         <figcaption aria-hidden="true">A screenshot of a computer Description
           automatically generated</figcaption>
@@ -468,10 +468,10 @@ const Sociomap_UserGuide = () => {
         <li><p>Once you press the <em>Search</em> icon, a set of search results
           will appear below.</p></li>
       </ol>
-      <p><img src="media/image13.png"
+      <p><img src="media/image13.webp"
         style={{ width: 6.5, height: 2.93056 }} /></p>
       <p>Here, you can see a list of all the datasets stored in SocioMap.</p>
-      <p><img src="media/image14.png"
+      <p><img src="media/image14.webp"
         style={{ width: 6.47917, height: 2.93056 }} />By checking the <em>Advanced
           search</em> box, you can then choose a country of interest from the
         <em>Country</em> dropdown menu. Here, we are looking at the datasets
@@ -491,7 +491,7 @@ const Sociomap_UserGuide = () => {
         <li><p>Once you press the <em>Search</em> button, a set of search
           results will appear below.</p></li>
       </ol>
-      <p><img src="media/image15.png"
+      <p><img src="media/image15.webp"
         style={{ width: 6.47917, height: 2.88889 }} /></p>
       <p>In this case, we are looking for all the ethnicities associated with
         Ghana. You can see that there are a total of 166 associated ethnicities

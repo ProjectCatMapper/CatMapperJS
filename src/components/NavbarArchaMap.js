@@ -2,8 +2,8 @@ import React, { useState } from 'react'
 import { useParams, Link } from 'react-router-dom';
 import { FaBars, FaTimes } from 'react-icons/fa'
 import './NavbarHome.css'
-import image from '../assets/catmapperWhite.png'
-import image1 from '../assets/archamapLogo.png'
+import image from '../assets/catmapperWhite.webp'
+import image1 from '../assets/archamapLogo.webp'
 import Button from '@mui/material/Button';
 import { useAuth } from './AuthContext';
 

@@ -2,8 +2,8 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { FaBars, FaTimes } from 'react-icons/fa'
 import './NavbarHome.css'
-import catmapperLogo from '../assets/catmapperWhite.png'
-import sociomapLogo from '../assets/sociomapLogo.png'
+import catmapperLogo from '../assets/catmapperWhite.webp'
+import sociomapLogo from '../assets/sociomapLogo.webp'
 import Button from '@mui/material/Button';
 import { useAuth } from './AuthContext';
 

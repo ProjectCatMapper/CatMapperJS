@@ -26,7 +26,7 @@ const LeafletCanvasMarker = ({ data }) => {
 
     // Define icon
     const icon = L.icon({
-      iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
+      iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.webp',
       iconSize: [20, 18],
       iconAnchor: [10, 9],
     });

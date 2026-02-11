@@ -1,6 +1,6 @@
 import { React, useState } from 'react';
 import { Box, Tabs, Tab, Button, Typography, TextField } from '@mui/material';
-import image from '../assets/catmapperWhite.png'
+import image from '../assets/catmapperWhite.webp'
 import { Link } from 'react-router-dom'
 import Divider from '@mui/material/Divider';
 import Propose_Merge from "./MergePropose"

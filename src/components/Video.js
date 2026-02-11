@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import './video.css'
 
-import mainvideo from "../assets/world.mp4"
+import mainvideo from "../assets/world.webm"
 
 const Video = ({ database }) => {
     const [displayData, setDisplayData] = useState([]);
