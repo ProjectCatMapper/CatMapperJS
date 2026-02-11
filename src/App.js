@@ -1,8 +1,11 @@
 import React, { useEffect, Suspense, lazy } from "react";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, useLocation } from "react-router-dom";
 
 import ProtectedRoute from './components/ProtectedRoute';
 import DynamicPropertiesForm from './components/EditMetadata';
+
+import ReactGA from 'react-ga4';
+import CookieBanner from './components/CookieBanner';
 
 // Lazy load all page components
 const Map1 = lazy(() => import('./routes/Map1'));
@@ -32,6 +35,16 @@ const FAQ = lazy(() => import('./routes/FAQ'));
 const AppHome = lazy(() => import('./routes/AppHome'));
 const LogsViewer = lazy(() => import('./routes/LogsViewer'));
 
+const usePageTracking = () => {
+  const location = useLocation();
+
+  useEffect(() => {
+    const consent = localStorage.getItem('cookie-consent');
+    if (consent === 'true') {
+      ReactGA.send({ hitType: "pageview", page: location.pathname });
+    }
+  }, [location]);
+};
 
 
 const App = () => {
@@ -48,9 +61,11 @@ const App = () => {
   //     window.removeEventListener('popstate', handlePopState);
   //   };
   // }, []);
+  usePageTracking();
 
   return (
     <Suspense fallback={<div style={{ padding: '20px', textAlign: 'center' }}>Loading...</div>}>
+      <CookieBanner />
       <Routes>
         <Route path='/' element={<Catmapper />} />
         <Route path='/:database' element={<AppHome />} />
