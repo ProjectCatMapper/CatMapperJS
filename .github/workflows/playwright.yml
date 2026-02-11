@@ -17,12 +17,18 @@ jobs:
       with:
         node-version: 20
 
-    - name: Verify API Accessibility
+    - name: Sanity Check API Content
       run: |
-        echo "Checking DNS and Connectivity to API..."
-        ping -c 3 apitest.catmapper.org
-        echo "Testing API Response..."
-        curl -v https://apitest.catmapper.org/
+        echo "Fetching API homepage..."
+        RESPONSE=$(curl -sL https://apitest.catmapper.org)
+        
+        if echo "$RESPONSE" | grep -q "Welcome to the CatMapper API"; then
+          echo "✅ API is up and serving the correct content!"
+        else
+          echo "❌ API Content Mismatch!"
+          echo "Received: $RESPONSE"
+          exit 1
+        fi
     
     - name: Install dependencies
       run: npm ci
