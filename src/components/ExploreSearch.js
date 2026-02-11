@@ -13,6 +13,7 @@ import CircularProgress from '@mui/material/CircularProgress';
 import { useMetadata } from './UseMetadata';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
+import { useSearchParams } from 'react-router-dom';
 
 const BootstrapInput = styled(InputBase)(({ theme }) => ({
   'label + &': {
@@ -47,6 +48,8 @@ const BootstrapInput = styled(InputBase)(({ theme }) => ({
 }));
 
 export default function Searchbar({ database }) {
+
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const [domainDrop, setdomainDrop] = React.useState('ALL NODES');
 
@@ -332,23 +335,54 @@ export default function Searchbar({ database }) {
     </div>
   );
 
-  function handleClick(tvalue, domain) {
+  function handleSearch(tvalue, domain) {
     setLoading(true);
-    fetch(`${process.env.REACT_APP_API_URL}/search?domain=` + domain + "&property=" + selectedOption + "&term=" + encodeURIComponent(tvalue) + "&database=" + database + "&query=false" + "&yearStart=" + yearStart + "&yearEnd=" + yearEnd + "&country=" + selectedcountry + "&context=" + contextID + "&dataset=" + datasetID,
-      {
-        method: "GET"
-      })
-      .then(response => {
-        return response.json()
-      })
+
+    // 1. Define the params object first
+    const params = {
+      domain: domain,
+      property: selectedOption,
+      term: tvalue,
+      database: database,
+      yearStart: yearStart,
+      yearEnd: yearEnd,
+      country: selectedcountry,
+      context: contextID,
+      dataset: datasetID
+    };
+
+    // 2. "clean" the object to remove null/empty values
+    const cleanParams = Object.fromEntries(
+      Object.entries(params).filter(([_, value]) => value != null && value !== "")
+    );
+
+    // 3. Update the URL
+    setSearchParams(cleanParams);
+  }
+
+  React.useEffect(() => {
+    // Only trigger the fetch if there's actually a 'term' or 'domain' in the URL
+    const term = searchParams.get("term");
+    const dom = searchParams.get("domain");
+
+    if (!term && !dom) return;
+
+    setLoading(true);
+
+    // We build the query string directly from the URL params
+    // .toString() handles the encoding (like & and ?) for you!
+    fetch(`${process.env.REACT_APP_API_URL}/search?${searchParams.toString()}&query=false`, {
+      method: "GET"
+    })
+      .then(response => response.json())
       .then(data => {
-        if (data.count[0].totalCount === 0) {
+        if (!data.data || data.count[0].totalCount === 0) {
           setUsers([]);
           setSnackbarOpen(true);
         } else {
           setUsers(data.data);
-          setqcount(data.count[0].totalCount)
-          setCMIDDownload(data.count[0].CMID)
+          setqcount(data.count[0].totalCount);
+          setCMIDDownload(data.count[0].CMID);
         }
       })
       .catch(error => {
@@ -358,7 +392,7 @@ export default function Searchbar({ database }) {
       .finally(() => {
         setLoading(false);
       });
-  }
+  }, [searchParams]);
 
   return (
     <div style={{ height: "auto" }}>
@@ -395,13 +429,13 @@ export default function Searchbar({ database }) {
             }}
             onKeyDown={(event) => {
               if (event.key === "Enter") {
-                handleClick(tvalue, advdomainDrop.trim())
+                handleSearch(tvalue, advdomainDrop.trim())
               }
             }}
           />
           <NeonButton
             type="searchOutlined"
-            onClick={() => handleClick(tvalue, advdomainDrop.trim())}
+            onClick={() => handleSearch(tvalue, advdomainDrop.trim())}
           />
           {loading && (
             <div style={{ position: "absolute", top: "40vh", left: "50vw", transform: "translate(-50%, -50%)" }}>
