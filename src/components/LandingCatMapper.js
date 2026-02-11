@@ -1,8 +1,8 @@
 import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { FaBars, FaTimes } from 'react-icons/fa'
-import logo from '../assets/catmapperWhite.png'
-import backgroundImage from '../assets/earth.jpg'
+import logo from '../assets/catmapperWhite.webp'
+import backgroundImage from '../assets/earth.webp'
 import './HomeCatMapper.css'
 
 const CatHome = () => {

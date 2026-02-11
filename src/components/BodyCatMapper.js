@@ -3,7 +3,7 @@ import Grid from "@mui/material/Grid";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import Typography from "@mui/material/Typography";
-// import image from "../assets/white.png";
+// import image from "../assets/white.webp";
 // import Link from "@mui/material/Link";
 import "./BodyCatMapper.css";
 // import Divider from "@mui/material/Divider";

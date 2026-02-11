@@ -78,7 +78,7 @@ const LeafletMap = ({ points, mapt, sources, sourceColorMap, stringToColor }) =>
       <SetViewToDataBounds points={points} polygons={mapt} />
       <GeoJSON data={mapt} style={getFeatureStyle} onEachFeature={onEachFeature} />
       <TileLayer
-        url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+        url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.webp"
         attribution='&copy; <a href="https://carto.com/">CARTO</a> contributors'
       />
       {points.length !== 0 ? (

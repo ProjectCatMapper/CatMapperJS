@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { FaBars, FaTimes } from 'react-icons/fa'
 import './NavbarHome.css'
-import image from '../assets/catmapperWhite.png'
+import image from '../assets/catmapperWhite.webp'
 
 const Navbar = () => {
     const [click, setClick] = useState(false)
