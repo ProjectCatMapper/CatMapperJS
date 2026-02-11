@@ -2,6 +2,9 @@ name: Playwright Tests
 on:
   push:
     branches: [ main, master ]
+    paths:
+      - 'src/**'
+      - 'tests/**'
   pull_request:
     branches: [ main, master ]
 jobs:
@@ -13,12 +16,54 @@ jobs:
     - uses: actions/setup-node@v4
       with:
         node-version: 20
+
+    - name: Verify API Accessibility
+      run: |
+        echo "Checking DNS and Connectivity to API..."
+        ping -c 3 apitest.catmapper.org
+        echo "Testing API Response..."
+        curl -v https://apitest.catmapper.org/
     
     - name: Install dependencies
       run: npm ci
       
-    - name: Install Playwright Browsers
+    - name: Get Playwright version
+      id: playwright-version
+      run: echo "PLAYWRIGHT_VERSION=$(node -e "console.log(require('@playwright/test/package.json').version)")" >> $GITHUB_ENV
+
+    # 2. Look for existing browsers in the cache
+    - name: Cache Playwright Browsers
+      uses: actions/cache@v4
+      id: playwright-cache
+      with:
+        path: ~/.cache/ms-playwright
+        key: ${{ runner.os }}-playwright-${{ env.PLAYWRIGHT_VERSION }}
+
+    # 3. Only download browsers if the cache was NOT found (hit != 'true')
+    - name: Install Playwright Browsers & Deps
+      if: steps.playwright-cache.outputs.cache-hit != 'true'
       run: npx playwright install --with-deps
+
+    # 4. If cache WAS found, we still need to install the OS-level system dependencies
+    - name: Install Playwright OS dependencies
+      if: steps.playwright-cache.outputs.cache-hit == 'true'
+      run: npx playwright install-deps
+
+    - name: Start React App
+      run: npm start & # The '&' runs it in the background
+
+    - name: Wait for server
+      run: npx wait-on http://localhost:3000 --timeout 60000
+
+    - name: Run Playwright tests
+      run: npx playwright test
+
+    - uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: playwright-report
+        path: playwright-report/
+        retention-days: 30
 
     - name: Start React App
       run: npm start & # The '&' runs it in the background
