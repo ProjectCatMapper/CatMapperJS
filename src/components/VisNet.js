@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useCallback, useEffect, useState, useRef } from 'react';
 import { Network } from 'vis-network';
 import { useNavigate } from 'react-router-dom'
 
@@ -95,9 +95,86 @@ const Neo4jVisualization = ({ visData, dropdownNodeLimit, database }) => {
   });
 
   const uniqueArray = Array.from(uniqueMap.values());
-  const [tooltipContent, setTooltipContent] = useState(null);
-  const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
-  const tooltipRef = useRef(null);
+  const [nodeInfo, setNodeInfo] = useState(null);
+  const [edgeInfo, setEdgeInfo] = useState(null);
+  const nodeInfoRef = useRef(null);
+  const edgeInfoRef = useRef(null);
+
+  const navigateToNode = useCallback((cmid) => {
+    if (!cmid || cmid === currentid) return;
+    navigate({ pathname: `/${database}/${cmid}/network` });
+    window.location.reload();
+  }, [currentid, database, navigate]);
+
+  const formatNodeDetails = useCallback((nodeId) => {
+    const node = visData.nodes.find(obj => obj.id === nodeId);
+    if (!node) return null;
+
+    let details = (node.tooltipcon || []).filter(
+      item => item !== 'SocioMapID' && item !== 'SocioMapName'
+    );
+    const cmItems = details.filter(item => ['CMID', 'CMName'].includes(item.split(':')[0].trim()));
+    const glottoItems = details.filter(item => item.split(':')[0].trim().toLowerCase() === 'glottocode');
+    const ISOItems = details.filter(item => item.split(':')[0].trim() === 'ISO3');
+    const FIPSItems = details.filter(item => item.split(':')[0].trim() === 'FIPS');
+    details = details.filter(
+      item => !['CMID', 'CMName', 'glottocode', 'ISO3', 'FIPS'].includes(item.split(':')[0].trim()) &&
+        !item.toLowerCase().includes('log')
+    );
+
+    return {
+      cmid: node.CMID,
+      lines: [...cmItems, ...glottoItems, ...ISOItems, ...FIPSItems, ...details],
+    };
+  }, [visData.nodes]);
+
+  const formatEdgeDetails = useCallback((edgeId) => {
+    const edge = visData.edges.find(item => item.id === edgeId);
+    if (!edge) return [];
+
+    const cleanAndFormat = (val) => {
+      if (val === null || val === undefined) return null;
+      const parts = String(val).split(',');
+      const validParts = parts.filter(part => {
+        const p = part.trim().toUpperCase();
+        return p !== "NULL" && p !== "" && p !== "UNDEFINED";
+      });
+      return validParts.length > 0 ? validParts.join(', ') : null;
+    };
+
+    if (edge.type === 'CONTAINS') {
+      const lines = [];
+      const dateVal = cleanAndFormat(edge.eventDate);
+      const typeVal = cleanAndFormat(edge.eventType);
+      const refKey = cleanAndFormat(edge.referenceKey);
+      if (dateVal) lines.push(`eventDate: ${dateVal}`);
+      if (typeVal) lines.push(`eventType: ${typeVal}`);
+      if (refKey) lines.push(`referenceKey: ${refKey}`);
+      lines.push(`type: ${edge.type}`);
+      return lines;
+    }
+
+    if (edge.type === 'USES') {
+      const { from, to, color, id, ...rest } = edge;
+      const grouped = Object.entries(rest).reduce((acc, [key, value]) => {
+        if (key === 'Name' || key === 'Key') {
+          acc.top.push(`${key}: ${value}`);
+        } else if (key.toLowerCase().includes('log')) {
+          return acc;
+        } else {
+          acc.middle.push(`${key}: ${value}`);
+        }
+        return acc;
+      }, { top: [], middle: [], bottom: [] });
+      return [...grouped.top, ...grouped.middle, ...grouped.bottom];
+    }
+
+    if (edge.type === 'EQUIVALENT') {
+      return [`stack: ${edge.stack}`, `dataset: ${edge.dataset}`, `Key: ${edge.Key}`];
+    }
+
+    return [`referenceKey: ${edge.referenceKey}`, `type: ${edge.type}`];
+  }, [visData.edges]);
 
   useEffect(() => {
 
@@ -156,139 +233,89 @@ const Neo4jVisualization = ({ visData, dropdownNodeLimit, database }) => {
       freezeNetwork();
     }, 800);
 
-    let clickTimeout = null;
+    let singleClickTimer = null;
+    let holdTimer = null;
+    let mousedownNodeId = null;
+
+    const clearTimers = () => {
+      if (singleClickTimer) {
+        clearTimeout(singleClickTimer);
+        singleClickTimer = null;
+      }
+      if (holdTimer) {
+        clearTimeout(holdTimer);
+        holdTimer = null;
+      }
+    };
+
+    network.on('mousedown', (params) => {
+      const nodeId = network.getNodeAt(params.pointer.DOM);
+      mousedownNodeId = nodeId || null;
+      if (!mousedownNodeId) return;
+
+      holdTimer = setTimeout(() => {
+        const nodeData = visData.nodes.find(obj => obj.id === mousedownNodeId);
+        if (nodeData?.CMID && nodeData.CMID !== currentid) {
+          navigateToNode(nodeData.CMID);
+        }
+      }, 1500);
+    });
+
+    network.on('mouseup', () => {
+      if (holdTimer) {
+        clearTimeout(holdTimer);
+        holdTimer = null;
+      }
+      mousedownNodeId = null;
+    });
+
+    network.on('dragStart', clearTimers);
+    network.on('dragging', clearTimers);
+
+    network.on('doubleClick', (params) => {
+      clearTimers();
+      if (!params.nodes.length) return;
+      const nodeData = visData.nodes.find(obj => obj.id === params.nodes[0]);
+      if (nodeData?.CMID && nodeData.CMID !== currentid) {
+        navigateToNode(nodeData.CMID);
+      }
+    });
 
     network.on('click', (params) => {
-      if (params.nodes.length === 0) return;
-
-      if (clickTimeout !== null) {
-        // DOUBLE CLICK DETECTED
-        clearTimeout(clickTimeout);
-        clickTimeout = null;
-
-        const clickedNodeId = params.nodes[0];
-        const nodeData = visData.nodes.find(obj => obj.id === clickedNodeId);
-        if (nodeData.CMID !== currentid) {
-          navigate({ pathname: `/${database}/${nodeData.CMID}/network` });
-          window.location.reload();
-        }
-      } else {
-        // SINGLE CLICK START
-        clickTimeout = setTimeout(() => {
-          if (params.nodes.length > 0 && params.nodes[0].length > -1) {
-            let tooltipContent = visData.nodes.find(obj => obj.id === params.nodes[0]).tooltipcon.filter(item => item !== 'SocioMapID' && item !== 'SocioMapName');
-            const cmItems = tooltipContent.filter(item => ['CMID', 'CMName'].includes(item.split(':')[0].trim()));
-            const glottoItems = tooltipContent.filter(item => item.split(':')[0].trim().toLowerCase() === 'glottocode');
-            const ISOItems = tooltipContent.filter(item => item.split(':')[0].trim() === 'ISO3');
-            const FIPSItems = tooltipContent.filter(item => item.split(':')[0].trim() === 'FIPS');
-            tooltipContent = tooltipContent.filter(item => !['CMID', 'CMName', 'glottocode', 'ISO3', 'FIPS'].includes(item.split(':')[0].trim()) && !item.toLowerCase().includes('log'));
-
-            tooltipContent = [...cmItems, ...glottoItems, ...ISOItems, ...FIPSItems, ...tooltipContent];
-
-            setTooltipContent(tooltipContent.map((item, index) => <span key={index}>{item}<br /></span>));
-            setTooltipPosition({ x: params.pointer.DOM.x, y: params.pointer.DOM.y });
-          }
-          clickTimeout = null;
-        }, 750); // Increased to 750ms for touchpad friendliness
+      if (!params.nodes.length) {
+        setNodeInfo(null);
+        return;
       }
-    });
 
+      const nodeDetails = formatNodeDetails(params.nodes[0]);
+      if (!nodeDetails) return;
 
-    network.on("hoverEdge", function (params) {
-      let tooltipText;
-      const edgeId = params.edge;
-      const edge = visData["edges"].find(edge => edge["id"] === edgeId);
-
-      // Helper: Splits data by commas, removes "NULL"s, and rejoins valid parts
-      const cleanAndFormat = (val) => {
-        if (val === null || val === undefined) return null;
-
-        // 1. Convert to string and split by comma
-        //    (Handles "1996,NULL" AND ["1996", "NULL"])
-        const parts = String(val).split(',');
-
-        // 2. Filter out bad values
-        const validParts = parts.filter(part => {
-          const p = part.trim().toUpperCase();
-          return p !== "NULL" && p !== "" && p !== "UNDEFINED";
+      singleClickTimer = setTimeout(() => {
+        setNodeInfo({
+          ...nodeDetails,
+          position: { x: params.pointer.DOM.x, y: params.pointer.DOM.y },
         });
-
-        // 3. Return null if nothing is left, otherwise join with ", "
-        return validParts.length > 0 ? validParts.join(', ') : null;
-      };
-
-      switch (edge.type) {
-        case 'CONTAINS':
-          {
-            const parts = [];
-
-            // Clean the values first
-            const dateVal = cleanAndFormat(edge.eventDate);
-            const typeVal = cleanAndFormat(edge.eventType);
-            const refKey = cleanAndFormat(edge.referenceKey);
-
-            // Only push if we have valid data left
-            if (dateVal) {
-              parts.push(`eventDate: ${dateVal}`);
-            }
-
-            if (typeVal) {
-              parts.push(`eventType: ${typeVal}`);
-            }
-
-            if (refKey) {
-              parts.push(`referenceKey: ${refKey}`);
-            }
-
-            parts.push(`type: ${edge.type}`);
-
-            tooltipText = parts.join(' <br> ');
-            break;
-          }
-        case 'USES':
-          {
-            const { from, to, color, id, ...rest } = edge;
-            tooltipText = Object.entries(rest)
-              .reduce((acc, [key, value]) => {
-                if (key === 'Name' || key === 'Key') {
-                  acc.top.push(`${key}: ${value}`);
-                }
-                else if (key.toLowerCase().includes('log')) {
-                  return acc;
-                }
-                else {
-                  acc.middle.push(`${key}: ${value}`);
-                }
-                return acc;
-              }, { top: [], middle: [], bottom: [] });
-
-            tooltipText = [...tooltipText.top, ...tooltipText.middle, ...tooltipText.bottom].join(' <br> ');
-            break;
-          }
-        case 'EQUIVALENT':
-          tooltipText = `stack: ${edge.stack} <br> dataset: ${edge.dataset} <br> Key: ${edge.Key}`;
-          break;
-        default:
-          tooltipText = `referenceKey: ${edge.referenceKey} <br> type: ${edge.type}`;
-          break;
-      }
-
-      const tooltipElement = document.getElementById('edge-tooltip');
-      tooltipElement.innerHTML = tooltipText;
-      tooltipElement.style.top = params.event.clientY + 'px';
-      tooltipElement.style.left = params.event.clientX + 'px';
-      tooltipElement.style.display = 'block';
+      }, 200);
     });
 
+    network.on('hoverEdge', (params) => {
+      const lines = formatEdgeDetails(params.edge);
+      setEdgeInfo({
+        lines,
+        position: { x: params.event.clientX, y: params.event.clientY },
+      });
+    });
 
-    network.on("blurEdge", function () {
-      const tooltipElement = document.getElementById('edge-tooltip');
-      tooltipElement.style.display = 'none';
+    network.on('blurEdge', () => {
+      // Keep info visible until explicit close or clicking elsewhere.
     });
 
     const handleClickOutside = (event) => {
-      if (tooltipRef.current && !tooltipRef.current.contains(event.target)) {
-        setTooltipContent(null);
+      if (nodeInfoRef.current && !nodeInfoRef.current.contains(event.target)) {
+        setNodeInfo(null);
+      }
+      if (edgeInfoRef.current && !edgeInfoRef.current.contains(event.target)) {
+        setEdgeInfo(null);
       }
     };
 
@@ -296,35 +323,70 @@ const Neo4jVisualization = ({ visData, dropdownNodeLimit, database }) => {
 
     return () => {
       isMounted = false; // Mark as unmounted
+      clearTimers();
       document.removeEventListener('mousedown', handleClickOutside);
       network.destroy();
     };
-  }, [currentid, database, dropdownNodeLimit, navigate, nodes, visData]);
+  }, [currentid, database, dropdownNodeLimit, formatEdgeDetails, formatNodeDetails, navigate, navigateToNode, nodes, visData]);
 
-  const handleTooltipClose = () => {
-    setTooltipContent(null);
-  };
+  const handleNodeInfoClose = () => setNodeInfo(null);
+  const handleEdgeInfoClose = () => setEdgeInfo(null);
 
   return (<div style={{ display: "Flex" }}><div id="network" style={{ height: '400px', width: "1000px" }}></div>
-    <div id="edge-tooltip" style={{ position: 'fixed', display: 'none', padding: '5px', backgroundColor: '#ffffff', border: '1px solid #ccc', borderRadius: '5px' }}></div>
-
-    {tooltipContent && (
+    {edgeInfo && (
       <div
-        ref={tooltipRef}
+        ref={edgeInfoRef}
         style={{
-          position: 'absolute',
-          left: tooltipPosition.x,
-          top: tooltipPosition.y,
+          position: 'fixed',
+          left: edgeInfo.position.x,
+          top: edgeInfo.position.y,
           backgroundColor: 'rgba(255, 255, 255, 0.9)',
-          padding: '5px',
+          padding: '8px',
           borderRadius: '3px',
           boxShadow: '0 0 5px rgba(0, 0, 0, 0.3)',
           zIndex: 9999,
-          width: "500px"
+          width: "500px",
+          maxHeight: "280px",
+          overflowY: "auto"
         }}
       >
-        {tooltipContent}
-        <button onClick={handleTooltipClose}>Close</button>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 8 }}>
+          <button onClick={handleEdgeInfoClose}>Close</button>
+        </div>
+        {edgeInfo.lines.map((line, index) => (
+          <div key={`edge-${index}`}>{line}</div>
+        ))}
+      </div>
+    )}
+
+    {nodeInfo && (
+      <div
+        ref={nodeInfoRef}
+        style={{
+          position: 'absolute',
+          left: nodeInfo.position.x,
+          top: nodeInfo.position.y,
+          backgroundColor: 'rgba(255, 255, 255, 0.95)',
+          padding: '8px',
+          borderRadius: '3px',
+          boxShadow: '0 0 5px rgba(0, 0, 0, 0.3)',
+          zIndex: 9999,
+          width: "500px",
+          maxHeight: "320px",
+          overflowY: "auto"
+        }}
+      >
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+          <div>
+            {nodeInfo.cmid !== currentid && (
+              <button onClick={() => navigateToNode(nodeInfo.cmid)}>View</button>
+            )}
+          </div>
+          <button onClick={handleNodeInfoClose}>Close</button>
+        </div>
+        {nodeInfo.lines.map((line, index) => (
+          <div key={`node-${index}`}>{line}</div>
+        ))}
       </div>
     )}
     <ul>
