@@ -29,6 +29,7 @@ import AdminPage from './routes/Admin';
 import FAQ from './routes/FAQ';
 import AppHome from './routes/AppHome';
 import LogsViewer from './routes/LogsViewer';
+import Profile from './routes/Profile';
 
 import ReactGA from 'react-ga4';
 import CookieBanner from './components/CookieBanner';
@@ -91,6 +92,7 @@ const App = () => {
         <Route path='/map4' element={<Map4 />} />
         <Route path='/FAQ' element={<FAQ />} />
         <Route path='/:database/edit' element={<ProtectedRoute requiredLevel={1}><EditPage /></ProtectedRoute>} />
+        <Route path='/:database/profile' element={<ProtectedRoute requiredLevel={1}><Profile /></ProtectedRoute>} />
         <Route path='/:database/admin' element={<ProtectedRoute requiredLevel={2}><AdminPage /></ProtectedRoute>} />
         <Route path='/editMetadata/:cmid' element={<ProtectedRoute requiredLevel={2}><DynamicPropertiesForm /></ProtectedRoute>} />
       </Routes >
