@@ -1,7 +1,7 @@
 import React from 'react';
 import { Box, Divider, Link, Typography } from "@mui/material";
 import { Link as RouterLink } from 'react-router-dom';
-import image from "../assets/catmapperWhite.webp";
+import image from "../assets/catmapperWhite_small.webp";
 import packageJson from '../../package.json';
 
 const FooterLinks = () => {
