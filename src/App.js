@@ -7,33 +7,56 @@ import DynamicPropertiesForm from './components/EditMetadata';
 import ReactGA from 'react-ga4';
 import CookieBanner from './components/CookieBanner';
 
+const lazyWithRetry = (importer, key) =>
+  lazy(async () => {
+    const storageKey = `lazy-retry-${key}`;
+    const hasRefreshed = sessionStorage.getItem(storageKey) === 'true';
+
+    try {
+      const module = await importer();
+      sessionStorage.setItem(storageKey, 'false');
+      return module;
+    } catch (error) {
+      const isChunkError =
+        error?.name === 'ChunkLoadError' ||
+        /Loading chunk [\\w-]+ failed/i.test(error?.message || '');
+
+      if (isChunkError && !hasRefreshed) {
+        sessionStorage.setItem(storageKey, 'true');
+        window.location.reload();
+      }
+
+      throw error;
+    }
+  });
+
 // Lazy load all page components
-const Map1 = lazy(() => import('./routes/Map1'));
-const Map2 = lazy(() => import('./routes/Map2'));
-const Map3 = lazy(() => import('./routes/Map3'));
-const Map4 = lazy(() => import('./routes/Map4'));
-const Explore = lazy(() => import('./routes/Explore'));
-const Translate = lazy(() => import('./routes/Translate'));
-const EditPage = lazy(() => import('./routes/Edit'));
-const Catmapper = lazy(() => import('./routes/Catmapper'));
-const ExploreNode = lazy(() => import('./routes/ExploreNode'));
-const MergePage = lazy(() => import('./routes/Merge'));
-const People = lazy(() => import('./routes/People'));
-const News = lazy(() => import('./routes/News'));
-const Funding = lazy(() => import('./routes/Funding'));
-const Citation = lazy(() => import('./routes/Citation'));
-const Terms = lazy(() => import('./routes/Terms'));
-const Contact = lazy(() => import('./routes/Contact'));
-const Download = lazy(() => import('./routes/Download'));
-const DownloadAll = lazy(() => import('./routes/DownloadAll'));
-const ApiGuide = lazy(() => import('./routes/APIGuide'));
-const UserGuide = lazy(() => import('./routes/UserGuide'));
-const Logins = lazy(() => import('./routes/Logins'));
-const RegisterPage = lazy(() => import('./routes/RegisterPage'));
-const AdminPage = lazy(() => import('./routes/Admin'));
-const FAQ = lazy(() => import('./routes/FAQ'));
-const AppHome = lazy(() => import('./routes/AppHome'));
-const LogsViewer = lazy(() => import('./routes/LogsViewer'));
+const Map1 = lazyWithRetry(() => import('./routes/Map1'), 'Map1');
+const Map2 = lazyWithRetry(() => import('./routes/Map2'), 'Map2');
+const Map3 = lazyWithRetry(() => import('./routes/Map3'), 'Map3');
+const Map4 = lazyWithRetry(() => import('./routes/Map4'), 'Map4');
+const Explore = lazyWithRetry(() => import('./routes/Explore'), 'Explore');
+const Translate = lazyWithRetry(() => import('./routes/Translate'), 'Translate');
+const EditPage = lazyWithRetry(() => import('./routes/Edit'), 'EditPage');
+const Catmapper = lazyWithRetry(() => import('./routes/Catmapper'), 'Catmapper');
+const ExploreNode = lazyWithRetry(() => import('./routes/ExploreNode'), 'ExploreNode');
+const MergePage = lazyWithRetry(() => import('./routes/Merge'), 'MergePage');
+const People = lazyWithRetry(() => import('./routes/People'), 'People');
+const News = lazyWithRetry(() => import('./routes/News'), 'News');
+const Funding = lazyWithRetry(() => import('./routes/Funding'), 'Funding');
+const Citation = lazyWithRetry(() => import('./routes/Citation'), 'Citation');
+const Terms = lazyWithRetry(() => import('./routes/Terms'), 'Terms');
+const Contact = lazyWithRetry(() => import('./routes/Contact'), 'Contact');
+const Download = lazyWithRetry(() => import('./routes/Download'), 'Download');
+const DownloadAll = lazyWithRetry(() => import('./routes/DownloadAll'), 'DownloadAll');
+const ApiGuide = lazyWithRetry(() => import('./routes/APIGuide'), 'ApiGuide');
+const UserGuide = lazyWithRetry(() => import('./routes/UserGuide'), 'UserGuide');
+const Logins = lazyWithRetry(() => import('./routes/Logins'), 'Logins');
+const RegisterPage = lazyWithRetry(() => import('./routes/RegisterPage'), 'RegisterPage');
+const AdminPage = lazyWithRetry(() => import('./routes/Admin'), 'AdminPage');
+const FAQ = lazyWithRetry(() => import('./routes/FAQ'), 'FAQ');
+const AppHome = lazyWithRetry(() => import('./routes/AppHome'), 'AppHome');
+const LogsViewer = lazyWithRetry(() => import('./routes/LogsViewer'), 'LogsViewer');
 
 const usePageTracking = () => {
   const location = useLocation();
