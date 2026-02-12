@@ -81,7 +81,15 @@
     z-index: 1;
     border-radius: 4px;
     top: 100%;
-    padding-top: 10px;
+    padding-top: 0;
+    margin-top: 0;
+}
+
+/* Keep app-nav dropdown flush with trigger even when NavbarHome global styles are bundled */
+.header .dropdown-content {
+    top: 100%;
+    padding-top: 0;
+    margin-top: 0;
 }
 
 .dropdown-content a {

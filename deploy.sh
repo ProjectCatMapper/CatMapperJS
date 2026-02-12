@@ -15,12 +15,9 @@ while [[ "$#" -gt 0 ]]; do
   shift
 done
 
-# Branch check: Ensure we are on main
+# Branch info: Print current branch
 CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
-if [ "$CURRENT_BRANCH" != "main" ]; then
-  echo "❌ Error: You are on branch '$CURRENT_BRANCH'. You must be on 'main' to deploy."
-  exit 1
-fi
+echo "🌿 Current branch: $CURRENT_BRANCH"
 
 # 1. Pre-flight check: Ensure git directory is clean
 if [ -n "$(git status --porcelain)" ]; then 
@@ -59,7 +56,7 @@ if [ "$SKIP_VERSION" = false ]; then
   git tag -a "v$NEW_VERSION" -m "Deployment on $(date)"
 
   # Push the commit and the tag to your remote
-  git push origin main
+  git push origin "$CURRENT_BRANCH"
   git push origin "v$NEW_VERSION"
   echo "✅ Done! CatMapper is now live on v$NEW_VERSION"
 else

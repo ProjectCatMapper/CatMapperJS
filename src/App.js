@@ -1,62 +1,37 @@
-import React, { useEffect, Suspense, lazy } from "react";
+import React, { useEffect } from "react";
 import { Routes, Route, useLocation } from "react-router-dom";
 
 import ProtectedRoute from './components/ProtectedRoute';
 import DynamicPropertiesForm from './components/EditMetadata';
+import Map1 from './routes/Map1';
+import Map2 from './routes/Map2';
+import Map3 from './routes/Map3';
+import Map4 from './routes/Map4';
+import Explore from './routes/Explore';
+import Translate from './routes/Translate';
+import EditPage from './routes/Edit';
+import Catmapper from './routes/Catmapper';
+import ExploreNode from './routes/ExploreNode';
+import MergePage from './routes/Merge';
+import People from './routes/People';
+import News from './routes/News';
+import Funding from './routes/Funding';
+import Citation from './routes/Citation';
+import Terms from './routes/Terms';
+import Contact from './routes/Contact';
+import Download from './routes/Download';
+import DownloadAll from './routes/DownloadAll';
+import ApiGuide from './routes/APIGuide';
+import UserGuide from './routes/UserGuide';
+import Logins from './routes/Logins';
+import RegisterPage from './routes/RegisterPage';
+import AdminPage from './routes/Admin';
+import FAQ from './routes/FAQ';
+import AppHome from './routes/AppHome';
+import LogsViewer from './routes/LogsViewer';
 
 import ReactGA from 'react-ga4';
 import CookieBanner from './components/CookieBanner';
-
-const lazyWithRetry = (importer, key) =>
-  lazy(async () => {
-    const storageKey = `lazy-retry-${key}`;
-    const hasRefreshed = sessionStorage.getItem(storageKey) === 'true';
-
-    try {
-      const module = await importer();
-      sessionStorage.setItem(storageKey, 'false');
-      return module;
-    } catch (error) {
-      const isChunkError =
-        error?.name === 'ChunkLoadError' ||
-        /Loading chunk [\\w-]+ failed/i.test(error?.message || '');
-
-      if (isChunkError && !hasRefreshed) {
-        sessionStorage.setItem(storageKey, 'true');
-        window.location.reload();
-      }
-
-      throw error;
-    }
-  });
-
-// Lazy load all page components
-const Map1 = lazyWithRetry(() => import('./routes/Map1'), 'Map1');
-const Map2 = lazyWithRetry(() => import('./routes/Map2'), 'Map2');
-const Map3 = lazyWithRetry(() => import('./routes/Map3'), 'Map3');
-const Map4 = lazyWithRetry(() => import('./routes/Map4'), 'Map4');
-const Explore = lazyWithRetry(() => import('./routes/Explore'), 'Explore');
-const Translate = lazyWithRetry(() => import('./routes/Translate'), 'Translate');
-const EditPage = lazyWithRetry(() => import('./routes/Edit'), 'EditPage');
-const Catmapper = lazyWithRetry(() => import('./routes/Catmapper'), 'Catmapper');
-const ExploreNode = lazyWithRetry(() => import('./routes/ExploreNode'), 'ExploreNode');
-const MergePage = lazyWithRetry(() => import('./routes/Merge'), 'MergePage');
-const People = lazyWithRetry(() => import('./routes/People'), 'People');
-const News = lazyWithRetry(() => import('./routes/News'), 'News');
-const Funding = lazyWithRetry(() => import('./routes/Funding'), 'Funding');
-const Citation = lazyWithRetry(() => import('./routes/Citation'), 'Citation');
-const Terms = lazyWithRetry(() => import('./routes/Terms'), 'Terms');
-const Contact = lazyWithRetry(() => import('./routes/Contact'), 'Contact');
-const Download = lazyWithRetry(() => import('./routes/Download'), 'Download');
-const DownloadAll = lazyWithRetry(() => import('./routes/DownloadAll'), 'DownloadAll');
-const ApiGuide = lazyWithRetry(() => import('./routes/APIGuide'), 'ApiGuide');
-const UserGuide = lazyWithRetry(() => import('./routes/UserGuide'), 'UserGuide');
-const Logins = lazyWithRetry(() => import('./routes/Logins'), 'Logins');
-const RegisterPage = lazyWithRetry(() => import('./routes/RegisterPage'), 'RegisterPage');
-const AdminPage = lazyWithRetry(() => import('./routes/Admin'), 'AdminPage');
-const FAQ = lazyWithRetry(() => import('./routes/FAQ'), 'FAQ');
-const AppHome = lazyWithRetry(() => import('./routes/AppHome'), 'AppHome');
-const LogsViewer = lazyWithRetry(() => import('./routes/LogsViewer'), 'LogsViewer');
 
 const usePageTracking = () => {
   const location = useLocation();
@@ -87,7 +62,7 @@ const App = () => {
   usePageTracking();
 
   return (
-    <Suspense fallback={<div style={{ padding: '20px', textAlign: 'center' }}>Loading...</div>}>
+    <>
       <CookieBanner />
       <Routes>
         <Route path='/' element={<Catmapper />} />
@@ -118,9 +93,8 @@ const App = () => {
         <Route path='/:database/edit' element={<ProtectedRoute requiredLevel={1}><EditPage /></ProtectedRoute>} />
         <Route path='/:database/admin' element={<ProtectedRoute requiredLevel={2}><AdminPage /></ProtectedRoute>} />
         <Route path='/editMetadata/:cmid' element={<ProtectedRoute requiredLevel={2}><DynamicPropertiesForm /></ProtectedRoute>} />
-
       </Routes >
-    </Suspense >
+    </>
   );
 }
 
