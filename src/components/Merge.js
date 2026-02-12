@@ -3,8 +3,8 @@ import { Box, Tabs, Tab, Typography } from '@mui/material';
 import image from '../assets/catmapperWhite.webp'
 import { Link } from 'react-router-dom'
 import Divider from '@mui/material/Divider';
-import Propose_Merge from "./MergePropose"
-import JoinDatasets_Merge from "./MergeJoinDatasets"
+import ProposeMerge from "./MergePropose"
+import JoinDatasetsMerge from "./MergeJoinDatasets"
 import MergeTemplate from "./MergeTemplate"
 
 function TabPanel(props) {
@@ -59,10 +59,10 @@ export default function Mergelayout({ database }) {
           <Tab label="Download merge template" {...a11yProps(2)} sx={{ alignItems: 'flex-end', justifyContent: 'center', textAlign: 'right' }} />
         </Tabs>
         <TabPanel value={value} index={0}>
-          <Propose_Merge database={database} />
+          <ProposeMerge database={database} />
         </TabPanel>
         <TabPanel value={value} index={1}>
-          <JoinDatasets_Merge database={database} />
+          <JoinDatasetsMerge database={database} />
         </TabPanel>
         <TabPanel value={value} index={2}>
           <MergeTemplate database={database} />

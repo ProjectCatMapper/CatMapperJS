@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { useState, useEffect } from 'react'
 import { Box, Button, FormControlLabel, Radio, RadioGroup, Checkbox, Typography, Divider, Select, TextField, MenuItem, InputLabel, FormControl, FormGroup, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TablePagination, Paper, Snackbar, Alert } from '@mui/material';
 import DatasetForm from './DatasetCreate';
@@ -22,7 +23,6 @@ const TEMPLATE_FILES = {
 
 const Edit = ({ database }) => {
 
-  const [file, setFile] = useState(null);
   const { user, authLevel } = useAuth();
   const [open, setOpen] = useState(false);
   const [node_open, setNodeOpen] = useState(false);
@@ -35,7 +35,7 @@ const Edit = ({ database }) => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [jsonData, setJsondata] = useState([]);
-  const [linkContext, setLinkContext] = useState([]);
+  const [, setLinkContext] = useState([]);
   const [download, setDownload] = useState(null);
   const [error, setError] = useState(null);
   const [fileDownload, setFileDownload] = useState('');
@@ -43,7 +43,6 @@ const Edit = ({ database }) => {
   const [missingCount, setMissingCount] = useState(0);
   const [missingCol, setMissingCol] = useState(0);
   const [openDialog, setOpenDialog] = useState(false);
-  const [progress, setProgress] = useState(0);
   const [formData, setFormData] = useState({
     domain: 'ALL NODES',
     datasetID: '',
@@ -56,22 +55,14 @@ const Edit = ({ database }) => {
   const [CMIDText, setCMIDText] = useState('The new dataset CMID is pending.');
   const [mergingType, setMergingType] = useState("0");
   let required = [];
-  let finalProduct = [];
   const foundColumns = [];
   const notFoundColumns = [];
-
-  const handleOpen = () => {
-    setOpen(true);
-  };
 
   const handleClose = () => {
     setOpen(false);
   };
 
   const [openSnackbar, setOpenSnackbar] = useState(false);
-  const handleOpen1 = () => {
-    setOpenSnackbar(true);  // Open the snackbar on button click
-  };
   const handleClose1 = () => {
     setOpenSnackbar(false); // Close the snackbar after user interaction
   };
@@ -95,7 +86,6 @@ const Edit = ({ database }) => {
 
   const handleFileChange = async (e) => {
     setError("")
-    setFile(null);
     const file = e.target.files[0];
     if (!file) return;
 
@@ -110,7 +100,6 @@ const Edit = ({ database }) => {
       fileType === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
       fileType === 'text/csv'
     ) {
-      setFile(file);
       const fileObj = file;
 
       try {
@@ -123,7 +112,6 @@ const Edit = ({ database }) => {
         const merges = worksheet["!merges"] || [];
         if (merges.length > 0) {
           alert("Merged cells detected. Please unmerge all cells before uploading.")
-          setFile(null);
           return;
         }
 
@@ -166,7 +154,6 @@ const Edit = ({ database }) => {
     } else {
       alert('Please upload a valid Excel file (CSV or XLSX).');
       e.target.value = null;
-      setFile(null);
     }
   };
 
@@ -283,7 +270,7 @@ const Edit = ({ database }) => {
 
     }
 
-    if (advselectedOption == "add_merging" && mergingType == "merging_ties_to_datasets") {
+    if (advselectedOption === "add_merging" && mergingType === "merging_ties_to_datasets") {
 
       if (columns.includes('stackID')) {
         const stackIDIndex = columns.indexOf('stackID');
@@ -486,6 +473,7 @@ const Edit = ({ database }) => {
     "polity", "occupation", "culture", "yearPublished", "stackID", "stackTransform", "summaryStatistic", "datasetTransform"]
   let allowedDatasetColumns = []
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (columns.length === 0 || rows.length === 0) return;
 
@@ -594,19 +582,8 @@ const Edit = ({ database }) => {
           }
 
           else if (cols.includes("categoryID1") && cols.includes("categoryID2")) {
-
             setError("Adding or replacing proeprties for existing equivalence ties is not permitted for now.");
             return false;
-
-            setMergingType("equivalence_ties")
-            const keyColumns = cols.filter(c => c.startsWith("Key_"));
-
-            if (keyColumns.length === 2) {
-              required = ["categoryID1", "categoryID2", "Key", "datasetID", "stackID"];
-            } else {
-              required = ["categoryID1", "categoryID2", "Key", "datasetID", "stackID"];
-            }
-
           }
           else {
             if (advselectedOption !== 'add_merging') {

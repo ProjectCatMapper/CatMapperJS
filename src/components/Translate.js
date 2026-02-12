@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import domainOptions from "./SearchSelectDropdown";
 import { Select, MenuItem } from '@mui/material';
 import { ExcelRenderer } from 'react-excel-renderer';
@@ -39,6 +39,8 @@ const getTooltipContent = (nm) => {
   return tooltipTexts[nm];
 };
 
+const fallbackOptions = ["Name", "Key", "CatMapper ID (CMID)"];
+
 function TranslateComponent({ database }) {
 
   const [selectedFile, setSelectedFile] = useState(null);
@@ -64,12 +66,9 @@ function TranslateComponent({ database }) {
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
-  let fileObj = ""
   const [filename, setFilename] = useState("");
-  let selectedColumnValues = ""
   const [jsonData, setJsondata] = useState();
   let query = "false"
-  const fallbackOptions = ["Name", "Key", "CatMapper ID (CMID)"];
 
   const [isUniqueRows, setUniqueRows] = useState(false);
 
@@ -125,7 +124,6 @@ function TranslateComponent({ database }) {
     setLoading(true);
     setProgress(10);
     try {
-      selectedColumnValues = rows.map((row) => row[columns.indexOf(zeroDropdownValue)]);
       setProgress(20);
       //const response = await fetch("http://127.0.0.1:5001/translate2", {
       const response = await fetch(`${process.env.REACT_APP_API_URL}/translate`, {
@@ -448,22 +446,22 @@ function TranslateComponent({ database }) {
     };
 
     fetchData();
-  }, []);
+  }, [database]);
 
-  const secondDropdownOptions = firstDropdownValue
-    ? (() => {
-      const options = dropdownData.find(
-        (item) => item.group === firstDropdownValue
-      )?.nodes || [];
+  const secondDropdownOptions = useMemo(() => {
+    if (!firstDropdownValue) {
+      return [];
+    }
 
-      const reordered = [
-        ...options.filter((opt) => opt === firstDropdownValue),
-        ...options.filter((opt) => opt !== firstDropdownValue),
-      ];
+    const options = dropdownData.find(
+      (item) => item.group === firstDropdownValue
+    )?.nodes || [];
 
-      return reordered;
-    })()
-    : [];
+    return [
+      ...options.filter((opt) => opt === firstDropdownValue),
+      ...options.filter((opt) => opt !== firstDropdownValue),
+    ];
+  }, [dropdownData, firstDropdownValue]);
 
   useEffect(() => {
     if (secondDropdownOptions.length > 0) {
@@ -471,7 +469,7 @@ function TranslateComponent({ database }) {
     } else {
       setsubDomain("");
     }
-  }, [firstDropdownValue]);
+  }, [firstDropdownValue, secondDropdownOptions]);
 
 
   useEffect(() => {

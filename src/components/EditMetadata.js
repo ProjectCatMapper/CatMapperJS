@@ -8,7 +8,7 @@ const DynamicPropertiesForm = () => {
     const [formData, setFormData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const { user, authLevel } = useAuth();
+    const { authLevel } = useAuth();
 
     useEffect(() => {
         if (authLevel !== 2) {
@@ -54,7 +54,7 @@ const DynamicPropertiesForm = () => {
                 setLoading(false);
                 setError(err.message);
             });
-    }, [cmid]);
+    }, [authLevel, cmid]);
 
     const handleChange = (itemIndex, key, value) => {
         const updatedData = [...formData];
