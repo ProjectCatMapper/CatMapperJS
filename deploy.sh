@@ -9,8 +9,8 @@ SKIP_VERSION=false
 # Parse flags
 while [[ "$#" -gt 0 ]]; do
   case $1 in
-    --no-version) SKIP_VERSION=true ;;
-    *) echo "Unknown parameter passed: $1"; exit 1 ;;
+    (--no-version) SKIP_VERSION=true ;;
+    (*) echo "Unknown parameter passed: $1"; exit 1 ;;
   esac
   shift
 done
