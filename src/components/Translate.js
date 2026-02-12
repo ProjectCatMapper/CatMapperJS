@@ -12,13 +12,11 @@ import Backdrop from '@mui/material/Backdrop';
 import LinearProgress from '@mui/material/LinearProgress';
 import CircularProgress from '@mui/material/CircularProgress';
 import './Translate.css'
-import Divider from '@mui/material/Divider';
-import image from '../assets/catmapperWhite.webp'
-import { Link } from 'react-router-dom'
 import Tooltip from '@mui/material/Tooltip';
 import InfoIcon from '@mui/icons-material/Info';
 import { Dialog, DialogTitle, DialogContent, DialogActions } from "@mui/material";
 import infodata from './infodata.json';
+import FooterLinks from './FooterLinks';
 
 const getTooltipContent = (nm) => {
   const tooltipTexts = {
@@ -946,20 +944,8 @@ function TranslateComponent({ database }) {
         </div>
       </Box>
       <div style={{ width: "100%", backgroundColor: "black", padding: '20px' }}>
-        <Divider sx={{ marginLeft: 1, marginRight: 1, backgroundColor: 'white' }} />
-
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 2, mb: 0 }}>
-          <img src={image} alt="CatMapper Logo" style={{ height: 80 }} />
-          <Box>
-            <Link id="catmapperfooter" to="/people" underline="none" style={{ color: 'white', textDecoration: 'none', margin: '0 8px' }}>People</Link>
-            <Link to="/news" id="catmapperfooter" underline="none" style={{ color: 'white', textDecoration: 'none', margin: '0 8px' }}>News</Link>
-            <Link to="/funding" id="catmapperfooter" underline="none" style={{ color: 'white', textDecoration: 'none', margin: '0 8px' }}>Funding</Link>
-            <Link to="/citation" id="catmapperfooter" underline="none" style={{ color: 'white', textDecoration: 'none', margin: '0 8px' }}>Citation</Link>
-            <Link to="/terms" id="catmapperfooter" underline="none" style={{ color: 'white', textDecoration: 'none', margin: '0 8px' }}>Terms</Link>
-            <Link to="/contact" id="catmapperfooter" underline="none" style={{ color: 'white', textDecoration: 'none', margin: '0 8px' }}>Contact</Link>
-            <Link to="/download" id="catmapperfooter" underline="none" style={{ color: "white", textDecoration: "none", margin: "0 8px" }}> Download</Link>
-          </Box>
-        </Box>      </div>
+        <FooterLinks />
+      </div>
     </Box>
 
   );
