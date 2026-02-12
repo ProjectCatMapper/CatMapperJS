@@ -47,7 +47,7 @@ const FooterLinks = () => {
             >
                 <Box>
                     <img src={image} alt="CatMapper Logo" style={{ height: "7vh" }} />
-                    <Typography variant="caption" sx={{ color: 'gray', fontSize: '0.25em', display: 'block', marginTop: 0.5 }}>
+                    <Typography variant="caption" sx={{ color: 'gray', fontSize: '0.5em', display: 'block', marginTop: 0.5 }}>
                         CatMapper v{packageJson.version}
                     </Typography>
                 </Box>
