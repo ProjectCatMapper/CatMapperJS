@@ -29,10 +29,6 @@ const descriptions = {
   ]
 }
 
-function createData(names, nodes, encodings, contains, context) {
-  return { names, nodes, encodings, contains, context };
-}
-
 function createFoci(Focus, Datasets, Areas, Ethnicities, Languages, Religions) {
   return { Focus, Datasets, Areas, Ethnicities, Languages, Religions };
 }
@@ -44,7 +40,7 @@ const AppBody = ({ database }) => {
 
   useEffect(() => {
 
-    fetch(`${process.env.REACT_APP_API_URL}/progress?database=${database}`,
+    fetch(`${process.env.REACT_APP_API_URL}/progress/${database}`,
       {
         method: "GET"
       })
@@ -52,63 +48,7 @@ const AppBody = ({ database }) => {
         return response.json()
       })
       .then(data => {
-        const nodeMap = {};
-        const encodingMap = {};
-        const relationMap = {};
-
-        data.nodes.forEach(n => { nodeMap[n.label] = n.current; });
-        data.encodings.forEach(e => { encodingMap[e.label] = e.current; });
-        data.relations.forEach(r => { relationMap[r.label] = r.current; });
-
-        // Define explicit relation mapping
-        const nodeToRelationMap = {
-          "AREAS": "AREA OF",
-          "PERIODS": "PERIOD OF",
-          "CULTURES": "CULTURE OF",
-          // Add more mappings if new types gain relations
-        };
-
-        const rows = [];
-
-        // Add DATASETS row if present
-        if (nodeMap["DATASETS"] !== undefined) {
-          rows.push(createData("Datasets", nodeMap["DATASETS"], "", "", ""));
-        }
-
-        let totalNodes = 0;
-
-        Object.entries(nodeMap).forEach(([label, count]) => {
-          if (label === "DATASETS") return;
-
-          const encoding = encodingMap[label] || 0;
-          const encodingPerNode = count > 0 ? (encoding / count).toFixed(2) : "0.00";
-          const relationLabel = nodeToRelationMap[label];
-          const relation = relationLabel ? (relationMap[relationLabel] || "") : "";
-
-          rows.push(
-            createData(label, count, encodingPerNode, "x", relation)
-          );
-
-          totalNodes += count;
-        });
-
-        const totalContains = relationMap["CONTAINS"] || 0;
-
-        const totalRelationSum = Object.entries(nodeToRelationMap).reduce((sum, [, relationLabel]) => {
-          return sum + (relationMap[relationLabel] || 0);
-        }, 0);
-
-        rows.push(
-          createData(
-            "Total",
-            totalNodes,
-            totalNodes > 0 ? (totalContains / totalNodes).toFixed(2) : "0.00",
-            totalContains,
-            totalRelationSum
-          )
-        );
-
-        setrows(rows);
+        setrows(data);
       })
       .catch(err => console.error("Failed to fetch progress", err));
 
@@ -134,6 +74,19 @@ const AppBody = ({ database }) => {
         setfoci(fociRows);
       })
       .catch((err) => console.error("Failed to fetch foci:", err));
+  }, [database]);
+
+  const [datasetCount, setDatasetCount] = useState(null);
+
+  useEffect(() => {
+
+    fetch(`${process.env.REACT_APP_API_URL}/metadata/domaincount/${database}/DATASET`, {
+      method: "GET"
+    })
+      .then(response => response.json())
+      .then(data => setDatasetCount(data))
+      .catch(err => console.error("Failed to fetch dataset count:", err));
+
   }, [database]);
 
   return (
@@ -186,7 +139,7 @@ const AppBody = ({ database }) => {
                   </Typography>
                   <TableContainer component={Paper}>
                     <Table
-                      sx={{ minWidth: 650 }}
+                      sx={{ minWidth: 400 }}
                       size="small"
                       aria-label="dataset coverage table"
                     >
@@ -211,7 +164,10 @@ const AppBody = ({ database }) => {
                           >
                             {Object.entries(row).map(([key, value]) => (
                               <TableCell key={key} align="left">
-                                {value}
+                                {value === 0 ? "" : value &&
+                                  typeof value === 'number'
+                                  ? value.toLocaleString()
+                                  : value}
                               </TableCell>
                             ))}
                           </TableRow>
@@ -242,34 +198,44 @@ const AppBody = ({ database }) => {
                 >
                   Dataset Progress &nbsp;
                   <DownloadDatasetButton databaseName={database} fileName="dataset_list.xlsx" />
-                  &nbsp; DATASETS: {rows[0]?.nodes ?? "Loading..."}
+                  &nbsp; DATASETS: {datasetCount ?? "Loading..."}
                 </Typography>
 
                 <TableContainer component={Paper}>
                   <Table
-                    sx={{ minWidth: 650, backgroundColor: "#f5f5f5" }}
+                    sx={{ minWidth: 400, backgroundColor: "#f5f5f5" }}
                     size="small"
                     aria-label="dataset progress table"
                   >
                     <TableHead>
                       <TableRow>
-                        <TableCell>Type</TableCell>
-                        <TableCell>Nodes</TableCell>
-                        <TableCell>Datasets per node</TableCell>
-                        <TableCell>Context ties</TableCell>
+                        {rows.length > 0 &&
+                          Object.keys(rows[0]).map((header) => (
+                            <TableCell key={header} sx={{ color: 'black', fontWeight: 'bold' }}>
+                              {/* Optional: Capitalize the first letter for display */}
+                              {header.charAt(0).toUpperCase() + header.slice(1)}
+                            </TableCell>
+                          ))}
                       </TableRow>
                     </TableHead>
                     <TableBody>
-                      {rows.slice(1).map((row) => (
-                        <TableRow key={row.names}>
-                          <TableCell component="th" scope="row">
-                            {row.names}
-                          </TableCell>
-                          <TableCell>{row.nodes}</TableCell>
-                          <TableCell>{row.encodings}</TableCell>
-                          <TableCell>{row.context}</TableCell>
-                        </TableRow>
-                      ))}
+                      {rows.map((row, index) => {
+                        const headers = Object.keys(row);
+
+                        return (
+                          <TableRow key={index}>
+                            {headers.map((header) => (
+                              <TableCell key={`${index}-${header}`} sx={{ color: 'black' }}>
+                                {/* Check if value is a number to apply formatting, else return as is */}
+                                {row[header] === 0 ? "" : row[header] &&
+                                  typeof row[header] === 'number'
+                                  ? row[header].toLocaleString()
+                                  : row[header]}
+                              </TableCell>
+                            ))}
+                          </TableRow>
+                        );
+                      })}
                     </TableBody>
                   </Table>
                 </TableContainer>

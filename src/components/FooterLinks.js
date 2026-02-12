@@ -1,7 +1,8 @@
 import React from 'react';
-import { Box, Divider, Link } from "@mui/material";
+import { Box, Divider, Link, Typography } from "@mui/material";
 import { Link as RouterLink } from 'react-router-dom';
 import image from "../assets/catmapperWhite.webp";
+import packageJson from '../../package.json';
 
 const FooterLinks = () => {
     const linkStyle = {
@@ -44,8 +45,12 @@ const FooterLinks = () => {
                     pointerEvents: "auto", // Explicitly allows clicks
                 }}
             >
-                <img src={image} alt="CatMapper Logo" style={{ height: "7vh" }} />
-
+                <Box>
+                    <img src={image} alt="CatMapper Logo" style={{ height: "7vh" }} />
+                    <Typography variant="caption" sx={{ color: 'gray', fontSize: '0.25em', display: 'block', marginTop: 0.5 }}>
+                        CatMapper v{packageJson.version}
+                    </Typography>
+                </Box>
                 <Box>
                     {navLinks.map((link) => (
                         <Link

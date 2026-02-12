@@ -8,6 +8,7 @@ set -e
 
 # mkdir -p "$TMPDIR" "$npm_config_cache"
 
+npm version $(date +%Y.%m.%d-%H%M) --no-git-tag-version
 npm run build
 
 rsync -av --delete build/ /mnt/storage/app/nginx/html/
