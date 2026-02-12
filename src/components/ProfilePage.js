@@ -137,6 +137,7 @@ const ProfilePage = ({ database }) => {
 
       const request = await requestProfileUpdate({
         userId: user,
+        cred,
         updates: {
           firstName: formData.firstName,
           lastName: formData.lastName,
@@ -169,7 +170,8 @@ const ProfilePage = ({ database }) => {
       const updated = await confirmProfileUpdate({
         userId: user,
         requestId: profileRequest.requestId,
-        verificationCode: profileVerificationCode.trim()
+        verificationCode: profileVerificationCode.trim(),
+        cred
       });
 
       setProfile(updated);
@@ -218,7 +220,8 @@ const ProfilePage = ({ database }) => {
       const request = await requestPasswordChange({
         userId: user,
         currentPassword,
-        newPassword
+        newPassword,
+        cred
       });
 
       setPasswordRequest(request);
@@ -243,7 +246,8 @@ const ProfilePage = ({ database }) => {
       await confirmPasswordChange({
         userId: user,
         requestId: passwordRequest.requestId,
-        verificationCode: passwordVerificationCode.trim()
+        verificationCode: passwordVerificationCode.trim(),
+        cred
       });
 
       setPasswordForm({
