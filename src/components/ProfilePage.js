@@ -208,7 +208,7 @@ const ProfilePage = ({ database }) => {
     }
 
     if (!passwordMeetsPolicy(newPassword)) {
-      setError('Password must be at least 10 characters and include uppercase, lowercase, number, and symbol.');
+      setError('Password must be at least 6 letters and contain no numbers or special characters.');
       setSuccess('');
       return;
     }
