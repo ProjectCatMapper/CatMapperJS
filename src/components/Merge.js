@@ -1,11 +1,9 @@
 import { React, useState } from 'react';
 import { Box, Tabs, Tab, Typography } from '@mui/material';
-import image from '../assets/catmapperWhite.webp'
-import { Link } from 'react-router-dom'
-import Divider from '@mui/material/Divider';
 import ProposeMerge from "./MergePropose"
 import JoinDatasetsMerge from "./MergeJoinDatasets"
 import MergeTemplate from "./MergeTemplate"
+import FooterLinks from './FooterLinks';
 
 function TabPanel(props) {
   const { children, value, index, ...other } = props;
@@ -68,20 +66,7 @@ export default function Mergelayout({ database }) {
           <MergeTemplate database={database} />
         </TabPanel>
       </Box>
-      <Divider sx={{ marginTop: 3, marginBottom: 7, marginLeft: 1, marginRight: 1, backgroundColor: 'white' }} />
-
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 2, mb: 0 }}>
-        <img src={image} alt="CatMapper Logo" style={{ height: 80 }} />
-        <Box>
-          <Link id="catmapperfooter" to="/people" underline="none" style={{ color: 'white', textDecoration: 'none', margin: '0 8px' }}>People</Link>
-          <Link to="/news" id="catmapperfooter" underline="none" style={{ color: 'white', textDecoration: 'none', margin: '0 8px' }}>News</Link>
-          <Link to="/funding" id="catmapperfooter" underline="none" style={{ color: 'white', textDecoration: 'none', margin: '0 8px' }}>Funding</Link>
-          <Link to="/citation" id="catmapperfooter" underline="none" style={{ color: 'white', textDecoration: 'none', margin: '0 8px' }}>Citation</Link>
-          <Link to="/terms" id="catmapperfooter" underline="none" style={{ color: 'white', textDecoration: 'none', margin: '0 8px' }}>Terms</Link>
-          <Link to="/contact" id="catmapperfooter" underline="none" style={{ color: 'white', textDecoration: 'none', margin: '0 8px' }}>Contact</Link>
-          <Link to="/download" id="catmapperfooter" underline="none" style={{ color: "white", textDecoration: "none", margin: "0 8px" }}> Download</Link>
-        </Box>
-      </Box>
+      <FooterLinks />
     </Box>
   );
 }
