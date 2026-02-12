@@ -7,9 +7,9 @@ export default function CategoriesTable(props) {
     const [rows, setRows] = useState([]);
 
     // 1. Safety Checks: Ensure we always work with arrays/objects, even if props are null
-    const safeCategories = categories || [];
-    const safeChildList = childcategories || [];
-    const safeNormalized = normalized || {};
+    const safeCategories = React.useMemo(() => categories || [], [categories]);
+    const safeChildList = React.useMemo(() => childcategories || [], [childcategories]);
+    const safeNormalized = React.useMemo(() => normalized || {}, [normalized]);
 
     // DEBUG LOGGING
     if (safeChildList.length > 0) {

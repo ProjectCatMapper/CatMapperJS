@@ -12,8 +12,8 @@ const Propose_Merge = ({ database }) => {
   const [loading, setLoading] = useState(false);
   const [inputValue, setInputValue] = useState('');
   const [open, setOpen] = useState(false);
-  const [data, setData] = useState();
   const [isValid, setIsValid] = useState(false);
+  const [, setData] = useState();
   const [mergeLevel, setMergeLevel] = useState(1);
   const [firstDropdownValue, setFirstDropdownValue] = useState('ANY DOMAIN');
   const [resultFormat, setResultFormat] = useState("key-to-key");
@@ -21,7 +21,7 @@ const Propose_Merge = ({ database }) => {
   const [showKeys, setShowKeys] = useState(false);
   const [keysByDataset, setkeysByDataset] = useState(false);
   const [selectedKeyVariables, setSelectedKeyVariables] = useState({});
-  const { infodata, loading: metadataLoading } = useMetadata(database);
+  const { infodata } = useMetadata(database);
   const [selectedCategory, setSelectedCategory] = useState({});
   const [advdomainDrop, setadvdomainDrop] = React.useState('ANY DOMAIN');
 

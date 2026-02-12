@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, { useState, useEffect, useRef } from "react";
 
 import { useNavigate } from "react-router-dom";
@@ -175,12 +176,14 @@ export default function Tableclick({ cmid, database, tabval }) {
 
   let limit = 300;
 
-  const { infodata, loadingInfo: metadataLoading } = useMetadata(database);
+  const { infodata } = useMetadata(database);
   // dialog box for bad sources
   const handleClose = () => {
     setOpen(false);
   };
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (advoptions.length > 0) {
       setadvdomainDrop([advoptions[0]]);
@@ -301,6 +304,8 @@ export default function Tableclick({ cmid, database, tabval }) {
     return colorMap[match] || "#cccccc";
   };
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (!cmid || !database) {
       console.warn("Skipping fetch: cmid or database is missing", { cmid, database });

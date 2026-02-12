@@ -11,7 +11,7 @@ const Navbar = () => {
     return (
         <div className='header' style={{ position: "relative" }}>
             <div className='image' style={{ margin: 0, paddingTop: 20, border: 0, }}>
-                <Link to='/'><img src={image} width={100} height={70}></img></Link>
+                <Link to='/'><img src={image} width={100} height={70} alt="CatMapper logo"></img></Link>
             </div>
             <ul className={click ? 'nav-menu active' : 'nav-menu'} style={{ color: "white" }}>
                 <li >

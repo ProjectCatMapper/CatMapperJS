@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { Box, Button, Divider, TextField, } from '@mui/material';
 import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
@@ -9,9 +9,9 @@ import { ExcelRenderer } from 'react-excel-renderer';
 const MergeTemplate = ({ database }) => {
 
   const [inputValue, setInputValue] = useState('');
-  const [file, setFile] = useState(null);
-  const [columns, setColumns] = useState();
-  const [rows, setRows] = useState([]);
+  const [, setFile] = useState(null);
+  const [, setColumns] = useState();
+  const [, setRows] = useState([]);
   const [jsonData, setJsondata] = useState();
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [message, setMessage] = useState('');

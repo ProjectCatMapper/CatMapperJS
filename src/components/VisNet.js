@@ -89,7 +89,6 @@ const Neo4jVisualization = ({ visData, dropdownNodeLimit, database }) => {
   }));
 
   const uniqueMap = new Map();
-  let tooltipText
 
   filteredData.forEach(obj => {
     uniqueMap.set(obj.color, obj);
@@ -153,12 +152,11 @@ const Neo4jVisualization = ({ visData, dropdownNodeLimit, database }) => {
       freezeNetwork();
     });
 
-    const safetyTimer = setTimeout(() => {
+    setTimeout(() => {
       freezeNetwork();
     }, 800);
 
     let clickTimeout = null;
-    let lastClickedNode = null;
 
     network.on('click', (params) => {
       if (params.nodes.length === 0) return;
@@ -192,12 +190,12 @@ const Neo4jVisualization = ({ visData, dropdownNodeLimit, database }) => {
           }
           clickTimeout = null;
         }, 750); // Increased to 750ms for touchpad friendliness
-        lastClickedNode = params.nodes[0];
       }
     });
 
 
     network.on("hoverEdge", function (params) {
+      let tooltipText;
       const edgeId = params.edge;
       const edge = visData["edges"].find(edge => edge["id"] === edgeId);
 
@@ -301,7 +299,7 @@ const Neo4jVisualization = ({ visData, dropdownNodeLimit, database }) => {
       document.removeEventListener('mousedown', handleClickOutside);
       network.destroy();
     };
-  }, [visData, dropdownNodeLimit]);
+  }, [currentid, database, dropdownNodeLimit, navigate, nodes, visData]);
 
   const handleTooltipClose = () => {
     setTooltipContent(null);

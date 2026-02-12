@@ -21,7 +21,7 @@ const Video = ({ database }) => {
 
     const sociomaptext = "SocioMap organizes dynamic and complex category systems commonly used by social scientists and policymakers, including ethnicities, languages, religions, and political districts. Each of these systems includes thousands of categories encoded in diverse, dynamic and incompatible ways across a growing corpus of thousands of datasets. SocioMap helps organize these categories so that users can merge diverse datasets for novel analyses."
 
-    const maintext = database == "archamap" ?
+    const maintext = database === "archamap" ?
         archamaptext
         : sociomaptext
 

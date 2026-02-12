@@ -213,7 +213,7 @@ const Sociomap_UserGuide = () => {
       <p><strong>Figure 1. Contents of the USES tie from Geonames to
         Greenland.</strong></p>
       <p><img src="/media/image1.webp"
-        style={{ width: 5.79167, height: 3.23342 }} /></p>
+        style={{ width: 5.79167, height: 3.23342 }} alt="" /></p>
       <p>Indeed, whenever CatMapper catalogues how a dataset uses a specific
         category, it stores this in such a <strong>USES tie</strong> from the
         dataset to the category. This USES tie records: (1) how the dataset
@@ -283,13 +283,13 @@ const Sociomap_UserGuide = () => {
           will appear below. </p></li>
       </ol>
       <p><img src="/media/image3.webp"
-        style={{ width: 6.52083, height: 2.53472 }} /></p>
+        style={{ width: 6.52083, height: 2.53472 }} alt="" /></p>
       <ol start="7" type="1">
         <li>Click on the row for the search result you would like to explore,
           and a <em>Info page</em> will open. </li>
       </ol>
       <p><img src="/media/image4.webp"
-        style={{ width: 6.54167, height: 2.84028 }} /></p>
+        style={{ width: 6.54167, height: 2.84028 }} alt="" /></p>
       <p>The page that opens will include contextual information about the
         category, including the relevant countries and languages, datasets
         containing the category with information on population estimates, sample
@@ -314,7 +314,7 @@ const Sociomap_UserGuide = () => {
         ethnicity from the same dataset.</p>
       <blockquote>
         <p><img src="/media/image5.webp"
-          style={{ width: 6.5, height: 2.82219 }} /></p>
+          style={{ width: 6.5, height: 2.82219 }} alt="" /></p>
       </blockquote>
       <p>In this case, there are many different datasets that contain
         information about Yoruba. Exploring the sample section shows that
@@ -383,7 +383,7 @@ const Sociomap_UserGuide = () => {
       </ol>
       <blockquote>
         <p><img src="/media/image9.webp"
-          style={{ width: 6.49306, height: 2.93056 }} /></p>
+          style={{ width: 6.49306, height: 2.93056 }} alt="" /></p>
       </blockquote>
       <h2
         id="question-how-can-i-identify-and-explore-ethnicities-languages-districts-and-religions-that-are-related-to-a-specific-category">2.4
@@ -459,10 +459,10 @@ const Sociomap_UserGuide = () => {
           will appear below.</p></li>
       </ol>
       <p><img src="/media/image13.webp"
-        style={{ width: 6.5, height: 2.93056 }} /></p>
+        style={{ width: 6.5, height: 2.93056 }} alt="" /></p>
       <p>Here, you can see a list of all the datasets stored in SocioMap.</p>
       <p><img src="/media/image14.webp"
-        style={{ width: 6.47917, height: 2.93056 }} />By checking the <em>Advanced
+        style={{ width: 6.47917, height: 2.93056 }} alt="" />By checking the <em>Advanced
           search</em> box, you can then choose a country of interest from the
         <em>Country</em> dropdown menu. Here, we are looking at the datasets
         stored in SocioMap that are have information from Ghana.</p>
@@ -482,7 +482,7 @@ const Sociomap_UserGuide = () => {
           results will appear below.</p></li>
       </ol>
       <p><img src="/media/image15.webp"
-        style={{ width: 6.47917, height: 2.88889 }} /></p>
+        style={{ width: 6.47917, height: 2.88889 }} alt="" /></p>
       <p>In this case, we are looking for all the ethnicities associated with
         Ghana. You can see that there are a total of 166 associated ethnicities
         stored within SocioMap. Clicking the row will allow you get contextual
