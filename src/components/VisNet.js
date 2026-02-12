@@ -1,11 +1,16 @@
-import { useCallback, useEffect, useState, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import { Network } from 'vis-network';
 import { useNavigate } from 'react-router-dom'
 
 const Neo4jVisualization = ({ visData, dropdownNodeLimit, database }) => {
   const navigate = useNavigate();
+  const visNodes = visData.nodes;
+  const visEdges = visData.edges;
   const valuesToRemove = ['DISTRICT', 'CATEGORY'];
-  const nodes = visData["nodes"].length > dropdownNodeLimit ? visData["nodes"].slice(0, dropdownNodeLimit) : visData["nodes"];
+  const nodes = useMemo(
+    () => (visNodes.length > dropdownNodeLimit ? visNodes.slice(0, dropdownNodeLimit) : visNodes),
+    [dropdownNodeLimit, visNodes]
+  );
   const domainHierarchy = [
     "PROJECTILE_POINT_TYPE",
     "PROJECTILE_POINT_CLUSTER",
@@ -69,9 +74,9 @@ const Neo4jVisualization = ({ visData, dropdownNodeLimit, database }) => {
   };
 
   const filteredMap = new Map();
-  const currentid = visData["nodes"][0].CMID;
+  const currentid = visNodes[0].CMID;
 
-  visData["nodes"].forEach((item) => {
+  visNodes.forEach((item) => {
     const mostSpecific = getMostSpecificDomain(item.domain || []);
     if (mostSpecific && !filteredMap.has(mostSpecific)) {
       filteredMap.set(mostSpecific, item.color);
@@ -107,7 +112,7 @@ const Neo4jVisualization = ({ visData, dropdownNodeLimit, database }) => {
   }, [currentid, database, navigate]);
 
   const formatNodeDetails = useCallback((nodeId) => {
-    const node = visData.nodes.find(obj => obj.id === nodeId);
+    const node = visNodes.find(obj => obj.id === nodeId);
     if (!node) return null;
 
     let details = (node.tooltipcon || []).filter(
@@ -126,10 +131,10 @@ const Neo4jVisualization = ({ visData, dropdownNodeLimit, database }) => {
       cmid: node.CMID,
       lines: [...cmItems, ...glottoItems, ...ISOItems, ...FIPSItems, ...details],
     };
-  }, [visData.nodes]);
+  }, [visNodes]);
 
   const formatEdgeDetails = useCallback((edgeId) => {
-    const edge = visData.edges.find(item => item.id === edgeId);
+    const edge = visEdges.find(item => item.id === edgeId);
     if (!edge) return [];
 
     const cleanAndFormat = (val) => {
@@ -174,7 +179,7 @@ const Neo4jVisualization = ({ visData, dropdownNodeLimit, database }) => {
     }
 
     return [`referenceKey: ${edge.referenceKey}`, `type: ${edge.type}`];
-  }, [visData.edges]);
+  }, [visEdges]);
 
   useEffect(() => {
 
@@ -214,7 +219,7 @@ const Neo4jVisualization = ({ visData, dropdownNodeLimit, database }) => {
 
     };
 
-    const data = { nodes, edges: visData.edges };
+    const data = { nodes, edges: visEdges };
     const network = new Network(container, data, options);
 
     let isMounted = true;
@@ -234,40 +239,13 @@ const Neo4jVisualization = ({ visData, dropdownNodeLimit, database }) => {
     }, 800);
 
     let singleClickTimer = null;
-    let holdTimer = null;
-    let mousedownNodeId = null;
 
     const clearTimers = () => {
       if (singleClickTimer) {
         clearTimeout(singleClickTimer);
         singleClickTimer = null;
       }
-      if (holdTimer) {
-        clearTimeout(holdTimer);
-        holdTimer = null;
-      }
     };
-
-    network.on('mousedown', (params) => {
-      const nodeId = network.getNodeAt(params.pointer.DOM);
-      mousedownNodeId = nodeId || null;
-      if (!mousedownNodeId) return;
-
-      holdTimer = setTimeout(() => {
-        const nodeData = visData.nodes.find(obj => obj.id === mousedownNodeId);
-        if (nodeData?.CMID && nodeData.CMID !== currentid) {
-          navigateToNode(nodeData.CMID);
-        }
-      }, 1500);
-    });
-
-    network.on('mouseup', () => {
-      if (holdTimer) {
-        clearTimeout(holdTimer);
-        holdTimer = null;
-      }
-      mousedownNodeId = null;
-    });
 
     network.on('dragStart', clearTimers);
     network.on('dragging', clearTimers);
@@ -275,7 +253,7 @@ const Neo4jVisualization = ({ visData, dropdownNodeLimit, database }) => {
     network.on('doubleClick', (params) => {
       clearTimers();
       if (!params.nodes.length) return;
-      const nodeData = visData.nodes.find(obj => obj.id === params.nodes[0]);
+      const nodeData = visNodes.find(obj => obj.id === params.nodes[0]);
       if (nodeData?.CMID && nodeData.CMID !== currentid) {
         navigateToNode(nodeData.CMID);
       }
@@ -327,10 +305,26 @@ const Neo4jVisualization = ({ visData, dropdownNodeLimit, database }) => {
       document.removeEventListener('mousedown', handleClickOutside);
       network.destroy();
     };
-  }, [currentid, database, dropdownNodeLimit, formatEdgeDetails, formatNodeDetails, navigate, navigateToNode, nodes, visData]);
+  }, [currentid, formatEdgeDetails, formatNodeDetails, navigateToNode, nodes, visEdges, visNodes]);
 
   const handleNodeInfoClose = () => setNodeInfo(null);
   const handleEdgeInfoClose = () => setEdgeInfo(null);
+  const viewButtonStyle = {
+    backgroundColor: 'rgb(46, 125, 50)',
+    color: '#fff',
+    border: 'none',
+    borderRadius: '4px',
+    padding: '6px 12px',
+    cursor: 'pointer'
+  };
+  const closeButtonStyle = {
+    backgroundColor: 'rgb(211, 47, 47)',
+    color: '#fff',
+    border: 'none',
+    borderRadius: '4px',
+    padding: '6px 12px',
+    cursor: 'pointer'
+  };
 
   return (<div style={{ display: "Flex" }}><div id="network" style={{ height: '400px', width: "1000px" }}></div>
     {edgeInfo && (
@@ -351,7 +345,7 @@ const Neo4jVisualization = ({ visData, dropdownNodeLimit, database }) => {
         }}
       >
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 8 }}>
-          <button onClick={handleEdgeInfoClose}>Close</button>
+          <button onClick={handleEdgeInfoClose} style={closeButtonStyle}>Close</button>
         </div>
         {edgeInfo.lines.map((line, index) => (
           <div key={`edge-${index}`}>{line}</div>
@@ -379,10 +373,10 @@ const Neo4jVisualization = ({ visData, dropdownNodeLimit, database }) => {
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
           <div>
             {nodeInfo.cmid !== currentid && (
-              <button onClick={() => navigateToNode(nodeInfo.cmid)}>View</button>
+              <button onClick={() => navigateToNode(nodeInfo.cmid)} style={viewButtonStyle}>View</button>
             )}
           </div>
-          <button onClick={handleNodeInfoClose}>Close</button>
+          <button onClick={handleNodeInfoClose} style={closeButtonStyle}>Close</button>
         </div>
         {nodeInfo.lines.map((line, index) => (
           <div key={`node-${index}`}>{line}</div>
