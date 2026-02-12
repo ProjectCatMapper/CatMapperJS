@@ -48,6 +48,9 @@
     "start-backend": "cd api && env/bin/flask run --no-debugger",
     "build": "react-scripts build",
     "test": "react-scripts test",
+    "e2e": "playwright test",
+    "e2e:smoke": "playwright test tests/mainRoutes.smoke.spec.js",
+    "e2e:list": "playwright test --list",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {
