@@ -22,6 +22,13 @@ import {
   LinearProgress,
   Snackbar,
   Alert,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
 } from "@mui/material";
 import { styled } from '@mui/material/styles';
 import InputBase from '@mui/material/InputBase';
@@ -149,7 +156,8 @@ export default function Tableclick({ cmid, database, tabval }) {
     "CULTURE_OF",
     "POLITY_OF",
     "USES",
-    "EQUIVALENT"
+    "EQUIVALENT",
+    "MERGING"
   ];
 
   const [activeFilters, setActiveFilters] = useState({
@@ -181,6 +189,8 @@ export default function Tableclick({ cmid, database, tabval }) {
   const [open, setOpen] = useState(false);
   const [bookmarkNotice, setBookmarkNotice] = useState({ open: false, severity: "success", message: "" });
   const historyLoggedRef = useRef("");
+  const [mergeTemplateSummary, setMergeTemplateSummary] = useState(null);
+  const [loadingMergeTemplateSummary, setLoadingMergeTemplateSummary] = useState(false);
 
   let limit = 300;
 
@@ -666,6 +676,60 @@ export default function Tableclick({ cmid, database, tabval }) {
     window.open(url, '_blank');
   };
 
+  const goToCmidInfo = (targetCmid) => {
+    if (!targetCmid) return;
+    navigate(`/${database.toLowerCase()}/${targetCmid}/network`);
+  };
+
+  const downloadRowsAsXlsx = (rows, filename, sheetName = "Sheet1") => {
+    if (!Array.isArray(rows) || rows.length === 0) {
+      alert("No rows available to download.");
+      return;
+    }
+    const worksheet = XLSX.utils.json_to_sheet(rows);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
+    const workbookBinaryString = XLSX.write(workbook, {
+      bookType: "xlsx",
+      type: "binary",
+    });
+
+    const buffer = new ArrayBuffer(workbookBinaryString.length);
+    const view = new Uint8Array(buffer);
+    for (let i = 0; i < workbookBinaryString.length; i++) {
+      view[i] = workbookBinaryString.charCodeAt(i) & 0xff;
+    }
+    const blob = new Blob([buffer], { type: "application/octet-stream" });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.style.display = "none";
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+  };
+
+  const downloadMergingTemplateTies = (tieType) => {
+    if (!mergeTemplateSummary) return;
+    const today = new Date();
+    const dateTag = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+    if (tieType === "merging") {
+      downloadRowsAsXlsx(
+        mergeTemplateSummary.mergingTies || [],
+        `${cmid}_merging_ties_${dateTag}.xlsx`,
+        "MergingTies"
+      );
+    } else {
+      downloadRowsAsXlsx(
+        mergeTemplateSummary.equivalenceTies || [],
+        `${cmid}_equivalence_ties_${dateTag}.xlsx`,
+        "EquivalenceTies"
+      );
+    }
+  };
+
 
   const fetchData = async (event) => {
     setLoadingNetwork(true);
@@ -944,7 +1008,10 @@ export default function Tableclick({ cmid, database, tabval }) {
   };
 
   useEffect(() => {
-    const ordered = orderOfProperties.filter((prop) => fdrop.includes(prop));
+    let ordered = orderOfProperties.filter((prop) => fdrop.includes(prop));
+    if (ordered.includes("MERGING")) {
+      ordered = ordered.filter((prop) => prop !== "MERGING").concat("MERGING");
+    }
     setOrderedProperties(ordered);
 
     if (ordered.length > 0) {
@@ -962,6 +1029,88 @@ export default function Tableclick({ cmid, database, tabval }) {
       navigate(newPath, { replace: true });
     }
   }, [value, tabval, cmid, database, navigate]);
+
+  const domainLabels = Array.isArray(rev?.Domains)
+    ? rev.Domains
+    : rev?.Domains
+      ? String(rev.Domains).split(",").map((x) => x.trim())
+      : [];
+  const isStackNode = domainLabels.includes("STACK");
+  const isMergingTemplateNode = domainLabels.includes("MERGING");
+  const isDatasetLike = cmid.startsWith("SD") || cmid.startsWith("AD") || isStackNode || isMergingTemplateNode || domainLabels.includes("DATASET");
+  const showMergingTemplateTab = isStackNode || isMergingTemplateNode;
+  const hasNetworkTab = orderedProperties.length > 0;
+  const hasPolygonData = Array.isArray(mapt)
+    ? mapt.length > 0
+    : Array.isArray(mapt?.features)
+      ? mapt.features.length > 0
+      : Boolean(mapt && Object.keys(mapt).length > 0);
+  const hasDatasetMapTab = hasPolygonData || (Array.isArray(datasetpoints) && datasetpoints.length > 0);
+  const hasCategoryMapTab = hasPolygonData || (Array.isArray(points) && points.length > 0);
+  const hasDatasetCategoriesTab = (Array.isArray(categories) && categories.length > 0) || (Array.isArray(childcategories) && childcategories.length > 0);
+  const hasCategoryDatasetsTab = Array.isArray(usert) && usert.length > 0;
+  const hasCategoryTimespanTab = Array.isArray(usert) && usert.length > 0;
+  const hasCategoryCategoriesTab = Array.isArray(categories) && categories.length > 0;
+  const hasMergingTemplateTabData = Boolean(
+    mergeTemplateSummary &&
+    (
+      (mergeTemplateSummary.nodeType === "MERGING" && Array.isArray(mergeTemplateSummary.stackSummary) && mergeTemplateSummary.stackSummary.length > 0) ||
+      (mergeTemplateSummary.nodeType === "STACK" && (
+        (Array.isArray(mergeTemplateSummary.datasetSummary) && mergeTemplateSummary.datasetSummary.length > 0) ||
+        Number(mergeTemplateSummary.mergingTemplateCount || 0) > 0
+      ))
+    )
+  );
+  const showMergingTemplateTabWithData = showMergingTemplateTab && hasMergingTemplateTabData;
+
+  useEffect(() => {
+    if (!showMergingTemplateTab || !cmid || !database) {
+      setMergeTemplateSummary(null);
+      return;
+    }
+    setLoadingMergeTemplateSummary(true);
+    fetch(`${process.env.REACT_APP_API_URL}/merge/template/summary/${database}/${cmid}`)
+      .then((res) => res.json())
+      .then((data) => setMergeTemplateSummary(data))
+      .catch((err) => {
+        console.error("Error fetching merge template summary:", err);
+        setMergeTemplateSummary(null);
+      })
+      .finally(() => setLoadingMergeTemplateSummary(false));
+  }, [showMergingTemplateTab, cmid, database]);
+
+  useEffect(() => {
+    const availableTabs = isDatasetLike
+      ? [
+        hasNetworkTab ? "network" : null,
+        hasDatasetMapTab ? "map" : null,
+        hasDatasetCategoriesTab ? "categories" : null,
+        showMergingTemplateTabWithData ? "merging-template" : null
+      ].filter(Boolean)
+      : [
+        hasNetworkTab ? "network" : null,
+        hasCategoryMapTab ? "map" : null,
+        hasCategoryTimespanTab ? "timespan" : null,
+        hasCategoryDatasetsTab ? "datasets" : null,
+        hasCategoryCategoriesTab ? "categories" : null
+      ].filter(Boolean);
+
+    if (availableTabs.length === 0) return;
+    if (!availableTabs.includes(value)) {
+      setValue(availableTabs[0]);
+    }
+  }, [
+    isDatasetLike,
+    value,
+    hasNetworkTab,
+    hasDatasetMapTab,
+    hasDatasetCategoriesTab,
+    showMergingTemplateTabWithData,
+    hasCategoryMapTab,
+    hasCategoryTimespanTab,
+    hasCategoryDatasetsTab,
+    hasCategoryCategoriesTab
+  ]);
 
   const [boxHeight, setBoxHeight] = useState("auto");
 
@@ -1243,8 +1392,7 @@ export default function Tableclick({ cmid, database, tabval }) {
           }}
         >
           {/* Render tabs here--first check for DATASET view, otherwise use CATEGORY view */}
-          {cmid.startsWith("SD") ||
-            cmid.startsWith("AD") ? (
+          {isDatasetLike ? (
             <React.Fragment>
               <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
                 <Tabs
@@ -1253,13 +1401,17 @@ export default function Tableclick({ cmid, database, tabval }) {
                   onChange={handleChange}
                   aria-label="tab layout"
                 >
-                  <Tab label="Network Explorer" value="network" {...a11yProps("network")} />
-                  <Tab label="Map" value="map" {...a11yProps("map")} />
-                  <Tab label="Categories" value="categories" {...a11yProps("categories")} />
+                  {hasNetworkTab && <Tab label="Network Explorer" value="network" {...a11yProps("network")} />}
+                  {hasDatasetMapTab && <Tab label="Map" value="map" {...a11yProps("map")} />}
+                  {hasDatasetCategoriesTab && <Tab label="Categories" value="categories" {...a11yProps("categories")} />}
+                  {showMergingTemplateTabWithData && (
+                    <Tab label="Merging Template" value="merging-template" {...a11yProps("merging-template")} />
+                  )}
                 </Tabs>
               </Box>
 
-              <CustomTabPanel value={value} index={"network"}>
+              {hasNetworkTab && (
+                <CustomTabPanel value={value} index={"network"}>
                 {/* Show loading bar only if fetching network data */}
                 {loadingNetwork && <LinearProgress sx={{ marginBottom: 2 }} />}
                 <NetworkExplorerView
@@ -1285,9 +1437,11 @@ export default function Tableclick({ cmid, database, tabval }) {
                   selectedEventTypes={selectedEventTypes}
                   updateEventTypeData={updateEventTypeData}
                 />
-              </CustomTabPanel>
+                </CustomTabPanel>
+              )}
 
-              <CustomTabPanel value={value} index={"map"}>
+              {hasDatasetMapTab && (
+                <CustomTabPanel value={value} index={"map"}>
                 {/* Show loading bar if background data is loading */}
                 {loadingBackground && <LinearProgress sx={{ marginBottom: 2 }} />}
                 <div
@@ -1330,13 +1484,129 @@ export default function Tableclick({ cmid, database, tabval }) {
                     </DialogActions>
                   </Dialog>
                 </div>
-              </CustomTabPanel>
+                </CustomTabPanel>
+              )}
 
-              <CustomTabPanel value={value} index={"categories"}>
+              {hasDatasetCategoriesTab && (
+                <CustomTabPanel value={value} index={"categories"}>
                 {/* Show loading bar if background data is loading */}
                 {loadingBackground && <LinearProgress sx={{ marginBottom: 2 }} />}
                 <CategoriesTable categories={categories} childcategories={childcategories} rememberChoice={rememberChoice} normalized={normalizedRef.current} />
-              </CustomTabPanel>
+                </CustomTabPanel>
+              )}
+              {showMergingTemplateTabWithData && (
+                <CustomTabPanel value={value} index={"merging-template"}>
+                {loadingMergeTemplateSummary && <LinearProgress sx={{ marginBottom: 2 }} />}
+                {!loadingMergeTemplateSummary && !mergeTemplateSummary && (
+                  <p>No merging template summary available.</p>
+                )}
+
+                {!loadingMergeTemplateSummary && mergeTemplateSummary?.nodeType === "MERGING" && (
+                  <Box>
+                    <Box sx={{ display: "flex", gap: 1, mb: 2 }}>
+                      <Button variant="contained" onClick={() => downloadMergingTemplateTies("merging")}>
+                        Download Merging Ties
+                      </Button>
+                      <Button variant="contained" onClick={() => downloadMergingTemplateTies("equivalence")}>
+                        Download Equivalence Ties
+                      </Button>
+                    </Box>
+                    <TableContainer component={Paper} variant="outlined">
+                      <Table size="small">
+                        <TableHead>
+                          <TableRow>
+                            <TableCell>Stack CMID</TableCell>
+                            <TableCell>Stack CMName</TableCell>
+                            <TableCell># of Datasets</TableCell>
+                            <TableCell># of Equivalence Ties</TableCell>
+                            <TableCell># of Key Reassignment</TableCell>
+                            <TableCell># of Variables</TableCell>
+                          </TableRow>
+                        </TableHead>
+                        <TableBody>
+                          {(mergeTemplateSummary.stackSummary || []).map((row) => (
+                            <TableRow key={row.stackID}>
+                              <TableCell>
+                                <Button
+                                  size="small"
+                                  variant="text"
+                                  sx={{ p: 0, minWidth: 0 }}
+                                  onClick={() => goToCmidInfo(row.stackID)}
+                                >
+                                  {row.stackID}
+                                </Button>
+                              </TableCell>
+                              <TableCell>{row.stackCMName || ""}</TableCell>
+                              <TableCell>{row.datasetCount || 0}</TableCell>
+                              <TableCell>{row.equivalenceTieCount || 0}</TableCell>
+                              <TableCell>{row.keyReassignmentCount || 0}</TableCell>
+                              <TableCell>{row.variableCount || 0}</TableCell>
+                            </TableRow>
+                          ))}
+                          <TableRow>
+                            <TableCell sx={{ fontWeight: 700 }}>Total</TableCell>
+                            <TableCell />
+                            <TableCell sx={{ fontWeight: 700 }}>{mergeTemplateSummary.stackSummaryTotals?.datasetCount || 0}</TableCell>
+                            <TableCell sx={{ fontWeight: 700 }}>{mergeTemplateSummary.stackSummaryTotals?.equivalenceTieCount || 0}</TableCell>
+                            <TableCell sx={{ fontWeight: 700 }}>{mergeTemplateSummary.stackSummaryTotals?.keyReassignmentCount || 0}</TableCell>
+                            <TableCell sx={{ fontWeight: 700 }}>{mergeTemplateSummary.stackSummaryTotals?.variableCount || 0}</TableCell>
+                          </TableRow>
+                        </TableBody>
+                      </Table>
+                    </TableContainer>
+                  </Box>
+                )}
+
+                {!loadingMergeTemplateSummary && mergeTemplateSummary?.nodeType === "STACK" && (
+                  <Box>
+                    <Typography sx={{ fontWeight: 700, mb: 1 }}>
+                      # of Merging Templates using this Stack: {mergeTemplateSummary.mergingTemplateCount || 0}
+                    </Typography>
+                    <Box sx={{ display: "flex", gap: 1, mb: 2 }}>
+                      <Button variant="contained" onClick={() => downloadMergingTemplateTies("merging")}>
+                        Download Merging Ties
+                      </Button>
+                      <Button variant="contained" onClick={() => downloadMergingTemplateTies("equivalence")}>
+                        Download Equivalence Ties
+                      </Button>
+                    </Box>
+                    <TableContainer component={Paper} variant="outlined">
+                      <Table size="small">
+                        <TableHead>
+                          <TableRow>
+                            <TableCell>Dataset CMID</TableCell>
+                            <TableCell>Dataset CMName</TableCell>
+                            <TableCell># of Equivalence Ties</TableCell>
+                            <TableCell># of Key Reassignment</TableCell>
+                            <TableCell># of Variables</TableCell>
+                          </TableRow>
+                        </TableHead>
+                        <TableBody>
+                          {(mergeTemplateSummary.datasetSummary || []).map((row) => (
+                            <TableRow key={row.datasetID}>
+                              <TableCell>
+                                <Button
+                                  size="small"
+                                  variant="text"
+                                  sx={{ p: 0, minWidth: 0 }}
+                                  onClick={() => goToCmidInfo(row.datasetID)}
+                                >
+                                  {row.datasetID}
+                                </Button>
+                              </TableCell>
+                              <TableCell>{row.datasetCMName || ""}</TableCell>
+                              <TableCell>{row.equivalenceTieCount || 0}</TableCell>
+                              <TableCell>{row.keyReassignmentCount || 0}</TableCell>
+                              <TableCell>{row.variableCount || 0}</TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </TableContainer>
+                  </Box>
+                )}
+                </CustomTabPanel>
+              )}
             </React.Fragment>
           ) : (
             // Render for category view
@@ -1348,16 +1618,17 @@ export default function Tableclick({ cmid, database, tabval }) {
                   onChange={handleChange}
                   aria-label="basic tabs example"
                 >
-                  <Tab label="Network Explorer" value="network" {...a11yProps("network")} />
-                  <Tab label="Map" value="map" {...a11yProps("map")} />
-                  <Tab label="Timespan" value="timespan" {...a11yProps("timespan")} />
-                  <Tab label="Datasets" value="datasets" {...a11yProps("datasets")} />
-                  {categories.length !== 0 ? (
+                  {hasNetworkTab && <Tab label="Network Explorer" value="network" {...a11yProps("network")} />}
+                  {hasCategoryMapTab && <Tab label="Map" value="map" {...a11yProps("map")} />}
+                  {hasCategoryTimespanTab && <Tab label="Timespan" value="timespan" {...a11yProps("timespan")} />}
+                  {hasCategoryDatasetsTab && <Tab label="Datasets" value="datasets" {...a11yProps("datasets")} />}
+                  {hasCategoryCategoriesTab ? (
                     <Tab label="Categories" value="categories" {...a11yProps("categories")} />
                   ) : null}
                 </Tabs>
               </Box>
-              <CustomTabPanel value={value} index={"network"}>
+              {hasNetworkTab && (
+                <CustomTabPanel value={value} index={"network"}>
                 {/* Show loading bar if background data is loading */}
                 {loadingBackground && <LinearProgress sx={{ marginBottom: 2 }} />}
                 <NetworkExplorerView
@@ -1383,8 +1654,10 @@ export default function Tableclick({ cmid, database, tabval }) {
                   selectedEventTypes={selectedEventTypes}
                   updateEventTypeData={updateEventTypeData}
                 />
-              </CustomTabPanel>
-              <CustomTabPanel value={value} index={"map"}>
+                </CustomTabPanel>
+              )}
+              {hasCategoryMapTab && (
+                <CustomTabPanel value={value} index={"map"}>
                 <div
                   style={{
                     position: "relative",
@@ -1423,16 +1696,23 @@ export default function Tableclick({ cmid, database, tabval }) {
                     </DialogActions>
                   </Dialog>
                 </div>
-              </CustomTabPanel>
-              <CustomTabPanel value={value} index={"timespan"}>
+                </CustomTabPanel>
+              )}
+              {hasCategoryTimespanTab && (
+                <CustomTabPanel value={value} index={"timespan"}>
                 {usert ? (<TimespanTable data={usert} />) : (<p> No Timespan available for this category.</p>)}
-              </CustomTabPanel>
-              <CustomTabPanel value={value} index={"datasets"}>
+                </CustomTabPanel>
+              )}
+              {hasCategoryDatasetsTab && (
+                <CustomTabPanel value={value} index={"datasets"}>
                 <ClickTable usert={usert} />
-              </CustomTabPanel>
-              <CustomTabPanel value={value} index={"categories"}>
+                </CustomTabPanel>
+              )}
+              {hasCategoryCategoriesTab && (
+                <CustomTabPanel value={value} index={"categories"}>
                 <CategoriesTable categories={categories} />
-              </CustomTabPanel>
+                </CustomTabPanel>
+              )}
             </React.Fragment>
           )}
         </Box>
