@@ -8,7 +8,7 @@ import { useAuth } from './AuthContext';
 import { CircularProgress } from '@mui/material';
 import { Dialog, DialogContent, DialogActions, DialogContentText, DialogTitle } from '@mui/material';
 import * as XLSX from 'xlsx';
-import domainOptions from "./dropdown.json";
+import domainFieldOptions from "./dropdown.json";
 import { parseTabularFile } from '../utils/tabularUpload';
 
 
@@ -44,7 +44,7 @@ const Edit = ({ database }) => {
   const [missingCol, setMissingCol] = useState(0);
   const [openDialog, setOpenDialog] = useState(false);
   const [formData, setFormData] = useState({
-    domain: 'ALL NODES',
+    domain: '',
     datasetID: '',
     cmNameColumn: '',
     categoryNamesColumn: '',
@@ -52,6 +52,7 @@ const Edit = ({ database }) => {
     cmidColumn: '',
     keyColumn: '',
   });
+  const [simpleDomainOptions, setSimpleDomainOptions] = useState([]);
   const [CMIDText, setCMIDText] = useState('The new dataset CMID is pending.');
   const [mergingType, setMergingType] = useState("0");
   let required = [];
@@ -258,8 +259,55 @@ const Edit = ({ database }) => {
     }
   };
 
-  const fallbackOptions = ["Name", "Key", "CatMapper ID (CMID)"];
-  const fieldOptions = domainOptions[formData.domain] || fallbackOptions;
+  useEffect(() => {
+    if (!database) return;
+
+    const excluded = new Set([
+      'DATASET',
+      'DATASETS',
+      'CATEGORY',
+      'CATEGORIES',
+      'ANY NODES',
+      'ANY NODE',
+      'ANY DOMAIN',
+      'ALL DOMAINS',
+      'ALL DOMAIN',
+      'ALL NODES',
+      'ALL NODE',
+    ]);
+
+    const loadSimpleDomains = async () => {
+      try {
+        const response = await fetch(`${process.env.REACT_APP_API_URL}/getDomains/${database}`);
+        const data = await response.json();
+
+        const domains = [
+          ...new Set(
+            (Array.isArray(data) ? data : [])
+              .map((item) => String(item?.display || '').trim())
+              .filter(Boolean)
+              .filter((value) => !excluded.has(value.toUpperCase()))
+          ),
+        ];
+
+        setSimpleDomainOptions(domains);
+
+        setFormData((prev) => {
+          if (prev.domain && domains.includes(prev.domain)) return prev;
+          return { ...prev, domain: domains[0] || '' };
+        });
+      } catch (err) {
+        const staticDomains = Object.keys(domainFieldOptions).filter((value) => !excluded.has(String(value).toUpperCase()));
+        setSimpleDomainOptions(staticDomains);
+        setFormData((prev) => {
+          if (prev.domain && staticDomains.includes(prev.domain)) return prev;
+          return { ...prev, domain: staticDomains[0] || '' };
+        });
+      }
+    };
+
+    loadSimpleDomains();
+  }, [database]);
 
   const handleSubmit = async () => {
 
@@ -812,7 +860,7 @@ const Edit = ({ database }) => {
               sx={{ width: 300, height: 40 }}
               margin="normal"
             >
-              {fieldOptions.map((key) => (
+              {simpleDomainOptions.map((key) => (
                 <MenuItem key={key} value={key}>
                   {key}
                 </MenuItem>
