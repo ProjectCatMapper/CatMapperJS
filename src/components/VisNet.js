@@ -6,80 +6,20 @@ const Neo4jVisualization = ({ visData, dropdownNodeLimit, database }) => {
   const navigate = useNavigate();
   const visNodes = visData.nodes;
   const visEdges = visData.edges;
-  const valuesToRemove = ['DISTRICT', 'CATEGORY'];
   const nodes = useMemo(
     () => (visNodes.length > dropdownNodeLimit ? visNodes.slice(0, dropdownNodeLimit) : visNodes),
     [dropdownNodeLimit, visNodes]
   );
-  const domainHierarchy = [
-    "PROJECTILE_POINT_TYPE",
-    "PROJECTILE_POINT_CLUSTER",
-    "PROJECTILE_POINT",
-    "CERAMIC_TYPE",
-    "CERAMIC_WARE",
-    "CERAMIC",
-    "PHYTOLITH",
-    "BOTANICAL",
-    "FAUNA",
-    "SUBSPECIES",
-    "SPECIES",
-    "SUBGENUS",
-    "GENUS",
-    "FAMILY",
-    "ORDER",
-    "CLASS",
-    "PHYLUM",
-    "KINGDOM",
-    "BIOTA",
-    "FEATURE",
-    "SITE",
-    "ADM0",
-    "ADM1",
-    "ADM2",
-    "ADM3",
-    "ADM4",
-    "ADMD",
-    "ADME",
-    "ADML",
-    "ADMX",
-    "REGION",
-    "DISTRICT",
-    "PERIOD",
-    "DIALECT",
-    "LANGUAGE",
-    "FAMILY",
-    "LANGUOID",
-    "ETHNICITY",
-    "RELIGION",
-    "OCCUPATION",
-    "POLITY",
-    "CULTURE",
-    "STONE",
-    "DATASET",
-    "GENERIC",
-    "VARIABLE"
-  ];
-
-  const getMostSpecificDomain = (domains) => {
-    const flat = Array.from(new Set(domains.flat()));
-    const filtered = flat.filter(val => !valuesToRemove.includes(val));
-
-    for (const specific of domainHierarchy) {
-      if (filtered.includes(specific)) {
-        return specific;
-      }
-    }
-
-    return null;
-  };
 
   const filteredMap = new Map();
   const currentid = visNodes[0].CMID;
 
   visNodes.forEach((item) => {
-    const mostSpecific = getMostSpecificDomain(item.domain || []);
-    if (mostSpecific && !filteredMap.has(mostSpecific)) {
-      filteredMap.set(mostSpecific, item.color);
+    const legendLabel = item.legendLabel || (Array.isArray(item.domain) ? item.domain.join(' + ') : 'UNMAPPED');
+    const legendColor = item.color || '#cccccc';
+    const legendKey = `${legendLabel}::${legendColor}`;
+    if (!filteredMap.has(legendKey)) {
+      filteredMap.set(legendKey, { domain: legendLabel, color: legendColor });
     }
     if (item.CMID === currentid) {
       item.shape = 'triangle';
@@ -88,18 +28,7 @@ const Neo4jVisualization = ({ visData, dropdownNodeLimit, database }) => {
     }
   });
 
-  const filteredData = Array.from(filteredMap.entries()).map(([domain, color]) => ({
-    domain,
-    color
-  }));
-
-  const uniqueMap = new Map();
-
-  filteredData.forEach(obj => {
-    uniqueMap.set(obj.color, obj);
-  });
-
-  const uniqueArray = Array.from(uniqueMap.values());
+  const uniqueArray = Array.from(filteredMap.values());
   const [nodeInfo, setNodeInfo] = useState(null);
   const [edgeInfo, setEdgeInfo] = useState(null);
   const nodeInfoRef = useRef(null);
