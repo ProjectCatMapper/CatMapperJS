@@ -93,6 +93,7 @@ const App = () => {
         <Route path='/FAQ' element={<FAQ />} />
         <Route path='/:database/edit' element={<ProtectedRoute requiredLevel={1}><EditPage /></ProtectedRoute>} />
         <Route path='/:database/profile' element={<ProtectedRoute requiredLevel={1}><Profile /></ProtectedRoute>} />
+        <Route path='/:database/profile/:tab' element={<ProtectedRoute requiredLevel={1}><Profile /></ProtectedRoute>} />
         <Route path='/:database/admin' element={<ProtectedRoute requiredLevel={2}><AdminPage /></ProtectedRoute>} />
         <Route path='/editMetadata/:cmid' element={<ProtectedRoute requiredLevel={2}><DynamicPropertiesForm /></ProtectedRoute>} />
       </Routes >
