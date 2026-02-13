@@ -56,6 +56,11 @@ fi
 
 # 4. Run the build
 echo "📦 Running npm build..."
+
+# Ensure build/cache paths are writable by deploy user before build.
+mkdir -p build node_modules/.cache
+chown -R "$DEPLOY_USER":catmapper build node_modules/.cache
+
 run_as_deploy_user npm run build
 
 # 5. Deploy the files
