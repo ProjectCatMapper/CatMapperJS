@@ -100,7 +100,7 @@ const ProfilePage = ({ database }) => {
 
   const hasProfileChanges = useMemo(() => {
     if (!profile) return false;
-    return ['firstName', 'lastName', 'username', 'email', 'database', 'intendedUse'].some(
+    return ['firstName', 'lastName', 'username', 'email', 'intendedUse'].some(
       (field) => (profile[field] || '') !== (formData[field] || '')
     );
   }, [formData, profile]);
@@ -119,8 +119,8 @@ const ProfilePage = ({ database }) => {
       return;
     }
 
-    if (!formData.firstName || !formData.lastName || !formData.email || !formData.username || !formData.database) {
-      setError('First name, last name, username, email, and database are required.');
+    if (!formData.firstName || !formData.lastName || !formData.email || !formData.username) {
+      setError('First name, last name, username, and email are required.');
       setSuccess('');
       return;
     }
@@ -312,9 +312,6 @@ const ProfilePage = ({ database }) => {
             </Grid>
             <Grid item xs={12} md={6}>
               <TextField label="Email" type="email" value={formData.email} onChange={handleFieldChange('email')} fullWidth />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField label="Database" value={formData.database} onChange={handleFieldChange('database')} fullWidth />
             </Grid>
             <Grid item xs={12}>
               <TextField
