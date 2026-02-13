@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Box, Button, FormControlLabel, Radio, RadioGroup, Checkbox, Typography, Divider, Select, NativeSelect, TextField, MenuItem, FormControl, FormGroup, Snackbar, Alert, Paper, Tooltip } from '@mui/material';
+import { Box, Button, FormControlLabel, Radio, RadioGroup, Checkbox, Typography, Divider, Select, NativeSelect, TextField, MenuItem, FormControl, FormGroup, Snackbar, Alert, Paper, Tooltip, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
 import * as XLSX from 'xlsx';
 import CircularProgress from '@mui/material/CircularProgress';
 import Backdrop from '@mui/material/Backdrop';
@@ -28,6 +28,7 @@ const Propose_Merge = ({ database }) => {
   const [selectedCategory, setSelectedCategory] = useState({});
   const [advdomainDrop, setadvdomainDrop] = React.useState('ANY DOMAIN');
   const [mergeInputError, setMergeInputError] = useState('');
+  const [validatedDatasets, setValidatedDatasets] = useState([]);
 
   const [advoptions, setadvoptions] = React.useState(['ANY DOMAIN']);
 
@@ -157,27 +158,35 @@ const Propose_Merge = ({ database }) => {
   const handleValidate = async () => {
     if (!validateDatasetInputs()) return;
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/validateDatasets`, {
-        method: 'POST',
+      const response = await fetch(process.env.REACT_APP_API_URL + "/validateDatasets", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          "names": inputValue,
-          "database": database,
+          names: inputValue,
+          database: database,
         }),
       });
 
       const result = await response.json();
-      console.log(result)
+      const rows = result.datasets || [];
+      setValidatedDatasets(rows);
+
       if (result.success === true) {
-        alert(`Validation successful: ${result.message || "All nodes exist."}`);
+        alert("Validation successful: " + (result.message || "All nodes exist."));
         setIsValid(true);
       } else {
-        alert(`Validation failed: ${result.message || "Some nodes are missing."}`);
+        const missing = Array.isArray(result.missing) && result.missing.length > 0
+          ? " Missing IDs: " + result.missing.join(", ") + "."
+          : "";
+        alert("Validation failed: " + (result.message || "Some nodes are missing.") + missing);
+        setIsValid(false);
       }
     } catch (error) {
-      alert('Validation failed. Please try again.');
+      setIsValid(false);
+      setValidatedDatasets([]);
+      alert("Validation failed. Please try again.");
     }
   };
 
@@ -307,6 +316,8 @@ const Propose_Merge = ({ database }) => {
           onChange={(e) => {
             setInputValue(e.target.value);
             setMergeInputError('');
+            setIsValid(false);
+            setValidatedDatasets([]);
           }}
           error={Boolean(mergeInputError)}
           helperText={mergeInputError || 'Only DATASET CMIDs are valid here (SD/AD).'}
@@ -342,6 +353,32 @@ const Propose_Merge = ({ database }) => {
           Merge proposal complete!
         </Alert>
       </Snackbar>
+
+      {validatedDatasets.length > 0 && (
+        <TableContainer component={Paper} variant="outlined" sx={{ mt: 2, mb: 2, maxWidth: "100%" }}>
+          <Table size="small" aria-label="validated dataset details">
+            <TableHead>
+              <TableRow>
+                <TableCell sx={{ fontWeight: 600, whiteSpace: "nowrap" }}>CMID</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>CMName</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>shortName</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>DatasetCitation</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {validatedDatasets.map((row) => (
+                <TableRow key={row.CMID || row.cmid}>
+                  <TableCell sx={{ whiteSpace: "nowrap" }}>{row.CMID || row.cmid || ""}</TableCell>
+                  <TableCell>{row.CMName || row.cmname || ""}</TableCell>
+                  <TableCell>{row.shortName || row.shortname || ""}</TableCell>
+                  <TableCell>{row.DatasetCitation || row.datasetcitation || ""}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      )}
+
       <Divider sx={{ my: 2 }} />
       <h4 style={{ color: 'black', padding: "1px" }}>Choose Domain</h4>
       <Box display="flex" alignItems="center" gap={2}>

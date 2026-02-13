@@ -23,11 +23,13 @@ run_as_deploy_user() {
 
 # Initialize variables
 SKIP_VERSION=false
+FAST_BUILD=true
 
 # Parse flags
 while [[ "$#" -gt 0 ]]; do
   case $1 in
     (--no-version) SKIP_VERSION=true ;;
+    (--full-build) FAST_BUILD=false ;;
     (*) echo "Unknown parameter passed: $1"; exit 1 ;;
   esac
   shift
@@ -61,7 +63,13 @@ echo "📦 Running npm build..."
 mkdir -p build node_modules/.cache
 chown -R "$DEPLOY_USER":catmapper build node_modules/.cache
 
-run_as_deploy_user npm run build
+if [ "$FAST_BUILD" = true ]; then
+  echo "⚡ Fast build mode enabled (DISABLE_ESLINT_PLUGIN=true, GENERATE_SOURCEMAP=false)"
+  run_as_deploy_user env DISABLE_ESLINT_PLUGIN=true GENERATE_SOURCEMAP=false npm run build
+else
+  echo "🧪 Full build mode enabled"
+  run_as_deploy_user npm run build
+fi
 
 # 5. Deploy the files
 echo "🚚 Syncing files to Nginx storage..."
