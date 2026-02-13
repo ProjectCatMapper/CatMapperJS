@@ -7,17 +7,30 @@ const parseError = async (response) => {
   } catch (error) {
     payload = null;
   }
+  if (response.status === 401 || response.status === 403) {
+    throw new Error(payload?.error || 'Authentication failed. Please log in again.');
+  }
   throw new Error(payload?.error || payload?.message || `Request failed with status ${response.status}`);
 };
 
 const requestJson = async (url, options = {}) => {
-  const response = await fetch(url, {
-    headers: {
-      'Content-Type': 'application/json',
-      ...(options.headers || {})
-    },
-    ...options
-  });
+  let response;
+  try {
+    response = await fetch(url, {
+      headers: {
+        'Content-Type': 'application/json',
+        ...(options.headers || {})
+      },
+      ...options
+    });
+  } catch (error) {
+    // Browsers usually throw TypeError('Failed to fetch') on CORS/preflight/network failures.
+    const message = String(error?.message || '').toLowerCase();
+    if (message.includes('failed to fetch') || message.includes('networkerror')) {
+      throw new Error('Request blocked by network/CORS. Please refresh login and try again. If it persists, contact support.');
+    }
+    throw new Error(error?.message || 'Unexpected network error.');
+  }
 
   if (!response.ok) {
     await parseError(response);
