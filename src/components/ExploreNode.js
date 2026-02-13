@@ -246,114 +246,6 @@ export default function Tableclick({ cmid, database, tabval }) {
       .map(([key, value]) => `${key}: ${value}\n`);
   };
 
-  const getColorBasedOnValue = (value) => {
-    const hierarchy = [
-      "PROJECTILE_POINT_TYPE",
-      "PROJECTILE_POINT_CLUSTER",
-      "PROJECTILE_POINT",
-      "CERAMIC_TYPE",
-      "CERAMIC_WARE",
-      "CERAMIC",
-      "PHYTOLITH",
-      "BOTANICAL",
-      "FAUNA",
-      "SUBSPECIES",
-      "SPECIES",
-      "SUBGENUS",
-      "GENUS",
-      "FAMILY",
-      "ORDER",
-      "CLASS",
-      "PHYLUM",
-      "KINGDOM",
-      "BIOTA",
-      "FEATURE",
-      "SITE",
-      "ADM0",
-      "ADM1",
-      "ADM2",
-      "ADM3",
-      "ADM4",
-      "ADMD",
-      "ADME",
-      "ADML",
-      "ADMX",
-      "REGION",
-      "DISTRICT",
-      "PERIOD",
-      "DIALECT",
-      "LANGUAGE",
-      "FAMILY",
-      "LANGUOID",
-      "ETHNICITY",
-      "RELIGION",
-      "OCCUPATION",
-      "POLITY",
-      "CULTURE",
-      "STONE",
-      "DATASET",
-      "GENERIC",
-      "VARIABLE"
-    ];
-
-    const colorMap = {
-      "PROJECTILE_POINT_TYPE": "#e6194b", // strong red
-      "PROJECTILE_POINT_CLUSTER": "#3cb44b", // medium green
-      "PROJECTILE_POINT": "#ffe119", // bright yellow
-      "CERAMIC_TYPE": "#0082c8", // vivid blue
-      "CERAMIC_WARE": "#f58231", // orange
-      "CERAMIC": "#911eb4", // purple
-      "PHYTOLITH": "#46f0f0", // cyan
-      "BOTANICAL": "#f032e6", // magenta
-      "FAUNA": "#d2f53c", // lime
-      "SUBSPECIES": "#fabebe", // pink
-      "SPECIES": "#008080", // teal
-      "SUBGENUS": "#e6beff", // lavender
-      "GENUS": "#aa6e28", // brown
-      "FAMILY": "#fffac8", // pale yellow
-      "ORDER": "#800000", // maroon
-      "CLASS": "#aaffc3", // mint green
-      "PHYLUM": "#808000", // olive
-      "KINGDOM": "#ffd8b1", // peach
-      "BIOTA": "#000080", // navy
-      "FEATURE": "#808080", // gray
-      "SITE": "#7b4173", // plum
-      "ADM0": "#d62728", // crimson
-      "ADM1": "#2ca02c", // bright green
-      "ADM2": "#ff7f0e", // bright orange
-      "ADM3": "#1f77b4", // medium blue
-      "ADM4": "#a9a9a9", // dark gray
-      "ADMD": "#9467bd", // lavender purple
-      "ADME": "#8c564b", // dark brown
-      "ADML": "#e377c2", // light pink
-      "ADMX": "#7f7f7f", // medium gray
-      "REGION": "#bcbd22", // yellow-green
-      "DISTRICT": "#17becf", // aqua
-      "PERIOD": "#393b79", // indigo
-      "DIALECT": "#637939", // moss green
-      "LANGUAGE": "#8c6d31", // mustard
-      "LANGUOID": "#843c39", // brick red
-      "ETHNICITY": "#7b4173", // plum
-      "RELIGION": "#3182bd", // steel blue
-      "OCCUPATION": "#fdd0a2", // sand
-      "POLITY": "#a1d99b", // pale green
-      "CULTURE": "#9e9ac8", // lilac
-      "STONE": "#f768a1", // hot pink
-      "DATASET": "#41ab5d", // grass green
-      "GENERIC": "#6baed6", // sky blue
-      "VARIABLE": "#d6616b" // dusty rose
-    };
-
-
-    const inputSet = new Set(
-      value.flat().filter((v) => v !== "CATEGORY" && v !== "DISTRICT")
-    );
-
-    const match = hierarchy.find((type) => inputSet.has(type));
-
-    return colorMap[match] || "#cccccc";
-  };
-
   // eslint-disable-next-line react-hooks/exhaustive-deps
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
@@ -753,9 +645,10 @@ export default function Tableclick({ cmid, database, tabval }) {
         id: node["1"].id,
         label: node["1"].CMName,
         domain: node["1"].labels,
+        legendLabel: node["1"].legendLabel || (Array.isArray(node["1"].labels) ? node["1"].labels.join(":") : "UNMAPPED"),
         CMID: node["1"].CMID,
         tooltipcon: generateTooltipContent(node["1"]),
-        color: getColorBasedOnValue(node["1"].labels),
+        color: node["1"].color || "#cccccc",
       }));
 
       const nodes = Array.from(new Set(node.map(JSON.stringify))).map(
