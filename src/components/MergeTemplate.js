@@ -1,9 +1,9 @@
 import React, { useState } from 'react'
-import { Box, Button, Divider, TextField, } from '@mui/material';
+import { Box, Button, Divider, TextField, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from '@mui/material';
 import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
 import * as XLSX from 'xlsx';
-import { ExcelRenderer } from 'react-excel-renderer';
+import { parseTabularFile } from '../utils/tabularUpload';
 
 
 const MergeTemplate = ({ database }) => {
@@ -17,6 +17,25 @@ const MergeTemplate = ({ database }) => {
   const [message, setMessage] = useState('');
   const [downloadHash, setDownloadHash] = useState('');
   const [templateData, setTemplateData] = useState([]);
+  const [templateFound, setTemplateFound] = useState(false);
+  const [uploadTemplateValid, setUploadTemplateValid] = useState(false);
+
+  const validTemplateRows = (templateData || []).filter((row) => row?.mergingID && String(row.mergingID).trim() !== "");
+
+  const mergingMetadataRows = Array.from(
+    new Map(
+      validTemplateRows
+        .map((row) => [
+          row.mergingID,
+          {
+            mergingID: row.mergingID,
+            mergingCMName: row.mergingCMName || "",
+            mergingShortName: row.mergingShortName || "",
+            mergingCitation: row.mergingCitation || ""
+          }
+      ])
+    ).values()
+  );
 
   const handleChange = (event) => {
     setInputValue(event.target.value);
@@ -24,7 +43,7 @@ const MergeTemplate = ({ database }) => {
 
   const handleSubmit = async () => {
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}//merge/syntax/${database}`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/merge/syntax/${database}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -32,22 +51,37 @@ const MergeTemplate = ({ database }) => {
         body: JSON.stringify({ template: jsonData }),
       });
 
-      const result = await response.json();
+      const raw = await response.text();
+      let result = null;
+      try {
+        result = raw ? JSON.parse(raw) : {};
+      } catch {
+        result = null;
+      }
+
+      if (!response.ok) {
+        const serverMessage =
+          (result && (result.msg || result.error)) ||
+          raw ||
+          `HTTP ${response.status}`;
+        throw new Error(serverMessage);
+      }
 
       let msgToDisplay;
 
-      if ('msg' in result) {
+      if (result && 'msg' in result) {
         msgToDisplay = result.msg;
         setMessage("✅" + msgToDisplay);
       } else {
-        msgToDisplay = "⚠️ Unexpected response format: 'msg' not found.";
+        msgToDisplay = "⚠️ Merge files generated, but response did not include a status message.";
         setMessage(msgToDisplay);
       }
 
       setSnackbarOpen(true);
 
-      if (result.download?.hash) {
+      if (result && result.download?.hash) {
         setDownloadHash(result.download.hash);
+        window.open(`${process.env.REACT_APP_API_URL}/download/zip/${result.download.hash}`, '_blank');
       }
 
       return msgToDisplay; // ✅ return message
@@ -80,22 +114,25 @@ const MergeTemplate = ({ database }) => {
       const result = await response.json();
       setTemplateData(result); // store valid template JSON
 
+      const foundRows = Array.isArray(result)
+        ? result.filter((row) => row?.mergingID && String(row.mergingID).trim() !== "")
+        : [];
+
       if (
-        Array.isArray(result) &&
-        result.length > 0 &&
-        typeof result[0] === 'object' &&
-        result[0] !== null &&
-        'mergingID' in result[0]
+        foundRows.length > 0
       ) {
         setMessage(`✅ Template found for "${inputValue}"`);
+        setTemplateFound(true);
       } else {
         setMessage(`⚠️ No valid template found for "${inputValue}"`);
+        setTemplateFound(false);
       }
 
       setSnackbarOpen(true);
     } catch (error) {
       console.error('Error fetching merging template:', error);
       setMessage(`❌ Error: ${error.message}`);
+      setTemplateFound(false);
       setSnackbarOpen(true);
     }
   };
@@ -124,41 +161,51 @@ const MergeTemplate = ({ database }) => {
   };
 
 
-  const handleFileChange = (e) => {
+  const handleFileChange = async (e) => {
     const file = e.target.files[0];
-    const fileType = file?.type;
+    if (!file) return;
 
-    if (
-      fileType === 'application/vnd.ms-excel' || // .xls
-      fileType === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' // .xlsx
-    ) {
+    try {
       setFile(file);
       setJsondata(null);
+      setUploadTemplateValid(false);
 
-      ExcelRenderer(file, (err, resp) => {
-        if (err) {
-          console.error('Error parsing Excel:', err);
-          return;
-        }
+      const parsed = await parseTabularFile(file, { checkMergedCells: false });
+      const normalizedHeader = parsed.headers;
+      const requiredCols = ["mergingID", "datasetID", "filePath"];
+      const hasAllRequiredCols = requiredCols.every((col) => normalizedHeader.includes(col));
 
-        const [header, ...dataRows] = resp.rows;
+      if (!hasAllRequiredCols) {
+        setMessage(`❌ Invalid merge template. Required columns: ${requiredCols.join(', ')}`);
+        setSnackbarOpen(true);
+        setUploadTemplateValid(false);
+        return;
+      }
 
-        const jsonArray = dataRows.map(row => {
-          const obj = {};
-          header.forEach((col, i) => {
-            obj[col] = row[i];
-          });
-          return obj;
-        });
+      if (parsed.records.length === 0) {
+        setMessage('❌ Uploaded template has no data rows.');
+        setSnackbarOpen(true);
+        setUploadTemplateValid(false);
+        return;
+      }
 
-        setColumns(header);
-        setRows(dataRows);
-        setJsondata(jsonArray); // ✅ Final JSON here
-      });
-    } else {
-      alert('Please upload a valid Excel (.xls or .xlsx) file.');
+      setColumns(normalizedHeader);
+      setRows(parsed.rows2d);
+      setJsondata(parsed.records);
+      setUploadTemplateValid(true);
+      setMessage(`✅ Valid merge template uploaded (${parsed.records.length} rows).`);
+      setSnackbarOpen(true);
+    } catch (err) {
+      const text = err?.message || 'Error parsing upload file. Please verify the file format and contents.';
+      if (text.toLowerCase().includes('please upload a valid file')) {
+        alert(text);
+      } else {
+        setMessage(`❌ ${text}`);
+        setSnackbarOpen(true);
+      }
       e.target.value = null;
       setFile(null);
+      setUploadTemplateValid(false);
     }
   };
 
@@ -191,9 +238,42 @@ const MergeTemplate = ({ database }) => {
           '&:hover': {
             backgroundColor: 'green',
           },
-        }} onClick={handleDownloadDatasetsXLSX}>
+        }} onClick={handleDownloadDatasetsXLSX} disabled={!templateFound}>
           Download list of Datasets
         </Button>
+        {mergingMetadataRows.length > 0 && (
+          <TableContainer component={Paper} variant="outlined" sx={{ mt: 2, mb: 2, maxWidth: "100%" }}>
+            <Table size="small" aria-label="merging template metadata">
+              <TableHead>
+                <TableRow>
+                  <TableCell sx={{ fontWeight: 600 }}>Merging CMID</TableCell>
+                  <TableCell sx={{ fontWeight: 600 }}>CMName</TableCell>
+                  <TableCell sx={{ fontWeight: 600 }}>shortName</TableCell>
+                  <TableCell sx={{ fontWeight: 600 }}>Citation</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {mergingMetadataRows.map((row) => (
+                  <TableRow key={row.mergingID}>
+                    <TableCell>
+                      <Button
+                        size="small"
+                        variant="text"
+                        sx={{ p: 0, minWidth: 0 }}
+                        onClick={() => window.open(`/${database.toLowerCase()}/${row.mergingID}/network`, '_blank')}
+                      >
+                        {row.mergingID}
+                      </Button>
+                    </TableCell>
+                    <TableCell>{row.mergingCMName}</TableCell>
+                    <TableCell>{row.mergingShortName}</TableCell>
+                    <TableCell>{row.mergingCitation}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        )}
         <Divider sx={{ my: 1 }} />
         <h4 style={{ color: 'black', padding: "2px" }}>Upload merging template with included file paths</h4>
         <Box>
@@ -202,7 +282,7 @@ const MergeTemplate = ({ database }) => {
             id="fileInput"
             style={{ color: 'black', fontWeight: "bold", marginLeft: 7, padding: "2px" }}
             type="file"
-            accept=".csv, .xlsx"
+            accept=".csv,.tsv,.xls,.xlsx"
             onChange={handleFileChange}
           />
           <Snackbar
@@ -225,17 +305,8 @@ const MergeTemplate = ({ database }) => {
             backgroundColor: 'green',
           },
           mr: 4, my: 1
-        }} onClick={handleSubmit}>
+        }} onClick={handleSubmit} disabled={!uploadTemplateValid}>
           Generate Merge Files
-        </Button>
-        <Button variant="contained" sx={{
-          backgroundColor: 'black',
-          color: 'white',
-          '&:hover': {
-            backgroundColor: 'green',
-          },
-        }} onClick={() => window.open(`${process.env.REACT_APP_API_URL}/download/zip/${downloadHash}`, '_blank')}>
-          Download Merge files
         </Button>
 
 

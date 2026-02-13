@@ -1,95 +1,43 @@
 import React, { useState } from 'react';
 import { Box, Button, Typography, Divider } from '@mui/material';
-import { ExcelRenderer } from 'react-excel-renderer';
-import Papa from 'papaparse';
 import CircularProgress from '@mui/material/CircularProgress';
 import Backdrop from '@mui/material/Backdrop';
 import * as XLSX from 'xlsx';
 import DomainSelector from './DomainSelector';
+import { parseTabularFile } from '../utils/tabularUpload';
 
 const JoinDatasets_Merge = ({ database }) => {
 
   const [fileLeft, setFileLeft] = useState(null);
   const [fileRight, setFileRight] = useState(null);
-  let fileObj = ""
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState();
   const [domain, setdomain] = useState('');
-  const validCsvTypes = ['text/csv', 'application/csv'];
 
-  const handleFileChange = (e) => {
-    const fileType = e.target.files[0].type;
-    if (fileType === 'application/vnd.ms-excel' || fileType === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') {
-      fileObj = e.target.files[0];
-
-      ExcelRenderer(fileObj, (err, resp) => {
-        if (err) {
-          console.log(err);
-        }
-        else {
-          const c = resp.rows[0];
-          const r = resp.rows.slice(1);
-
-          const table = r.map((row, index) => {
-            const rowData = {};
-            c.forEach((column, columnIndex) => {
-              rowData[column] = row[columnIndex];
-            });
-            return rowData;
-          });
-          setFileLeft(table)
-        }
+  const parseJoinFile = async (file, setTarget, event) => {
+    try {
+      const parsed = await parseTabularFile(file, {
+        checkMergedCells: false,
+        stripWrappingQuotes: true,
       });
-    } else {
-      alert('Please upload a valid CSV or XLSX file.');
-      e.target.value = null;
-      setFileLeft(null);
+      setTarget(parsed.records);
+    } catch (err) {
+      alert(err?.message || 'Please upload a valid CSV/TSV/Excel file.');
+      if (event?.target) event.target.value = null;
+      setTarget(null);
     }
   };
 
-  const handleFileChange1 = (e) => {
-    const fileType = e.target.files[0].type;
-    if (fileType === 'application/vnd.ms-excel' || fileType === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
-      fileType === 'text/csv') {
-      fileObj = e.target.files[0];
+  const handleFileChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    await parseJoinFile(file, setFileLeft, e);
+  };
 
-      ExcelRenderer(fileObj, (err, resp) => {
-        if (err) {
-          console.log(err);
-        }
-        else {
-          const c = resp.rows[0];
-          const r = resp.rows.slice(1);
-
-          const table = r.map((row, index) => {
-            const rowData = {};
-            c.forEach((column, columnIndex) => {
-              rowData[column] = row[columnIndex];
-            });
-            return rowData;
-          });
-          setFileRight(table);
-        }
-      });
-    }
-
-
-    // CSV (.csv)
-    else if (validCsvTypes.includes(fileType)) {
-      Papa.parse(fileObj, {
-        header: true,
-        skipEmptyLines: true,
-        complete: (results) => setFileRight(results.data),
-        error: (err) => console.error('CSV parse error:', err),
-      });
-
-      //   // Invalid type
-    }
-    else {
-      alert('Please upload a valid CSV (.csv) or Excel (.xlsx, .xls) file.');
-      e.target.value = null;
-      setFileRight(null);
-    }
+  const handleFileChange1 = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    await parseJoinFile(file, setFileRight, e);
   };
 
   // ------------------------------------------------------------
@@ -187,7 +135,7 @@ const JoinDatasets_Merge = ({ database }) => {
           <h3 style={{ color: 'black', fontWeight: 'bold' }}>Upload first Dataset</h3>
           <input
             type="file"
-            accept=".csv, .xlsx"
+            accept=".csv,.tsv,.xls,.xlsx"
             onClick={(e) => {
               e.target.value = null;       // clears previous selection in the browser
               setFileLeft(null);           // resets React state
@@ -201,7 +149,7 @@ const JoinDatasets_Merge = ({ database }) => {
           <h3 style={{ color: 'black', fontWeight: 'bold' }}>Upload second Dataset</h3>
           <input
             type="file"
-            accept=".csv, .xlsx"
+            accept=".csv,.tsv,.xls,.xlsx"
             onClick={(e) => {
               e.target.value = null;       // clears previous selection in the browser
               setFileRight(null);           // resets React state
