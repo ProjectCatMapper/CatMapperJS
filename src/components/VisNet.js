@@ -178,6 +178,22 @@ const Neo4jVisualization = ({ visData, dropdownNodeLimit, database }) => {
       return [`stack: ${edge.stack}`, `dataset: ${edge.dataset}`, `Key: ${edge.Key}`];
     }
 
+    if (edge.type === 'MERGING') {
+      const { from, to, color, id, ...rest } = edge;
+      const lines = Object.entries(rest)
+        .filter(([key, value]) => {
+          if (key.toLowerCase().includes('log')) return false;
+          if (value === null || value === undefined) return false;
+          const strVal = String(value).trim();
+          if (!strVal) return false;
+          const normalized = strVal.toUpperCase();
+          return normalized !== 'NULL' && normalized !== 'UNDEFINED';
+        })
+        .map(([key, value]) => `${key}: ${value}`);
+
+      return lines.length > 0 ? lines : [`type: ${edge.type}`];
+    }
+
     return [`referenceKey: ${edge.referenceKey}`, `type: ${edge.type}`];
   }, [visEdges]);
 
