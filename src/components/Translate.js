@@ -8,7 +8,6 @@ import { saveAs } from 'file-saver';
 import TranslateTable from './TranslateResults';
 import Backdrop from '@mui/material/Backdrop';
 import LinearProgress from '@mui/material/LinearProgress';
-import CircularProgress from '@mui/material/CircularProgress';
 import './Translate.css'
 import Tooltip from '@mui/material/Tooltip';
 import InfoIcon from '@mui/icons-material/Info';
@@ -62,7 +61,7 @@ function TranslateComponent({ database }) {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [loading, setLoading] = useState(false);
-  const [progress, setProgress] = useState(0);
+  const [loadingStage, setLoadingStage] = useState('');
   const [filename, setFilename] = useState("");
   const [jsonData, setJsondata] = useState();
   let query = "false"
@@ -119,9 +118,9 @@ function TranslateComponent({ database }) {
 
   const handleClick = async () => {
     setLoading(true);
-    setProgress(10);
+    setLoadingStage('Processing input...');
     try {
-      setProgress(20);
+      setLoadingStage('Waiting on server...');
       //const response = await fetch("http://127.0.0.1:5001/translate2", {
       const response = await fetch(`${process.env.REACT_APP_API_URL}/translate`, {
         method: 'POST',
@@ -146,12 +145,11 @@ function TranslateComponent({ database }) {
         }),
       });
 
-      setProgress(50);
-
       if (!response.ok) {
         alert('Propose translate was not completed, please check your matching column for unusual characters and please contact the CatMapper team if the issue persists.');
       }
 
+      setLoadingStage('Parsing results...');
       const responseData = await response.json();
 
       const allKeys = responseData.order;
@@ -183,7 +181,6 @@ function TranslateComponent({ database }) {
       setData(responseData.file);
       setColumns(reorderedColumns)
       setRows(responseData.file.map(row => reorderedColumns.map(key => row[key])));
-      setProgress(80);
 
       const matchTypeCounts = responseData.file.reduce((acc, row) => {
         const matchType = row['matchType_' + zeroDropdownValue]
@@ -198,14 +195,13 @@ function TranslateComponent({ database }) {
       }, {});
 
       setTcategories(matchTypePercentages);
-      setProgress(100)
 
     } catch (error) {
       console.error('Error sending POST request:', error);
     }
     finally {
       setLoading(false);
-      setProgress(0);
+      setLoadingStage('');
     }
   };
 
@@ -327,14 +323,21 @@ function TranslateComponent({ database }) {
     }
   };
 
-  const ProgressBar = ({ progress }) => (
-    <Box display="flex" alignItems="right" width="15%" style={{ position: 'absolute', bottom: '10px', right: '10px', padding: '10px', background: '#f0f0f0', borderRadius: '5px' }}>
-      <Box width="80%" mr={1}>
-        <LinearProgress variant="determinate" value={progress} />
-      </Box>
-      <Box minWidth={35}>
-        <Typography variant="body2" color="textSecondary">{`translating ${progress}%`}</Typography>
-      </Box>
+  const LoadingBar = ({ stage }) => (
+    <Box
+      sx={{
+        width: 'min(560px, 80vw)',
+        mt: 2,
+        p: 2,
+        borderRadius: 1,
+        bgcolor: 'rgba(255, 255, 255, 0.92)',
+        color: 'black',
+      }}
+    >
+      <Typography variant="body1" sx={{ mb: 1, fontWeight: 600 }}>
+        {stage || 'Working...'}
+      </Typography>
+      <LinearProgress />
     </Box>
   );
 
@@ -795,7 +798,7 @@ function TranslateComponent({ database }) {
             '&:hover': {
               backgroundColor: 'green',
             },
-          }} onClick={handleClick}>
+          }} onClick={handleClick} disabled={loading}>
             Search
           </Button>
           <br />
@@ -808,12 +811,11 @@ function TranslateComponent({ database }) {
           <br />
           <Backdrop style={{ color: '#fff', zIndex: 1300 }} open={loading}>
             <div>
-              <CircularProgress color="inherit" />
               <Typography variant="h6" align="center" style={{ marginTop: '10px' }}>
-                Translating...
+                Translating
               </Typography>
+              <LoadingBar stage={loadingStage} />
             </div>
-            {loading && <ProgressBar progress={progress} />}
           </Backdrop>
           <Button variant="contained" sx={{
             backgroundColor: 'black',
