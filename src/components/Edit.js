@@ -45,6 +45,7 @@ const Edit = ({ database }) => {
   const [openDialog, setOpenDialog] = useState(false);
   const [formData, setFormData] = useState({
     domain: '',
+    subdomain: '',
     datasetID: '',
     cmNameColumn: '',
     categoryNamesColumn: '',
@@ -53,6 +54,8 @@ const Edit = ({ database }) => {
     keyColumn: '',
   });
   const [simpleDomainOptions, setSimpleDomainOptions] = useState([]);
+  const [simpleSubdomainOptions, setSimpleSubdomainOptions] = useState([]);
+  const [simpleDomainsData, setSimpleDomainsData] = useState([]);
   const [CMIDText, setCMIDText] = useState('The new dataset CMID is pending.');
   const [mergingType, setMergingType] = useState("0");
   let required = [];
@@ -131,6 +134,29 @@ const Edit = ({ database }) => {
     setFormData((prevState) => ({
       ...prevState,
       [name]: value,
+    }));
+  };
+
+  const getSimpleSubdomainsForDomain = (domainValue, domainsData) => {
+    return domainsData.filter((item) => item.display === domainValue);
+  };
+
+  const handleSimpleDomainChange = (event) => {
+    const nextDomain = event.target.value;
+    const subdomains = getSimpleSubdomainsForDomain(nextDomain, simpleDomainsData);
+    setSimpleSubdomainOptions(subdomains);
+    setFormData((prev) => ({
+      ...prev,
+      domain: nextDomain,
+      subdomain: subdomains[0]?.subdomain || '',
+    }));
+  };
+
+  const handleSimpleSubdomainChange = (event) => {
+    const nextSubdomain = event.target.value;
+    setFormData((prev) => ({
+      ...prev,
+      subdomain: nextSubdomain,
     }));
   };
 
@@ -281,27 +307,55 @@ const Edit = ({ database }) => {
         const response = await fetch(`${process.env.REACT_APP_API_URL}/getDomains/${database}`);
         const data = await response.json();
 
-        const domains = [
-          ...new Set(
-            (Array.isArray(data) ? data : [])
-              .map((item) => String(item?.display || '').trim())
-              .filter(Boolean)
-              .filter((value) => !excluded.has(value.toUpperCase()))
-          ),
-        ];
+        const normalized = (Array.isArray(data) ? data : [])
+          .map((item) => ({
+            display: String(item?.display || '').trim(),
+            subdisplay: String(item?.subdisplay || '').trim(),
+            subdomain: String(item?.subdomain || '').trim(),
+            order: Number(item?.order ?? 9999),
+            suborder: Number(item?.suborder ?? 9999),
+          }))
+          .filter((item) => item.display)
+          .filter((item) => !excluded.has(item.display.toUpperCase()))
+          .sort((a, b) => {
+            if (a.order !== b.order) return a.order - b.order;
+            if (a.suborder !== b.suborder) return a.suborder - b.suborder;
+            return a.subdisplay.localeCompare(b.subdisplay);
+          });
 
+        const domains = [...new Set(normalized.map((item) => item.display))];
+        setSimpleDomainsData(normalized);
         setSimpleDomainOptions(domains);
 
         setFormData((prev) => {
-          if (prev.domain && domains.includes(prev.domain)) return prev;
-          return { ...prev, domain: domains[0] || '' };
+          const nextDomain = prev.domain && domains.includes(prev.domain) ? prev.domain : (domains[0] || '');
+          const subdomains = getSimpleSubdomainsForDomain(nextDomain, normalized);
+          const nextSubdomain = subdomains.some((item) => item.subdomain === prev.subdomain)
+            ? prev.subdomain
+            : (subdomains[0]?.subdomain || '');
+          setSimpleSubdomainOptions(subdomains);
+          return { ...prev, domain: nextDomain, subdomain: nextSubdomain };
         });
       } catch (err) {
         const staticDomains = Object.keys(domainFieldOptions).filter((value) => !excluded.has(String(value).toUpperCase()));
+        const staticDomainRows = staticDomains.map((value) => ({
+          display: value,
+          subdisplay: value,
+          subdomain: value,
+          order: 9999,
+          suborder: 9999,
+        }));
+        setSimpleDomainsData(staticDomainRows);
         setSimpleDomainOptions(staticDomains);
+
         setFormData((prev) => {
-          if (prev.domain && staticDomains.includes(prev.domain)) return prev;
-          return { ...prev, domain: staticDomains[0] || '' };
+          const nextDomain = prev.domain && staticDomains.includes(prev.domain) ? prev.domain : (staticDomains[0] || '');
+          const subdomains = getSimpleSubdomainsForDomain(nextDomain, staticDomainRows);
+          const nextSubdomain = subdomains.some((item) => item.subdomain === prev.subdomain)
+            ? prev.subdomain
+            : (subdomains[0]?.subdomain || '');
+          setSimpleSubdomainOptions(subdomains);
+          return { ...prev, domain: nextDomain, subdomain: nextSubdomain };
         });
       }
     };
@@ -309,7 +363,49 @@ const Edit = ({ database }) => {
     loadSimpleDomains();
   }, [database]);
 
+  const validateSimpleWorkflow = () => {
+    if (selectedOption !== "simple") return true;
+
+    if (!formData.domain) {
+      setError("Please select a domain.");
+      return false;
+    }
+    if (!formData.subdomain) {
+      setError("Please select a subdomain.");
+      return false;
+    }
+    if (!formData.datasetID?.trim()) {
+      setError("Please enter a Dataset CMID.");
+      return false;
+    }
+    if (!formData.cmNameColumn) {
+      setError("Please select a CMName column.");
+      return false;
+    }
+    if (!formData.keyColumn) {
+      setError("Please select a Key column.");
+      return false;
+    }
+
+    const requiredColumns = [formData.cmNameColumn, formData.keyColumn];
+    if (formData.categoryNamesColumn) requiredColumns.push(formData.categoryNamesColumn);
+    if (formData.alternateCategoryNamesColumn) requiredColumns.push(formData.alternateCategoryNamesColumn);
+    if (formData.cmidColumn) requiredColumns.push(formData.cmidColumn);
+
+    const missingColumns = requiredColumns.filter((col) => !columns.includes(col));
+    if (missingColumns.length > 0) {
+      setError(`Selected columns not found in uploaded file: ${missingColumns.join(", ")}`);
+      return false;
+    }
+
+    setError('');
+    return true;
+  };
+
   const handleSubmit = async () => {
+    if (!validateSimpleWorkflow()) {
+      return;
+    }
 
     const validationResult = validateColumns();
 
@@ -856,13 +952,33 @@ const Edit = ({ database }) => {
               id="domain"
               name="domain"
               value={formData.domain}
-              onChange={handleChange}
+              onChange={handleSimpleDomainChange}
               sx={{ width: 300, height: 40 }}
               margin="normal"
             >
               {simpleDomainOptions.map((key) => (
                 <MenuItem key={key} value={key}>
                   {key}
+                </MenuItem>
+              ))}
+            </Select>
+          </Box>
+          <br />
+          <Box sx={{ mb: 2 }}>
+            <InputLabel id="subdomain-label" style={{ color: "black " }}>Please select the <strong>subdomain</strong> to be uploaded:</InputLabel>
+            <br />
+            <Select
+              labelId="subdomain-label"
+              id="subdomain"
+              name="subdomain"
+              value={formData.subdomain}
+              onChange={handleSimpleSubdomainChange}
+              sx={{ width: 300, height: 40 }}
+              margin="normal"
+            >
+              {simpleSubdomainOptions.map((item) => (
+                <MenuItem key={`${item.subdomain}-${item.subdisplay}`} value={item.subdomain}>
+                  {item.subdisplay || item.subdomain}
                 </MenuItem>
               ))}
             </Select>
