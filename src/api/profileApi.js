@@ -31,40 +31,36 @@ const ensureAuth = ({ userId, cred }) => {
     throw new Error('Missing userId. User must be logged in.');
   }
   if (!cred) {
-    throw new Error('Missing credentials. Please log in again.');
+    throw new Error('Missing authentication token. Please log in again.');
   }
 };
 
+const authHeaders = (cred) => ({
+  Authorization: `Bearer ${cred}`
+});
+
 export const getUserProfile = async ({ userId, cred }) => {
   ensureAuth({ userId, cred });
-
-  const params = new URLSearchParams({
-    credentials: JSON.stringify(cred)
-  });
-
-  return requestJson(`${API_BASE}/profile/${encodeURIComponent(userId)}?${params.toString()}`, {
-    method: 'GET'
+  return requestJson(`${API_BASE}/profile/${encodeURIComponent(userId)}`, {
+    method: 'GET',
+    headers: authHeaders(cred)
   });
 };
 
 export const getUserActivity = async ({ userId, database, cred }) => {
   ensureAuth({ userId, cred });
-  const params = new URLSearchParams({
-    credentials: JSON.stringify(cred),
-    database
-  });
+  const params = new URLSearchParams({ database });
   return requestJson(`${API_BASE}/profile/activity/${encodeURIComponent(userId)}?${params.toString()}`, {
-    method: 'GET'
+    method: 'GET',
+    headers: authHeaders(cred)
   });
 };
 
 export const getBookmarks = async ({ userId, cred }) => {
   ensureAuth({ userId, cred });
-  const params = new URLSearchParams({
-    credentials: JSON.stringify(cred)
-  });
-  return requestJson(`${API_BASE}/profile/bookmarks/${encodeURIComponent(userId)}?${params.toString()}`, {
-    method: 'GET'
+  return requestJson(`${API_BASE}/profile/bookmarks/${encodeURIComponent(userId)}`, {
+    method: 'GET',
+    headers: authHeaders(cred)
   });
 };
 
@@ -72,7 +68,8 @@ export const addBookmark = async ({ userId, database, cmid, cmname, cred }) => {
   ensureAuth({ userId, cred });
   return requestJson(`${API_BASE}/profile/bookmarks/add`, {
     method: 'POST',
-    body: JSON.stringify({ userId, database, cmid, cmname, credentials: cred })
+    headers: authHeaders(cred),
+    body: JSON.stringify({ userId, database, cmid, cmname })
   });
 };
 
@@ -80,17 +77,16 @@ export const removeBookmarks = async ({ userId, items, cred }) => {
   ensureAuth({ userId, cred });
   return requestJson(`${API_BASE}/profile/bookmarks/remove`, {
     method: 'POST',
-    body: JSON.stringify({ userId, items, credentials: cred })
+    headers: authHeaders(cred),
+    body: JSON.stringify({ userId, items })
   });
 };
 
 export const getHistory = async ({ userId, cred }) => {
   ensureAuth({ userId, cred });
-  const params = new URLSearchParams({
-    credentials: JSON.stringify(cred)
-  });
-  return requestJson(`${API_BASE}/profile/history/${encodeURIComponent(userId)}?${params.toString()}`, {
-    method: 'GET'
+  return requestJson(`${API_BASE}/profile/history/${encodeURIComponent(userId)}`, {
+    method: 'GET',
+    headers: authHeaders(cred)
   });
 };
 
@@ -98,53 +94,58 @@ export const addHistoryItem = async ({ userId, database, cmid, cmname, cred }) =
   ensureAuth({ userId, cred });
   return requestJson(`${API_BASE}/profile/history/add`, {
     method: 'POST',
-    body: JSON.stringify({ userId, database, cmid, cmname, credentials: cred })
+    headers: authHeaders(cred),
+    body: JSON.stringify({ userId, database, cmid, cmname })
   });
 };
 
 export const requestProfileUpdate = async ({ userId, updates, cred }) => {
+  ensureAuth({ userId, cred });
   return requestJson(`${API_BASE}/profile/request-update`, {
     method: 'POST',
+    headers: authHeaders(cred),
     body: JSON.stringify({
       userId,
-      updates,
-      credentials: cred
+      updates
     })
   });
 };
 
 export const confirmProfileUpdate = async ({ userId, requestId, verificationCode, cred }) => {
+  ensureAuth({ userId, cred });
   return requestJson(`${API_BASE}/profile/confirm-update`, {
     method: 'POST',
+    headers: authHeaders(cred),
     body: JSON.stringify({
       userId,
       requestId,
-      verificationCode,
-      credentials: cred
+      verificationCode
     })
   });
 };
 
 export const requestPasswordChange = async ({ userId, currentPassword, newPassword, cred }) => {
+  ensureAuth({ userId, cred });
   return requestJson(`${API_BASE}/profile/request-password-change`, {
     method: 'POST',
+    headers: authHeaders(cred),
     body: JSON.stringify({
       userId,
       currentPassword,
-      newPassword,
-      credentials: cred
+      newPassword
     })
   });
 };
 
 export const confirmPasswordChange = async ({ userId, requestId, verificationCode, cred }) => {
+  ensureAuth({ userId, cred });
   return requestJson(`${API_BASE}/profile/confirm-password-change`, {
     method: 'POST',
+    headers: authHeaders(cred),
     body: JSON.stringify({
       userId,
       requestId,
-      verificationCode,
-      credentials: cred
+      verificationCode
     })
   });
 };
