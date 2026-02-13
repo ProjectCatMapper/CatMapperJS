@@ -2,7 +2,6 @@
 import { useState, useEffect } from 'react'
 import { Box, Button, FormControlLabel, Radio, RadioGroup, Checkbox, Typography, Divider, Select, TextField, MenuItem, InputLabel, FormControl, FormGroup, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TablePagination, Paper, Snackbar, Alert } from '@mui/material';
 import DatasetForm from './DatasetCreate';
-import { ExcelRenderer } from 'react-excel-renderer';
 import Tooltip from '@mui/material/Tooltip';
 import InfoIcon from '@mui/icons-material/Info';
 import { useAuth } from './AuthContext';
@@ -10,6 +9,7 @@ import { CircularProgress } from '@mui/material';
 import { Dialog, DialogContent, DialogActions, DialogContentText, DialogTitle } from '@mui/material';
 import * as XLSX from 'xlsx';
 import domainOptions from "./dropdown.json";
+import { parseTabularFile } from '../utils/tabularUpload';
 
 
 const TEMPLATE_FILES = {
@@ -94,65 +94,31 @@ const Edit = ({ database }) => {
       return;
     }
 
-    const fileType = file.type;
-    if (
-      fileType === 'application/vnd.ms-excel' ||
-      fileType === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
-      fileType === 'text/csv'
-    ) {
-      const fileObj = file;
+    try {
+      const parsed = await parseTabularFile(file, {
+        checkMergedCells: true,
+        stripWrappingQuotes: true,
+      });
 
-      try {
-        const data = await file.arrayBuffer();
-        const workbook = XLSX.read(data, { type: "array" });
+      setColumns(parsed.headers);
+      setRows(parsed.rows2d);
 
-        const sheetName = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[sheetName];
+      const table = parsed.records.map((rowData, index) => ({
+        ...rowData,
+        key: index + 1,
+      }));
 
-        const merges = worksheet["!merges"] || [];
-        if (merges.length > 0) {
-          alert("Merged cells detected. Please unmerge all cells before uploading.")
-          return;
-        }
+      setNodeCount(table.length);
 
-        const resp = await new Promise((resolve, reject) => {
-          ExcelRenderer(fileObj, (err, resp) => {
-            if (err) {
-              reject(err);
-            } else {
-              resolve(resp);
-            }
-          });
-        });
-
-        setColumns(resp.rows[0]);
-        const filteredRows = resp.rows.slice(1).filter(row =>
-          row.some(value => value !== null && value !== undefined && value !== "")
-        );
-        setRows(filteredRows);
-
-        const table = filteredRows.map((row, index) => {
-          const rowData = {};
-          resp.rows[0].forEach((column, columnIndex) => {
-            rowData[column] = row[columnIndex];
-          });
-          rowData['key'] = index + 1;
-          return rowData;
-        });
-
-        setNodeCount(table.length);
-
-        await new Promise((resolve) => {
-          setJsondata(table);
-          setViewUploadedData(true);
-          setShowFields(true);
-          resolve();
-        });
-      } catch (error) {
-        alert('Error processing file: ' + error.message);
-      }
-    } else {
-      alert('Please upload a valid Excel file (CSV or XLSX).');
+      await new Promise((resolve) => {
+        setJsondata(table);
+        setViewUploadedData(true);
+        setShowFields(true);
+        resolve();
+      });
+    } catch (error) {
+      const msg = error?.message || 'Error processing file.';
+      alert(msg);
       e.target.value = null;
     }
   };
@@ -776,7 +742,7 @@ const Edit = ({ database }) => {
       <Box sx={{ mb: 2 }}>
         <h3 style={{ color: 'black', fontWeight: "bold", padding: "2px" }}> Choose file to import</h3>
 
-        <input id="fileInput" style={{ color: 'black', fontWeight: "bold", marginLeft: 7, padding: "2px" }} type="file" accept=".csv, .xlsx" onChange={handleFileChange} />
+        <input id="fileInput" style={{ color: 'black', fontWeight: "bold", marginLeft: 7, padding: "2px" }} type="file" accept=".csv,.tsv,.xls,.xlsx" onChange={handleFileChange} />
       </Box>
       {showFields && <Typography variant="body2">{`Number of nodes to import: ${nodecount}`}</Typography>}
       <FormControlLabel

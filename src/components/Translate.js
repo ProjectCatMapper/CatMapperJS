@@ -1,8 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import domainOptions from "./SearchSelectDropdown";
 import { Select, MenuItem } from '@mui/material';
-import { ExcelRenderer } from 'react-excel-renderer';
-import Papa from 'papaparse';
 import Button from '@mui/material/Button';
 import { Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TablePagination, Typography, Box, FormControlLabel, Checkbox } from '@mui/material';
 import * as XLSX from 'xlsx';
@@ -17,6 +15,7 @@ import InfoIcon from '@mui/icons-material/Info';
 import { Dialog, DialogTitle, DialogContent, DialogActions } from "@mui/material";
 import infodata from './infodata.json';
 import FooterLinks from './FooterLinks';
+import { parseTabularFile } from '../utils/tabularUpload';
 
 const getTooltipContent = (nm) => {
   const tooltipTexts = {
@@ -262,6 +261,7 @@ function TranslateComponent({ database }) {
 
   const handleFileChange = async (event) => {
     setSelectedFile(null);
+    setError(null);
     const file = event.target.files[0];
     if (!file) return;
 
@@ -271,92 +271,27 @@ function TranslateComponent({ database }) {
     }
 
     const fileName = file.name;
-    const fileExtension = fileName.split('.').pop().toLowerCase();
     const baseFileName = fileName.split('.').slice(0, -1).join('.');
     setFilename(baseFileName);
     setSelectedFile(file);
 
-    const processData = (rows) => {
-      if (!rows.length) {
-        setError('No data found in the file.');
-        return;
+    try {
+      const parsed = await parseTabularFile(file, {
+        checkMergedCells: true,
+        stripWrappingQuotes: true,
+        normalizeEmptyToNull: true,
+      });
+
+      setColumns(parsed.headers);
+      setRows(parsed.rows2d.map((row) => row.map((cell) => (cell === '' ? null : cell))));
+      setJsondata(parsed.records);
+    } catch (err) {
+      const msg = err?.message || 'Please upload a valid CSV/TSV/Excel (.csv/.tsv/.xlsx/.xls) file.';
+      if (msg.toLowerCase().includes('please upload a valid file')) {
+        alert(msg);
+      } else {
+        setError(msg);
       }
-
-      const firstRow = rows[0];
-      const column_check = [];
-
-      try {
-        for (let i = 0; i < firstRow.length; i++) {
-          if (firstRow[i] === undefined || firstRow[i].trim() === "") {
-            throw new Error(`Missing column name at index ${i}`);
-          }
-          column_check.push(firstRow[i]);
-        }
-      } catch (err) {
-        setError(err.message);
-        return;
-      }
-
-      setColumns(column_check);
-
-      const processedRows = rows.slice(1).map((row) => {
-        const fullRow = Array(column_check.length).fill(null);
-        row.forEach((cell, index) => {
-          if (typeof cell === 'string') {
-            cell = cell.replace(/^['"]|['"]$/g, '');
-          }
-          fullRow[index] = cell !== undefined ? cell : null;
-        });
-        return fullRow;
-      });
-
-      const filteredRows = processedRows.filter((row) =>
-        row.some((cell) => cell !== null && cell !== "")
-      );
-
-      setRows(filteredRows);
-
-      const table = filteredRows.map((row) => {
-        const rowData = {};
-        column_check.forEach((column, columnIndex) => {
-          rowData[column] = row[columnIndex];
-        });
-        return rowData;
-      });
-
-      setJsondata(table);
-    };
-
-    if (fileExtension === 'csv') {
-      Papa.parse(file, {
-        complete: (result) => {
-          processData(result.data);
-        },
-        error: (err) => {
-          setError(`CSV Parsing Error: ${err.message}`);
-        },
-      });
-    } else if (fileExtension === 'xlsx' || fileExtension === 'xls') {
-      const data = await file.arrayBuffer();
-      const workbook = XLSX.read(data, { type: 'array', dense: true });
-
-      const sheetName = workbook.SheetNames[0];
-      const worksheet = workbook.Sheets[sheetName];
-
-      const merges = worksheet["!merges"] || [];
-      if (merges.length > 0) {
-        alert("Merged cells detected. Please unmerge all cells before uploading.")
-        return;
-      }
-      ExcelRenderer(file, (err, resp) => {
-        if (err) {
-          setError(`Excel Parsing Error: ${err.message}`);
-        } else {
-          processData(resp.rows);
-        }
-      });
-    } else {
-      alert('Please upload a valid CSV or Excel (.xlsx/.xls) file.');
       event.target.value = null;
       setSelectedFile(null);
     }
@@ -574,7 +509,7 @@ function TranslateComponent({ database }) {
               <Button startIcon={<InfoIcon sx={{ height: '28px', width: '28px' }} />} />
             </Tooltip>
           </Box>
-          <input id="fileInput" style={{ color: 'black', fontWeight: "bold", marginLeft: 7, padding: "2px" }} type="file" accept=".csv, .xlsx" onChange={handleFileChange} />
+          <input id="fileInput" style={{ color: 'black', fontWeight: "bold", marginLeft: 7, padding: "2px" }} type="file" accept=".csv,.tsv,.xls,.xlsx" onChange={handleFileChange} />
           <br />
           {selectedFile !== null && (
             <div>
