@@ -28,9 +28,10 @@ import { DataGrid } from '@mui/x-data-grid';
 import CircularProgress from "@mui/material/CircularProgress";
 import FooterLinks from "./FooterLinks";
 import CardContent from '@mui/material/CardContent';
+import SavedCmidInsertPopover from './SavedCmidInsertPopover';
 
 const Admin = ({ database }) => {
-  const { cred } = useAuth();
+  const { cred, user } = useAuth();
   const [firstDropdownValue, setFirstDropdownValue] = useState(
     "add/edit/delete USES property"
   );
@@ -44,6 +45,7 @@ const Admin = ({ database }) => {
   const [ntableData, setnTableData] = useState([]);
   const [tableDropdownValues, setTableDropdownValues] = useState({});
   const [datasetID, setDatasetID] = useState('')
+  const [insertTargetField, setInsertTargetField] = useState('s1_2');
 
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
@@ -340,6 +342,15 @@ const Admin = ({ database }) => {
     s1_8: ""
   });
 
+  const insertSavedIntoForm = (selectedSavedCmid) => {
+    if (!selectedSavedCmid) return;
+    setFormData((prev) => {
+      const current = (prev[insertTargetField] || '').trim();
+      const value = current ? `${current},${selectedSavedCmid}` : selectedSavedCmid;
+      return { ...prev, [insertTargetField]: value };
+    });
+  };
+
   const columns = [
     { field: 'userid', headerName: 'User ID', width: 150 },
     { field: 'first', headerName: 'First Name', width: 150 },
@@ -537,6 +548,21 @@ const Admin = ({ database }) => {
           >
             {menuItems}
           </Select>
+          <Box sx={{ mt: 1 }}>
+            <SavedCmidInsertPopover
+              user={user}
+              cred={cred}
+              database={database}
+              title="Insert from Bookmarks/History"
+              targetField={insertTargetField}
+              onTargetFieldChange={setInsertTargetField}
+              targetFieldOptions={[
+                { value: "s1_2", label: "Target Field 1" },
+                { value: "s1_3", label: "Target Field 2" }
+              ]}
+              onInsert={insertSavedIntoForm}
+            />
+          </Box>
         </Box>
 
         {firstDropdownValue === "add/edit/delete USES property" && (

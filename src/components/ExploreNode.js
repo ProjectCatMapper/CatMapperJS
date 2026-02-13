@@ -20,10 +20,13 @@ import {
   Typography,
   Tooltip as MuiTool,
   LinearProgress,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 import { styled } from '@mui/material/styles';
 import InputBase from '@mui/material/InputBase';
 import InfoIcon from "@mui/icons-material/Info";
+import BookmarkBorderIcon from "@mui/icons-material/BookmarkBorder";
 
 import PropTypes from "prop-types";
 import * as XLSX from "xlsx";
@@ -37,6 +40,8 @@ import TimespanTable from "./TimeSpanTable";
 import MapComponent from './MapComponent';
 
 import { useMetadata } from './UseMetadata';
+import { useAuth } from './AuthContext';
+import { addBookmark, addHistoryItem } from '../api/profileApi';
 
 import "./ExploreNode.css";
 
@@ -109,6 +114,7 @@ const BootstrapInput = styled(InputBase)(({ theme }) => ({
 
 export default function Tableclick({ cmid, database, tabval }) {
   const navigate = useNavigate();
+  const { user, cred } = useAuth();
   const [value, setValue] = useState(tabval || "network");
   const [usert, setUsert] = useState([]);
   const [mapt, setMapt] = useState([]);
@@ -173,6 +179,8 @@ export default function Tableclick({ cmid, database, tabval }) {
   const normalizedRef = useRef({});
 
   const [open, setOpen] = useState(false);
+  const [bookmarkNotice, setBookmarkNotice] = useState({ open: false, severity: "success", message: "" });
+  const historyLoggedRef = useRef("");
 
   let limit = 300;
 
@@ -181,6 +189,38 @@ export default function Tableclick({ cmid, database, tabval }) {
   const handleClose = () => {
     setOpen(false);
   };
+
+  const handleBookmarkCurrent = async () => {
+    if (!user || !cred) {
+      setBookmarkNotice({ open: true, severity: "warning", message: "Please log in to save bookmarks." });
+      return;
+    }
+    try {
+      await addBookmark({
+        userId: user,
+        database,
+        cmid,
+        cmname: rev?.CMName || "",
+        cred
+      });
+      setBookmarkNotice({ open: true, severity: "success", message: `Bookmarked ${cmid}` });
+    } catch (error) {
+      setBookmarkNotice({ open: true, severity: "error", message: error.message || "Unable to bookmark this CMID." });
+    }
+  };
+
+  useEffect(() => {
+    const key = `${database}::${cmid}`;
+    if (!user || !cred || !cmid || historyLoggedRef.current === key) return;
+    historyLoggedRef.current = key;
+    addHistoryItem({
+      userId: user,
+      database,
+      cmid,
+      cmname: rev?.CMName || "",
+      cred
+    }).catch(() => { });
+  }, [user, cred, database, cmid, rev]);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -990,6 +1030,15 @@ export default function Tableclick({ cmid, database, tabval }) {
             >
               <InfoIcon style={{ color: "blue", cursor: "pointer" }} />
             </MuiTool>
+            <Button
+              size="small"
+              startIcon={<BookmarkBorderIcon />}
+              variant="outlined"
+              onClick={handleBookmarkCurrent}
+              sx={{ ml: 1, backgroundColor: "white" }}
+            >
+              Bookmark
+            </Button>
           </div>
           <ul
             id="content"
@@ -1387,6 +1436,16 @@ export default function Tableclick({ cmid, database, tabval }) {
             </React.Fragment>
           )}
         </Box>
+        <Snackbar
+          open={bookmarkNotice.open}
+          autoHideDuration={3000}
+          onClose={() => setBookmarkNotice((prev) => ({ ...prev, open: false }))}
+          anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+        >
+          <Alert severity={bookmarkNotice.severity} variant="filled">
+            {bookmarkNotice.message}
+          </Alert>
+        </Snackbar>
       </div >
     );
   } catch (error) {
