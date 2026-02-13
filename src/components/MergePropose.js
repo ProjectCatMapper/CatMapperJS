@@ -6,9 +6,12 @@ import Backdrop from '@mui/material/Backdrop';
 import InfoIcon from '@mui/icons-material/Info';
 import { useMetadata } from './UseMetadata';
 import DownloadDatasetButton from './DownloadDatasetListButton';
+import { useAuth } from './AuthContext';
+import SavedCmidInsertPopover from './SavedCmidInsertPopover';
 // import infodata from './infodata.json';
 
 const Propose_Merge = ({ database }) => {
+  const { user, cred } = useAuth();
   const [loading, setLoading] = useState(false);
   const [inputValue, setInputValue] = useState('');
   const [open, setOpen] = useState(false);
@@ -24,8 +27,30 @@ const Propose_Merge = ({ database }) => {
   const { infodata } = useMetadata(database);
   const [selectedCategory, setSelectedCategory] = useState({});
   const [advdomainDrop, setadvdomainDrop] = React.useState('ANY DOMAIN');
+  const [mergeInputError, setMergeInputError] = useState('');
 
   const [advoptions, setadvoptions] = React.useState(['ANY DOMAIN']);
+
+  const parseDatasetIds = () =>
+    inputValue
+      .split(',')
+      .map((value) => value.trim())
+      .filter(Boolean);
+
+  const validateDatasetInputs = () => {
+    const datasetIds = parseDatasetIds();
+    const invalid = datasetIds.filter((cmid) => !/^(SD|AD)\d+$/i.test(cmid));
+    if (invalid.length > 0) {
+      setMergeInputError(`Only DATASET CMIDs are allowed here. Invalid values: ${invalid.join(', ')}`);
+      return false;
+    }
+    if (selectedOption === 'Extended' && datasetIds.length > 2) {
+      setMergeInputError('Extended merge supports at most two dataset CMIDs.');
+      return false;
+    }
+    setMergeInputError('');
+    return true;
+  };
 
   useEffect(() => {
     fetch(`${process.env.REACT_APP_API_URL}/metadata/subdomains/${database}`)
@@ -130,6 +155,7 @@ const Propose_Merge = ({ database }) => {
   };
 
   const handleValidate = async () => {
+    if (!validateDatasetInputs()) return;
     try {
       const response = await fetch(`${process.env.REACT_APP_API_URL}/validateDatasets`, {
         method: 'POST',
@@ -156,6 +182,7 @@ const Propose_Merge = ({ database }) => {
   };
 
   const getKeys = async () => {
+    if (!validateDatasetInputs()) return;
     try {
       const response = await fetch(`${process.env.REACT_APP_API_URL}/getKeys`, {
         method: 'POST',
@@ -186,6 +213,7 @@ const Propose_Merge = ({ database }) => {
 
 
   const handleSubmit = async () => {
+    if (!validateDatasetInputs()) return;
     if (!isValid) {
       alert('Please validate successfully before submitting.');
       return;
@@ -276,12 +304,32 @@ const Propose_Merge = ({ database }) => {
           label="Enter DatasetIDs separated by commas"
           variant="outlined"
           value={inputValue}
-          onChange={(e) => setInputValue(e.target.value)}
+          onChange={(e) => {
+            setInputValue(e.target.value);
+            setMergeInputError('');
+          }}
+          error={Boolean(mergeInputError)}
+          helperText={mergeInputError || 'Only DATASET CMIDs are valid here (SD/AD).'}
           sx={{ mr: 2, width: '34vw' }}
         />
         <Button variant="contained" onClick={handleValidate}>
           Validate DatasetIDs
         </Button>
+      </Box>
+      <Box sx={{ mt: 1 }}>
+        <SavedCmidInsertPopover
+          user={user}
+          cred={cred}
+          database={database}
+          datasetOnly
+          title="Insert Dataset from Bookmarks/History"
+          onInsert={(cmid) => {
+            const ids = parseDatasetIds();
+            if (!ids.includes(cmid)) {
+              setInputValue([...ids, cmid].join(', '));
+            }
+          }}
+        />
       </Box>
 
       <Snackbar

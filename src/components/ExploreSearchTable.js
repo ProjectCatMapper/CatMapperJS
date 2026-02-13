@@ -1,23 +1,42 @@
 import * as React from 'react';
-import { useState } from 'react'
+import { useState } from 'react';
 import { DataGrid } from '@mui/x-data-grid';
-import { useNavigate } from 'react-router-dom'
-import { Snackbar, Alert, Button, IconButton, Tooltip } from "@mui/material";
-import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder'; // Import Bookmark Icon
-import "./TableClickViewSC.css"
+import { useNavigate } from 'react-router-dom';
+import { Snackbar, Alert, Button, IconButton, Tooltip } from '@mui/material';
+import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder';
+import './TableClickViewSC.css';
+import { useAuth } from './AuthContext';
+import { addBookmark } from '../api/profileApi';
 
 export default function DataTable({ users, snackbarOpen, setSnackbarOpen, database }) {
   const [rows, setRows] = useState([]);
   const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 10 });
-  const [bookmarkNotice, setBookmarkNotice] = useState(false); // State for the notice
+  const [bookmarkNotice, setBookmarkNotice] = useState({ open: false, severity: 'info', message: '' });
   const navigate = useNavigate();
+  const { user, cred } = useAuth();
 
   const handleViewButton = (params) => {
     navigate({ pathname: `/${database}/${params.row.cmid}` });
   };
 
-  const handleBookmarkClick = () => {
-    setBookmarkNotice(true);
+  const handleBookmarkClick = async (row) => {
+    if (!user || !cred) {
+      setBookmarkNotice({ open: true, severity: 'warning', message: 'Please log in to save bookmarks.' });
+      return;
+    }
+
+    try {
+      await addBookmark({
+        userId: user,
+        database,
+        cmid: row.cmid,
+        cmname: row.name,
+        cred
+      });
+      setBookmarkNotice({ open: true, severity: 'success', message: `Bookmarked ${row.cmid}` });
+    } catch (error) {
+      setBookmarkNotice({ open: true, severity: 'error', message: error.message || 'Unable to add bookmark.' });
+    }
   };
 
   const columns = [
@@ -40,13 +59,13 @@ export default function DataTable({ users, snackbarOpen, setSnackbarOpen, databa
         >
           View
         </Button>
-      ),
+      )
     },
     { field: 'id', headerName: 'Index', flex: 0.3 },
     { field: 'cmid', headerName: 'CatMapper ID', flex: 0.9 },
     { field: 'name', headerName: 'CMName', flex: 2 },
     { field: 'label', headerName: 'Domain', flex: 1 },
-    { field: 'country', headerName: 'Country', flex: 2, cellClassName: (params) => params.row.hasLargeText ? 'wrap-text-3-lines_ex' : '' },
+    { field: 'country', headerName: 'Country', flex: 2, cellClassName: (params) => (params.row.hasLargeText ? 'wrap-text-3-lines_ex' : '') },
     { field: 'match', headerName: 'Matching', flex: 1 },
     {
       field: 'bookmarkAction',
@@ -55,42 +74,42 @@ export default function DataTable({ users, snackbarOpen, setSnackbarOpen, databa
       sortable: false,
       filterable: false,
       disableColumnMenu: true,
-      renderCell: () => (
+      renderCell: (params) => (
         <Tooltip title="Bookmark" arrow>
-          <IconButton onClick={handleBookmarkClick} color="primary">
+          <IconButton onClick={() => handleBookmarkClick(params.row)} color="primary">
             <BookmarkBorderIcon />
           </IconButton>
         </Tooltip>
-      ),
-    },
+      )
+    }
   ];
 
   React.useEffect(() => {
-    setRows(users.map((value, key) => {
-      const hasLargeText = ['country'].some(column => {
-        const text = value[column];
-        return text && text.toString().length > 50;
-      });
+    setRows(
+      users.map((value, key) => {
+        const hasLargeText = ['country'].some((column) => {
+          const text = value[column];
+          return text && text.toString().length > 50;
+        });
 
-      return {
-        id: key + 1,
-        cmid: value.CMID,
-        name: value.CMName,
-        label: value.domain,
-        country: value.country,
-        match: value.matching,
-        hasLargeText
-      }
-    }))
+        return {
+          id: key + 1,
+          cmid: value.CMID,
+          name: value.CMName,
+          label: value.domain,
+          country: value.country,
+          match: value.matching,
+          hasLargeText
+        };
+      })
+    );
     setPaginationModel((prev) => ({ ...prev, page: 0 }));
-  }, [users])
+  }, [users]);
 
-  const getRowHeight = (params) => {
-    return params.model.hasLargeText ? 63 : 48; // Bumped slightly for button padding
-  };
+  const getRowHeight = (params) => (params.model.hasLargeText ? 63 : 48);
 
   return (
-    <div style={{ height: "auto", width: '100%' }}>
+    <div style={{ height: 'auto', width: '100%' }}>
       <DataGrid
         className="custom-row-height"
         rows={rows}
@@ -100,33 +119,32 @@ export default function DataTable({ users, snackbarOpen, setSnackbarOpen, databa
         onPaginationModelChange={setPaginationModel}
         initialState={{
           pagination: {
-            paginationModel: { page: 0, pageSize: 10 },
-          },
+            paginationModel: { page: 0, pageSize: 10 }
+          }
         }}
         pageSizeOptions={[10, 30, 50]}
-        localeText={{ noRowsLabel: "" }} />
+        localeText={{ noRowsLabel: '' }}
+      />
 
-      {/* Main Error Snackbar */}
       <Snackbar
         open={snackbarOpen}
         autoHideDuration={5000}
         onClose={() => setSnackbarOpen(false)}
-        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
       >
-        <Alert onClose={() => setSnackbarOpen(false)} severity="error" sx={{ width: "100%", fontWeight: "bold" }}>
+        <Alert onClose={() => setSnackbarOpen(false)} severity="error" sx={{ width: '100%', fontWeight: 'bold' }}>
           No results found
         </Alert>
       </Snackbar>
 
-      {/* Bookmark "In Progress" Snackbar */}
       <Snackbar
-        open={bookmarkNotice}
+        open={bookmarkNotice.open}
         autoHideDuration={3000}
-        onClose={() => setBookmarkNotice(false)}
-        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+        onClose={() => setBookmarkNotice((prev) => ({ ...prev, open: false }))}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
       >
-        <Alert severity="info" variant="filled">
-          Bookmark feature coming soon!
+        <Alert severity={bookmarkNotice.severity} variant="filled">
+          {bookmarkNotice.message}
         </Alert>
       </Snackbar>
     </div>
