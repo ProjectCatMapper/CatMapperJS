@@ -46,6 +46,9 @@ const sidebarItems = [
   { key: 'security', label: 'Security' },
   { key: 'library', label: 'Bookmarks & History' }
 ];
+const validProfileTabs = new Set(sidebarItems.map((item) => item.key));
+
+const ACTIVITY_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 
 const passwordMeetsPolicy = (value) => value.length >= 6;
 
@@ -66,7 +69,7 @@ const cmidStyle = (cmid) => {
   return { backgroundColor: '#eeeeee', color: '#424242', border: '1px solid #bdbdbd' };
 };
 
-const ProfilePage = ({ database }) => {
+const ProfilePage = ({ database, tab }) => {
   const navigate = useNavigate();
   const { user, cred } = useAuth();
 
@@ -83,6 +86,11 @@ const ProfilePage = ({ database }) => {
     updatedNodes: 0,
     updatedRelationships: 0,
     totalActions: 0
+  });
+  const [activityMeta, setActivityMeta] = useState({
+    fromCache: false,
+    lastUpdated: null,
+    refreshing: false
   });
   const [bookmarks, setBookmarks] = useState([]);
   const [history, setHistory] = useState([]);
@@ -108,6 +116,72 @@ const ProfilePage = ({ database }) => {
   const [passwordRequest, setPasswordRequest] = useState(null);
   const [passwordVerificationCode, setPasswordVerificationCode] = useState('');
 
+  useEffect(() => {
+    if (!database) return;
+    const normalizedTab = (tab || '').toLowerCase();
+    if (!normalizedTab || !validProfileTabs.has(normalizedTab)) {
+      if (!tab && activePage === 'activity') return;
+      setActivePage('activity');
+      if (tab) {
+        navigate(`/${database}/profile/activity`, { replace: true });
+      }
+      return;
+    }
+    if (normalizedTab !== activePage) {
+      setActivePage(normalizedTab);
+    }
+  }, [database, tab, activePage, navigate]);
+
+  const handleSidebarSelect = (pageKey) => {
+    setActivePage(pageKey);
+    if (database) {
+      navigate(`/${database}/profile/${pageKey}`);
+    }
+  };
+
+  const getActivityCacheKey = () => `catmapper_activity_${user || 'anon'}_${(database || '').toLowerCase()}`;
+
+  const loadActivity = async ({ forceRefresh = false } = {}) => {
+    if (!user || !cred || !database) return;
+
+    setActivityMeta((prev) => ({ ...prev, refreshing: true }));
+    const cacheKey = getActivityCacheKey();
+    const now = Date.now();
+
+    if (!forceRefresh) {
+      try {
+        const raw = localStorage.getItem(cacheKey);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed?.cachedAt && parsed?.data && now - parsed.cachedAt < ACTIVITY_CACHE_TTL_MS) {
+            setActivity(parsed.data);
+            setActivityMeta({
+              fromCache: true,
+              lastUpdated: parsed.cachedAt,
+              refreshing: false
+            });
+            return;
+          }
+        }
+      } catch (_cacheReadError) {
+        // ignore cache read/parsing errors and fall through to API request
+      }
+    }
+
+    const freshData = await getUserActivity({ userId: user, database, cred });
+    setActivity(freshData || {});
+    setActivityMeta({
+      fromCache: false,
+      lastUpdated: now,
+      refreshing: false
+    });
+    try {
+      localStorage.setItem(cacheKey, JSON.stringify({ cachedAt: now, data: freshData || {} }));
+    } catch (_cacheWriteError) {
+      // ignore localStorage write failures
+    }
+  };
+
   const loadLibrary = async () => {
     const [bookmarkData, historyData] = await Promise.all([
       getBookmarks({ userId: user, cred }),
@@ -125,15 +199,11 @@ const ProfilePage = ({ database }) => {
         setLoading(true);
         setError('');
 
-        const [profileData, activityData] = await Promise.all([
-          getUserProfile({ userId: user, database, cred }),
-          getUserActivity({ userId: user, database, cred })
-        ]);
+        const profileData = await getUserProfile({ userId: user, database, cred });
 
         if (!mounted) return;
 
         setProfile(profileData);
-        setActivity(activityData || {});
         setFormData({
           firstName: profileData.firstName,
           lastName: profileData.lastName,
@@ -143,6 +213,7 @@ const ProfilePage = ({ database }) => {
           intendedUse: profileData.intendedUse
         });
 
+        await loadActivity();
         await loadLibrary();
       } catch (loadError) {
         if (mounted) {
@@ -405,7 +476,7 @@ const ProfilePage = ({ database }) => {
                   <ListItemButton
                     key={item.key}
                     selected={activePage === item.key}
-                    onClick={() => setActivePage(item.key)}
+                    onClick={() => handleSidebarSelect(item.key)}
                     sx={{ borderRadius: 1, mb: 0.5 }}
                   >
                     <ListItemText primary={item.label} />
@@ -420,9 +491,24 @@ const ProfilePage = ({ database }) => {
           {activePage === 'activity' && (
             <Card>
               <CardContent>
-                <Typography variant="h6" sx={{ mb: 2 }}>My Activity</Typography>
+                <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1.5 }}>
+                  <Typography variant="h6">My Activity</Typography>
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    onClick={() => loadActivity({ forceRefresh: true })}
+                    disabled={activityMeta.refreshing}
+                  >
+                    {activityMeta.refreshing ? 'Refreshing...' : 'Refresh Activity'}
+                  </Button>
+                </Stack>
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
                   Summary of logged database actions for your account.
+                </Typography>
+                <Typography variant="caption" color="text.secondary" sx={{ mb: 2, display: 'block' }}>
+                  {activityMeta.lastUpdated
+                    ? `Last updated: ${new Date(activityMeta.lastUpdated).toLocaleString()}${activityMeta.fromCache ? ' (cached)' : ''}`
+                    : 'No activity cache yet.'}
                 </Typography>
                 <Grid container spacing={2}>
                   <Grid item xs={12} sm={6}>
