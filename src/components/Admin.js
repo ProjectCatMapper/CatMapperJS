@@ -141,10 +141,10 @@ const Admin = ({ database }) => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          ...(cred ? { Authorization: `Bearer ${cred}` } : {}),
         },
         body: JSON.stringify({
           database: database,
-          cred: cred,
           fun: firstDropdownValue,
           input: cleanedData,
           tabledata: ntableData,
@@ -197,10 +197,10 @@ const Admin = ({ database }) => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          ...(cred ? { Authorization: `Bearer ${cred}` } : {}),
         },
         body: JSON.stringify({
           database: database,
-          cred: cred,
           fun: firstDropdownValue,
           input: cleanedData,
           tabledata: combinedData,
@@ -234,10 +234,10 @@ const Admin = ({ database }) => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          ...(cred ? { Authorization: `Bearer ${cred}` } : {}),
         },
         body: JSON.stringify({
           database: database,
-          cred: cred,
           input: cleanedData
         }),
       });
@@ -283,11 +283,11 @@ const Admin = ({ database }) => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          ...(cred ? { Authorization: `Bearer ${cred}` } : {}),
         },
         body: JSON.stringify({
           userid: "none",
           database: database,
-          credentials: cred,
           process: "None",
         }),
       });
@@ -306,11 +306,11 @@ const Admin = ({ database }) => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          ...(cred ? { Authorization: `Bearer ${cred}` } : {}),
         },
         body: JSON.stringify({
           userid: selectedUserIds,
           database: database,
-          credentials: cred,
           process: "approve",
         }),
       });

@@ -14,7 +14,17 @@ export const AuthProvider = ({ children }) => {
     });
 
     const [cred, setCred] = useState(() => {
-        return JSON.parse(localStorage.getItem('cred')) || null;
+        const token = localStorage.getItem('authToken');
+        if (token) return token;
+        // Legacy fallback (older sessions stored JSON in `cred`).
+        try {
+            const legacy = JSON.parse(localStorage.getItem('cred'));
+            if (typeof legacy === 'string') return legacy;
+            if (legacy && typeof legacy === 'object' && legacy.token) return legacy.token;
+        } catch (_err) {
+            // ignore parse errors
+        }
+        return null;
     });
 
     const [authLevel, setAuthLevel] = useState(() => {
@@ -30,10 +40,12 @@ export const AuthProvider = ({ children }) => {
             localStorage.removeItem('userId');
         }
         if (cred) {
-            localStorage.setItem('cred', JSON.stringify(cred));
+            localStorage.setItem('authToken', cred);
         } else {
-            localStorage.removeItem('cred');
+            localStorage.removeItem('authToken');
         }
+        // Clear legacy credential storage.
+        localStorage.removeItem('cred');
         localStorage.setItem('authLevel', authLevel);
     }, [authLevel, user, cred]);
 
@@ -52,7 +64,7 @@ export const AuthProvider = ({ children }) => {
         if (response.ok) {
             const data = await response.json();
             setUser(data.userid)
-            setCred(data)
+            setCred(data.token || null)
             if (data.role === "user") {
                 setAuthLevel(1)
             }
@@ -70,6 +82,7 @@ export const AuthProvider = ({ children }) => {
         localStorage.removeItem('authLevel');
         localStorage.removeItem('userId');
         localStorage.removeItem('cred');
+        localStorage.removeItem('authToken');
     };
 
     return (
