@@ -21,6 +21,32 @@ run_as_deploy_user() {
   sudo -u "$DEPLOY_USER" -H "$@"
 }
 
+verify_git_write_access() {
+  run_as_deploy_user test -w .git/objects || return 1
+  mkdir -p .git/refs/tags
+  run_as_deploy_user test -w .git/refs/tags || return 1
+  run_as_deploy_user sh -c 'tmp=".git/objects/.cm_write_test_$$"; : > "$tmp" && rm -f "$tmp"' || return 1
+  run_as_deploy_user sh -c 'tmp=".git/refs/tags/.cm_write_test_$$"; : > "$tmp" && rm -f "$tmp"' || return 1
+}
+
+fix_git_ownership() {
+  local deploy_group
+  deploy_group=$(id -gn "$DEPLOY_USER")
+  echo "🔧 Repairing .git ownership to $DEPLOY_USER:$deploy_group ..."
+
+  if ! chown -R "$DEPLOY_USER":"$deploy_group" .git; then
+    echo "❌ Error: Failed to chown .git to $DEPLOY_USER:$deploy_group"
+    return 1
+  fi
+
+  if ! chmod -R u+rwX .git; then
+    echo "❌ Error: Failed to apply writable permissions to .git"
+    return 1
+  fi
+
+  return 0
+}
+
 # Initialize variables
 SKIP_VERSION=false
 FAST_BUILD=true
@@ -38,6 +64,21 @@ done
 # Branch info: Print current branch
 CURRENT_BRANCH=$(run_as_deploy_user git rev-parse --abbrev-ref HEAD)
 echo "🌿 Current branch: $CURRENT_BRANCH"
+
+# Ensure git internals are writable by deployment user (fix once, then fail if still broken).
+if ! verify_git_write_access; then
+  echo "⚠️  .git is not writable by $DEPLOY_USER. Attempting ownership repair..."
+  if ! fix_git_ownership; then
+    echo "❌ Error: Unable to repair .git ownership."
+    exit 1
+  fi
+
+  if ! verify_git_write_access; then
+    echo "❌ Error: .git is still not writable by $DEPLOY_USER after repair."
+    echo "Check ACLs/mount permissions for $(pwd)/.git and retry."
+    exit 1
+  fi
+fi
 
 # 1. Pre-flight check: Ensure git directory is clean
 if [ -n "$(run_as_deploy_user git status --porcelain)" ]; then 
