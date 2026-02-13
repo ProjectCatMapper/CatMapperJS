@@ -10,7 +10,8 @@ import {
   Grid,
   Stack,
   TextField,
-  Typography
+  Typography,
+  Snackbar
 } from '@mui/material';
 import { useAuth } from './AuthContext';
 import {
@@ -29,14 +30,7 @@ const baseButtonStyle = {
   }
 };
 
-const passwordMeetsPolicy = (value) => {
-  const minLength = value.length >= 10;
-  const hasUpper = /[A-Z]/.test(value);
-  const hasLower = /[a-z]/.test(value);
-  const hasNumber = /\d/.test(value);
-  const hasSymbol = /[^A-Za-z0-9]/.test(value);
-  return minLength && hasUpper && hasLower && hasNumber && hasSymbol;
-};
+const passwordMeetsPolicy = (value) => value.length >= 6;
 
 const ProfilePage = ({ database }) => {
   const { user, cred } = useAuth();
@@ -208,7 +202,7 @@ const ProfilePage = ({ database }) => {
     }
 
     if (!passwordMeetsPolicy(newPassword)) {
-      setError('Password must be at least 6 letters and contain no numbers or special characters.');
+      setError('Password must be at least 6 characters.');
       setSuccess('');
       return;
     }
@@ -264,6 +258,15 @@ const ProfilePage = ({ database }) => {
     }
   };
 
+  const toastMessage = error || success;
+  const toastSeverity = error ? 'error' : 'success';
+
+  const handleToastClose = (_event, reason) => {
+    if (reason === 'clickaway') return;
+    setError('');
+    setSuccess('');
+  };
+
   if (loading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
@@ -274,15 +277,22 @@ const ProfilePage = ({ database }) => {
 
   return (
     <Box sx={{ maxWidth: 980, mx: 'auto', py: 4, px: 2 }}>
+      <Snackbar
+        open={Boolean(toastMessage)}
+        autoHideDuration={6000}
+        onClose={handleToastClose}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert onClose={handleToastClose} severity={toastSeverity} sx={{ width: '100%' }} variant="filled">
+          {toastMessage}
+        </Alert>
+      </Snackbar>
       <Typography variant="h4" sx={{ mb: 1, fontWeight: 700 }}>
         My Profile
       </Typography>
       <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
         Update your profile details and password. Any change requires email verification before it is applied.
       </Typography>
-
-      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-      {success && <Alert severity="success" sx={{ mb: 2 }}>{success}</Alert>}
 
       <Card sx={{ mb: 3 }}>
         <CardContent>
