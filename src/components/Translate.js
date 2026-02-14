@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import domainOptions from "./SearchSelectDropdown";
 import { Select, MenuItem } from '@mui/material';
 import Button from '@mui/material/Button';
-import { Typography, Box, FormControlLabel, Checkbox } from '@mui/material';
+import { Typography, Box, FormControlLabel, Checkbox, IconButton } from '@mui/material';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import TranslateTable from './TranslateResults';
@@ -11,6 +11,8 @@ import LinearProgress from '@mui/material/LinearProgress';
 import './Translate.css'
 import Tooltip from '@mui/material/Tooltip';
 import InfoIcon from '@mui/icons-material/Info';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { Dialog, DialogTitle, DialogContent, DialogActions } from "@mui/material";
 import infodata from './infodata.json';
 import FooterLinks from './FooterLinks';
@@ -63,8 +65,10 @@ function TranslateComponent({ database }) {
   const [isCheckedthree, setIsCheckedthree] = useState(false);
   const [isCheckedfour, setIsCheckedfour] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [loading, setLoading] = useState(false);
   const [loadingStage, setLoadingStage] = useState('');
+  const translateAbortRef = useRef(null);
   const [filename, setFilename] = useState("");
   const [jsonData, setJsondata] = useState();
   let query = "false"
@@ -107,6 +111,12 @@ function TranslateComponent({ database }) {
   }
 
   const handleClick = async () => {
+    if (translateAbortRef.current) {
+      translateAbortRef.current.abort();
+    }
+    const controller = new AbortController();
+    translateAbortRef.current = controller;
+
     setLoading(true);
     setLoadingStage('Processing input...');
     try {
@@ -133,6 +143,7 @@ function TranslateComponent({ database }) {
           countsamename: isCountSameName,
           uniqueRows: isUniqueRows
         }),
+        signal: controller.signal,
       });
 
       if (!response.ok) {
@@ -174,12 +185,27 @@ function TranslateComponent({ database }) {
       setTcategories(getMatchTypePercentages(withReviewIds, zeroDropdownValue));
 
     } catch (error) {
+      if (error?.name === 'AbortError') {
+        return;
+      }
       console.error('Error sending POST request:', error);
     }
     finally {
+      if (translateAbortRef.current === controller) {
+        translateAbortRef.current = null;
+      }
       setLoading(false);
       setLoadingStage('');
     }
+  };
+
+  const handleCancelTranslate = () => {
+    if (translateAbortRef.current) {
+      translateAbortRef.current.abort();
+      translateAbortRef.current = null;
+    }
+    setLoading(false);
+    setLoadingStage('');
   };
 
   const handleClicktwo = () => {
@@ -456,7 +482,30 @@ function TranslateComponent({ database }) {
   return (
     <Box sx={{ backgroundColor: 'black', opacity: 1, flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
       <Box sx={{ display: 'flex', flexDirection: 'row', gap: 0.5, flexGrow: 1 }}>
-        <div style={{ width: "26%", backgroundColor: '#e0e0e0', padding: '20px', border: '1px solid #ccc', borderRadius: '10px', overflow: "auto" }}>
+        <div
+          style={{
+            width: isSidebarCollapsed ? "56px" : "26%",
+            backgroundColor: '#e0e0e0',
+            padding: isSidebarCollapsed ? '10px 6px' : '20px',
+            border: '1px solid #ccc',
+            borderRadius: '10px',
+            overflow: "auto",
+            transition: 'width 0.2s ease, padding 0.2s ease',
+          }}
+        >
+          <Box sx={{ display: 'flex', justifyContent: isSidebarCollapsed ? 'center' : 'flex-end' }}>
+            <Tooltip title={isSidebarCollapsed ? 'Expand panel' : 'Collapse panel'} arrow>
+              <IconButton
+                size="small"
+                onClick={() => setIsSidebarCollapsed((prev) => !prev)}
+                aria-label={isSidebarCollapsed ? 'Expand translate sidebar' : 'Collapse translate sidebar'}
+              >
+                {isSidebarCollapsed ? <ChevronRightIcon /> : <ChevronLeftIcon />}
+              </IconButton>
+            </Tooltip>
+          </Box>
+          {!isSidebarCollapsed && (
+            <>
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <p class="dropdown-labels">Choose spreadsheet to match</p>
             <Tooltip title={getTooltipContent('UPLOAD_INSTRUCTION')} arrow>
@@ -766,6 +815,19 @@ function TranslateComponent({ database }) {
                 Translating
               </Typography>
               <LoadingBar stage={loadingStage} />
+              <Box sx={{ display: 'flex', justifyContent: 'center', mt: 1.5 }}>
+                <Button
+                  variant="outlined"
+                  onClick={handleCancelTranslate}
+                  sx={{
+                    color: 'white',
+                    borderColor: 'white',
+                    '&:hover': { borderColor: '#ddd', backgroundColor: 'rgba(255,255,255,0.1)' },
+                  }}
+                >
+                  Cancel
+                </Button>
+              </Box>
             </div>
           </Backdrop>
           <Button variant="contained" sx={{
@@ -786,8 +848,10 @@ function TranslateComponent({ database }) {
               </Button>
             </DialogActions>
           </Dialog>
+            </>
+          )}
         </div>
-        <div style={{ width: "72%", backgroundColor: "white", padding: '20px', border: '1px solid #ccc', borderRadius: '10px', overflow: 'auto' }}>
+        <div style={{ width: isSidebarCollapsed ? "94%" : "72%", backgroundColor: "white", padding: '20px', border: '1px solid #ccc', borderRadius: '10px', overflow: 'auto', transition: 'width 0.2s ease' }}>
           {columns.length > 0 && reviewRows.length > 0 && (
             <TranslateMatchReview
               rows={reviewRows}

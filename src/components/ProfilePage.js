@@ -422,6 +422,7 @@ const ProfilePage = ({ database, tab }) => {
         database: item.database || database,
         cmid: item.cmid,
         cmname: item.cmname,
+        item,
         cred
       });
       await loadLibrary();

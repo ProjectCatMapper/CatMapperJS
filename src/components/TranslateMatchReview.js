@@ -3,13 +3,18 @@ import {
   Alert,
   Box,
   Button,
+  FormControlLabel,
+  IconButton,
+  Link,
   MenuItem,
   Select,
   Stack,
+  Switch,
   TextField,
   Typography,
 } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
+import CloseIcon from '@mui/icons-material/Close';
 import SavedCmidInsertPopover from './SavedCmidInsertPopover';
 import {
   getMatchColumns,
@@ -34,6 +39,7 @@ const TranslateMatchReview = ({
   const [duplicateGroupId, setDuplicateGroupId] = useState('');
   const [duplicateKeepRowId, setDuplicateKeepRowId] = useState('');
   const [notice, setNotice] = useState('');
+  const [compactTable, setCompactTable] = useState(false);
 
   const matchColumns = useMemo(() => getMatchColumns(columns, termColumn), [columns, termColumn]);
 
@@ -45,17 +51,18 @@ const TranslateMatchReview = ({
   );
 
   const gridColumns = useMemo(() => {
+    const isCmidColumn = (name) => name === 'CMID' || name.startsWith('CMID_');
     const cols = [
       {
         field: '__actions',
         headerName: 'Row Actions',
-        width: 140,
+        width: 88,
         sortable: false,
         filterable: false,
         renderCell: (params) => (
-          <Button
+          <IconButton
             size="small"
-            variant="outlined"
+            aria-label="Remove match row"
             onClick={() => {
               const next = rows.map((row) =>
                 row.__reviewId === params.row.__reviewId
@@ -64,9 +71,10 @@ const TranslateMatchReview = ({
               );
               onRowsChange(next);
             }}
+            sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 1 }}
           >
-            Remove
-          </Button>
+            <CloseIcon fontSize="small" />
+          </IconButton>
         ),
       },
       ...columns.map((col) => ({
@@ -74,10 +82,26 @@ const TranslateMatchReview = ({
         headerName: col,
         flex: col.length > 14 ? 1.3 : 1,
         minWidth: 130,
+        renderCell: isCmidColumn(col)
+          ? (params) => {
+              const cmid = String(params.value || '').trim();
+              if (!cmid) return '';
+              return (
+                <Link
+                  href={`/${database}/${cmid}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  underline="hover"
+                >
+                  {cmid}
+                </Link>
+              );
+            }
+          : undefined,
       })),
     ];
     return cols;
-  }, [columns, onRowsChange, rows, termColumn]);
+  }, [columns, database, onRowsChange, rows, termColumn]);
 
   const applyRemoveSelected = () => {
     if (!selectionModel.length) {
@@ -162,6 +186,10 @@ const TranslateMatchReview = ({
             onInsert={applyBookmarkCmid}
             title="Insert CMID from Bookmarks"
           />
+          <FormControlLabel
+            control={<Switch size="small" checked={compactTable} onChange={(event) => setCompactTable(event.target.checked)} />}
+            label="Compact table"
+          />
         </Stack>
 
         <Stack direction={{ xs: 'column', md: 'row' }} spacing={1} alignItems={{ xs: 'stretch', md: 'center' }}>
@@ -215,12 +243,21 @@ const TranslateMatchReview = ({
           rows={rows}
           columns={gridColumns}
           getRowId={(row) => row.__reviewId}
+          density={compactTable ? 'compact' : 'standard'}
           checkboxSelection
           rowSelectionModel={selectionModel}
           onRowSelectionModelChange={(model) => setSelectionModel(model)}
           pageSizeOptions={[10, 25, 50]}
           initialState={{ pagination: { paginationModel: { page: 0, pageSize: 10 } } }}
           disableRowSelectionOnClick
+          sx={
+            compactTable
+              ? {
+                  '& .MuiDataGrid-columnHeaders': { fontSize: '0.78rem' },
+                  '& .MuiDataGrid-cell': { fontSize: '0.78rem', py: 0.25 },
+                }
+              : undefined
+          }
         />
       </div>
     </Box>
