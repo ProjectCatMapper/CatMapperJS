@@ -1,170 +1,333 @@
-import React, { useState, useEffect } from "react";
-import { TextField, Button, Box, Typography, Paper, Grid, CircularProgress, Alert } from "@mui/material";
-import { useParams } from 'react-router-dom'
+import React, { useMemo, useState, useEffect } from "react";
+import {
+  TextField,
+  Button,
+  Box,
+  Typography,
+  Paper,
+  Grid,
+  CircularProgress,
+  Alert,
+  Divider,
+  Stack
+} from "@mui/material";
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from './AuthContext';
+import Navbar from './NavbarHome';
+import './EditMetadata.css';
+
+const isHexColor = (value) => /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(String(value || '').trim());
+
+const normalizeNodeItem = (databaseName, item) => {
+  const labels = Array.isArray(item.labels) ? item.labels : [];
+  const group = item.groupLabel || labels[0] || 'UNMAPPED';
+  return {
+    database: databaseName,
+    id: item.id,
+    CMID: item.CMID,
+    CMName: item.CMName,
+    color: item.color || null,
+    group,
+    labels,
+  };
+};
 
 const DynamicPropertiesForm = () => {
-    const { cmid } = useParams();
-    const [formData, setFormData] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
-    const { authLevel } = useAuth();
+  const params = useParams();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { authLevel, cred } = useAuth();
 
-    useEffect(() => {
-        if (authLevel !== 2) {
-            // Set the error state so the user sees the message
-            setError("Not authorized to edit metadata.");
-            setLoading(false); // Stop the spinner
-            return; // <--- STOP here. Don't return the string itself.
+  const cmid = params.cmid || params.legacyCmid;
+  const database = (params.database || '').toLowerCase();
+  const mode = location.pathname.endsWith('/view')
+    ? 'view'
+    : (location.pathname.endsWith('/edit') ? 'edit' : (cmid ? 'edit' : 'list'));
+  const isReadOnly = mode === 'view';
+  const isListView = !cmid;
+
+  const [metadataIndex, setMetadataIndex] = useState({});
+  const [formData, setFormData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState(null);
+  const [successMessage, setSuccessMessage] = useState(null);
+
+  const fetchHeaders = useMemo(() => ({
+    "Content-Type": "application/json",
+    ...(cred ? { Authorization: `Bearer ${cred}` } : {}),
+  }), [cred]);
+
+  useEffect(() => {
+    if (authLevel !== 2) {
+      setError("Not authorized to edit metadata.");
+      setLoading(false);
+      return;
+    }
+
+    const load = async () => {
+      setLoading(true);
+      setError(null);
+      setSuccessMessage(null);
+      try {
+        if (isListView) {
+          const response = await fetch(`${process.env.REACT_APP_API_URL}/admin/metadata/nodes`, {
+            headers: fetchHeaders,
+          });
+          const result = await response.json();
+          if (!response.ok) {
+            throw new Error(result.error || `Server error: ${response.status}`);
+          }
+
+          const normalized = {
+            SocioMap: (result.SocioMap || []).map((item) => normalizeNodeItem('SocioMap', item)),
+            ArchaMap: (result.ArchaMap || []).map((item) => normalizeNodeItem('ArchaMap', item)),
+          };
+          setMetadataIndex(normalized);
+          setFormData([]);
+        } else {
+          const dbParam = database ? `?database=${database}` : '';
+          const response = await fetch(`${process.env.REACT_APP_API_URL}/admin/metadata/node/${cmid}${dbParam}`, {
+            headers: fetchHeaders,
+          });
+          const result = await response.json();
+          if (!response.ok) {
+            throw new Error(result.error || `Server error: ${response.status}`);
+          }
+
+          const rawArray = Array.isArray(result) ? result : [];
+          const processedData = rawArray.map((item) => {
+            const dbName = Object.keys(item)[0];
+            const nodeData = item[dbName];
+            return {
+              database: dbName,
+              ...nodeData,
+            };
+          });
+          setFormData(processedData);
         }
-        if (!cmid) return;
-
-        setLoading(true);
-
-        fetch(`${process.env.REACT_APP_API_URL}/metadata/node/${cmid}`)
-            .then((res) => {
-                if (!res.ok) throw new Error(`Server error: ${res.status}`);
-                return res.json();
-            })
-            .then((data) => {
-                // 1. Ensure it's an array
-                const rawArray = Array.isArray(data) ? data : (data.results || []);
-
-                // 2. TRANSFORM THE DATA
-                // The API returns: [ { SocioMap: { ...data } }, { ArchaMap: { ...data } } ]
-                // We need: [ { database: "SocioMap", ...data }, { database: "ArchaMap", ...data } ]
-                const processedData = rawArray.map(item => {
-                    // Get the first key (e.g., "SocioMap")
-                    const dbName = Object.keys(item)[0];
-                    // Get the actual node data inside that key
-                    const nodeData = item[dbName];
-
-                    return {
-                        database: dbName, // Save the key as a string for the title
-                        ...nodeData       // Spread the rest of the data (id, properties, etc.)
-                    };
-                });
-
-                console.log("Processed Form Data:", processedData); // Debugging check
-                setFormData(processedData);
-                setLoading(false);
-            })
-            .catch((err) => {
-                console.error("Error loading node data:", err);
-                setLoading(false);
-                setError(err.message);
-            });
-    }, [authLevel, cmid]);
-
-    const handleChange = (itemIndex, key, value) => {
-        const updatedData = [...formData];
-        updatedData[itemIndex].properties = {
-            ...updatedData[itemIndex].properties,
-            [key]: value,
-        };
-        setFormData(updatedData);
+      } catch (err) {
+        setError(err.message || "Failed to load metadata.");
+      } finally {
+        setLoading(false);
+      }
     };
 
-    const handleSave = async () => {
-        // Optional: Prevent saving if data is missing
-        if (!formData) return;
+    load();
+  }, [authLevel, cmid, database, isListView, fetchHeaders]);
 
-        try {
-            const response = await fetch(`${process.env.REACT_APP_API_URL}/admin/saveMetadata`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(formData),
-            });
+  const groupedIndex = useMemo(() => {
+    const groupBySubdomain = (rows = []) => rows.reduce((acc, row) => {
+      const key = row.group || 'UNMAPPED';
+      if (!acc[key]) acc[key] = [];
+      acc[key].push(row);
+      return acc;
+    }, {});
 
-            if (!response.ok) {
-                throw new Error(`Server error: ${response.status}`);
-            }
-
-            const result = await response.json();
-
-            // Success feedback
-            alert(result.message || "Changes saved successfully!");
-            console.log("Save result:", result);
-
-        } catch (err) {
-            console.error("Failed to save metadata:", err);
-            alert("Error saving changes. Please try again.");
-        }
+    return {
+      SocioMap: groupBySubdomain(metadataIndex.SocioMap || []),
+      ArchaMap: groupBySubdomain(metadataIndex.ArchaMap || []),
     };
+  }, [metadataIndex]);
 
-    if (loading) {
-        return (
-            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 10 }}>
-                <CircularProgress />
-            </Box>
-        );
+  const handleChange = (itemIndex, key, value) => {
+    setFormData((prev) => {
+      const updated = [...prev];
+      updated[itemIndex] = {
+        ...updated[itemIndex],
+        properties: {
+          ...(updated[itemIndex].properties || {}),
+          [key]: value,
+        },
+      };
+      return updated;
+    });
+  };
+
+  const handleOpenNode = (dbName, nodeCmid, targetMode) => {
+    navigate(`/admin/metadata/${dbName.toLowerCase()}/${nodeCmid}/${targetMode}`);
+  };
+
+  const handleSave = async () => {
+    if (!formData || formData.length === 0) return;
+
+    setSaving(true);
+    setError(null);
+    setSuccessMessage(null);
+
+    try {
+      const payload = {
+        updates: formData.map((item) => ({
+          id: item.id,
+          database: item.database,
+          properties: item.properties || {},
+        })),
+      };
+
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/admin/saveMetadata`, {
+        method: "POST",
+        headers: fetchHeaders,
+        body: JSON.stringify(payload),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || `Server error: ${response.status}`);
+      }
+
+      setSuccessMessage(result.message || "Changes saved successfully.");
+    } catch (err) {
+      setError(err.message || "Error saving changes.");
+    } finally {
+      setSaving(false);
     }
+  };
 
-    if (error) {
-        return (
-            <Box sx={{ p: 3 }}>
-                <Alert severity="error">Error loading data: {error}</Alert>
-            </Box>
-        );
-    }
+  return (
+    <div className="metadata-page">
+      <Navbar />
+      <div className="metadata-content">
+        {loading && (
+          <Box sx={{ display: 'flex', justifyContent: 'center', mt: 6 }}>
+            <CircularProgress />
+          </Box>
+        )}
 
-    if (!formData || formData.length === 0) {
-        return <Box sx={{ p: 3 }}>No data found for this Node ID.</Box>;
-    }
+        {!loading && error && (
+          <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>
+        )}
 
-    return (
-        <Box sx={{ p: 3, backgroundColor: "#f4f6f8", minHeight: "100vh" }}>
-            <Typography variant="h4" gutterBottom>
-                Edit Node Properties
-            </Typography>
+        {!loading && successMessage && (
+          <Alert severity="success" sx={{ mb: 2 }}>{successMessage}</Alert>
+        )}
+
+        {!loading && isListView && !error && (
+          <>
+            <div className="metadata-toolbar">
+              <Typography variant="h4">Metadata Nodes (Admin)</Typography>
+              <Typography variant="body2" color="text.secondary">
+                Grouped by database and subdomain/type
+              </Typography>
+            </div>
+
+            <div className="metadata-grid">
+              {["SocioMap", "ArchaMap"].map((dbName) => (
+                <Paper key={dbName} elevation={2} sx={{ p: 2 }}>
+                  <Typography variant="h5" sx={{ mb: 1 }}>{dbName}</Typography>
+                  <Divider sx={{ mb: 2 }} />
+
+                  {Object.keys(groupedIndex[dbName] || {}).length === 0 && (
+                    <Typography variant="body2" color="text.secondary">No metadata nodes found.</Typography>
+                  )}
+
+                  {Object.entries(groupedIndex[dbName] || {}).map(([groupName, rows]) => (
+                    <Box key={`${dbName}-${groupName}`} sx={{ mb: 2 }}>
+                      <Typography className="metadata-section-title" variant="h6">{groupName}</Typography>
+                      <div className="metadata-table-wrap">
+                        <table className="metadata-table">
+                          <thead>
+                            <tr>
+                              <th>CMID</th>
+                              <th>Name</th>
+                              <th>Color</th>
+                              <th>Actions</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {rows.map((row) => (
+                              <tr key={`${dbName}-${row.id}`}>
+                                <td>{row.CMID}</td>
+                                <td>{row.CMName}</td>
+                                <td>
+                                  {isHexColor(row.color) ? (
+                                    <span className="metadata-color-chip">
+                                      <span className="metadata-color-swatch" style={{ backgroundColor: row.color }} />
+                                      {row.color}
+                                    </span>
+                                  ) : (
+                                    row.color || "-"
+                                  )}
+                                </td>
+                                <td>
+                                  <Stack direction="row" spacing={1}>
+                                    <Button size="small" variant="outlined" onClick={() => handleOpenNode(dbName, row.CMID, 'view')}>
+                                      View
+                                    </Button>
+                                    <Button size="small" variant="contained" onClick={() => handleOpenNode(dbName, row.CMID, 'edit')}>
+                                      Edit
+                                    </Button>
+                                  </Stack>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </Box>
+                  ))}
+                </Paper>
+              ))}
+            </div>
+          </>
+        )}
+
+        {!loading && !isListView && !error && (
+          <>
+            <div className="metadata-toolbar">
+              <Typography variant="h4">
+                {isReadOnly ? "View Metadata Node" : "Edit Metadata Node"}
+              </Typography>
+              <Button variant="outlined" onClick={() => navigate('/admin/metadata')}>
+                Back To Metadata List
+              </Button>
+            </div>
+
+            {formData.length === 0 && (
+              <Typography variant="body1">No metadata node found for {cmid}.</Typography>
+            )}
 
             {formData.map((item, index) => (
-                <Paper
-                    key={item.id || index}
-                    elevation={3}
-                    sx={{ p: 3, mb: 4, borderRadius: 2 }}
-                >
-                    <Typography
-                        variant="h6"
-                        sx={{ fontWeight: "bold", borderBottom: "1px solid #ddd", pb: 1, mb: 2, color: "#1976d2" }}
-                    >
-                        {item.database || "Unknown Database"}
-                        <span style={{ fontSize: '0.8em', color: '#666', marginLeft: '10px' }}>
-                            ({item.id})
-                        </span>
-                    </Typography>
-
-                    <Grid container spacing={3}>
-                        {/* Safely map over properties */}
-                        {item.properties && Object.entries(item.properties).map(([key, value]) => {
-                            // Handle arrays (like 'log') safely
-                            const displayValue = Array.isArray(value) ? JSON.stringify(value) : value;
-
-                            return (
-                                <Grid item xs={12} sm={6} md={4} key={key}>
-                                    <TextField
-                                        fullWidth
-                                        label={key}
-                                        value={displayValue || ""}
-                                        onChange={(e) => handleChange(index, key, e.target.value)}
-                                        variant="outlined"
-                                        size="small"
-                                        multiline={String(displayValue).length > 50}
-                                    />
-                                </Grid>
-                            );
-                        })}
-                    </Grid>
-                </Paper>
+              <Paper key={item.id || index} elevation={3} sx={{ p: 3, mb: 3 }}>
+                <Typography variant="h6" sx={{ fontWeight: 700, mb: 2 }}>
+                  {item.database} ({item.id})
+                </Typography>
+                <Grid container spacing={2}>
+                  {Object.entries(item.properties || {}).map(([key, value]) => {
+                    const displayValue = Array.isArray(value) ? JSON.stringify(value) : (value ?? "");
+                    const isColorField = key.toLowerCase() === 'color' && isHexColor(displayValue);
+                    return (
+                      <Grid item xs={12} sm={6} md={4} key={key}>
+                        <div className="metadata-field-row">
+                          {isColorField && <span className="metadata-color-swatch" style={{ backgroundColor: displayValue }} />}
+                          <TextField
+                            fullWidth
+                            label={key}
+                            value={displayValue}
+                            onChange={(e) => handleChange(index, key, e.target.value)}
+                            variant="outlined"
+                            size="small"
+                            multiline={String(displayValue).length > 60}
+                            disabled={isReadOnly}
+                          />
+                        </div>
+                      </Grid>
+                    );
+                  })}
+                </Grid>
+              </Paper>
             ))}
 
-            <Button variant="contained" color="primary" size="large" onClick={handleSave} sx={{ mt: 2 }}>
-                Save Changes
-            </Button>
-        </Box>
-    );
+            {!isReadOnly && formData.length > 0 && (
+              <Button variant="contained" size="large" onClick={handleSave} disabled={saving}>
+                {saving ? "Saving..." : "Save Changes"}
+              </Button>
+            )}
+          </>
+        )}
+      </div>
+    </div>
+  );
 };
 
 export default DynamicPropertiesForm;
