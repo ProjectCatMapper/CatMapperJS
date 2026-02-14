@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import { Network } from 'vis-network';
 import { useNavigate } from 'react-router-dom'
+import './VisNet.css';
 
 const Neo4jVisualization = ({ visData, dropdownNodeLimit, database }) => {
   const navigate = useNavigate();
@@ -254,43 +255,19 @@ const Neo4jVisualization = ({ visData, dropdownNodeLimit, database }) => {
 
   const handleNodeInfoClose = () => setNodeInfo(null);
   const handleEdgeInfoClose = () => setEdgeInfo(null);
-  const viewButtonStyle = {
-    backgroundColor: 'rgb(46, 125, 50)',
-    color: '#fff',
-    border: 'none',
-    borderRadius: '4px',
-    padding: '6px 12px',
-    cursor: 'pointer'
-  };
-  const closeButtonStyle = {
-    backgroundColor: 'rgb(211, 47, 47)',
-    color: '#fff',
-    border: 'none',
-    borderRadius: '4px',
-    padding: '6px 12px',
-    cursor: 'pointer'
-  };
 
-  return (<div style={{ display: "Flex" }}><div id="network" style={{ height: '400px', width: "1000px" }}></div>
+  return (<div className="visnet-layout"><div id="network" className="visnet-canvas"></div>
     {edgeInfo && (
       <div
         ref={edgeInfoRef}
+        className="visnet-info-box visnet-info-box--edge"
         style={{
-          position: 'fixed',
           left: edgeInfo.position.x,
           top: edgeInfo.position.y,
-          backgroundColor: 'rgba(255, 255, 255, 0.9)',
-          padding: '8px',
-          borderRadius: '3px',
-          boxShadow: '0 0 5px rgba(0, 0, 0, 0.3)',
-          zIndex: 9999,
-          width: "500px",
-          maxHeight: "280px",
-          overflowY: "auto"
         }}
       >
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 8 }}>
-          <button onClick={handleEdgeInfoClose} style={closeButtonStyle}>Close</button>
+        <div className="visnet-actions">
+          <button onClick={handleEdgeInfoClose} className="visnet-btn visnet-btn--close">Close</button>
         </div>
         {edgeInfo.lines.map((line, index) => (
           <div key={`edge-${index}`}>{line}</div>
@@ -301,44 +278,31 @@ const Neo4jVisualization = ({ visData, dropdownNodeLimit, database }) => {
     {nodeInfo && (
       <div
         ref={nodeInfoRef}
+        className="visnet-info-box visnet-info-box--node"
         style={{
-          position: 'absolute',
           left: nodeInfo.position.x,
           top: nodeInfo.position.y,
-          backgroundColor: 'rgba(255, 255, 255, 0.95)',
-          padding: '8px',
-          borderRadius: '3px',
-          boxShadow: '0 0 5px rgba(0, 0, 0, 0.3)',
-          zIndex: 9999,
-          width: "500px",
-          maxHeight: "320px",
-          overflowY: "auto"
         }}
       >
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+        <div className="visnet-actions-between">
           <div>
             {nodeInfo.cmid !== currentid && (
-              <button onClick={() => navigateToNode(nodeInfo.cmid)} style={viewButtonStyle}>View</button>
+              <button onClick={() => navigateToNode(nodeInfo.cmid)} className="visnet-btn visnet-btn--view">View</button>
             )}
           </div>
-          <button onClick={handleNodeInfoClose} style={closeButtonStyle}>Close</button>
+          <button onClick={handleNodeInfoClose} className="visnet-btn visnet-btn--close">Close</button>
         </div>
         {nodeInfo.lines.map((line, index) => (
           <div key={`node-${index}`}>{line}</div>
         ))}
       </div>
     )}
-    <ul>
+    <ul className="visnet-legend">
       {uniqueArray.map((item, index) => (
         <li key={index}>
           <span
-            style={{
-              display: 'inline-block',
-              width: '20px',
-              height: '20px',
-              backgroundColor: item.color,
-              marginRight: '5px',
-            }}
+            className="visnet-legend-color"
+            style={{ backgroundColor: item.color }}
           ></span>
           {item.domain}
         </li>

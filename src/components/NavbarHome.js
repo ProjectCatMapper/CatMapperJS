@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { FaBars, FaTimes } from 'react-icons/fa'
+import './NavCommon.css';
 import './NavbarHome.css'
 import image from '../assets/catmapperWhite_small.webp'
 
@@ -9,39 +10,39 @@ const Navbar = () => {
     const handleClick = () => setClick(!click)
 
     return (
-        <div className='header' style={{ position: "relative" }}>
-            <div className='image' style={{ margin: 0, paddingTop: 20, border: 0, }}>
+        <div className='cm-nav cm-nav--home'>
+            <div className='cm-nav-image'>
                 <Link to='/'><img src={image} width={100} height={70} alt="CatMapper logo"></img></Link>
             </div>
-            <ul className={click ? 'nav-menu active' : 'nav-menu'} style={{ color: "white" }}>
+            <ul className={click ? 'cm-nav-menu active' : 'cm-nav-menu'}>
                 <li >
-                    <Link id='sociomapnavbar' to='/'>Home</Link>
+                    <Link className='cm-nav-link' to='/'>Home</Link>
                 </li>
                 <li >
-                    <Link id='sociomapnavbar' to='/people'>People</Link>
+                    <Link className='cm-nav-link' to='/people'>People</Link>
                 </li>
                 <li >
-                    <Link id='sociomapnavbar' to='/news'>News</Link>
+                    <Link className='cm-nav-link' to='/news'>News</Link>
                 </li>
                 <li >
-                    <Link id='sociomapnavbar' to='/funding'>Funding</Link>
+                    <Link className='cm-nav-link' to='/funding'>Funding</Link>
                 </li>
                 <li >
-                    <Link id='sociomapnavbar' to='/terms'>Terms</Link>
+                    <Link className='cm-nav-link' to='/terms'>Terms</Link>
                 </li>
                 <li >
-                    <Link id='sociomapnavbar' to='/citation'>Citation</Link>
+                    <Link className='cm-nav-link' to='/citation'>Citation</Link>
                 </li>
                 <li >
-                    <Link id='sociomapnavbar' to='/contact'>Contact</Link>
+                    <Link className='cm-nav-link' to='/contact'>Contact</Link>
                 </li>
                 <li >
-                    <Link id='sociomapnavbar' to='/download'>Download</Link>
+                    <Link className='cm-nav-link' to='/download'>Download</Link>
                 </li>
 
             </ul>
-            <div className='hamburger' onClick={handleClick}>
-                {click ? (<FaTimes size={20} style={{ color: '#fff' }} />) : (<FaBars size={20} style={{ color: '#fff' }} />)}
+            <div className='cm-nav-hamburger' onClick={handleClick}>
+                {click ? (<FaTimes size={20} className='cm-nav-icon' />) : (<FaBars size={20} className='cm-nav-icon' />)}
             </div>
 
         </div>
