@@ -3,8 +3,11 @@
 }
 
 .cm-nav-app-logo {
-  flex-grow: 1;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
   text-align: center;
+  z-index: 2;
 }
 
 .cm-nav-app-logo img,
@@ -55,4 +58,8 @@
 
 .cm-nav-auth-btn {
   margin-left: 0.5rem;
+}
+
+.cm-nav--app .cm-nav-menu {
+  margin-left: auto;
 }
