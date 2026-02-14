@@ -15,7 +15,7 @@
   position: relative;
   z-index: 10;
   pointer-events: auto;
-  gap: 16px;
+  gap: 24px;
 }
 
 .footer-links-logo {
@@ -33,12 +33,17 @@
   display: flex;
   flex-wrap: wrap;
   justify-content: flex-end;
+  row-gap: 8px;
+  column-gap: 12px;
+  max-width: 760px;
 }
 
 .footer-links-nav-item {
   color: white !important;
   text-decoration: none !important;
-  margin: 0 8px;
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.2;
 }
 
 @media (max-width: 768px) {
@@ -49,9 +54,10 @@
 
   .footer-links-nav {
     justify-content: flex-start;
+    max-width: 100%;
   }
 
   .footer-links-nav-item {
-    margin: 4px 8px 4px 0;
+    font-size: 0.9rem;
   }
 }
