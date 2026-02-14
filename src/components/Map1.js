@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Circle, Tooltip } from 'react-leaflet';
 import map1 from '../data/m1.csv';
+import './MapViews.css';
 
 const parseCsvData = (csvString) => {
   const lines = csvString.trim().split('\n');
@@ -24,7 +25,7 @@ const Sociomap_1 = () => {
   }, []);
 
   return (
-    <MapContainer center={[20, 0]} zoom={2} style={{ height: "80vh", width: "90vw", marginLeft: "5vw", marginTop: "5vh" }}>
+    <MapContainer center={[20, 0]} zoom={2} className="map-view">
       <TileLayer
         url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.webp"
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'

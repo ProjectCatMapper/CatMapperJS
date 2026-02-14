@@ -49,7 +49,10 @@
     "e2e": "playwright test",
     "e2e:smoke": "playwright test tests/mainRoutes.smoke.spec.js",
     "e2e:list": "playwright test --list",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "check:styles:inline": "node scripts/check-inline-styles.js",
+    "e2e:mobile": "playwright test tests/mobileLayout.spec.js",
+    "check:ui": "npm run build && npm run check:styles:inline && npm run e2e:mobile"
   },
   "eslintConfig": {
     "extends": [
