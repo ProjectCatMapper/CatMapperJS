@@ -638,18 +638,124 @@ export default function Tableclick({ cmid, database, tabval }) {
       );
       const result = await response.json();
 
-      const node = [
+      const rawNodes = [
         ...Object.entries(result["node"]),
         ...Object.entries(result["relNodes"]),
-      ].map((node) => ({
-        id: node["1"].id,
-        label: node["1"].CMName,
-        domain: node["1"].labels,
-        legendLabel: node["1"].legendLabel || (Array.isArray(node["1"].labels) ? node["1"].labels.join(":") : "UNMAPPED"),
-        CMID: node["1"].CMID,
-        tooltipcon: generateTooltipContent(node["1"]),
-        color: node["1"].color || "#cccccc",
-      }));
+      ];
+
+      const groupDomains = new Set(Object.keys(normalizedRef.current || {}));
+      const subdomains = new Set(
+        Object.values(normalizedRef.current || {}).flat().filter(Boolean)
+      );
+      const isTopLevelDomain = (label) => groupDomains.has(label);
+
+      const uniqueLabels = (labels = []) =>
+        [...new Set(labels.filter((value) => value && value !== "CATEGORY"))];
+
+      const getEffectiveLabels = (labels = []) => {
+        const cleaned = uniqueLabels(labels);
+        const nonGroupSubdomains = cleaned.filter(
+          (label) => subdomains.has(label) && !isTopLevelDomain(label)
+        );
+        if (nonGroupSubdomains.length > 0) {
+          return nonGroupSubdomains;
+        }
+        const nonGroup = cleaned.filter((label) => !groupDomains.has(label) || cleaned.length === 1);
+        return nonGroup.length > 0 ? nonGroup : cleaned;
+      };
+
+      const normalizeLegendLabel = (rawLegendLabel, effectiveLabels) => {
+        if (!rawLegendLabel) {
+          return effectiveLabels.length > 0 ? effectiveLabels.join(":") : "UNMAPPED";
+        }
+
+        const tokens = String(rawLegendLabel)
+          .split(/[:+,/|]/)
+          .map((token) => token.trim())
+          .filter(Boolean);
+
+        const cleaned = uniqueLabels(tokens);
+        const tokenSubdomains = cleaned.filter(
+          (label) => subdomains.has(label) && !isTopLevelDomain(label)
+        );
+        const tokenNonGroups = cleaned.filter((label) => !groupDomains.has(label));
+
+        const preferred =
+          tokenSubdomains.length > 0
+            ? tokenSubdomains
+            : (tokenNonGroups.length > 0 ? tokenNonGroups : cleaned);
+
+        if (preferred.length > 0) {
+          return preferred.join(":");
+        }
+        return effectiveLabels.length > 0 ? effectiveLabels.join(":") : "UNMAPPED";
+      };
+
+      const toRgb = (hex) => {
+        const value = String(hex || "").replace("#", "").trim();
+        const normalized = value.length === 3
+          ? value.split("").map((ch) => ch + ch).join("")
+          : value;
+        if (!/^[0-9a-fA-F]{6}$/.test(normalized)) return null;
+        return {
+          r: parseInt(normalized.slice(0, 2), 16),
+          g: parseInt(normalized.slice(2, 4), 16),
+          b: parseInt(normalized.slice(4, 6), 16),
+        };
+      };
+
+      const toHex = ({ r, g, b }) =>
+        `#${[r, g, b].map((v) => Math.max(0, Math.min(255, v)).toString(16).padStart(2, "0")).join("")}`;
+
+      const mixHexColors = (colors = []) => {
+        const rgbColors = colors.map(toRgb).filter(Boolean);
+        if (rgbColors.length === 0) return null;
+        const total = rgbColors.reduce(
+          (acc, c) => ({ r: acc.r + c.r, g: acc.g + c.g, b: acc.b + c.b }),
+          { r: 0, g: 0, b: 0 }
+        );
+        return toHex({
+          r: Math.round(total.r / rgbColors.length),
+          g: Math.round(total.g / rgbColors.length),
+          b: Math.round(total.b / rgbColors.length),
+        });
+      };
+
+      const singleLabelColorMap = new Map();
+      rawNodes.forEach((entry) => {
+        const nodeData = entry["1"];
+        const labels = getEffectiveLabels(nodeData.labels || []);
+        if (labels.length === 1 && nodeData.color) {
+          singleLabelColorMap.set(labels[0], nodeData.color);
+        }
+      });
+
+      const node = rawNodes.map((entry) => {
+        const nodeData = entry["1"];
+        const effectiveLabels = getEffectiveLabels(nodeData.labels || []);
+        const hasMultipleSubdomains =
+          effectiveLabels.filter((label) => subdomains.has(label) && !isTopLevelDomain(label)).length > 1;
+
+        let color = nodeData.color || "#cccccc";
+        if (effectiveLabels.length === 1) {
+          color = singleLabelColorMap.get(effectiveLabels[0]) || color;
+        } else if (hasMultipleSubdomains) {
+          const palette = effectiveLabels
+            .map((label) => singleLabelColorMap.get(label))
+            .filter(Boolean);
+          color = mixHexColors(palette) || color;
+        }
+
+        return {
+          id: nodeData.id,
+          label: nodeData.CMName,
+          domain: effectiveLabels,
+          legendLabel: normalizeLegendLabel(nodeData.legendLabel, effectiveLabels),
+          CMID: nodeData.CMID,
+          tooltipcon: generateTooltipContent(nodeData),
+          color,
+        };
+      });
 
       const nodes = Array.from(new Set(node.map(JSON.stringify))).map(
         JSON.parse
