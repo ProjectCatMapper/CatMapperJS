@@ -1,5 +1,6 @@
 .cm-nav--home {
-  position: relative;
+  position: sticky;
+  top: 0;
 }
 
 .cm-nav--home .cm-nav-image {

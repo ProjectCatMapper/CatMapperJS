@@ -2,7 +2,6 @@ import React, { useState } from 'react'
 import { FaBars, FaTimes } from 'react-icons/fa'
 import './NavCommon.css';
 import './NavbarApp.css'
-import image from '../assets/catmapperWhite_small.webp'
 import Button from '@mui/material/Button';
 import { useAuth } from './AuthContext';
 import { APP_LOGOS } from './Logos';
@@ -19,7 +18,7 @@ const NavbarApp = ({ database }) => {
             {/* LEFT SECTION: Main Catmapper Logo */}
             <div className='cm-nav-image'>
                 <Link to='/'>
-                    <img src={image} alt="Catmapper" />
+                    <img src="/catmapperWhite_small.webp" alt="Catmapper" />
                 </Link>
             </div>
 
