@@ -110,4 +110,8 @@
   .cm-nav-link {
     font-size: 2rem;
   }
+
+  .cm-nav-image {
+    margin-right: 0;
+  }
 }
