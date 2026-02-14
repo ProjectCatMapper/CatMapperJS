@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import domainOptions from "./SearchSelectDropdown";
 import { Select, MenuItem } from '@mui/material';
 import Button from '@mui/material/Button';
-import { Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TablePagination, Typography, Box, FormControlLabel, Checkbox } from '@mui/material';
+import { Typography, Box, FormControlLabel, Checkbox } from '@mui/material';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import TranslateTable from './TranslateResults';
@@ -15,6 +15,9 @@ import { Dialog, DialogTitle, DialogContent, DialogActions } from "@mui/material
 import infodata from './infodata.json';
 import FooterLinks from './FooterLinks';
 import { parseTabularFile } from '../utils/tabularUpload';
+import TranslateMatchReview from './TranslateMatchReview';
+import { useAuth } from './AuthContext';
+import { addReviewIds, getMatchTypePercentages, stripReviewFields } from '../utils/translateReview';
 
 const getTooltipContent = (nm) => {
   const tooltipTexts = {
@@ -38,6 +41,7 @@ const getTooltipContent = (nm) => {
 const fallbackOptions = ["Name", "Key", "CatMapper ID (CMID)"];
 
 function TranslateComponent({ database }) {
+  const { user, cred } = useAuth();
 
   const [selectedFile, setSelectedFile] = useState(null);
   const [error, setError] = useState(null);
@@ -51,15 +55,14 @@ function TranslateComponent({ database }) {
   const [fifthDropdownValue, setfifthDropdownValue] = useState([""]);
   const [svalues, setsvalues] = useState(["Name", "SocioMapID"]);
   const [columns, setColumns] = useState([]);
-  const [rows, setRows] = useState([]);
+  const [reviewRows, setReviewRows] = useState([]);
+  const [previewRows, setPreviewRows] = useState([]);
   const [tcategories, setTcategories] = useState([]);
   const [isChecked, setIsChecked] = useState(false);
   const [isCheckedtwo, setIsCheckedtwo] = useState(false);
   const [isCheckedthree, setIsCheckedthree] = useState(false);
   const [isCheckedfour, setIsCheckedfour] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
   const [loading, setLoading] = useState(false);
   const [loadingStage, setLoadingStage] = useState('');
   const [filename, setFilename] = useState("");
@@ -77,17 +80,6 @@ function TranslateComponent({ database }) {
   const handleCountSameName = (event) => {
     setCountSameName(event.target.checked);
   };
-
-  const handleChangePage = (event, newPage) => {
-    setPage(newPage);
-  };
-
-  const handleChangeRowsPerPage = (event) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
-  };
-
-  const emptyRows = rowsPerPage - Math.min(rowsPerPage, rows.length - page * rowsPerPage);
 
   const handleCheckboxChange = () => {
     setIsChecked(!isChecked);
@@ -113,8 +105,6 @@ function TranslateComponent({ database }) {
   const handleCheckboxChangefour = () => {
     setIsCheckedfour(!isCheckedfour);
   }
-
-  const [data, setData] = useState({});
 
   const handleClick = async () => {
     setLoading(true);
@@ -178,23 +168,10 @@ function TranslateComponent({ database }) {
         ...remainingColumns
       ];
 
-      setData(responseData.file);
+      const withReviewIds = addReviewIds(responseData.file || []);
+      setReviewRows(withReviewIds);
       setColumns(reorderedColumns)
-      setRows(responseData.file.map(row => reorderedColumns.map(key => row[key])));
-
-      const matchTypeCounts = responseData.file.reduce((acc, row) => {
-        const matchType = row['matchType_' + zeroDropdownValue]
-        acc[matchType] = acc[matchType] ? acc[matchType] + 1 : 1;
-        return acc;
-      }, {});
-
-      const total = responseData.file.length;
-      const matchTypePercentages = Object.keys(matchTypeCounts).reduce((acc, key) => {
-        acc[key] = (matchTypeCounts[key] / total * 100).toFixed(2) + '%';
-        return acc;
-      }, {});
-
-      setTcategories(matchTypePercentages);
+      setTcategories(getMatchTypePercentages(withReviewIds, zeroDropdownValue));
 
     } catch (error) {
       console.error('Error sending POST request:', error);
@@ -206,7 +183,8 @@ function TranslateComponent({ database }) {
   };
 
   const handleClicktwo = () => {
-    const worksheet = XLSX.utils.json_to_sheet(data, { header: columns });
+    const exportRows = stripReviewFields(reviewRows);
+    const worksheet = XLSX.utils.json_to_sheet(exportRows, { header: columns });
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
 
@@ -249,10 +227,8 @@ function TranslateComponent({ database }) {
     setJsondata(newTable);
 
     const newColumns = Object.keys(newTable[0] || {});
-    const newRows = newTable.map(r => Object.values(r));
-
     setColumns(newColumns);
-    setRows(newRows);
+    setPreviewRows(newTable);
   };
 
   const handleFileChange = async (event) => {
@@ -279,8 +255,9 @@ function TranslateComponent({ database }) {
       });
 
       setColumns(parsed.headers);
-      setRows(parsed.rows2d.map((row) => row.map((cell) => (cell === '' ? null : cell))));
+      setPreviewRows(parsed.records);
       setJsondata(parsed.records);
+      setReviewRows([]);
     } catch (err) {
       const msg = err?.message || 'Please upload a valid CSV/TSV/Excel (.csv/.tsv/.xlsx/.xls) file.';
       if (msg.toLowerCase().includes('please upload a valid file')) {
@@ -293,35 +270,9 @@ function TranslateComponent({ database }) {
     }
   };
 
-  const getRowStyle = (row) => {
-    const statusIndex = columns.findIndex(col => col === 'matchType_' + zeroDropdownValue);
-    const status = row[statusIndex];
-
-    return getClassForStatus(status);
-  };
-
-  const getClassForStatus = (status) => {
-
-    if (status === undefined) {
-      return 'color-undefined';
-    }
-    status = (status && typeof status === "string") ? status.trim() : status;
-
-    switch (status) {
-      case 'exact match':
-        return 'exact-matches';
-      case 'fuzzy match':
-        return 'fuzzy-matches';
-      case 'one-to-many':
-        return 'one-to-many';
-      case 'many-to-one':
-        return 'many-to-one';
-      case "none":
-        return "none";
-      default:
-        return '';
-    }
-  };
+  useEffect(() => {
+    setTcategories(getMatchTypePercentages(reviewRows, zeroDropdownValue));
+  }, [reviewRows, zeroDropdownValue]);
 
   const LoadingBar = ({ stage }) => (
     <Box
@@ -837,46 +788,21 @@ function TranslateComponent({ database }) {
           </Dialog>
         </div>
         <div style={{ width: "72%", backgroundColor: "white", padding: '20px', border: '1px solid #ccc', borderRadius: '10px', overflow: 'auto' }}>
-          {columns.length > 0 && rows.length > 0 && (
-            <>
-              <TableContainer component={Paper} sx={{ width: '100%', overflow: 'auto' }}>
-                <Table id="myTable">
-                  <TableHead>
-                    <TableRow>
-                      {columns.map((col, index) => (
-                        <TableCell key={index} sx={{ fontWeight: 'bold' }}>{col}</TableCell>
-                      ))}
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {(rowsPerPage > 0
-                      ? rows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                      : rows
-                    ).map((row, rowIndex) => (
-                      <TableRow key={rowIndex} className={getRowStyle(row)} >
-                        {row.map((cell, cellIndex) => (
-                          <TableCell key={cellIndex}>{cell}</TableCell>
-                        ))}
-                      </TableRow>
-                    ))}
-                    {emptyRows > 0 && (
-                      <TableRow style={{ height: 45 * emptyRows }}>
-                        <TableCell colSpan={columns.length} />
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-              <TablePagination id='pagination'
-                rowsPerPageOptions={[5, 10, 25, { label: 'All', value: -1 }]}
-                component="div"
-                count={rows.length}
-                rowsPerPage={rowsPerPage}
-                page={page}
-                onPageChange={handleChangePage}
-                onRowsPerPageChange={handleChangeRowsPerPage}
-              />
-            </>
+          {columns.length > 0 && reviewRows.length > 0 && (
+            <TranslateMatchReview
+              rows={reviewRows}
+              columns={columns}
+              termColumn={zeroDropdownValue}
+              database={database}
+              user={user}
+              cred={cred}
+              onRowsChange={setReviewRows}
+            />
+          )}
+          {columns.length > 0 && reviewRows.length === 0 && previewRows.length > 0 && (
+            <Typography variant="body2" color="text.secondary">
+              Search to generate matches, then use the review interface to clean up results.
+            </Typography>
           )}
         </div>
       </Box>
