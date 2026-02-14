@@ -19,14 +19,22 @@ import './EditMetadata.css';
 const isHexColor = (value) => /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(String(value || '').trim());
 
 const normalizeNodeItem = (databaseName, item) => {
-  const labels = Array.isArray(item.labels) ? item.labels : [];
-  const group = item.groupLabel || labels[0] || 'UNMAPPED';
+  if (!item || typeof item !== 'object') return null;
+  const props = (item.props && typeof item.props === 'object') ? item.props : {};
+  const labels = Array.isArray(item.labels)
+    ? item.labels
+    : (Array.isArray(props.labels) ? props.labels : []);
+  const group = item.groupLabel || props.groupLabel || props.groupDomain || labels[0] || 'UNMAPPED';
+  const cmid = item.CMID || item.cmid || props.CMID || props.cmid || '';
+  const cmname = item.CMName || item.cmname || props.CMName || props.Name || props.name || '';
+  const color = item.color || props.color || props.hexColor || null;
+  if (!cmid && !cmname) return null;
   return {
     database: databaseName,
-    id: item.id,
-    CMID: item.CMID,
-    CMName: item.CMName,
-    color: item.color || null,
+    id: item.id || props.id || null,
+    CMID: cmid,
+    CMName: cmname,
+    color,
     group,
     labels,
   };
@@ -80,8 +88,12 @@ const DynamicPropertiesForm = () => {
           }
 
           const normalized = {
-            SocioMap: (result.SocioMap || []).map((item) => normalizeNodeItem('SocioMap', item)),
-            ArchaMap: (result.ArchaMap || []).map((item) => normalizeNodeItem('ArchaMap', item)),
+            SocioMap: (result.SocioMap || [])
+              .map((item) => normalizeNodeItem('SocioMap', item))
+              .filter(Boolean),
+            ArchaMap: (result.ArchaMap || [])
+              .map((item) => normalizeNodeItem('ArchaMap', item))
+              .filter(Boolean),
           };
           setMetadataIndex(normalized);
           setFormData([]);
@@ -237,8 +249,8 @@ const DynamicPropertiesForm = () => {
                           <tbody>
                             {rows.map((row) => (
                               <tr key={`${dbName}-${row.id}`}>
-                                <td>{row.CMID}</td>
-                                <td>{row.CMName}</td>
+                                <td>{row.CMID || '-'}</td>
+                                <td>{row.CMName || '-'}</td>
                                 <td>
                                   {isHexColor(row.color) ? (
                                     <span className="metadata-color-chip">
@@ -251,10 +263,10 @@ const DynamicPropertiesForm = () => {
                                 </td>
                                 <td>
                                   <Stack direction="row" spacing={1}>
-                                    <Button size="small" variant="outlined" onClick={() => handleOpenNode(dbName, row.CMID, 'view')}>
+                                    <Button size="small" variant="outlined" disabled={!row.CMID} onClick={() => handleOpenNode(dbName, row.CMID, 'view')}>
                                       View
                                     </Button>
-                                    <Button size="small" variant="contained" onClick={() => handleOpenNode(dbName, row.CMID, 'edit')}>
+                                    <Button size="small" variant="contained" disabled={!row.CMID} onClick={() => handleOpenNode(dbName, row.CMID, 'edit')}>
                                       Edit
                                     </Button>
                                   </Stack>
