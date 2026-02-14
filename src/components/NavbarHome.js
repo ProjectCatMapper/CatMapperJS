@@ -30,6 +30,9 @@ const Navbar = () => {
                     <Link className='cm-nav-link' to='/terms'>Terms</Link>
                 </li>
                 <li >
+                    <Link className='cm-nav-link' to='/privacy'>Privacy</Link>
+                </li>
+                <li >
                     <Link className='cm-nav-link' to='/citation'>Citation</Link>
                 </li>
                 <li >

@@ -9,7 +9,8 @@ import {
   CircularProgress,
   Alert,
   Divider,
-  Stack
+  Stack,
+  MenuItem
 } from "@mui/material";
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from './AuthContext';
@@ -60,6 +61,8 @@ const DynamicPropertiesForm = () => {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
+  const [addableProps, setAddableProps] = useState({});
+  const [selectedAddProp, setSelectedAddProp] = useState({});
 
   const fetchHeaders = useMemo(() => ({
     "Content-Type": "application/json",
@@ -128,6 +131,48 @@ const DynamicPropertiesForm = () => {
     load();
   }, [authLevel, cmid, database, isListView, fetchHeaders]);
 
+  useEffect(() => {
+    if (isListView || isReadOnly || formData.length === 0) return;
+
+    const loadAddableProps = async () => {
+      const nextAddable = {};
+      const nextSelected = {};
+
+      for (let index = 0; index < formData.length; index += 1) {
+        const item = formData[index];
+        const itemCMID = item?.properties?.CMID || item?.CMID || cmid;
+        const itemDatabase = String(item?.database || '').toLowerCase();
+        if (!itemCMID || !itemDatabase) {
+          nextAddable[index] = [];
+          continue;
+        }
+
+        try {
+          const query = new URLSearchParams({
+            CMID: itemCMID,
+            database: itemDatabase,
+            option: 'add',
+          });
+          const response = await fetch(
+            `${process.env.REACT_APP_API_URL}/admin_add_edit_delete_nodeproperties?${query.toString()}`,
+            { headers: fetchHeaders }
+          );
+          const result = await response.json();
+          const options = Array.isArray(result?.r1) ? result.r1 : [];
+          nextAddable[index] = options;
+          nextSelected[index] = options[0] || '';
+        } catch (_err) {
+          nextAddable[index] = [];
+        }
+      }
+
+      setAddableProps(nextAddable);
+      setSelectedAddProp(nextSelected);
+    };
+
+    loadAddableProps();
+  }, [cmid, formData, isListView, isReadOnly, fetchHeaders]);
+
   const groupedIndex = useMemo(() => {
     const groupBySubdomain = (rows = []) => rows.reduce((acc, row) => {
       const key = row.group || 'UNMAPPED';
@@ -194,6 +239,34 @@ const DynamicPropertiesForm = () => {
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleAddProperty = (itemIndex) => {
+    const propName = selectedAddProp[itemIndex];
+    if (!propName) return;
+
+    setFormData((prev) => {
+      const updated = [...prev];
+      const props = { ...(updated[itemIndex]?.properties || {}) };
+      if (!(propName in props)) {
+        props[propName] = '';
+      }
+      updated[itemIndex] = {
+        ...updated[itemIndex],
+        properties: props,
+      };
+      return updated;
+    });
+
+    const nextOptions = (addableProps[itemIndex] || []).filter((name) => name !== propName);
+    setAddableProps((prev) => ({
+      ...prev,
+      [itemIndex]: nextOptions,
+    }));
+    setSelectedAddProp((prev) => ({
+      ...prev,
+      [itemIndex]: nextOptions[0] || '',
+    }));
   };
 
   return (
@@ -304,6 +377,43 @@ const DynamicPropertiesForm = () => {
                 <Typography variant="h6" sx={{ fontWeight: 700, mb: 2 }}>
                   {item.database} ({item.id})
                 </Typography>
+
+                {!isReadOnly && (
+                  <Box sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+                    <TextField
+                      select
+                      size="small"
+                      label="Add property"
+                      value={selectedAddProp[index] || ''}
+                      onChange={(e) =>
+                        setSelectedAddProp((prev) => ({
+                          ...prev,
+                          [index]: e.target.value,
+                        }))
+                      }
+                      sx={{ minWidth: 260 }}
+                    >
+                      {(addableProps[index] || []).map((prop) => (
+                        <MenuItem key={`${index}-${prop}`} value={prop}>
+                          {prop}
+                        </MenuItem>
+                      ))}
+                    </TextField>
+                    <Button
+                      variant="outlined"
+                      onClick={() => handleAddProperty(index)}
+                      disabled={!selectedAddProp[index]}
+                    >
+                      Add Property
+                    </Button>
+                    {(addableProps[index] || []).length === 0 && (
+                      <Typography variant="body2" color="text.secondary">
+                        No additional properties available for this metadata label.
+                      </Typography>
+                    )}
+                  </Box>
+                )}
+
                 <Grid container spacing={2}>
                   {Object.entries(item.properties || {}).map(([key, value]) => {
                     const displayValue = Array.isArray(value) ? JSON.stringify(value) : (value ?? "");
