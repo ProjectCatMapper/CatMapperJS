@@ -1,5 +1,29 @@
 const API_BASE = process.env.REACT_APP_API_URL;
 
+const normalizeScalar = (value) => (value == null ? '' : String(value).trim());
+
+const normalizeDatabase = (value) => {
+  const raw = normalizeScalar(value);
+  if (!raw) return '';
+  const lower = raw.toLowerCase();
+  if (lower === 'sociomap') return 'sociomap';
+  if (lower === 'archamap') return 'archamap';
+  return raw;
+};
+
+const normalizeLibraryEntry = (entry) => {
+  const row = entry || {};
+  const cmid = normalizeScalar(row.cmid || row.CMID);
+  const cmname = normalizeScalar(row.cmname || row.CMName);
+  const database = normalizeDatabase(row.database || row.Database || row.db);
+  return {
+    ...row,
+    cmid,
+    cmname,
+    database
+  };
+};
+
 const parseError = async (response) => {
   let payload = null;
   try {
@@ -71,18 +95,37 @@ export const getUserActivity = async ({ userId, database, cred }) => {
 
 export const getBookmarks = async ({ userId, cred }) => {
   ensureAuth({ userId, cred });
-  return requestJson(`${API_BASE}/profile/bookmarks/${encodeURIComponent(userId)}`, {
+  const data = await requestJson(`${API_BASE}/profile/bookmarks/${encodeURIComponent(userId)}`, {
     method: 'GET',
     headers: authHeaders(cred)
   });
+  return {
+    ...data,
+    bookmarks: (data.bookmarks || []).map(normalizeLibraryEntry)
+  };
 };
 
-export const addBookmark = async ({ userId, database, cmid, cmname, cred }) => {
+export const addBookmark = async ({ userId, database, cmid, cmname, cred, item }) => {
+  const normalizedUserId = normalizeScalar(userId);
+  const normalizedItem = normalizeLibraryEntry(item || {});
+  const normalizedDatabase = normalizeDatabase(database || normalizedItem.database);
+  const normalizedCmid = normalizeScalar(cmid || normalizedItem.cmid);
+  const normalizedCmname = normalizeScalar(cmname || normalizedItem.cmname);
+
+  if (!normalizedDatabase || !normalizedCmid) {
+    throw new Error('Missing required bookmark fields (database and CMID).');
+  }
+
   ensureAuth({ userId, cred });
   return requestJson(`${API_BASE}/profile/bookmarks/add`, {
     method: 'POST',
     headers: authHeaders(cred),
-    body: JSON.stringify({ userId, database, cmid, cmname })
+    body: JSON.stringify({
+      userId: normalizedUserId,
+      database: normalizedDatabase,
+      cmid: normalizedCmid,
+      cmname: normalizedCmname
+    })
   });
 };
 
@@ -97,10 +140,14 @@ export const removeBookmarks = async ({ userId, items, cred }) => {
 
 export const getHistory = async ({ userId, cred }) => {
   ensureAuth({ userId, cred });
-  return requestJson(`${API_BASE}/profile/history/${encodeURIComponent(userId)}`, {
+  const data = await requestJson(`${API_BASE}/profile/history/${encodeURIComponent(userId)}`, {
     method: 'GET',
     headers: authHeaders(cred)
   });
+  return {
+    ...data,
+    history: (data.history || []).map(normalizeLibraryEntry)
+  };
 };
 
 export const addHistoryItem = async ({ userId, database, cmid, cmname, cred }) => {

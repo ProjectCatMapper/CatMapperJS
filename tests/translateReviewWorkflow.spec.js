@@ -141,8 +141,9 @@ test.describe('Translate review workflow', () => {
     await expect(page.getByText('SM1')).toBeVisible();
     await expect(page.getByText('SM2')).toBeVisible();
     await expect(page.getByText('SM3')).toBeVisible();
+    await expect(page.locator('a[href="/sociomap/SM1"][target="_blank"]').first()).toBeVisible();
 
-    await page.getByRole('button', { name: /^Remove$/, exact: true }).first().click();
+    await page.getByRole('button', { name: /Remove match row/i }).first().click();
     await expect(page.getByText('SM1')).toHaveCount(0);
     await expect(page.getByText('alpha').first()).toBeVisible();
 
