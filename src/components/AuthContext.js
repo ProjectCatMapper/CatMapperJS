@@ -50,29 +50,35 @@ export const AuthProvider = ({ children }) => {
     }, [authLevel, user, cred]);
 
     const login = async (username, password) => {
-        const response = await fetch(`${process.env.REACT_APP_API_URL}/login`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                user: username,
-                password: password
-            }),
-        });
+        try {
+            const response = await fetch(`${process.env.REACT_APP_API_URL}/login`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    user: username,
+                    password: password
+                }),
+            });
 
-        if (response.ok) {
-            const data = await response.json();
-            setUser(data.userid)
-            setCred(data.token || null)
-            if (data.role === "user") {
-                setAuthLevel(1)
+            if (response.ok) {
+                const data = await response.json();
+                setUser(data.userid)
+                setCred(data.token || null)
+                if (data.role === "user") {
+                    setAuthLevel(1)
+                }
+                if (data.role === "admin") {
+                    setAuthLevel(2)
+                }
+                return { ok: true };
             }
-            if (data.role === "admin") {
-                setAuthLevel(2)
-            }
-        } else {
-            alert('Login failed');
+
+            const errorData = await response.json().catch(() => ({}));
+            return { ok: false, message: errorData?.error || 'Login failed' };
+        } catch (_error) {
+            return { ok: false, message: 'Login failed' };
         }
     };
 

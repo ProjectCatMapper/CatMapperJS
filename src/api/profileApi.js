@@ -209,3 +209,37 @@ export const confirmPasswordChange = async ({ userId, requestId, verificationCod
     })
   });
 };
+
+export const requestForgotPassword = async ({ user, newPassword }) => {
+  const normalizedUser = normalizeScalar(user);
+  if (!normalizedUser) {
+    throw new Error('Username is required.');
+  }
+  if (!newPassword) {
+    throw new Error('New password is required.');
+  }
+
+  return requestJson(`${API_BASE}/forgot-password/request`, {
+    method: 'POST',
+    body: JSON.stringify({
+      user: normalizedUser,
+      newPassword
+    })
+  });
+};
+
+export const confirmForgotPassword = async ({ user, requestId, verificationCode }) => {
+  const normalizedUser = normalizeScalar(user);
+  if (!normalizedUser || !requestId || !verificationCode) {
+    throw new Error('Missing required confirmation fields.');
+  }
+
+  return requestJson(`${API_BASE}/forgot-password/confirm`, {
+    method: 'POST',
+    body: JSON.stringify({
+      user: normalizedUser,
+      requestId,
+      verificationCode
+    })
+  });
+};
