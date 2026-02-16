@@ -60,11 +60,11 @@ const requestJson = async (url, options = {}) => {
   let response;
   try {
     response = await fetch(url, {
+      ...options,
       headers: {
         'Content-Type': 'application/json',
         ...(options.headers || {})
-      },
-      ...options
+      }
     });
   } catch (error) {
     // Browsers usually throw TypeError('Failed to fetch') on CORS/preflight/network failures.
