@@ -118,14 +118,16 @@ describe('translateReview utils', () => {
     expect(out.find((r) => r.__reviewId === 'r-3').CMID_Name).toBe('SM3');
   });
 
-  test('resolveOneToManyGroup with no selection clears all in group', () => {
+  test('resolveOneToManyGroup with no selection keeps one row, clears it, and removes duplicates', () => {
     const rows = [
       { ...row, __reviewId: 'r-1', CMuniqueRowID: 'u1', CMID_Name: 'SM1' },
       { ...row, __reviewId: 'r-2', CMuniqueRowID: 'u1', CMID_Name: 'SM2' },
     ];
     const out = resolveOneToManyGroup({ rows, columns, termColumn: term, groupId: 'u1', keepRowId: null });
+    expect(out).toHaveLength(1);
+    expect(out[0].__reviewId).toBe('r-1');
     expect(out[0].CMID_Name).toBe('');
-    expect(out[1].CMID_Name).toBe('');
+    expect(out[0].matchType_Name).toBe('');
   });
 
   test('stripReviewFields removes internal review id', () => {
