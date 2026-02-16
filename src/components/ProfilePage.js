@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Alert,
   Box,
@@ -139,13 +139,11 @@ const ProfilePage = ({ database, tab }) => {
     }
   };
 
-  const getActivityCacheKey = () => `catmapper_activity_${user || 'anon'}_${(database || '').toLowerCase()}`;
-
-  const loadActivity = async ({ forceRefresh = false } = {}) => {
+  const loadActivity = useCallback(async ({ forceRefresh = false } = {}) => {
     if (!user || !cred || !database) return;
 
     setActivityMeta((prev) => ({ ...prev, refreshing: true }));
-    const cacheKey = getActivityCacheKey();
+    const cacheKey = `catmapper_activity_${user || 'anon'}_${(database || '').toLowerCase()}`;
     const now = Date.now();
 
     if (!forceRefresh) {
@@ -180,16 +178,16 @@ const ProfilePage = ({ database, tab }) => {
     } catch (_cacheWriteError) {
       // ignore localStorage write failures
     }
-  };
+  }, [cred, database, user]);
 
-  const loadLibrary = async () => {
+  const loadLibrary = useCallback(async () => {
     const [bookmarkData, historyData] = await Promise.all([
       getBookmarks({ userId: user, cred }),
       getHistory({ userId: user, cred })
     ]);
     setBookmarks(bookmarkData.bookmarks || []);
     setHistory(historyData.history || []);
-  };
+  }, [cred, user]);
 
   useEffect(() => {
     let mounted = true;
@@ -231,7 +229,7 @@ const ProfilePage = ({ database, tab }) => {
     return () => {
       mounted = false;
     };
-  }, [cred, database, user]);
+  }, [cred, database, loadActivity, loadLibrary, user]);
 
   const hasProfileChanges = useMemo(() => {
     if (!profile) return false;
