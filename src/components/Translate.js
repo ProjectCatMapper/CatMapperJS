@@ -20,6 +20,7 @@ import { parseTabularFile } from '../utils/tabularUpload';
 import TranslateMatchReview from './TranslateMatchReview';
 import { useAuth } from './AuthContext';
 import { addReviewIds, getMatchTypePercentages, stripReviewFields } from '../utils/translateReview';
+import { DataGrid } from '@mui/x-data-grid';
 
 const getTooltipContent = (nm) => {
   const tooltipTexts = {
@@ -32,7 +33,7 @@ const getTooltipContent = (nm) => {
     FILTER_BY_DATASET: "This permits only finding matches to categories that are used by a specific dataset (e.g., only language categories used by glottolog 4.4).  This requires an additional spreadsheet column with the CatMapper ID for the dataset (e.g., the CatMapper ID for glottolog 4.4 is SD20)",
     TIME_RANGE: 'Specify a time range which matching categories need to fall within.  This uses  information about the years for which a category was observed.',
     TBD_OPTION: 'Checking this button… TBD',
-    MATCH_STATISTICS: "This table provides statistics on the matches, including what % were **exact matches** to only one CatMapper category, **fuzzy matches** to only on CatMapper category, matches to more than one CatMapper category (**one-to-many**), multiple matches to a single CatMapper category (**many-to-one**), and no match found.",
+    MATCH_STATISTICS: "Summary table + review row colors use the same legend: exact match (white), fuzzy match (orange), one-to-many (salmon), many-to-one (pink), and no match (yellow). Percentages are out of all uploaded rows for the selected match column.",
     SPLIT_CATEGORIES: "Press apply to split categories in the selected category domain by the selected separator.  This will create new rows for each split category, and will assign them the same context (e.g., country) as the combined category.",
     COMBINE_IDENTICAL: "Checking this button will combine identical categories from the selected column into a single row for matching, although it will preserve other information if selected. For example, if Country, Context, and/or Dataset is checked then categories will be considered identical only if they have the same spelling and are associated with the same Country, Context, and/or Dataset.  This is useful if your spreadsheet has many identical categories that you want to match only once to speed up processing time and make corrections easier.",
   };
@@ -424,6 +425,23 @@ function TranslateComponent({ database }) {
       });
   }, [database]);
 
+  const previewGridRows = useMemo(
+    () => (previewRows || []).map((row, index) => ({ ...row, __previewId: `preview-${index + 1}` })),
+    [previewRows]
+  );
+
+  const previewGridColumns = useMemo(
+    () =>
+      (columns || []).map((col) => ({
+        field: col,
+        headerName: col,
+        width: Math.max(140, Math.min(420, String(col).length * 10 + 48)),
+        minWidth: 120,
+        resizable: true,
+      })),
+    [columns]
+  );
+
   const tooltipContent = (
     <div style={{ maxWidth: '400px' }}>
       <h3>From which category domain do you want to find matches?</h3>
@@ -804,7 +822,7 @@ function TranslateComponent({ database }) {
           <br />
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <TranslateTable categories={tcategories} />
-            <Tooltip title={getTooltipContent(10)} arrow>
+            <Tooltip title={getTooltipContent("MATCH_STATISTICS")} arrow>
               <Button startIcon={<InfoIcon sx={{ height: '28px', width: '28px' }} />} />
             </Tooltip>
           </Box>
@@ -864,9 +882,25 @@ function TranslateComponent({ database }) {
             />
           )}
           {columns.length > 0 && reviewRows.length === 0 && previewRows.length > 0 && (
-            <Typography variant="body2" color="text.secondary">
-              Search to generate matches, then use the review interface to clean up results.
-            </Typography>
+            <Box>
+              <Typography variant="h6" sx={{ mb: 1 }}>
+                Uploaded Data Preview
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                Preview the uploaded spreadsheet before running Search.
+              </Typography>
+              <div style={{ height: 560, width: '100%' }}>
+                <DataGrid
+                  rows={previewGridRows}
+                  columns={previewGridColumns}
+                  getRowId={(row) => row.__previewId}
+                  disableColumnResize={false}
+                  pageSizeOptions={[10, 25, 50]}
+                  initialState={{ pagination: { paginationModel: { page: 0, pageSize: 10 } } }}
+                  disableRowSelectionOnClick
+                />
+              </div>
+            </Box>
           )}
         </div>
       </Box>

@@ -73,12 +73,29 @@ export const resolveOneToManyGroup = ({
   keepRowId = null,
 }) => {
   const matchColumns = getMatchColumns(columns, termColumn);
-  const next = rows.map((row) => {
-    if (row.CMuniqueRowID !== groupId) return row;
-    if (keepRowId && row.__reviewId === keepRowId) return row;
-    return clearGeneratedValues(row, matchColumns);
-  });
-  return next;
+  if (keepRowId) {
+    return rows.map((row) => {
+      if (row.CMuniqueRowID !== groupId) return row;
+      if (row.__reviewId === keepRowId) return row;
+      return clearGeneratedValues(row, matchColumns);
+    });
+  }
+
+  // "Set Group To None": keep one row for the group (first encountered),
+  // clear generated match fields on that kept row, and remove duplicates.
+  let keptOne = false;
+  return rows.reduce((acc, row) => {
+    if (row.CMuniqueRowID !== groupId) {
+      acc.push(row);
+      return acc;
+    }
+
+    if (!keptOne) {
+      acc.push(clearGeneratedValues(row, matchColumns));
+      keptOne = true;
+    }
+    return acc;
+  }, []);
 };
 
 export const stripReviewFields = (rows = []) =>

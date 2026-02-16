@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   Alert,
   Box,
@@ -11,6 +11,7 @@ import {
   Stack,
   Switch,
   TextField,
+  Tooltip,
   Typography,
 } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
@@ -40,6 +41,8 @@ const TranslateMatchReview = ({
   const [duplicateKeepRowId, setDuplicateKeepRowId] = useState('');
   const [notice, setNotice] = useState('');
   const [compactTable, setCompactTable] = useState(false);
+  const [columnWidths, setColumnWidths] = useState({ __actions: 88 });
+  const [filterModel, setFilterModel] = useState({ items: [] });
 
   const matchColumns = useMemo(() => getMatchColumns(columns, termColumn), [columns, termColumn]);
 
@@ -50,38 +53,64 @@ const TranslateMatchReview = ({
     [oneToManyGroups, duplicateGroupId]
   );
 
+  useEffect(() => {
+    if (!duplicateGroupId) return;
+    if (activeGroup) return;
+    setDuplicateGroupId('');
+    setDuplicateKeepRowId('');
+  }, [activeGroup, duplicateGroupId]);
+
+  const visibleRows = useMemo(() => {
+    if (!duplicateGroupId) return rows;
+    return rows.filter((row) => String(row.CMuniqueRowID) === String(duplicateGroupId));
+  }, [duplicateGroupId, rows]);
+
   const gridColumns = useMemo(() => {
     const isCmidColumn = (name) => name === 'CMID' || name.startsWith('CMID_');
+    const estimateWidth = (name) => {
+      const headerWidth = Math.max(130, name.length * 9 + 32);
+      const longestCell = rows.reduce((max, row) => {
+        const valueLength = String(row[name] ?? '').length;
+        return Math.max(max, valueLength);
+      }, 0);
+      const cellWidth = Math.min(420, Math.max(130, longestCell * 8 + 40));
+      return Math.max(headerWidth, cellWidth);
+    };
     const cols = [
       {
         field: '__actions',
         headerName: 'Row Actions',
-        width: 88,
+        width: columnWidths.__actions ?? 88,
+        minWidth: 88,
         sortable: false,
         filterable: false,
+        resizable: true,
         renderCell: (params) => (
-          <IconButton
-            size="small"
-            aria-label="Remove match row"
-            onClick={() => {
-              const next = rows.map((row) =>
-                row.__reviewId === params.row.__reviewId
-                  ? removeMatchFromRow(row, columns, termColumn)
-                  : row
-              );
-              onRowsChange(next);
-            }}
-            sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 1 }}
-          >
-            <CloseIcon fontSize="small" />
-          </IconButton>
+          <Tooltip title="remove matching data" arrow>
+            <IconButton
+              size="small"
+              aria-label="remove matching data"
+              onClick={() => {
+                const next = rows.map((row) =>
+                  row.__reviewId === params.row.__reviewId
+                    ? removeMatchFromRow(row, columns, termColumn)
+                    : row
+                );
+                onRowsChange(next);
+              }}
+              sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 1 }}
+            >
+              <CloseIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
         ),
       },
       ...columns.map((col) => ({
         field: col,
         headerName: col,
-        flex: col.length > 14 ? 1.3 : 1,
+        width: columnWidths[col] ?? estimateWidth(col),
         minWidth: 130,
+        resizable: true,
         renderCell: isCmidColumn(col)
           ? (params) => {
               const cmid = String(params.value || '').trim();
@@ -101,7 +130,7 @@ const TranslateMatchReview = ({
       })),
     ];
     return cols;
-  }, [columns, database, onRowsChange, rows, termColumn]);
+  }, [columnWidths, columns, database, onRowsChange, rows, termColumn]);
 
   const applyRemoveSelected = () => {
     if (!selectionModel.length) {
@@ -156,10 +185,27 @@ const TranslateMatchReview = ({
     setNotice(keepNone ? 'Cleared all matches in duplicate group.' : 'Resolved duplicate group by keeping one row.');
   };
 
+  const resetColumnFilters = () => {
+    setFilterModel({ items: [], quickFilterValues: [] });
+    setNotice('Column filters reset.');
+  };
+
   const matchSummary = useMemo(() => {
     if (!termColumn) return 'Select a column and run search to review matches.';
     return `Generated match columns: ${matchColumns.join(', ') || 'none'}`;
   }, [matchColumns, termColumn]);
+
+  const getRowClassName = (params) => {
+    if (!termColumn) return '';
+    const matchTypeKey = `matchType_${termColumn}`;
+    const normalized = String(params?.row?.[matchTypeKey] || '').trim().toLowerCase();
+
+    if (normalized === 'exact match') return 'translate-match-row-exact';
+    if (normalized === 'fuzzy match') return 'translate-match-row-fuzzy';
+    if (normalized === 'one-to-many') return 'translate-match-row-one-to-many';
+    if (normalized === 'many-to-one') return 'translate-match-row-many-to-one';
+    return 'translate-match-row-none';
+  };
 
   return (
     <Box>
@@ -233,30 +279,56 @@ const TranslateMatchReview = ({
           <Button variant="outlined" disabled={!duplicateGroupId} onClick={() => applyDuplicateResolution(true)}>
             Set Group To None
           </Button>
+          <Button variant="text" onClick={resetColumnFilters}>
+            Reset Column Filters
+          </Button>
         </Stack>
 
-        {notice && <Alert severity="info">{notice}</Alert>}
+        {notice && (
+          <Alert severity="info" onClose={() => setNotice('')}>
+            {notice}
+          </Alert>
+        )}
       </Stack>
 
       <div style={{ height: 560, width: '100%' }}>
         <DataGrid
-          rows={rows}
+          rows={visibleRows}
           columns={gridColumns}
           getRowId={(row) => row.__reviewId}
+          getRowClassName={getRowClassName}
+          disableColumnResize={false}
+          filterModel={filterModel}
+          onFilterModelChange={(model) => setFilterModel(model)}
           density={compactTable ? 'compact' : 'standard'}
           checkboxSelection
           rowSelectionModel={selectionModel}
           onRowSelectionModelChange={(model) => setSelectionModel(model)}
+          onColumnWidthChange={(params) => {
+            const field = params?.colDef?.field;
+            if (!field) return;
+            setColumnWidths((prev) => ({ ...prev, [field]: params.width }));
+          }}
           pageSizeOptions={[10, 25, 50]}
           initialState={{ pagination: { paginationModel: { page: 0, pageSize: 10 } } }}
           disableRowSelectionOnClick
           sx={
-            compactTable
-              ? {
-                  '& .MuiDataGrid-columnHeaders': { fontSize: '0.78rem' },
-                  '& .MuiDataGrid-cell': { fontSize: '0.78rem', py: 0.25 },
-                }
-              : undefined
+            {
+              '& .translate-match-row-exact': { backgroundColor: '#FFFFFF' },
+              '& .translate-match-row-fuzzy': { backgroundColor: '#F6C594' },
+              '& .translate-match-row-one-to-many': { backgroundColor: '#F6AD94' },
+              '& .translate-match-row-many-to-one': { backgroundColor: '#e48dd9' },
+              '& .translate-match-row-none': { backgroundColor: '#FFFFCC' },
+              '& .MuiDataGrid-row:hover': {
+                filter: 'brightness(0.97)'
+              },
+              ...(compactTable
+                ? {
+                    '& .MuiDataGrid-columnHeaders': { fontSize: '0.78rem' },
+                    '& .MuiDataGrid-cell': { fontSize: '0.78rem', py: 0.25 },
+                  }
+                : {}),
+            }
           }
         />
       </div>
