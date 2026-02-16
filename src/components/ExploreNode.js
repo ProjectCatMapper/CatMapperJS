@@ -691,69 +691,22 @@ export default function Tableclick({ cmid, database, tabval }) {
         return effectiveLabels.length > 0 ? effectiveLabels.join(":") : "UNMAPPED";
       };
 
-      const toRgb = (hex) => {
-        const value = String(hex || "").replace("#", "").trim();
-        const normalized = value.length === 3
-          ? value.split("").map((ch) => ch + ch).join("")
-          : value;
-        if (!/^[0-9a-fA-F]{6}$/.test(normalized)) return null;
-        return {
-          r: parseInt(normalized.slice(0, 2), 16),
-          g: parseInt(normalized.slice(2, 4), 16),
-          b: parseInt(normalized.slice(4, 6), 16),
-        };
-      };
-
-      const toHex = ({ r, g, b }) =>
-        `#${[r, g, b].map((v) => Math.max(0, Math.min(255, v)).toString(16).padStart(2, "0")).join("")}`;
-
-      const mixHexColors = (colors = []) => {
-        const rgbColors = colors.map(toRgb).filter(Boolean);
-        if (rgbColors.length === 0) return null;
-        const total = rgbColors.reduce(
-          (acc, c) => ({ r: acc.r + c.r, g: acc.g + c.g, b: acc.b + c.b }),
-          { r: 0, g: 0, b: 0 }
-        );
-        return toHex({
-          r: Math.round(total.r / rgbColors.length),
-          g: Math.round(total.g / rgbColors.length),
-          b: Math.round(total.b / rgbColors.length),
-        });
-      };
-
-      const singleLabelColorMap = new Map();
-      rawNodes.forEach((entry) => {
-        const nodeData = entry["1"];
-        const labels = getEffectiveLabels(nodeData.labels || []);
-        if (labels.length === 1 && nodeData.color) {
-          singleLabelColorMap.set(labels[0], nodeData.color);
-        }
-      });
-
       const node = rawNodes.map((entry) => {
         const nodeData = entry["1"];
         const effectiveLabels = getEffectiveLabels(nodeData.labels || []);
-        const hasMultipleSubdomains =
-          effectiveLabels.filter((label) => subdomains.has(label) && !isTopLevelDomain(label)).length > 1;
-
-        let color = nodeData.color || "#cccccc";
-        if (effectiveLabels.length === 1) {
-          color = singleLabelColorMap.get(effectiveLabels[0]) || color;
-        } else if (hasMultipleSubdomains) {
-          const palette = effectiveLabels
-            .map((label) => singleLabelColorMap.get(label))
-            .filter(Boolean);
-          color = mixHexColors(palette) || color;
-        }
+        const normalizedLegendLabel = normalizeLegendLabel(nodeData.legendLabel, effectiveLabels);
 
         return {
           id: nodeData.id,
           label: nodeData.CMName,
           domain: effectiveLabels,
-          legendLabel: normalizeLegendLabel(nodeData.legendLabel, effectiveLabels),
+          legendLabel: normalizedLegendLabel,
           CMID: nodeData.CMID,
-          tooltipcon: generateTooltipContent(nodeData),
-          color,
+          tooltipcon: generateTooltipContent({
+            ...nodeData,
+            legendLabel: normalizedLegendLabel
+          }),
+          color: nodeData.color || "#cccccc",
         };
       });
 
