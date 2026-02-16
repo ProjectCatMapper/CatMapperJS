@@ -32,6 +32,16 @@ export const AuthProvider = ({ children }) => {
         return storedAuthLevel ? parseInt(storedAuthLevel, 10) : 0;
     });; // 0: Unauthenticated, 1: Advanced, 2: Admin
 
+    const clearAuthState = () => {
+        setUser(null);
+        setCred(null);
+        setAuthLevel(0);
+        localStorage.removeItem('authLevel');
+        localStorage.removeItem('userId');
+        localStorage.removeItem('cred');
+        localStorage.removeItem('authToken');
+    };
+
 
     useEffect(() => {
         if (user) {
@@ -48,6 +58,16 @@ export const AuthProvider = ({ children }) => {
         localStorage.removeItem('cred');
         localStorage.setItem('authLevel', authLevel);
     }, [authLevel, user, cred]);
+
+    useEffect(() => {
+        const handleAuthInvalid = () => {
+            clearAuthState();
+        };
+        window.addEventListener('catmapper-auth-invalid', handleAuthInvalid);
+        return () => {
+            window.removeEventListener('catmapper-auth-invalid', handleAuthInvalid);
+        };
+    }, []);
 
     const login = async (username, password) => {
         try {
@@ -83,12 +103,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     const logout = () => {
-        setUser(null);
-        setAuthLevel(0);
-        localStorage.removeItem('authLevel');
-        localStorage.removeItem('userId');
-        localStorage.removeItem('cred');
-        localStorage.removeItem('authToken');
+        clearAuthState();
     };
 
     return (
