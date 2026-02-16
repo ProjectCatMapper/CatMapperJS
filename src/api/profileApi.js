@@ -230,10 +230,11 @@ export const confirmPasswordChange = async ({ userId, requestId, verificationCod
   });
 };
 
-export const requestForgotPassword = async ({ user, newPassword }) => {
+export const requestForgotPassword = async ({ user, email, newPassword }) => {
   const normalizedUser = normalizeScalar(user);
-  if (!normalizedUser) {
-    throw new Error('Username is required.');
+  const normalizedEmail = normalizeScalar(email);
+  if (!normalizedUser && !normalizedEmail) {
+    throw new Error('Username or email is required.');
   }
   if (!newPassword) {
     throw new Error('New password is required.');
@@ -243,14 +244,16 @@ export const requestForgotPassword = async ({ user, newPassword }) => {
     method: 'POST',
     body: JSON.stringify({
       user: normalizedUser,
+      email: normalizedEmail,
       newPassword
     })
   });
 };
 
-export const confirmForgotPassword = async ({ user, requestId, verificationCode }) => {
+export const confirmForgotPassword = async ({ user, email, requestId, verificationCode }) => {
   const normalizedUser = normalizeScalar(user);
-  if (!normalizedUser || !requestId || !verificationCode) {
+  const normalizedEmail = normalizeScalar(email);
+  if ((!normalizedUser && !normalizedEmail) || !requestId || !verificationCode) {
     throw new Error('Missing required confirmation fields.');
   }
 
@@ -258,6 +261,7 @@ export const confirmForgotPassword = async ({ user, requestId, verificationCode 
     method: 'POST',
     body: JSON.stringify({
       user: normalizedUser,
+      email: normalizedEmail,
       requestId,
       verificationCode
     })

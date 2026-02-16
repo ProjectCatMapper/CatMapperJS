@@ -26,6 +26,7 @@ import DownloadAll from './routes/DownloadAll';
 import ApiGuide from './routes/APIGuide';
 import UserGuide from './routes/UserGuide';
 import Logins from './routes/Logins';
+import ForgotPassword from './routes/ForgotPassword';
 import RegisterPage from './routes/RegisterPage';
 import AdminPage from './routes/Admin';
 import FAQ from './routes/FAQ';
@@ -71,6 +72,7 @@ const App = () => {
         <Route path='/' element={<Catmapper />} />
         <Route path='/:database' element={<DatabaseRoute><AppHome /></DatabaseRoute>} />
         <Route path='/:database/login' element={<DatabaseRoute><Logins /></DatabaseRoute>} />
+        <Route path='/:database/forgot-password' element={<DatabaseRoute><ForgotPassword /></DatabaseRoute>} />
         <Route path="/:database/register" element={<DatabaseRoute><RegisterPage /></DatabaseRoute>} />
         <Route path='/:database/explore' element={<DatabaseRoute><Explore /></DatabaseRoute>} />
         <Route path='/:database/translate' element={<DatabaseRoute><Translate /></DatabaseRoute>} />
