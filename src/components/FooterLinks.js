@@ -12,6 +12,7 @@ const FooterLinks = () => {
         { name: "Funding", path: "/funding" },
         { name: "Citation", path: "/citation" },
         { name: "Terms", path: "/terms" },
+        { name: "Privacy", path: "/privacy" },
         { name: "Contact", path: "/contact" },
         { name: "Download", path: "/download" },
     ];
