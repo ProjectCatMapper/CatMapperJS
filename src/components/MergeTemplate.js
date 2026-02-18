@@ -15,7 +15,7 @@ const MergeTemplate = ({ database }) => {
   const [jsonData, setJsondata] = useState();
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [message, setMessage] = useState('');
-  const [downloadHash, setDownloadHash] = useState('');
+  const [, setDownloadHash] = useState('');
   const [templateData, setTemplateData] = useState([]);
   const [templateFound, setTemplateFound] = useState(false);
   const [uploadTemplateValid, setUploadTemplateValid] = useState(false);
