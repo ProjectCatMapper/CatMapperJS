@@ -18,6 +18,7 @@ import News from './routes/News';
 import Funding from './routes/Funding';
 import Citation from './routes/Citation';
 import Terms from './routes/Terms';
+import Privacy from './routes/Privacy';
 import Contact from './routes/Contact';
 import Download from './routes/Download';
 import DownloadAll from './routes/DownloadAll';
@@ -83,6 +84,7 @@ const App = () => {
         <Route path='/funding' element={<Funding />} />
         <Route path='/citation' element={<Citation />} />
         <Route path='/terms' element={<Terms />} />
+        <Route path='/privacy' element={<Privacy />} />
         <Route path='/download' element={<Download />} />
         <Route path='/download/all' element={<DownloadAll />} />
         <Route path='/contact' element={<Contact />} />
@@ -95,7 +97,10 @@ const App = () => {
         <Route path='/:database/profile' element={<ProtectedRoute requiredLevel={1}><Profile /></ProtectedRoute>} />
         <Route path='/:database/profile/:tab' element={<ProtectedRoute requiredLevel={1}><Profile /></ProtectedRoute>} />
         <Route path='/:database/admin' element={<ProtectedRoute requiredLevel={2}><AdminPage /></ProtectedRoute>} />
-        <Route path='/editMetadata/:cmid' element={<ProtectedRoute requiredLevel={2}><DynamicPropertiesForm /></ProtectedRoute>} />
+        <Route path='/admin/metadata' element={<ProtectedRoute requiredLevel={2}><DynamicPropertiesForm /></ProtectedRoute>} />
+        <Route path='/admin/metadata/:database/:cmid/view' element={<ProtectedRoute requiredLevel={2}><DynamicPropertiesForm /></ProtectedRoute>} />
+        <Route path='/admin/metadata/:database/:cmid/edit' element={<ProtectedRoute requiredLevel={2}><DynamicPropertiesForm /></ProtectedRoute>} />
+        <Route path='/editMetadata/:legacyCmid' element={<ProtectedRoute requiredLevel={2}><DynamicPropertiesForm /></ProtectedRoute>} />
       </Routes >
     </>
   );

@@ -1,11 +1,23 @@
 .cm-nav--app {
   min-height: 10vh;
+  display: grid;
+  grid-template-columns: 170px 1fr minmax(0, max-content);
+  align-items: center;
+  column-gap: 12px;
+  overflow: visible;
+}
+
+.cm-nav--app .cm-nav-image {
+  grid-column: 1;
+  justify-self: start;
+  margin-right: 0;
+  z-index: 3;
 }
 
 .cm-nav-app-logo {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
+  grid-column: 2;
+  position: static;
+  justify-self: center;
   text-align: center;
   z-index: 2;
 }
@@ -60,6 +72,20 @@
   margin-left: 0.5rem;
 }
 
-.cm-nav--app .cm-nav-menu {
-  margin-left: auto;
+.cm-nav-right {
+  grid-column: 3;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-width: 0;
+}
+
+@media screen and (max-width: 600px) {
+  .cm-nav--app {
+    display: flex;
+  }
+
+  .cm-nav--app .cm-nav-image {
+    margin-right: auto;
+  }
 }
