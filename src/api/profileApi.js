@@ -230,6 +230,30 @@ export const confirmPasswordChange = async ({ userId, requestId, verificationCod
   });
 };
 
+export const requestApiKeyCreation = async ({ userId, cred }) => {
+  ensureAuth({ userId, cred });
+  return requestJson(`${API_BASE}/profile/request-api-key`, {
+    method: 'POST',
+    headers: authHeaders(cred),
+    body: JSON.stringify({
+      userId
+    })
+  });
+};
+
+export const confirmApiKeyCreation = async ({ userId, requestId, verificationCode, cred }) => {
+  ensureAuth({ userId, cred });
+  return requestJson(`${API_BASE}/profile/confirm-api-key`, {
+    method: 'POST',
+    headers: authHeaders(cred),
+    body: JSON.stringify({
+      userId,
+      requestId,
+      verificationCode
+    })
+  });
+};
+
 export const requestForgotPassword = async ({ user, email, newPassword }) => {
   const normalizedUser = normalizeScalar(user);
   const normalizedEmail = normalizeScalar(email);

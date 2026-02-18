@@ -1,4 +1,4 @@
-import { addBookmark, getBookmarks, getHistory } from './profileApi';
+import { addBookmark, confirmApiKeyCreation, getBookmarks, getHistory, requestApiKeyCreation } from './profileApi';
 
 describe('profileApi bookmark/history normalization', () => {
   beforeEach(() => {
@@ -61,5 +61,37 @@ describe('profileApi bookmark/history normalization', () => {
 
     const out = await getHistory({ userId: '42', cred: 'token-123' });
     expect(out.history[0]).toMatchObject({ cmid: 'SM9', cmname: 'Legacy', database: 'sociomap' });
+  });
+
+  test('requestApiKeyCreation and confirmApiKeyCreation call expected endpoints', async () => {
+    global.fetch
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ requestId: 'apikey_123', maskedEmail: 'ad***@example.org' })
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ apiKey: 'cmk_abc', apiKeyCreatedAt: '2026-02-18T00:00:00Z' })
+      });
+
+    await requestApiKeyCreation({ userId: '42', cred: 'token-123' });
+    await confirmApiKeyCreation({
+      userId: '42',
+      requestId: 'apikey_123',
+      verificationCode: '123456',
+      cred: 'token-123'
+    });
+
+    const [requestUrl, requestOptions] = global.fetch.mock.calls[0];
+    expect(requestUrl).toContain('/profile/request-api-key');
+    expect(requestOptions.headers.Authorization).toBe('Bearer token-123');
+
+    const [confirmUrl, confirmOptions] = global.fetch.mock.calls[1];
+    expect(confirmUrl).toContain('/profile/confirm-api-key');
+    expect(JSON.parse(confirmOptions.body)).toEqual({
+      userId: '42',
+      requestId: 'apikey_123',
+      verificationCode: '123456'
+    });
   });
 });

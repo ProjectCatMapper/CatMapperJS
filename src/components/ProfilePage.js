@@ -28,8 +28,10 @@ import {
   getUserActivity,
   getUserProfile,
   removeBookmarks,
+  requestApiKeyCreation,
   requestPasswordChange,
-  requestProfileUpdate
+  requestProfileUpdate,
+  confirmApiKeyCreation
 } from '../api/profileApi';
 
 const baseButtonStyle = {
@@ -115,6 +117,9 @@ const ProfilePage = ({ database, tab }) => {
   });
   const [passwordRequest, setPasswordRequest] = useState(null);
   const [passwordVerificationCode, setPasswordVerificationCode] = useState('');
+  const [apiKeyRequest, setApiKeyRequest] = useState(null);
+  const [apiKeyVerificationCode, setApiKeyVerificationCode] = useState('');
+  const [generatedApiKey, setGeneratedApiKey] = useState('');
 
   useEffect(() => {
     if (!database) return;
@@ -387,6 +392,57 @@ const ProfilePage = ({ database, tab }) => {
     }
   };
 
+  const handleRequestApiKeyCreation = async () => {
+    try {
+      setError('');
+      setSuccess('');
+      setGeneratedApiKey('');
+
+      const request = await requestApiKeyCreation({
+        userId: user,
+        cred
+      });
+
+      setApiKeyRequest(request);
+      setSuccess(`Verification email sent to ${request.maskedEmail}. Enter code to create API key.`);
+    } catch (requestError) {
+      setError(requestError.message || 'Unable to request API key creation.');
+      setSuccess('');
+    }
+  };
+
+  const handleConfirmApiKeyCreation = async () => {
+    if (!apiKeyRequest?.requestId || !apiKeyVerificationCode) {
+      setError('Enter the verification code from your email to create an API key.');
+      setSuccess('');
+      return;
+    }
+
+    try {
+      setError('');
+      setSuccess('');
+      const response = await confirmApiKeyCreation({
+        userId: user,
+        requestId: apiKeyRequest.requestId,
+        verificationCode: apiKeyVerificationCode.trim(),
+        cred
+      });
+
+      setApiKeyRequest(null);
+      setApiKeyVerificationCode('');
+      setGeneratedApiKey(response.apiKey || '');
+      setProfile((prev) => ({
+        ...(prev || {}),
+        hasApiKey: true,
+        apiKeyCreatedAt: response.apiKeyCreatedAt || new Date().toISOString()
+      }));
+      setSuccess('API key created successfully. Copy it now; it will not be shown again.');
+    } catch (confirmError) {
+      setError(confirmError.message || 'Unable to confirm API key creation.');
+      setSuccess('');
+    }
+  };
+
   const handleRemoveSelectedBookmarks = async () => {
     const items = Object.entries(selectedBookmarks)
       .filter(([, selected]) => selected)
@@ -651,6 +707,51 @@ const ProfilePage = ({ database, tab }) => {
                 {passwordRequest?.debugVerificationCode && (
                   <Alert severity="info" sx={{ mt: 2 }}>
                     Dummy endpoint mode: email code is <strong>{passwordRequest.debugVerificationCode}</strong>
+                  </Alert>
+                )}
+
+                <Divider sx={{ my: 3 }} />
+
+                <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 700 }}>
+                  API Key
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+                  Create an API key for scripts and API clients. Creation requires email verification.
+                </Typography>
+                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 2 }}>
+                  {profile?.hasApiKey
+                    ? `API key exists${profile?.apiKeyCreatedAt ? ` (created ${new Date(profile.apiKeyCreatedAt).toLocaleString()})` : ''}. Creating a new key replaces the previous key.`
+                    : 'No API key created yet.'}
+                </Typography>
+
+                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
+                  <Button variant="contained" sx={baseButtonStyle} onClick={handleRequestApiKeyCreation}>
+                    Send API Key Verification Email
+                  </Button>
+                  {apiKeyRequest && (
+                    <>
+                      <TextField
+                        label="Verification Code"
+                        value={apiKeyVerificationCode}
+                        onChange={(event) => setApiKeyVerificationCode(event.target.value)}
+                        size="small"
+                      />
+                      <Button variant="contained" sx={baseButtonStyle} onClick={handleConfirmApiKeyCreation}>
+                        Confirm API Key Creation
+                      </Button>
+                    </>
+                  )}
+                </Stack>
+
+                {apiKeyRequest?.debugVerificationCode && (
+                  <Alert severity="info" sx={{ mt: 2 }}>
+                    Dummy endpoint mode: email code is <strong>{apiKeyRequest.debugVerificationCode}</strong>
+                  </Alert>
+                )}
+
+                {generatedApiKey && (
+                  <Alert severity="warning" sx={{ mt: 2 }}>
+                    Your new API key: <strong>{generatedApiKey}</strong>. Save it now; this value is only shown once.
                   </Alert>
                 )}
               </CardContent>
