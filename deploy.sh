@@ -4,6 +4,14 @@ echo "🚀 Starting Build and Deploy"
 set -e
 
 DEPLOY_USER="rjbischo"
+APP_DIR="/mnt/storage/app/CatMapperJS"
+
+if [ ! -d "$APP_DIR" ]; then
+  echo "❌ Error: App directory not found: $APP_DIR"
+  exit 1
+fi
+
+cd "$APP_DIR"
 
 # Require sudo/root so deployment behavior is explicit.
 if [ "$EUID" -ne 0 ]; then
