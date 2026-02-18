@@ -16,7 +16,7 @@ const Neo4jVisualization = ({ visData, dropdownNodeLimit, database }) => {
   const currentid = visNodes[0].CMID;
 
   visNodes.forEach((item) => {
-    const legendLabel = item.legendLabel || (Array.isArray(item.domain) ? item.domain.join(' + ') : 'UNMAPPED');
+    const legendLabel = item.legendLabel || (Array.isArray(item.domain) ? item.domain.join(':') : 'UNMAPPED');
     const legendColor = item.color || '#cccccc';
     const legendKey = `${legendLabel}::${legendColor}`;
     if (!filteredMap.has(legendKey)) {

@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import domainOptions from "./SearchSelectDropdown";
 import { Select, MenuItem } from '@mui/material';
 import Button from '@mui/material/Button';
-import { Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TablePagination, Typography, Box, FormControlLabel, Checkbox } from '@mui/material';
+import { Typography, Box, FormControlLabel, Checkbox, IconButton } from '@mui/material';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import TranslateTable from './TranslateResults';
@@ -11,10 +11,16 @@ import LinearProgress from '@mui/material/LinearProgress';
 import './Translate.css'
 import Tooltip from '@mui/material/Tooltip';
 import InfoIcon from '@mui/icons-material/Info';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { Dialog, DialogTitle, DialogContent, DialogActions } from "@mui/material";
 import infodata from './infodata.json';
 import FooterLinks from './FooterLinks';
 import { parseTabularFile } from '../utils/tabularUpload';
+import TranslateMatchReview from './TranslateMatchReview';
+import { useAuth } from './AuthContext';
+import { addReviewIds, getMatchTypePercentages, stripReviewFields } from '../utils/translateReview';
+import { DataGrid } from '@mui/x-data-grid';
 
 const getTooltipContent = (nm) => {
   const tooltipTexts = {
@@ -27,7 +33,7 @@ const getTooltipContent = (nm) => {
     FILTER_BY_DATASET: "This permits only finding matches to categories that are used by a specific dataset (e.g., only language categories used by glottolog 4.4).  This requires an additional spreadsheet column with the CatMapper ID for the dataset (e.g., the CatMapper ID for glottolog 4.4 is SD20)",
     TIME_RANGE: 'Specify a time range which matching categories need to fall within.  This uses  information about the years for which a category was observed.',
     TBD_OPTION: 'Checking this button… TBD',
-    MATCH_STATISTICS: "This table provides statistics on the matches, including what % were **exact matches** to only one CatMapper category, **fuzzy matches** to only on CatMapper category, matches to more than one CatMapper category (**one-to-many**), multiple matches to a single CatMapper category (**many-to-one**), and no match found.",
+    MATCH_STATISTICS: "Summary table + review row colors use the same legend: exact match (white), fuzzy match (orange), one-to-many (salmon), many-to-one (pink), and no match (yellow). Percentages are out of all uploaded rows for the selected match column.",
     SPLIT_CATEGORIES: "Press apply to split categories in the selected category domain by the selected separator.  This will create new rows for each split category, and will assign them the same context (e.g., country) as the combined category.",
     COMBINE_IDENTICAL: "Checking this button will combine identical categories from the selected column into a single row for matching, although it will preserve other information if selected. For example, if Country, Context, and/or Dataset is checked then categories will be considered identical only if they have the same spelling and are associated with the same Country, Context, and/or Dataset.  This is useful if your spreadsheet has many identical categories that you want to match only once to speed up processing time and make corrections easier.",
   };
@@ -38,6 +44,7 @@ const getTooltipContent = (nm) => {
 const fallbackOptions = ["Name", "Key", "CatMapper ID (CMID)"];
 
 function TranslateComponent({ database }) {
+  const { user, cred } = useAuth();
 
   const [selectedFile, setSelectedFile] = useState(null);
   const [error, setError] = useState(null);
@@ -51,17 +58,18 @@ function TranslateComponent({ database }) {
   const [fifthDropdownValue, setfifthDropdownValue] = useState([""]);
   const [svalues, setsvalues] = useState(["Name", "SocioMapID"]);
   const [columns, setColumns] = useState([]);
-  const [rows, setRows] = useState([]);
+  const [reviewRows, setReviewRows] = useState([]);
+  const [previewRows, setPreviewRows] = useState([]);
   const [tcategories, setTcategories] = useState([]);
   const [isChecked, setIsChecked] = useState(false);
   const [isCheckedtwo, setIsCheckedtwo] = useState(false);
   const [isCheckedthree, setIsCheckedthree] = useState(false);
   const [isCheckedfour, setIsCheckedfour] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [loading, setLoading] = useState(false);
   const [loadingStage, setLoadingStage] = useState('');
+  const translateAbortRef = useRef(null);
   const [filename, setFilename] = useState("");
   const [jsonData, setJsondata] = useState();
   let query = "false"
@@ -77,17 +85,6 @@ function TranslateComponent({ database }) {
   const handleCountSameName = (event) => {
     setCountSameName(event.target.checked);
   };
-
-  const handleChangePage = (event, newPage) => {
-    setPage(newPage);
-  };
-
-  const handleChangeRowsPerPage = (event) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
-  };
-
-  const emptyRows = rowsPerPage - Math.min(rowsPerPage, rows.length - page * rowsPerPage);
 
   const handleCheckboxChange = () => {
     setIsChecked(!isChecked);
@@ -114,9 +111,13 @@ function TranslateComponent({ database }) {
     setIsCheckedfour(!isCheckedfour);
   }
 
-  const [data, setData] = useState({});
-
   const handleClick = async () => {
+    if (translateAbortRef.current) {
+      translateAbortRef.current.abort();
+    }
+    const controller = new AbortController();
+    translateAbortRef.current = controller;
+
     setLoading(true);
     setLoadingStage('Processing input...');
     try {
@@ -143,6 +144,7 @@ function TranslateComponent({ database }) {
           countsamename: isCountSameName,
           uniqueRows: isUniqueRows
         }),
+        signal: controller.signal,
       });
 
       if (!response.ok) {
@@ -178,35 +180,38 @@ function TranslateComponent({ database }) {
         ...remainingColumns
       ];
 
-      setData(responseData.file);
+      const withReviewIds = addReviewIds(responseData.file || []);
+      setReviewRows(withReviewIds);
       setColumns(reorderedColumns)
-      setRows(responseData.file.map(row => reorderedColumns.map(key => row[key])));
-
-      const matchTypeCounts = responseData.file.reduce((acc, row) => {
-        const matchType = row['matchType_' + zeroDropdownValue]
-        acc[matchType] = acc[matchType] ? acc[matchType] + 1 : 1;
-        return acc;
-      }, {});
-
-      const total = responseData.file.length;
-      const matchTypePercentages = Object.keys(matchTypeCounts).reduce((acc, key) => {
-        acc[key] = (matchTypeCounts[key] / total * 100).toFixed(2) + '%';
-        return acc;
-      }, {});
-
-      setTcategories(matchTypePercentages);
+      setTcategories(getMatchTypePercentages(withReviewIds, zeroDropdownValue));
 
     } catch (error) {
+      if (error?.name === 'AbortError') {
+        return;
+      }
       console.error('Error sending POST request:', error);
     }
     finally {
+      if (translateAbortRef.current === controller) {
+        translateAbortRef.current = null;
+      }
       setLoading(false);
       setLoadingStage('');
     }
   };
 
+  const handleCancelTranslate = () => {
+    if (translateAbortRef.current) {
+      translateAbortRef.current.abort();
+      translateAbortRef.current = null;
+    }
+    setLoading(false);
+    setLoadingStage('');
+  };
+
   const handleClicktwo = () => {
-    const worksheet = XLSX.utils.json_to_sheet(data, { header: columns });
+    const exportRows = stripReviewFields(reviewRows);
+    const worksheet = XLSX.utils.json_to_sheet(exportRows, { header: columns });
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
 
@@ -249,10 +254,8 @@ function TranslateComponent({ database }) {
     setJsondata(newTable);
 
     const newColumns = Object.keys(newTable[0] || {});
-    const newRows = newTable.map(r => Object.values(r));
-
     setColumns(newColumns);
-    setRows(newRows);
+    setPreviewRows(newTable);
   };
 
   const handleFileChange = async (event) => {
@@ -279,8 +282,9 @@ function TranslateComponent({ database }) {
       });
 
       setColumns(parsed.headers);
-      setRows(parsed.rows2d.map((row) => row.map((cell) => (cell === '' ? null : cell))));
+      setPreviewRows(parsed.records);
       setJsondata(parsed.records);
+      setReviewRows([]);
     } catch (err) {
       const msg = err?.message || 'Please upload a valid CSV/TSV/Excel (.csv/.tsv/.xlsx/.xls) file.';
       if (msg.toLowerCase().includes('please upload a valid file')) {
@@ -293,35 +297,9 @@ function TranslateComponent({ database }) {
     }
   };
 
-  const getRowStyle = (row) => {
-    const statusIndex = columns.findIndex(col => col === 'matchType_' + zeroDropdownValue);
-    const status = row[statusIndex];
-
-    return getClassForStatus(status);
-  };
-
-  const getClassForStatus = (status) => {
-
-    if (status === undefined) {
-      return 'color-undefined';
-    }
-    status = (status && typeof status === "string") ? status.trim() : status;
-
-    switch (status) {
-      case 'exact match':
-        return 'exact-matches';
-      case 'fuzzy match':
-        return 'fuzzy-matches';
-      case 'one-to-many':
-        return 'one-to-many';
-      case 'many-to-one':
-        return 'many-to-one';
-      case "none":
-        return "none";
-      default:
-        return '';
-    }
-  };
+  useEffect(() => {
+    setTcategories(getMatchTypePercentages(reviewRows, zeroDropdownValue));
+  }, [reviewRows, zeroDropdownValue]);
 
   const LoadingBar = ({ stage }) => (
     <Box
@@ -447,6 +425,23 @@ function TranslateComponent({ database }) {
       });
   }, [database]);
 
+  const previewGridRows = useMemo(
+    () => (previewRows || []).map((row, index) => ({ ...row, __previewId: `preview-${index + 1}` })),
+    [previewRows]
+  );
+
+  const previewGridColumns = useMemo(
+    () =>
+      (columns || []).map((col) => ({
+        field: col,
+        headerName: col,
+        width: Math.max(140, Math.min(420, String(col).length * 10 + 48)),
+        minWidth: 120,
+        resizable: true,
+      })),
+    [columns]
+  );
+
   const tooltipContent = (
     <div style={{ maxWidth: '400px' }}>
       <h3>From which category domain do you want to find matches?</h3>
@@ -505,7 +500,30 @@ function TranslateComponent({ database }) {
   return (
     <Box sx={{ backgroundColor: 'black', opacity: 1, flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
       <Box sx={{ display: 'flex', flexDirection: 'row', gap: 0.5, flexGrow: 1 }}>
-        <div style={{ width: "26%", backgroundColor: '#e0e0e0', padding: '20px', border: '1px solid #ccc', borderRadius: '10px', overflow: "auto" }}>
+        <div
+          style={{
+            width: isSidebarCollapsed ? "56px" : "26%",
+            backgroundColor: '#e0e0e0',
+            padding: isSidebarCollapsed ? '10px 6px' : '20px',
+            border: '1px solid #ccc',
+            borderRadius: '10px',
+            overflow: "auto",
+            transition: 'width 0.2s ease, padding 0.2s ease',
+          }}
+        >
+          <Box sx={{ display: 'flex', justifyContent: isSidebarCollapsed ? 'center' : 'flex-end' }}>
+            <Tooltip title={isSidebarCollapsed ? 'Expand panel' : 'Collapse panel'} arrow>
+              <IconButton
+                size="small"
+                onClick={() => setIsSidebarCollapsed((prev) => !prev)}
+                aria-label={isSidebarCollapsed ? 'Expand translate sidebar' : 'Collapse translate sidebar'}
+              >
+                {isSidebarCollapsed ? <ChevronRightIcon /> : <ChevronLeftIcon />}
+              </IconButton>
+            </Tooltip>
+          </Box>
+          {!isSidebarCollapsed && (
+            <>
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <p class="dropdown-labels">Choose spreadsheet to match</p>
             <Tooltip title={getTooltipContent('UPLOAD_INSTRUCTION')} arrow>
@@ -804,7 +822,7 @@ function TranslateComponent({ database }) {
           <br />
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <TranslateTable categories={tcategories} />
-            <Tooltip title={getTooltipContent(10)} arrow>
+            <Tooltip title={getTooltipContent("MATCH_STATISTICS")} arrow>
               <Button startIcon={<InfoIcon sx={{ height: '28px', width: '28px' }} />} />
             </Tooltip>
           </Box>
@@ -815,6 +833,19 @@ function TranslateComponent({ database }) {
                 Translating
               </Typography>
               <LoadingBar stage={loadingStage} />
+              <Box sx={{ display: 'flex', justifyContent: 'center', mt: 1.5 }}>
+                <Button
+                  variant="outlined"
+                  onClick={handleCancelTranslate}
+                  sx={{
+                    color: 'white',
+                    borderColor: 'white',
+                    '&:hover': { borderColor: '#ddd', backgroundColor: 'rgba(255,255,255,0.1)' },
+                  }}
+                >
+                  Cancel
+                </Button>
+              </Box>
             </div>
           </Backdrop>
           <Button variant="contained" sx={{
@@ -835,48 +866,41 @@ function TranslateComponent({ database }) {
               </Button>
             </DialogActions>
           </Dialog>
-        </div>
-        <div style={{ width: "72%", backgroundColor: "white", padding: '20px', border: '1px solid #ccc', borderRadius: '10px', overflow: 'auto' }}>
-          {columns.length > 0 && rows.length > 0 && (
-            <>
-              <TableContainer component={Paper} sx={{ width: '100%', overflow: 'auto' }}>
-                <Table id="myTable">
-                  <TableHead>
-                    <TableRow>
-                      {columns.map((col, index) => (
-                        <TableCell key={index} sx={{ fontWeight: 'bold' }}>{col}</TableCell>
-                      ))}
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {(rowsPerPage > 0
-                      ? rows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                      : rows
-                    ).map((row, rowIndex) => (
-                      <TableRow key={rowIndex} className={getRowStyle(row)} >
-                        {row.map((cell, cellIndex) => (
-                          <TableCell key={cellIndex}>{cell}</TableCell>
-                        ))}
-                      </TableRow>
-                    ))}
-                    {emptyRows > 0 && (
-                      <TableRow style={{ height: 45 * emptyRows }}>
-                        <TableCell colSpan={columns.length} />
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-              <TablePagination id='pagination'
-                rowsPerPageOptions={[5, 10, 25, { label: 'All', value: -1 }]}
-                component="div"
-                count={rows.length}
-                rowsPerPage={rowsPerPage}
-                page={page}
-                onPageChange={handleChangePage}
-                onRowsPerPageChange={handleChangeRowsPerPage}
-              />
             </>
+          )}
+        </div>
+        <div style={{ width: isSidebarCollapsed ? "94%" : "72%", backgroundColor: "white", padding: '20px', border: '1px solid #ccc', borderRadius: '10px', overflow: 'auto', transition: 'width 0.2s ease' }}>
+          {columns.length > 0 && reviewRows.length > 0 && (
+            <TranslateMatchReview
+              rows={reviewRows}
+              columns={columns}
+              termColumn={zeroDropdownValue}
+              database={database}
+              user={user}
+              cred={cred}
+              onRowsChange={setReviewRows}
+            />
+          )}
+          {columns.length > 0 && reviewRows.length === 0 && previewRows.length > 0 && (
+            <Box>
+              <Typography variant="h6" sx={{ mb: 1 }}>
+                Uploaded Data Preview
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                Preview the uploaded spreadsheet before running Search.
+              </Typography>
+              <div style={{ height: 560, width: '100%' }}>
+                <DataGrid
+                  rows={previewGridRows}
+                  columns={previewGridColumns}
+                  getRowId={(row) => row.__previewId}
+                  disableColumnResize={false}
+                  pageSizeOptions={[10, 25, 50]}
+                  initialState={{ pagination: { paginationModel: { page: 0, pageSize: 10 } } }}
+                  disableRowSelectionOnClick
+                />
+              </div>
+            </Box>
           )}
         </div>
       </Box>
