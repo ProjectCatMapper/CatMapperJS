@@ -49,6 +49,11 @@ import MapComponent from './MapComponent';
 import { useMetadata } from './UseMetadata';
 import { useAuth } from './AuthContext';
 import { addBookmark, addHistoryItem } from '../api/profileApi';
+import {
+  getRequestedExploreTab,
+  getResolvedExploreTab,
+  shouldRedirectExploreTab,
+} from "../utils/exploreTabSync";
 
 import "./ExploreNode.css";
 
@@ -122,7 +127,8 @@ const BootstrapInput = styled(InputBase)(({ theme }) => ({
 export default function Tableclick({ cmid, database, tabval }) {
   const navigate = useNavigate();
   const { user, cred } = useAuth();
-  const [value, setValue] = useState(tabval || "network");
+  const requestedTab = getRequestedExploreTab(tabval);
+  const [value, setValue] = useState(requestedTab);
   const [usert, setUsert] = useState([]);
   const [mapt, setMapt] = useState([]);
   const [rev, setrev] = useState([]);
@@ -1042,11 +1048,10 @@ export default function Tableclick({ cmid, database, tabval }) {
   };
 
   useEffect(() => {
-    const requestedTab = tabval || "network";
     if (value !== requestedTab) {
       setValue(requestedTab);
     }
-  }, [cmid, tabval, value]);
+  }, [cmid, requestedTab, value]);
 
   useEffect(() => {
     let ordered = orderOfProperties.filter((prop) => fdrop.includes(prop));
@@ -1060,16 +1065,6 @@ export default function Tableclick({ cmid, database, tabval }) {
       fetchData({ target: { value: ordered[0] } });
     }
   }, [fdrop]);
-
-  // Sync URL with Tab State on Load/Change
-  useEffect(() => {
-    // If the tab in the URL doesn't match the current active tab state...
-    if (tabval !== value) {
-      // ...update the URL to match the current state.
-      const newPath = `/${database.toLowerCase()}/${cmid}/${value}`;
-      navigate(newPath, { replace: true });
-    }
-  }, [value, tabval, cmid, database, navigate]);
 
   const domainLabels = Array.isArray(rev?.Domains)
     ? rev.Domains
@@ -1136,13 +1131,22 @@ export default function Tableclick({ cmid, database, tabval }) {
         hasCategoryCategoriesTab ? "categories" : null
       ].filter(Boolean);
 
-    if (availableTabs.length === 0) return;
-    if (!availableTabs.includes(value)) {
-      setValue(availableTabs[0]);
+    const resolvedTab = getResolvedExploreTab(requestedTab, availableTabs);
+    if (!resolvedTab) return;
+    if (value !== resolvedTab) {
+      setValue(resolvedTab);
+    }
+    if (shouldRedirectExploreTab(tabval, resolvedTab)) {
+      navigate(`/${database.toLowerCase()}/${cmid}/${resolvedTab}`, { replace: true });
     }
   }, [
     isDatasetLike,
+    tabval,
+    requestedTab,
     value,
+    cmid,
+    database,
+    navigate,
     hasNetworkTab,
     hasDatasetMapTab,
     hasDatasetCategoriesTab,
