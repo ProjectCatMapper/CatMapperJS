@@ -1,80 +1,26 @@
-import { useEffect, useState, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import { Network } from 'vis-network';
 import { useNavigate } from 'react-router-dom'
+import './VisNet.css';
 
 const Neo4jVisualization = ({ visData, dropdownNodeLimit, database }) => {
   const navigate = useNavigate();
-  const valuesToRemove = ['DISTRICT', 'CATEGORY'];
-  const nodes = visData["nodes"].length > dropdownNodeLimit ? visData["nodes"].slice(0, dropdownNodeLimit) : visData["nodes"];
-  const domainHierarchy = [
-    "PROJECTILE_POINT_TYPE",
-    "PROJECTILE_POINT_CLUSTER",
-    "PROJECTILE_POINT",
-    "CERAMIC_TYPE",
-    "CERAMIC_WARE",
-    "CERAMIC",
-    "PHYTOLITH",
-    "BOTANICAL",
-    "FAUNA",
-    "SUBSPECIES",
-    "SPECIES",
-    "SUBGENUS",
-    "GENUS",
-    "FAMILY",
-    "ORDER",
-    "CLASS",
-    "PHYLUM",
-    "KINGDOM",
-    "BIOTA",
-    "FEATURE",
-    "SITE",
-    "ADM0",
-    "ADM1",
-    "ADM2",
-    "ADM3",
-    "ADM4",
-    "ADMD",
-    "ADME",
-    "ADML",
-    "ADMX",
-    "REGION",
-    "DISTRICT",
-    "PERIOD",
-    "DIALECT",
-    "LANGUAGE",
-    "FAMILY",
-    "LANGUOID",
-    "ETHNICITY",
-    "RELIGION",
-    "OCCUPATION",
-    "POLITY",
-    "CULTURE",
-    "STONE",
-    "DATASET",
-    "GENERIC",
-    "VARIABLE"
-  ];
-
-  const getMostSpecificDomain = (domains) => {
-    const flat = Array.from(new Set(domains.flat()));
-    const filtered = flat.filter(val => !valuesToRemove.includes(val));
-
-    for (const specific of domainHierarchy) {
-      if (filtered.includes(specific)) {
-        return specific;
-      }
-    }
-
-    return null;
-  };
+  const visNodes = visData.nodes;
+  const visEdges = visData.edges;
+  const nodes = useMemo(
+    () => (visNodes.length > dropdownNodeLimit ? visNodes.slice(0, dropdownNodeLimit) : visNodes),
+    [dropdownNodeLimit, visNodes]
+  );
 
   const filteredMap = new Map();
-  const currentid = visData["nodes"][0].CMID;
+  const currentid = visNodes[0].CMID;
 
-  visData["nodes"].forEach((item) => {
-    const mostSpecific = getMostSpecificDomain(item.domain || []);
-    if (mostSpecific && !filteredMap.has(mostSpecific)) {
-      filteredMap.set(mostSpecific, item.color);
+  visNodes.forEach((item) => {
+    const legendLabel = item.legendLabel || (Array.isArray(item.domain) ? item.domain.join(' + ') : 'UNMAPPED');
+    const legendColor = item.color || '#cccccc';
+    const legendKey = `${legendLabel}::${legendColor}`;
+    if (!filteredMap.has(legendKey)) {
+      filteredMap.set(legendKey, { domain: legendLabel, color: legendColor });
     }
     if (item.CMID === currentid) {
       item.shape = 'triangle';
@@ -83,22 +29,103 @@ const Neo4jVisualization = ({ visData, dropdownNodeLimit, database }) => {
     }
   });
 
-  const filteredData = Array.from(filteredMap.entries()).map(([domain, color]) => ({
-    domain,
-    color
-  }));
+  const uniqueArray = Array.from(filteredMap.values());
+  const [nodeInfo, setNodeInfo] = useState(null);
+  const [edgeInfo, setEdgeInfo] = useState(null);
+  const nodeInfoRef = useRef(null);
+  const edgeInfoRef = useRef(null);
 
-  const uniqueMap = new Map();
-  let tooltipText
+  const navigateToNode = useCallback((cmid) => {
+    if (!cmid || cmid === currentid) return;
+    navigate({ pathname: `/${database}/${cmid}/network` });
+    window.location.reload();
+  }, [currentid, database, navigate]);
 
-  filteredData.forEach(obj => {
-    uniqueMap.set(obj.color, obj);
-  });
+  const formatNodeDetails = useCallback((nodeId) => {
+    const node = visNodes.find(obj => obj.id === nodeId);
+    if (!node) return null;
 
-  const uniqueArray = Array.from(uniqueMap.values());
-  const [tooltipContent, setTooltipContent] = useState(null);
-  const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
-  const tooltipRef = useRef(null);
+    let details = (node.tooltipcon || []).filter(
+      item => item !== 'SocioMapID' && item !== 'SocioMapName'
+    );
+    const cmItems = details.filter(item => ['CMID', 'CMName'].includes(item.split(':')[0].trim()));
+    const glottoItems = details.filter(item => item.split(':')[0].trim().toLowerCase() === 'glottocode');
+    const ISOItems = details.filter(item => item.split(':')[0].trim() === 'ISO3');
+    const FIPSItems = details.filter(item => item.split(':')[0].trim() === 'FIPS');
+    details = details.filter(
+      item => !['CMID', 'CMName', 'glottocode', 'ISO3', 'FIPS'].includes(item.split(':')[0].trim()) &&
+        !item.toLowerCase().includes('log')
+    );
+
+    return {
+      cmid: node.CMID,
+      lines: [...cmItems, ...glottoItems, ...ISOItems, ...FIPSItems, ...details],
+    };
+  }, [visNodes]);
+
+  const formatEdgeDetails = useCallback((edgeId) => {
+    const edge = visEdges.find(item => item.id === edgeId);
+    if (!edge) return [];
+
+    const cleanAndFormat = (val) => {
+      if (val === null || val === undefined) return null;
+      const parts = String(val).split(',');
+      const validParts = parts.filter(part => {
+        const p = part.trim().toUpperCase();
+        return p !== "NULL" && p !== "" && p !== "UNDEFINED";
+      });
+      return validParts.length > 0 ? validParts.join(', ') : null;
+    };
+
+    if (edge.type === 'CONTAINS') {
+      const lines = [];
+      const dateVal = cleanAndFormat(edge.eventDate);
+      const typeVal = cleanAndFormat(edge.eventType);
+      const refKey = cleanAndFormat(edge.referenceKey);
+      if (dateVal) lines.push(`eventDate: ${dateVal}`);
+      if (typeVal) lines.push(`eventType: ${typeVal}`);
+      if (refKey) lines.push(`referenceKey: ${refKey}`);
+      lines.push(`type: ${edge.type}`);
+      return lines;
+    }
+
+    if (edge.type === 'USES') {
+      const { from, to, color, id, ...rest } = edge;
+      const grouped = Object.entries(rest).reduce((acc, [key, value]) => {
+        if (key === 'Name' || key === 'Key') {
+          acc.top.push(`${key}: ${value}`);
+        } else if (key.toLowerCase().includes('log')) {
+          return acc;
+        } else {
+          acc.middle.push(`${key}: ${value}`);
+        }
+        return acc;
+      }, { top: [], middle: [], bottom: [] });
+      return [...grouped.top, ...grouped.middle, ...grouped.bottom];
+    }
+
+    if (edge.type === 'EQUIVALENT') {
+      return [`stack: ${edge.stack}`, `dataset: ${edge.dataset}`, `Key: ${edge.Key}`];
+    }
+
+    if (edge.type === 'MERGING') {
+      const { from, to, color, id, ...rest } = edge;
+      const lines = Object.entries(rest)
+        .filter(([key, value]) => {
+          if (key.toLowerCase().includes('log')) return false;
+          if (value === null || value === undefined) return false;
+          const strVal = String(value).trim();
+          if (!strVal) return false;
+          const normalized = strVal.toUpperCase();
+          return normalized !== 'NULL' && normalized !== 'UNDEFINED';
+        })
+        .map(([key, value]) => `${key}: ${value}`);
+
+      return lines.length > 0 ? lines : [`type: ${edge.type}`];
+    }
+
+    return [`referenceKey: ${edge.referenceKey}`, `type: ${edge.type}`];
+  }, [visEdges]);
 
   useEffect(() => {
 
@@ -138,7 +165,7 @@ const Neo4jVisualization = ({ visData, dropdownNodeLimit, database }) => {
 
     };
 
-    const data = { nodes, edges: visData.edges };
+    const data = { nodes, edges: visEdges };
     const network = new Network(container, data, options);
 
     let isMounted = true;
@@ -153,144 +180,66 @@ const Neo4jVisualization = ({ visData, dropdownNodeLimit, database }) => {
       freezeNetwork();
     });
 
-    const safetyTimer = setTimeout(() => {
+    setTimeout(() => {
       freezeNetwork();
     }, 800);
 
-    let clickTimeout = null;
-    let lastClickedNode = null;
+    let singleClickTimer = null;
+
+    const clearTimers = () => {
+      if (singleClickTimer) {
+        clearTimeout(singleClickTimer);
+        singleClickTimer = null;
+      }
+    };
+
+    network.on('dragStart', clearTimers);
+    network.on('dragging', clearTimers);
+
+    network.on('doubleClick', (params) => {
+      clearTimers();
+      if (!params.nodes.length) return;
+      const nodeData = visNodes.find(obj => obj.id === params.nodes[0]);
+      if (nodeData?.CMID && nodeData.CMID !== currentid) {
+        navigateToNode(nodeData.CMID);
+      }
+    });
 
     network.on('click', (params) => {
-      if (params.nodes.length === 0) return;
-
-      if (clickTimeout !== null) {
-        // DOUBLE CLICK DETECTED
-        clearTimeout(clickTimeout);
-        clickTimeout = null;
-
-        const clickedNodeId = params.nodes[0];
-        const nodeData = visData.nodes.find(obj => obj.id === clickedNodeId);
-        if (nodeData.CMID !== currentid) {
-          navigate({ pathname: `/${database}/${nodeData.CMID}/network` });
-          window.location.reload();
-        }
-      } else {
-        // SINGLE CLICK START
-        clickTimeout = setTimeout(() => {
-          if (params.nodes.length > 0 && params.nodes[0].length > -1) {
-            let tooltipContent = visData.nodes.find(obj => obj.id === params.nodes[0]).tooltipcon.filter(item => item !== 'SocioMapID' && item !== 'SocioMapName');
-            const cmItems = tooltipContent.filter(item => ['CMID', 'CMName'].includes(item.split(':')[0].trim()));
-            const glottoItems = tooltipContent.filter(item => item.split(':')[0].trim().toLowerCase() === 'glottocode');
-            const ISOItems = tooltipContent.filter(item => item.split(':')[0].trim() === 'ISO3');
-            const FIPSItems = tooltipContent.filter(item => item.split(':')[0].trim() === 'FIPS');
-            tooltipContent = tooltipContent.filter(item => !['CMID', 'CMName', 'glottocode', 'ISO3', 'FIPS'].includes(item.split(':')[0].trim()) && !item.toLowerCase().includes('log'));
-
-            tooltipContent = [...cmItems, ...glottoItems, ...ISOItems, ...FIPSItems, ...tooltipContent];
-
-            setTooltipContent(tooltipContent.map((item, index) => <span key={index}>{item}<br /></span>));
-            setTooltipPosition({ x: params.pointer.DOM.x, y: params.pointer.DOM.y });
-          }
-          clickTimeout = null;
-        }, 750); // Increased to 750ms for touchpad friendliness
-        lastClickedNode = params.nodes[0];
+      if (!params.nodes.length) {
+        setNodeInfo(null);
+        return;
       }
-    });
 
+      const nodeDetails = formatNodeDetails(params.nodes[0]);
+      if (!nodeDetails) return;
 
-    network.on("hoverEdge", function (params) {
-      const edgeId = params.edge;
-      const edge = visData["edges"].find(edge => edge["id"] === edgeId);
-
-      // Helper: Splits data by commas, removes "NULL"s, and rejoins valid parts
-      const cleanAndFormat = (val) => {
-        if (val === null || val === undefined) return null;
-
-        // 1. Convert to string and split by comma
-        //    (Handles "1996,NULL" AND ["1996", "NULL"])
-        const parts = String(val).split(',');
-
-        // 2. Filter out bad values
-        const validParts = parts.filter(part => {
-          const p = part.trim().toUpperCase();
-          return p !== "NULL" && p !== "" && p !== "UNDEFINED";
+      singleClickTimer = setTimeout(() => {
+        setNodeInfo({
+          ...nodeDetails,
+          position: { x: params.pointer.DOM.x, y: params.pointer.DOM.y },
         });
-
-        // 3. Return null if nothing is left, otherwise join with ", "
-        return validParts.length > 0 ? validParts.join(', ') : null;
-      };
-
-      switch (edge.type) {
-        case 'CONTAINS':
-          {
-            const parts = [];
-
-            // Clean the values first
-            const dateVal = cleanAndFormat(edge.eventDate);
-            const typeVal = cleanAndFormat(edge.eventType);
-            const refKey = cleanAndFormat(edge.referenceKey);
-
-            // Only push if we have valid data left
-            if (dateVal) {
-              parts.push(`eventDate: ${dateVal}`);
-            }
-
-            if (typeVal) {
-              parts.push(`eventType: ${typeVal}`);
-            }
-
-            if (refKey) {
-              parts.push(`referenceKey: ${refKey}`);
-            }
-
-            parts.push(`type: ${edge.type}`);
-
-            tooltipText = parts.join(' <br> ');
-            break;
-          }
-        case 'USES':
-          {
-            const { from, to, color, id, ...rest } = edge;
-            tooltipText = Object.entries(rest)
-              .reduce((acc, [key, value]) => {
-                if (key === 'Name' || key === 'Key') {
-                  acc.top.push(`${key}: ${value}`);
-                }
-                else if (key.toLowerCase().includes('log')) {
-                  return acc;
-                }
-                else {
-                  acc.middle.push(`${key}: ${value}`);
-                }
-                return acc;
-              }, { top: [], middle: [], bottom: [] });
-
-            tooltipText = [...tooltipText.top, ...tooltipText.middle, ...tooltipText.bottom].join(' <br> ');
-            break;
-          }
-        case 'EQUIVALENT':
-          tooltipText = `stack: ${edge.stack} <br> dataset: ${edge.dataset} <br> Key: ${edge.Key}`;
-          break;
-        default:
-          tooltipText = `referenceKey: ${edge.referenceKey} <br> type: ${edge.type}`;
-          break;
-      }
-
-      const tooltipElement = document.getElementById('edge-tooltip');
-      tooltipElement.innerHTML = tooltipText;
-      tooltipElement.style.top = params.event.clientY + 'px';
-      tooltipElement.style.left = params.event.clientX + 'px';
-      tooltipElement.style.display = 'block';
+      }, 200);
     });
 
+    network.on('hoverEdge', (params) => {
+      const lines = formatEdgeDetails(params.edge);
+      setEdgeInfo({
+        lines,
+        position: { x: params.event.clientX, y: params.event.clientY },
+      });
+    });
 
-    network.on("blurEdge", function () {
-      const tooltipElement = document.getElementById('edge-tooltip');
-      tooltipElement.style.display = 'none';
+    network.on('blurEdge', () => {
+      // Keep info visible until explicit close or clicking elsewhere.
     });
 
     const handleClickOutside = (event) => {
-      if (tooltipRef.current && !tooltipRef.current.contains(event.target)) {
-        setTooltipContent(null);
+      if (nodeInfoRef.current && !nodeInfoRef.current.contains(event.target)) {
+        setNodeInfo(null);
+      }
+      if (edgeInfoRef.current && !edgeInfoRef.current.contains(event.target)) {
+        setEdgeInfo(null);
       }
     };
 
@@ -298,48 +247,62 @@ const Neo4jVisualization = ({ visData, dropdownNodeLimit, database }) => {
 
     return () => {
       isMounted = false; // Mark as unmounted
+      clearTimers();
       document.removeEventListener('mousedown', handleClickOutside);
       network.destroy();
     };
-  }, [visData, dropdownNodeLimit]);
+  }, [currentid, formatEdgeDetails, formatNodeDetails, navigateToNode, nodes, visEdges, visNodes]);
 
-  const handleTooltipClose = () => {
-    setTooltipContent(null);
-  };
+  const handleNodeInfoClose = () => setNodeInfo(null);
+  const handleEdgeInfoClose = () => setEdgeInfo(null);
 
-  return (<div style={{ display: "Flex" }}><div id="network" style={{ height: '400px', width: "1000px" }}></div>
-    <div id="edge-tooltip" style={{ position: 'fixed', display: 'none', padding: '5px', backgroundColor: '#ffffff', border: '1px solid #ccc', borderRadius: '5px' }}></div>
-
-    {tooltipContent && (
+  return (<div className="visnet-layout"><div id="network" className="visnet-canvas"></div>
+    {edgeInfo && (
       <div
-        ref={tooltipRef}
+        ref={edgeInfoRef}
+        className="visnet-info-box visnet-info-box--edge"
         style={{
-          position: 'absolute',
-          left: tooltipPosition.x,
-          top: tooltipPosition.y,
-          backgroundColor: 'rgba(255, 255, 255, 0.9)',
-          padding: '5px',
-          borderRadius: '3px',
-          boxShadow: '0 0 5px rgba(0, 0, 0, 0.3)',
-          zIndex: 9999,
-          width: "500px"
+          left: edgeInfo.position.x,
+          top: edgeInfo.position.y,
         }}
       >
-        {tooltipContent}
-        <button onClick={handleTooltipClose}>Close</button>
+        <div className="visnet-actions">
+          <button onClick={handleEdgeInfoClose} className="visnet-btn visnet-btn--close">Close</button>
+        </div>
+        {edgeInfo.lines.map((line, index) => (
+          <div key={`edge-${index}`}>{line}</div>
+        ))}
       </div>
     )}
-    <ul>
+
+    {nodeInfo && (
+      <div
+        ref={nodeInfoRef}
+        className="visnet-info-box visnet-info-box--node"
+        style={{
+          left: nodeInfo.position.x,
+          top: nodeInfo.position.y,
+        }}
+      >
+        <div className="visnet-actions-between">
+          <div>
+            {nodeInfo.cmid !== currentid && (
+              <button onClick={() => navigateToNode(nodeInfo.cmid)} className="visnet-btn visnet-btn--view">View</button>
+            )}
+          </div>
+          <button onClick={handleNodeInfoClose} className="visnet-btn visnet-btn--close">Close</button>
+        </div>
+        {nodeInfo.lines.map((line, index) => (
+          <div key={`node-${index}`}>{line}</div>
+        ))}
+      </div>
+    )}
+    <ul className="visnet-legend">
       {uniqueArray.map((item, index) => (
         <li key={index}>
           <span
-            style={{
-              display: 'inline-block',
-              width: '20px',
-              height: '20px',
-              backgroundColor: item.color,
-              marginRight: '5px',
-            }}
+            className="visnet-legend-color"
+            style={{ backgroundColor: item.color }}
           ></span>
           {item.domain}
         </li>

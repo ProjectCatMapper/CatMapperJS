@@ -21,12 +21,12 @@ const Video = ({ database }) => {
 
     const sociomaptext = "SocioMap organizes dynamic and complex category systems commonly used by social scientists and policymakers, including ethnicities, languages, religions, and political districts. Each of these systems includes thousands of categories encoded in diverse, dynamic and incompatible ways across a growing corpus of thousands of datasets. SocioMap helps organize these categories so that users can merge diverse datasets for novel analyses."
 
-    const maintext = database == "archamap" ?
+    const maintext = database === "archamap" ?
         archamaptext
         : sociomaptext
 
     const mainHeader = displayData.length > 0 && (
-        <div className="header-stats" style={{ display: 'flex', gap: '20px' }}>
+        <div className="header-stats">
             {displayData.map((item) => (
                 <div key={item.label}>
                     {/* Rounds down to nearest 1000 and adds the display name */}
@@ -38,7 +38,7 @@ const Video = ({ database }) => {
 
 
     return (
-        <div className='hero' style={{ marginBottom: "2rem" }}>
+        <div className='hero'>
             <video autoPlay loop muted playsInline controls={false} id='video'>
                 <source src={mainvideo} type='video/mp4' />
             </video>

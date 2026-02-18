@@ -1,11 +1,11 @@
 import { React, useState } from 'react';
-import { Box, Tabs, Tab, Button, Typography, TextField } from '@mui/material';
-import image from '../assets/catmapperWhite.webp'
-import { Link } from 'react-router-dom'
-import Divider from '@mui/material/Divider';
-import Propose_Merge from "./MergePropose"
-import JoinDatasets_Merge from "./MergeJoinDatasets"
+import { Box, Tabs, Tab, Typography } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
+import useMediaQuery from '@mui/material/useMediaQuery';
+import ProposeMerge from "./MergePropose"
+import JoinDatasetsMerge from "./MergeJoinDatasets"
 import MergeTemplate from "./MergeTemplate"
+import FooterLinks from './FooterLinks';
 
 function TabPanel(props) {
   const { children, value, index, ...other } = props;
@@ -36,6 +36,8 @@ function a11yProps(index) {
 
 export default function Mergelayout({ database }) {
   const [value, setValue] = useState(0);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
   const handleChange = (event, newValue) => {
     setValue(newValue);
@@ -44,44 +46,36 @@ export default function Mergelayout({ database }) {
   return (
     <Box sx={{ backgroundColor: 'black', opacity: 1 }}>
       <Box
-        sx={{ flexGrow: 1, bgcolor: 'background.paper', display: 'flex' }}
+        sx={{ flexGrow: 1, bgcolor: 'background.paper', display: 'flex', flexDirection: isMobile ? 'column' : 'row' }}
       >
         <Tabs
-          orientation="vertical"
+          orientation={isMobile ? "horizontal" : "vertical"}
           variant="scrollable"
           value={value}
           onChange={handleChange}
-          aria-label="Vertical tabs example"
-          sx={{ borderRight: 1, borderColor: 'divider', minWidth: 250 }}
+          aria-label="Merge tabs"
+          sx={{
+            borderRight: isMobile ? 0 : 1,
+            borderBottom: isMobile ? 1 : 0,
+            borderColor: 'divider',
+            minWidth: isMobile ? '100%' : 250
+          }}
         >
-          <Tab label="Propose merge" {...a11yProps(0)} sx={{ alignItems: 'flex-end', justifyContent: 'center', textAlign: 'right' }} />
-          <Tab label="Join Datasets" {...a11yProps(1)} sx={{ alignItems: 'flex-end', justifyContent: 'center', textAlign: 'right' }} />
-          <Tab label="Download merge template" {...a11yProps(2)} sx={{ alignItems: 'flex-end', justifyContent: 'center', textAlign: 'right' }} />
+          <Tab label="Propose merge" {...a11yProps(0)} sx={{ alignItems: isMobile ? 'center' : 'flex-end', justifyContent: 'center', textAlign: isMobile ? 'center' : 'right' }} />
+          <Tab label="Join Datasets" {...a11yProps(1)} sx={{ alignItems: isMobile ? 'center' : 'flex-end', justifyContent: 'center', textAlign: isMobile ? 'center' : 'right' }} />
+          <Tab label="Download merge template" {...a11yProps(2)} sx={{ alignItems: isMobile ? 'center' : 'flex-end', justifyContent: 'center', textAlign: isMobile ? 'center' : 'right' }} />
         </Tabs>
         <TabPanel value={value} index={0}>
-          <Propose_Merge database={database} />
+          <ProposeMerge database={database} />
         </TabPanel>
         <TabPanel value={value} index={1}>
-          <JoinDatasets_Merge database={database} />
+          <JoinDatasetsMerge database={database} />
         </TabPanel>
         <TabPanel value={value} index={2}>
           <MergeTemplate database={database} />
         </TabPanel>
       </Box>
-      <Divider sx={{ marginTop: 3, marginBottom: 7, marginLeft: 1, marginRight: 1, backgroundColor: 'white' }} />
-
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 2, mb: 0 }}>
-        <img src={image} alt="CatMapper Logo" style={{ height: 80 }} />
-        <Box>
-          <Link id="catmapperfooter" to="/people" underline="none" style={{ color: 'white', textDecoration: 'none', margin: '0 8px' }}>People</Link>
-          <Link to="/news" id="catmapperfooter" underline="none" style={{ color: 'white', textDecoration: 'none', margin: '0 8px' }}>News</Link>
-          <Link to="/funding" id="catmapperfooter" underline="none" style={{ color: 'white', textDecoration: 'none', margin: '0 8px' }}>Funding</Link>
-          <Link to="/citation" id="catmapperfooter" underline="none" style={{ color: 'white', textDecoration: 'none', margin: '0 8px' }}>Citation</Link>
-          <Link to="/terms" id="catmapperfooter" underline="none" style={{ color: 'white', textDecoration: 'none', margin: '0 8px' }}>Terms</Link>
-          <Link to="/contact" id="catmapperfooter" underline="none" style={{ color: 'white', textDecoration: 'none', margin: '0 8px' }}>Contact</Link>
-          <Link to="/download" id="catmapperfooter" underline="none" style={{ color: "white", textDecoration: "none", margin: "0 8px" }}> Download</Link>
-        </Box>
-      </Box>
+      <FooterLinks />
     </Box>
   );
 }

@@ -2,7 +2,6 @@ import React from 'react';
 import { Carousel } from 'react-responsive-carousel';
 import 'react-responsive-carousel/lib/styles/carousel.min.css';
 import { Link } from 'react-router-dom';
-import mapImage1 from '../assets/map1.webp';
 import mapImage2 from '../assets/map2.webp';
 import mapImage3 from '../assets/map3.webp';
 import './LiveMapCarousel.css';
