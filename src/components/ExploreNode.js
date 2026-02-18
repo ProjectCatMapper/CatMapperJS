@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 
 import { useNavigate } from "react-router-dom";
 import CircularProgress from "@mui/material/CircularProgress";
@@ -177,6 +177,7 @@ export default function Tableclick({ cmid, database, tabval }) {
 
   const [rememberChoice, setRememberChoice] = useState(false);
   const [loadingInfo, setLoadingInfo] = useState(false);
+  const [navigationLoading, setNavigationLoading] = useState(false);
   const [loadingDownload, setLoadingDownload] = useState(false);
   const abortControllerRef = useRef(null);
   const [badsources, setbadsources] = useState([]);
@@ -185,6 +186,7 @@ export default function Tableclick({ cmid, database, tabval }) {
   const [advoptions, setadvoptions] = React.useState(['ALL NODES']);
   const [selectedCategory, setSelectedCategory] = useState({});
   const normalizedRef = useRef({});
+  const nodeRequestIdRef = useRef(0);
 
   const [open, setOpen] = useState(false);
   const [bookmarkNotice, setBookmarkNotice] = useState({ open: false, severity: "success", message: "" });
@@ -195,6 +197,30 @@ export default function Tableclick({ cmid, database, tabval }) {
   let limit = 300;
 
   const { infodata } = useMetadata(database);
+  const clearNodeData = useCallback(() => {
+    setrev({});
+    setUsert([]);
+    setCategories([]);
+    setChildCategories([]);
+    setMapt([]);
+    setPoints([]);
+    setDatasetPoints([]);
+    setbadsources([]);
+    setsources([]);
+    setOpen(false);
+    setfdrop([]);
+    setoriginaldata(null);
+    setVisData(null);
+    setdomains([]);
+    setSelectedValues([]);
+    setSelectedNodes(["All"]);
+    setSelectedDatasets([]);
+    setEventTypes([]);
+    setSelectedEventTypes(["All"]);
+    setThirdDropdownValue("All");
+    setFourthDropdownValue("All");
+  }, []);
+
   // dialog box for bad sources
   const handleClose = () => {
     setOpen(false);
@@ -246,40 +272,72 @@ export default function Tableclick({ cmid, database, tabval }) {
       .map(([key, value]) => `${key}: ${value}\n`);
   };
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (!cmid || !database) {
       console.warn("Skipping fetch: cmid or database is missing", { cmid, database });
+      setLoadingInfo(false);
+      setNavigationLoading(false);
+      setLoadingBackground(false);
+      clearNodeData();
       return;
     }
+
+    const requestId = nodeRequestIdRef.current + 1;
+    nodeRequestIdRef.current = requestId;
+    const controller = new AbortController();
+    const { signal } = controller;
+    const isLatestRequest = () => nodeRequestIdRef.current === requestId;
+
     const baseUrl = process.env.REACT_APP_API_URL;
     const infoUrl = `${baseUrl}/info/${database}/${cmid}`;
     const categoryUrl = `${baseUrl}/category/${database}/${cmid}`;
     const geometryUrl = `${baseUrl}/exploreGeometry/${database}/${cmid}`;
 
+    clearNodeData();
+
     // Start spinner
     setLoadingInfo(true);
-
-    fetch(infoUrl)
-      .then((res) => res.json())
-      .then((infoData) => {
-        setrev(infoData);
-        // We have the info, so we can show the page now!
-        setLoadingInfo(false);
-      })
-      .catch((err) => {
-        console.error("Error fetching info:", err);
-        // Even if it fails, we must turn off the spinner so the user isn't stuck
-        setLoadingInfo(false);
-      });
-
+    setNavigationLoading(true);
     setLoadingBackground(true);
-    Promise.all([
-      fetch(categoryUrl).then((res) => res.json()),
-      fetch(geometryUrl).then((res) => res.json())
-    ])
-      .then(([categoryData, geometryData]) => {
+
+    const loadInfo = async () => {
+      try {
+        const res = await fetch(infoUrl, { signal });
+        if (!res.ok) {
+          throw new Error(`Info request failed with status ${res.status}`);
+        }
+        const infoData = await res.json();
+        if (!isLatestRequest()) return;
+        setrev(infoData);
+      } catch (err) {
+        if (err?.name === "AbortError") return;
+        console.error("Error fetching info:", err);
+        if (!isLatestRequest()) return;
+        clearNodeData();
+      } finally {
+        if (!isLatestRequest()) return;
+        setLoadingInfo(false);
+        setNavigationLoading(false);
+      }
+    };
+
+    const loadBackground = async () => {
+      try {
+        const [categoryRes, geometryRes] = await Promise.all([
+          fetch(categoryUrl, { signal }),
+          fetch(geometryUrl, { signal })
+        ]);
+        if (!categoryRes.ok) {
+          throw new Error(`Category request failed with status ${categoryRes.status}`);
+        }
+        if (!geometryRes.ok) {
+          throw new Error(`Geometry request failed with status ${geometryRes.status}`);
+        }
+        const [categoryData, geometryData] = await Promise.all([
+          categoryRes.json(),
+          geometryRes.json()
+        ]);
+        if (!isLatestRequest()) return;
         // --- Process Category Data ---
         setUsert(categoryData.samples);
         setCategories(categoryData.categories);
@@ -315,14 +373,33 @@ export default function Tableclick({ cmid, database, tabval }) {
         ];
 
         setsources(uniqueSources);
-      })
-      .catch((err) => {
+      } catch (err) {
+        if (err?.name === "AbortError") return;
         console.error("Error fetching background data:", err);
-      }).finally(() => {
+        if (!isLatestRequest()) return;
+        setUsert([]);
+        setCategories([]);
+        setChildCategories([]);
+        setMapt([]);
+        setPoints([]);
+        setDatasetPoints([]);
+        setbadsources([]);
+        setsources([]);
+        setOpen(false);
+        setfdrop([]);
+      } finally {
+        if (!isLatestRequest()) return;
         setLoadingBackground(false); // <--- Stop background tab loading
-      });
+      }
+    };
 
-  }, [cmid, database]);
+    loadInfo();
+    loadBackground();
+
+    return () => {
+      controller.abort();
+    };
+  }, [cmid, database, clearNodeData]);
 
   const tooltipContent = (
     <div style={{ maxWidth: '400px' }}>
@@ -569,9 +646,14 @@ export default function Tableclick({ cmid, database, tabval }) {
   };
 
   const goToCmidInfo = (targetCmid) => {
-    if (!targetCmid) return;
+    if (!targetCmid || targetCmid === cmid) return;
+    setNavigationLoading(true);
     navigate(`/${database.toLowerCase()}/${targetCmid}/network`);
   };
+
+  const handleNodeNavigateStart = useCallback(() => {
+    setNavigationLoading(true);
+  }, []);
 
   const downloadRowsAsXlsx = (rows, filename, sheetName = "Sheet1") => {
     if (!Array.isArray(rows) || rows.length === 0) {
@@ -1078,7 +1160,7 @@ export default function Tableclick({ cmid, database, tabval }) {
   const handleDatasetCheckbox = () => {
     setRememberChoice((prev) => !prev);
   };
-  if (loadingInfo) {
+  if (loadingInfo || navigationLoading) {
     return (
       <Box
         sx={{
@@ -1388,6 +1470,7 @@ export default function Tableclick({ cmid, database, tabval }) {
                   eventTypes={eventTypes}
                   selectedEventTypes={selectedEventTypes}
                   updateEventTypeData={updateEventTypeData}
+                  onNodeNavigateStart={handleNodeNavigateStart}
                 />
                 </CustomTabPanel>
               )}
@@ -1605,6 +1688,7 @@ export default function Tableclick({ cmid, database, tabval }) {
                   eventTypes={eventTypes}
                   selectedEventTypes={selectedEventTypes}
                   updateEventTypeData={updateEventTypeData}
+                  onNodeNavigateStart={handleNodeNavigateStart}
                 />
                 </CustomTabPanel>
               )}

@@ -28,7 +28,8 @@ const NetworkExplorerView = ({
     selectedDatasets,
     eventTypes,
     selectedEventTypes,
-    updateEventTypeData
+    updateEventTypeData,
+    onNodeNavigateStart
 }) => {
     return (
         <div>
@@ -164,6 +165,7 @@ const NetworkExplorerView = ({
                     visData={visData}
                     dropdownNodeLimit={dropdownNodeLimit}
                     setDropdownNodeLimit={setDropdownNodeLimit}
+                    onNavigateStart={onNodeNavigateStart}
                 />}
             </div>
         </div>

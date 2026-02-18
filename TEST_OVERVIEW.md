@@ -2,7 +2,7 @@
 
 Last reviewed: February 18, 2026
 
-This folder currently has 8 automated frontend test suites with 33 total checks.  
+This folder currently has 9 automated frontend test suites with 37 total checks.  
 The goal of these tests is to make sure major pages render, mobile layout stays usable, admin workflows function, and translate-review behavior stays stable.
 
 ## Current Test Suites
@@ -15,6 +15,7 @@ The goal of these tests is to make sure major pages render, mobile layout stays 
 - `tests/translateReviewWorkflow.spec.js` (1 check): Runs a full translate-review journey (remove/replace/resolve/export), including bookmark insertion and row-selection reset behavior after updates.
 - `src/api/profileApi.test.js` (4 checks): Verifies profile-related API calls normalize older payload formats and hit the expected endpoints.
 - `src/utils/translateReview.test.js` (17 checks): Confirms translate-review helper logic handles IDs, grouped matches, row updates, selection-model normalization, cleanup, and summary percentages consistently.
+- `src/components/VisNet.navigation.test.js` (4 checks): Verifies graph navigation path building and confirms navigation only triggers when a valid, different node is selected.
 
 ## Notes
 

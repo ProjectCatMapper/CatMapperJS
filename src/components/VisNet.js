@@ -3,7 +3,27 @@ import { Network } from 'vis-network';
 import { useNavigate } from 'react-router-dom'
 import './VisNet.css';
 
-const Neo4jVisualization = ({ visData, dropdownNodeLimit, database }) => {
+export const buildNodeNetworkPath = (database, cmid) => `/${database}/${cmid}/network`;
+
+export const navigateToNetworkNode = ({
+  cmid,
+  currentid,
+  database,
+  navigate,
+  onNavigateStart,
+}) => {
+  if (!cmid || cmid === currentid) return false;
+  onNavigateStart?.(cmid);
+  navigate({ pathname: buildNodeNetworkPath(database, cmid) });
+  return true;
+};
+
+const Neo4jVisualization = ({
+  visData,
+  dropdownNodeLimit,
+  database,
+  onNavigateStart,
+}) => {
   const navigate = useNavigate();
   const visNodes = visData.nodes;
   const visEdges = visData.edges;
@@ -36,10 +56,14 @@ const Neo4jVisualization = ({ visData, dropdownNodeLimit, database }) => {
   const edgeInfoRef = useRef(null);
 
   const navigateToNode = useCallback((cmid) => {
-    if (!cmid || cmid === currentid) return;
-    navigate({ pathname: `/${database}/${cmid}/network` });
-    window.location.reload();
-  }, [currentid, database, navigate]);
+    navigateToNetworkNode({
+      cmid,
+      currentid,
+      database,
+      navigate,
+      onNavigateStart,
+    });
+  }, [currentid, database, navigate, onNavigateStart]);
 
   const formatNodeDetails = useCallback((nodeId) => {
     const node = visNodes.find(obj => obj.id === nodeId);
