@@ -1042,6 +1042,13 @@ export default function Tableclick({ cmid, database, tabval }) {
   };
 
   useEffect(() => {
+    const requestedTab = tabval || "network";
+    if (value !== requestedTab) {
+      setValue(requestedTab);
+    }
+  }, [cmid, tabval, value]);
+
+  useEffect(() => {
     let ordered = orderOfProperties.filter((prop) => fdrop.includes(prop));
     if (ordered.includes("MERGING")) {
       ordered = ordered.filter((prop) => prop !== "MERGING").concat("MERGING");
