@@ -5,6 +5,7 @@ import {
   removeMatchFromRow,
   setBookmarkOrManualCmid,
   applyToSelectedRows,
+  normalizeSelectedReviewIds,
   getOneToManyGroups,
   resolveOneToManyGroup,
   stripReviewFields,
@@ -82,6 +83,22 @@ describe('translateReview utils', () => {
     const out = applyToSelectedRows(rows, ['r-2'], (r) => setBookmarkOrManualCmid(r, columns, term, 'SM888'));
     expect(out[0].CMID_Name).toBe('SM1');
     expect(out[1].CMID_Name).toBe('SM888');
+  });
+
+  test('normalizeSelectedReviewIds supports array selection models', () => {
+    const out = normalizeSelectedReviewIds(['r-2']);
+    expect(out).toEqual(['r-2']);
+  });
+
+  test('normalizeSelectedReviewIds supports include-set selection models', () => {
+    const out = normalizeSelectedReviewIds({ type: 'include', ids: new Set(['r-1', 'r-3']) });
+    expect(out).toEqual(['r-1', 'r-3']);
+  });
+
+  test('normalizeSelectedReviewIds supports exclude-set selection models', () => {
+    const rows = [{ __reviewId: 'r-1' }, { __reviewId: 'r-2' }, { __reviewId: 'r-3' }];
+    const out = normalizeSelectedReviewIds({ type: 'exclude', ids: new Set(['r-2']) }, rows);
+    expect(out).toEqual(['r-1', 'r-3']);
   });
 
   test('getOneToManyGroups returns only duplicated CMuniqueRowID groups', () => {

@@ -24,6 +24,7 @@ import {
   setBookmarkOrManualCmid,
   getOneToManyGroups,
   resolveOneToManyGroup,
+  normalizeSelectedReviewIds,
 } from '../utils/translateReview';
 
 const TranslateMatchReview = ({
@@ -43,6 +44,25 @@ const TranslateMatchReview = ({
   const [compactTable, setCompactTable] = useState(false);
   const [columnWidths, setColumnWidths] = useState({ __actions: 88 });
   const [filterModel, setFilterModel] = useState({ items: [] });
+
+  const selectedReviewIds = useMemo(
+    () => normalizeSelectedReviewIds(selectionModel, rows),
+    [selectionModel, rows]
+  );
+
+  const clearSelection = () => {
+    setSelectionModel((previousSelection) => {
+      if (
+        previousSelection &&
+        typeof previousSelection === 'object' &&
+        !Array.isArray(previousSelection) &&
+        previousSelection.ids instanceof Set
+      ) {
+        return { type: 'include', ids: new Set() };
+      }
+      return [];
+    });
+  };
 
   const matchColumns = useMemo(() => getMatchColumns(columns, termColumn), [columns, termColumn]);
 
@@ -97,6 +117,7 @@ const TranslateMatchReview = ({
                     : row
                 );
                 onRowsChange(next);
+                clearSelection();
               }}
               sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 1 }}
             >
@@ -133,38 +154,41 @@ const TranslateMatchReview = ({
   }, [columnWidths, columns, database, onRowsChange, rows, termColumn]);
 
   const applyRemoveSelected = () => {
-    if (!selectionModel.length) {
+    if (!selectedReviewIds.length) {
       setNotice('Select at least one row to remove matches.');
       return;
     }
-    const next = applyToSelectedRows(rows, selectionModel, (row) =>
+    const next = applyToSelectedRows(rows, selectedReviewIds, (row) =>
       removeMatchFromRow(row, columns, termColumn)
     );
     onRowsChange(next);
+    clearSelection();
     setNotice('Removed match data from selected rows.');
   };
 
   const applyManualCmid = () => {
-    if (!selectionModel.length) {
+    if (!selectedReviewIds.length) {
       setNotice('Select at least one row before replacing match data.');
       return;
     }
-    const next = applyToSelectedRows(rows, selectionModel, (row) =>
+    const next = applyToSelectedRows(rows, selectedReviewIds, (row) =>
       setBookmarkOrManualCmid(row, columns, termColumn, manualCmid.trim())
     );
     onRowsChange(next);
+    clearSelection();
     setNotice(manualCmid.trim() ? 'Replaced selected rows with manual CMID.' : 'Cleared selected row matches.');
   };
 
   const applyBookmarkCmid = (cmid) => {
-    if (!selectionModel.length) {
+    if (!selectedReviewIds.length) {
       setNotice('Select at least one row before inserting bookmark CMID.');
       return;
     }
-    const next = applyToSelectedRows(rows, selectionModel, (row) =>
+    const next = applyToSelectedRows(rows, selectedReviewIds, (row) =>
       setBookmarkOrManualCmid(row, columns, termColumn, cmid)
     );
     onRowsChange(next);
+    clearSelection();
     setNotice(`Inserted ${cmid} into selected rows.`);
   };
 
@@ -182,6 +206,7 @@ const TranslateMatchReview = ({
       keepRowId: keepNone ? null : duplicateKeepRowId,
     });
     onRowsChange(next);
+    clearSelection();
     setNotice(keepNone ? 'Cleared all matches in duplicate group.' : 'Resolved duplicate group by keeping one row.');
   };
 

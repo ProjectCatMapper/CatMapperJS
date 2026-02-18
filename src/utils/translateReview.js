@@ -51,6 +51,23 @@ export const applyToSelectedRows = (rows = [], selectedIds = [], updater) => {
   });
 };
 
+export const normalizeSelectedReviewIds = (selectionModel, rows = []) => {
+  if (Array.isArray(selectionModel)) return selectionModel;
+  if (
+    selectionModel &&
+    typeof selectionModel === 'object' &&
+    selectionModel.ids instanceof Set
+  ) {
+    if (selectionModel.type === 'exclude') {
+      return rows
+        .map((row) => row.__reviewId)
+        .filter((id) => !selectionModel.ids.has(id));
+    }
+    return Array.from(selectionModel.ids);
+  }
+  return [];
+};
+
 export const getOneToManyGroups = (rows = []) => {
   const grouped = new Map();
   rows.forEach((row) => {

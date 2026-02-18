@@ -148,18 +148,31 @@ test.describe('Translate review workflow', () => {
     await expect(page.getByText('alpha').first()).toBeVisible();
 
     const betaRow = page.locator('div[role="row"]', { hasText: 'beta' }).first();
-    await betaRow.getByRole('checkbox', { name: 'Select row' }).click();
+    const betaCheckbox = betaRow.getByRole('checkbox', { name: 'Select row' });
+    await betaCheckbox.click();
+    await expect(betaCheckbox).toBeChecked();
 
     await page.getByLabel('Replace with CMID').fill('SM777');
     await page.getByRole('button', { name: /Apply CMID To Selected/i }).click();
     await expect(page.getByText('SM777')).toBeVisible();
+    await expect(betaCheckbox).not.toBeChecked();
 
     await page.getByRole('button', { name: /Insert CMID from Bookmarks/i }).click();
     const popover = page.locator('.MuiPopover-paper');
     await popover.locator('div[role="combobox"]').click();
     await page.getByRole('option', { name: /SM999 - Saved Choice/i }).click();
     await popover.getByRole('button', { name: /Insert CMID/i }).click();
+    await expect(page.getByText('Select at least one row before inserting bookmark CMID.')).toBeVisible();
+    await popover.getByRole('button', { name: /^Close$/i }).click();
+
+    await betaCheckbox.click();
+    await expect(betaCheckbox).toBeChecked();
+    await page.getByRole('button', { name: /Insert CMID from Bookmarks/i }).click();
+    await popover.locator('div[role="combobox"]').click();
+    await page.getByRole('option', { name: /SM999 - Saved Choice/i }).click();
+    await popover.getByRole('button', { name: /Insert CMID/i }).click();
     await expect(page.locator('div[role="row"]', { hasText: 'beta' }).first()).toContainText('SM999');
+    await expect(betaCheckbox).not.toBeChecked();
     await popover.getByRole('button', { name: /^Close$/i }).click();
 
     await page.locator('div[role="combobox"]', { hasText: 'Select one-to-many group' }).click();
