@@ -28,9 +28,10 @@ import { DataGrid } from '@mui/x-data-grid';
 import CircularProgress from "@mui/material/CircularProgress";
 import FooterLinks from "./FooterLinks";
 import CardContent from '@mui/material/CardContent';
+import SavedCmidInsertPopover from './SavedCmidInsertPopover';
 
 const Admin = ({ database }) => {
-  const { user, cred, authLevel } = useAuth();
+  const { cred, user } = useAuth();
   const [firstDropdownValue, setFirstDropdownValue] = useState(
     "add/edit/delete USES property"
   );
@@ -44,6 +45,7 @@ const Admin = ({ database }) => {
   const [ntableData, setnTableData] = useState([]);
   const [tableDropdownValues, setTableDropdownValues] = useState({});
   const [datasetID, setDatasetID] = useState('')
+  const [insertTargetField, setInsertTargetField] = useState('s1_2');
 
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
@@ -139,10 +141,10 @@ const Admin = ({ database }) => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          ...(cred ? { Authorization: `Bearer ${cred}` } : {}),
         },
         body: JSON.stringify({
           database: database,
-          cred: cred,
           fun: firstDropdownValue,
           input: cleanedData,
           tabledata: ntableData,
@@ -190,15 +192,15 @@ const Admin = ({ database }) => {
         s1_3: formData.s1_3.trim(),
       };
 
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/admin/edit`, {
+      await fetch(`${process.env.REACT_APP_API_URL}/admin/edit`, {
         //const response = await fetch("http://127.0.0.1:5001/admin/edit", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          ...(cred ? { Authorization: `Bearer ${cred}` } : {}),
         },
         body: JSON.stringify({
           database: database,
-          cred: cred,
           fun: firstDropdownValue,
           input: cleanedData,
           tabledata: combinedData,
@@ -206,7 +208,6 @@ const Admin = ({ database }) => {
         }),
       });
 
-      const result = await response.text();
       alert("Action completed");
 
     } catch (error) {
@@ -233,10 +234,10 @@ const Admin = ({ database }) => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          ...(cred ? { Authorization: `Bearer ${cred}` } : {}),
         },
         body: JSON.stringify({
           database: database,
-          cred: cred,
           input: cleanedData
         }),
       });
@@ -282,11 +283,11 @@ const Admin = ({ database }) => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          ...(cred ? { Authorization: `Bearer ${cred}` } : {}),
         },
         body: JSON.stringify({
           userid: "none",
           database: database,
-          credentials: cred,
           process: "None",
         }),
       });
@@ -305,11 +306,11 @@ const Admin = ({ database }) => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          ...(cred ? { Authorization: `Bearer ${cred}` } : {}),
         },
         body: JSON.stringify({
           userid: selectedUserIds,
           database: database,
-          credentials: cred,
           process: "approve",
         }),
       });
@@ -340,6 +341,15 @@ const Admin = ({ database }) => {
     s1_7: "",
     s1_8: ""
   });
+
+  const insertSavedIntoForm = (selectedSavedCmid) => {
+    if (!selectedSavedCmid) return;
+    setFormData((prev) => {
+      const current = (prev[insertTargetField] || '').trim();
+      const value = current ? `${current},${selectedSavedCmid}` : selectedSavedCmid;
+      return { ...prev, [insertTargetField]: value };
+    });
+  };
 
   const columns = [
     { field: 'userid', headerName: 'User ID', width: 150 },
@@ -426,7 +436,7 @@ const Admin = ({ database }) => {
     } else {
       setDropdownOptions([]); // reset dropdown if input does not match
     }
-  }, [formData.s1_1, formData.s1_2, firstDropdownValue]);
+  }, [database, formData, formData.s1_1, formData.s1_2, firstDropdownValue]);
 
   useEffect(() => {
     if (firstDropdownValue !== "add/edit/delete USES property" && firstDropdownValue !== "delete USES relation" && firstDropdownValue !== "move USES tie") {
@@ -472,7 +482,7 @@ const Admin = ({ database }) => {
     } else {
       setDropdown1Options([]); // reset dropdown if input does not match
     }
-  }, [formData.s1_1, formData.s1_2, firstDropdownValue]);
+  }, [database, formData.s1_1, formData.s1_2, firstDropdownValue]);
 
   useEffect(() => {
     const createLabel = async () => {
@@ -495,7 +505,7 @@ const Admin = ({ database }) => {
     if (firstDropdownValue === 'create new domain') {
       createLabel();
     }
-  }, [firstDropdownValue]);
+  }, [database, firstDropdownValue]);
 
 
   return (
@@ -538,6 +548,21 @@ const Admin = ({ database }) => {
           >
             {menuItems}
           </Select>
+          <Box sx={{ mt: 1 }}>
+            <SavedCmidInsertPopover
+              user={user}
+              cred={cred}
+              database={database}
+              title="Insert from Bookmarks/History"
+              targetField={insertTargetField}
+              onTargetFieldChange={setInsertTargetField}
+              targetFieldOptions={[
+                { value: "s1_2", label: "Target Field 1" },
+                { value: "s1_3", label: "Target Field 2" }
+              ]}
+              onInsert={insertSavedIntoForm}
+            />
+          </Box>
         </Box>
 
         {firstDropdownValue === "add/edit/delete USES property" && (
@@ -597,7 +622,7 @@ const Admin = ({ database }) => {
             {formData.s1_7 !== "" && add_edit_delete_usesprops_Options.length !== 0 && (
               <>
                 {(() => {
-                  const [n, r, d] = add_edit_delete_usesprops_Options[formData.s1_7 - 1];
+                  const [, r] = add_edit_delete_usesprops_Options[formData.s1_7 - 1];
                   let dropdown2Options = [];
 
                   if (formData.s1_1 === "edit" || formData.s1_1 === "delete") {

@@ -92,12 +92,12 @@ const AppBody = ({ database }) => {
   return (
     <div className='body'>
 
-      <Box sx={{ flexGrow: 1, marginLeft: 1, marginRight: 1, }}>
-        <Grid container spacing={2}>
+      <Box sx={{ flexGrow: 1, marginLeft: { xs: 0, sm: 1 }, marginRight: { xs: 0, sm: 1 } }}>
+        <Grid container spacing={{ xs: 1, sm: 2 }}>
 
           {/* Description */}
-          <Grid item xs={6}>
-            <Card variant="outlined" style={{ backgroundColor: 'black', border: '1px solid white', }}>
+          <Grid item xs={12} sm={6}>
+            <Card variant="outlined" className="appbody-card">
               <CardContent>
                 <FAQButton title="Description" />
                 <Box sx={{ mt: 2 }}>
@@ -123,10 +123,10 @@ const AppBody = ({ database }) => {
 
           {/* Foci Table */}
           {database === "sociomap" && (
-            <Grid item xs={6}>
+            <Grid item xs={12} sm={6}>
               <Card
                 variant="outlined"
-                style={{ backgroundColor: "black", border: "1px solid white" }}
+                className="appbody-card"
               >
                 <CardContent>
                   <Typography
@@ -139,7 +139,7 @@ const AppBody = ({ database }) => {
                   </Typography>
                   <TableContainer component={Paper}>
                     <Table
-                      sx={{ minWidth: 400 }}
+                      sx={{ minWidth: { xs: 0, sm: 400 } }}
                       size="small"
                       aria-label="dataset coverage table"
                     >
@@ -203,7 +203,7 @@ const AppBody = ({ database }) => {
 
                 <TableContainer component={Paper}>
                   <Table
-                    sx={{ minWidth: 400, backgroundColor: "#f5f5f5" }}
+                    sx={{ minWidth: { xs: 0, sm: 400 }, backgroundColor: "#f5f5f5" }}
                     size="small"
                     aria-label="dataset progress table"
                   >
@@ -245,10 +245,10 @@ const AppBody = ({ database }) => {
 
           {/* Maps */}
           {database === "sociomap" && (
-            <Grid item xs={6}>
+            <Grid item xs={12} sm={6}>
               <Card
                 variant="outlined"
-                style={{ backgroundColor: "black", border: "1px solid white" }}
+                className="appbody-card"
               >
                 <CardContent>
                   <LiveMapCarousel />

@@ -1,16 +1,11 @@
 import React from 'react';
 import { Box, Divider, Link, Typography } from "@mui/material";
 import { Link as RouterLink } from 'react-router-dom';
-import image from "../assets/catmapperWhite.webp";
+import image from "../assets/catmapperWhite_small.webp";
 import packageJson from '../../package.json';
+import './FooterLinks.css';
 
 const FooterLinks = () => {
-    const linkStyle = {
-        color: "white",
-        textDecoration: "none",
-        margin: "0 8px"
-    };
-
     const navLinks = [
         { name: "People", path: "/people" },
         { name: "News", path: "/news" },
@@ -23,42 +18,22 @@ const FooterLinks = () => {
 
     return (
         <>
-            <Divider
-                sx={{
-                    marginTop: 3,
-                    marginBottom: 7,
-                    marginLeft: 1,
-                    marginRight: 1,
-                    backgroundColor: "white",
-                }}
-            />
+            <Divider className="footer-links-divider" />
 
-            <Box
-                sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    mt: 2,
-                    mb: 0,
-                    position: "relative", // Ensures it stays in the flow
-                    zIndex: 10,           // Brings links to the front
-                    pointerEvents: "auto", // Explicitly allows clicks
-                }}
-            >
+            <Box className="footer-links-wrap">
                 <Box>
-                    <img src={image} alt="CatMapper Logo" style={{ height: "7vh" }} />
-                    <Typography variant="caption" sx={{ color: 'gray', fontSize: '0.5em', display: 'block', marginTop: 0.5 }}>
+                    <img src={image} alt="CatMapper Logo" className="footer-links-logo" />
+                    <Typography variant="caption" className="footer-links-version">
                         CatMapper v{packageJson.version}
                     </Typography>
                 </Box>
-                <Box>
+                <Box className="footer-links-nav">
                     {navLinks.map((link) => (
                         <Link
                             key={link.path}
                             component={RouterLink}
                             to={link.path}
-                            id="catmapperfooter"
-                            sx={linkStyle}
+                            className="footer-links-nav-item"
                         >
                             {link.name}
                         </Link>

@@ -1,8 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import domainOptions from "./SearchSelectDropdown";
 import { Select, MenuItem } from '@mui/material';
-import { ExcelRenderer } from 'react-excel-renderer';
-import Papa from 'papaparse';
 import Button from '@mui/material/Button';
 import { Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TablePagination, Typography, Box, FormControlLabel, Checkbox } from '@mui/material';
 import * as XLSX from 'xlsx';
@@ -10,15 +8,13 @@ import { saveAs } from 'file-saver';
 import TranslateTable from './TranslateResults';
 import Backdrop from '@mui/material/Backdrop';
 import LinearProgress from '@mui/material/LinearProgress';
-import CircularProgress from '@mui/material/CircularProgress';
 import './Translate.css'
-import Divider from '@mui/material/Divider';
-import image from '../assets/catmapperWhite.webp'
-import { Link } from 'react-router-dom'
 import Tooltip from '@mui/material/Tooltip';
 import InfoIcon from '@mui/icons-material/Info';
 import { Dialog, DialogTitle, DialogContent, DialogActions } from "@mui/material";
 import infodata from './infodata.json';
+import FooterLinks from './FooterLinks';
+import { parseTabularFile } from '../utils/tabularUpload';
 
 const getTooltipContent = (nm) => {
   const tooltipTexts = {
@@ -38,6 +34,8 @@ const getTooltipContent = (nm) => {
 
   return tooltipTexts[nm];
 };
+
+const fallbackOptions = ["Name", "Key", "CatMapper ID (CMID)"];
 
 function TranslateComponent({ database }) {
 
@@ -63,13 +61,10 @@ function TranslateComponent({ database }) {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [loading, setLoading] = useState(false);
-  const [progress, setProgress] = useState(0);
-  let fileObj = ""
+  const [loadingStage, setLoadingStage] = useState('');
   const [filename, setFilename] = useState("");
-  let selectedColumnValues = ""
   const [jsonData, setJsondata] = useState();
   let query = "false"
-  const fallbackOptions = ["Name", "Key", "CatMapper ID (CMID)"];
 
   const [isUniqueRows, setUniqueRows] = useState(false);
 
@@ -123,10 +118,9 @@ function TranslateComponent({ database }) {
 
   const handleClick = async () => {
     setLoading(true);
-    setProgress(10);
+    setLoadingStage('Processing input...');
     try {
-      selectedColumnValues = rows.map((row) => row[columns.indexOf(zeroDropdownValue)]);
-      setProgress(20);
+      setLoadingStage('Waiting on server...');
       //const response = await fetch("http://127.0.0.1:5001/translate2", {
       const response = await fetch(`${process.env.REACT_APP_API_URL}/translate`, {
         method: 'POST',
@@ -151,12 +145,11 @@ function TranslateComponent({ database }) {
         }),
       });
 
-      setProgress(50);
-
       if (!response.ok) {
         alert('Propose translate was not completed, please check your matching column for unusual characters and please contact the CatMapper team if the issue persists.');
       }
 
+      setLoadingStage('Parsing results...');
       const responseData = await response.json();
 
       const allKeys = responseData.order;
@@ -188,7 +181,6 @@ function TranslateComponent({ database }) {
       setData(responseData.file);
       setColumns(reorderedColumns)
       setRows(responseData.file.map(row => reorderedColumns.map(key => row[key])));
-      setProgress(80);
 
       const matchTypeCounts = responseData.file.reduce((acc, row) => {
         const matchType = row['matchType_' + zeroDropdownValue]
@@ -203,14 +195,13 @@ function TranslateComponent({ database }) {
       }, {});
 
       setTcategories(matchTypePercentages);
-      setProgress(100)
 
     } catch (error) {
       console.error('Error sending POST request:', error);
     }
     finally {
       setLoading(false);
-      setProgress(0);
+      setLoadingStage('');
     }
   };
 
@@ -266,6 +257,7 @@ function TranslateComponent({ database }) {
 
   const handleFileChange = async (event) => {
     setSelectedFile(null);
+    setError(null);
     const file = event.target.files[0];
     if (!file) return;
 
@@ -275,92 +267,27 @@ function TranslateComponent({ database }) {
     }
 
     const fileName = file.name;
-    const fileExtension = fileName.split('.').pop().toLowerCase();
     const baseFileName = fileName.split('.').slice(0, -1).join('.');
     setFilename(baseFileName);
     setSelectedFile(file);
 
-    const processData = (rows) => {
-      if (!rows.length) {
-        setError('No data found in the file.');
-        return;
+    try {
+      const parsed = await parseTabularFile(file, {
+        checkMergedCells: true,
+        stripWrappingQuotes: true,
+        normalizeEmptyToNull: true,
+      });
+
+      setColumns(parsed.headers);
+      setRows(parsed.rows2d.map((row) => row.map((cell) => (cell === '' ? null : cell))));
+      setJsondata(parsed.records);
+    } catch (err) {
+      const msg = err?.message || 'Please upload a valid CSV/TSV/Excel (.csv/.tsv/.xlsx/.xls) file.';
+      if (msg.toLowerCase().includes('please upload a valid file')) {
+        alert(msg);
+      } else {
+        setError(msg);
       }
-
-      const firstRow = rows[0];
-      const column_check = [];
-
-      try {
-        for (let i = 0; i < firstRow.length; i++) {
-          if (firstRow[i] === undefined || firstRow[i].trim() === "") {
-            throw new Error(`Missing column name at index ${i}`);
-          }
-          column_check.push(firstRow[i]);
-        }
-      } catch (err) {
-        setError(err.message);
-        return;
-      }
-
-      setColumns(column_check);
-
-      const processedRows = rows.slice(1).map((row) => {
-        const fullRow = Array(column_check.length).fill(null);
-        row.forEach((cell, index) => {
-          if (typeof cell === 'string') {
-            cell = cell.replace(/^['"]|['"]$/g, '');
-          }
-          fullRow[index] = cell !== undefined ? cell : null;
-        });
-        return fullRow;
-      });
-
-      const filteredRows = processedRows.filter((row) =>
-        row.some((cell) => cell !== null && cell !== "")
-      );
-
-      setRows(filteredRows);
-
-      const table = filteredRows.map((row) => {
-        const rowData = {};
-        column_check.forEach((column, columnIndex) => {
-          rowData[column] = row[columnIndex];
-        });
-        return rowData;
-      });
-
-      setJsondata(table);
-    };
-
-    if (fileExtension === 'csv') {
-      Papa.parse(file, {
-        complete: (result) => {
-          processData(result.data);
-        },
-        error: (err) => {
-          setError(`CSV Parsing Error: ${err.message}`);
-        },
-      });
-    } else if (fileExtension === 'xlsx' || fileExtension === 'xls') {
-      const data = await file.arrayBuffer();
-      const workbook = XLSX.read(data, { type: 'array', dense: true });
-
-      const sheetName = workbook.SheetNames[0];
-      const worksheet = workbook.Sheets[sheetName];
-
-      const merges = worksheet["!merges"] || [];
-      if (merges.length > 0) {
-        alert("Merged cells detected. Please unmerge all cells before uploading.")
-        return;
-      }
-      ExcelRenderer(file, (err, resp) => {
-        if (err) {
-          setError(`Excel Parsing Error: ${err.message}`);
-        } else {
-          processData(resp.rows);
-        }
-      });
-    } else {
-      alert('Please upload a valid CSV or Excel (.xlsx/.xls) file.');
       event.target.value = null;
       setSelectedFile(null);
     }
@@ -396,14 +323,21 @@ function TranslateComponent({ database }) {
     }
   };
 
-  const ProgressBar = ({ progress }) => (
-    <Box display="flex" alignItems="right" width="15%" style={{ position: 'absolute', bottom: '10px', right: '10px', padding: '10px', background: '#f0f0f0', borderRadius: '5px' }}>
-      <Box width="80%" mr={1}>
-        <LinearProgress variant="determinate" value={progress} />
-      </Box>
-      <Box minWidth={35}>
-        <Typography variant="body2" color="textSecondary">{`translating ${progress}%`}</Typography>
-      </Box>
+  const LoadingBar = ({ stage }) => (
+    <Box
+      sx={{
+        width: 'min(560px, 80vw)',
+        mt: 2,
+        p: 2,
+        borderRadius: 1,
+        bgcolor: 'rgba(255, 255, 255, 0.92)',
+        color: 'black',
+      }}
+    >
+      <Typography variant="body1" sx={{ mb: 1, fontWeight: 600 }}>
+        {stage || 'Working...'}
+      </Typography>
+      <LinearProgress />
     </Box>
   );
 
@@ -448,22 +382,22 @@ function TranslateComponent({ database }) {
     };
 
     fetchData();
-  }, []);
+  }, [database]);
 
-  const secondDropdownOptions = firstDropdownValue
-    ? (() => {
-      const options = dropdownData.find(
-        (item) => item.group === firstDropdownValue
-      )?.nodes || [];
+  const secondDropdownOptions = useMemo(() => {
+    if (!firstDropdownValue) {
+      return [];
+    }
 
-      const reordered = [
-        ...options.filter((opt) => opt === firstDropdownValue),
-        ...options.filter((opt) => opt !== firstDropdownValue),
-      ];
+    const options = dropdownData.find(
+      (item) => item.group === firstDropdownValue
+    )?.nodes || [];
 
-      return reordered;
-    })()
-    : [];
+    return [
+      ...options.filter((opt) => opt === firstDropdownValue),
+      ...options.filter((opt) => opt !== firstDropdownValue),
+    ];
+  }, [dropdownData, firstDropdownValue]);
 
   useEffect(() => {
     if (secondDropdownOptions.length > 0) {
@@ -471,7 +405,7 @@ function TranslateComponent({ database }) {
     } else {
       setsubDomain("");
     }
-  }, [firstDropdownValue]);
+  }, [firstDropdownValue, secondDropdownOptions]);
 
 
   useEffect(() => {
@@ -578,7 +512,7 @@ function TranslateComponent({ database }) {
               <Button startIcon={<InfoIcon sx={{ height: '28px', width: '28px' }} />} />
             </Tooltip>
           </Box>
-          <input id="fileInput" style={{ color: 'black', fontWeight: "bold", marginLeft: 7, padding: "2px" }} type="file" accept=".csv, .xlsx" onChange={handleFileChange} />
+          <input id="fileInput" style={{ color: 'black', fontWeight: "bold", marginLeft: 7, padding: "2px" }} type="file" accept=".csv,.tsv,.xls,.xlsx" onChange={handleFileChange} />
           <br />
           {selectedFile !== null && (
             <div>
@@ -864,7 +798,7 @@ function TranslateComponent({ database }) {
             '&:hover': {
               backgroundColor: 'green',
             },
-          }} onClick={handleClick}>
+          }} onClick={handleClick} disabled={loading}>
             Search
           </Button>
           <br />
@@ -877,12 +811,11 @@ function TranslateComponent({ database }) {
           <br />
           <Backdrop style={{ color: '#fff', zIndex: 1300 }} open={loading}>
             <div>
-              <CircularProgress color="inherit" />
               <Typography variant="h6" align="center" style={{ marginTop: '10px' }}>
-                Translating...
+                Translating
               </Typography>
+              <LoadingBar stage={loadingStage} />
             </div>
-            {loading && <ProgressBar progress={progress} />}
           </Backdrop>
           <Button variant="contained" sx={{
             backgroundColor: 'black',
@@ -948,20 +881,8 @@ function TranslateComponent({ database }) {
         </div>
       </Box>
       <div style={{ width: "100%", backgroundColor: "black", padding: '20px' }}>
-        <Divider sx={{ marginLeft: 1, marginRight: 1, backgroundColor: 'white' }} />
-
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 2, mb: 0 }}>
-          <img src={image} alt="CatMapper Logo" style={{ height: 80 }} />
-          <Box>
-            <Link id="catmapperfooter" to="/people" underline="none" style={{ color: 'white', textDecoration: 'none', margin: '0 8px' }}>People</Link>
-            <Link to="/news" id="catmapperfooter" underline="none" style={{ color: 'white', textDecoration: 'none', margin: '0 8px' }}>News</Link>
-            <Link to="/funding" id="catmapperfooter" underline="none" style={{ color: 'white', textDecoration: 'none', margin: '0 8px' }}>Funding</Link>
-            <Link to="/citation" id="catmapperfooter" underline="none" style={{ color: 'white', textDecoration: 'none', margin: '0 8px' }}>Citation</Link>
-            <Link to="/terms" id="catmapperfooter" underline="none" style={{ color: 'white', textDecoration: 'none', margin: '0 8px' }}>Terms</Link>
-            <Link to="/contact" id="catmapperfooter" underline="none" style={{ color: 'white', textDecoration: 'none', margin: '0 8px' }}>Contact</Link>
-            <Link to="/download" id="catmapperfooter" underline="none" style={{ color: "white", textDecoration: "none", margin: "0 8px" }}> Download</Link>
-          </Box>
-        </Box>      </div>
+        <FooterLinks />
+      </div>
     </Box>
 
   );

@@ -1,5 +1,5 @@
 import Navbar from '../components/NavbarHome'
-import { Container, Typography, Box, Paper, Divider, Grid } from '@mui/material';
+import { Container, Typography, Box, Paper, Divider } from '@mui/material';
 
 const updates = [
   {

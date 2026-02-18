@@ -1,0 +1,15 @@
+.map-view {
+  height: 80vh;
+  width: 90vw;
+  margin-left: 5vw;
+  margin-top: 5vh;
+}
+
+@media (max-width: 768px) {
+  .map-view {
+    width: 100vw;
+    margin-left: 0;
+    margin-top: 90px;
+    height: calc(100vh - 110px);
+  }
+}

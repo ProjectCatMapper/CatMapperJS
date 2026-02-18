@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Tooltip } from 'react-leaflet';
 import MarkerClusterGroup from '@changey/react-leaflet-markercluster';
 import map1 from '../data/all_coords.csv';
+import './MapViews.css';
 
 const CanvasMarkers = ({ data }) => {
   return (
@@ -38,7 +39,7 @@ const Sociomap_4 = () => {
   }, []);
 
   return (
-    <MapContainer center={[20, 0]} zoom={2} style={{ height: "80vh", width: "90vw", marginLeft: "5vw", marginTop: "5vh" }}>
+    <MapContainer center={[20, 0]} zoom={2} className="map-view">
       <TileLayer
         url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.webp"
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
