@@ -1,12 +1,6 @@
 import React, { useState } from 'react';
 import FormControl from '@mui/material/FormControl';
-import NativeSelect from '@mui/material/NativeSelect';
-import InputBase from '@mui/material/InputBase';
 import { styled } from '@mui/material/styles';
-
-const BootstrapInput = ({ ...rest }) => {
-  return <InputBase {...rest} />;
-};
 
 const useStyles = styled({
   optgroup: {

@@ -31,4 +31,16 @@
     padding: 1rem 0;
 }
 
+.appbody-card {
+    background-color: black !important;
+    border: 1px solid white !important;
+}
+
+.body .MuiTableContainer-root {
+    overflow-x: auto;
+}
+
+.body .MuiTableCell-root {
+    white-space: nowrap;
+}
 

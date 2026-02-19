@@ -1,39 +1,41 @@
-import React, { useEffect, Suspense, lazy } from "react";
+import React, { useEffect } from "react";
 import { Routes, Route, useLocation } from "react-router-dom";
 
 import ProtectedRoute from './components/ProtectedRoute';
+import DatabaseRoute from './components/DatabaseRoute';
 import DynamicPropertiesForm from './components/EditMetadata';
+import Map1 from './routes/Map1';
+import Map2 from './routes/Map2';
+import Map3 from './routes/Map3';
+import Map4 from './routes/Map4';
+import Explore from './routes/Explore';
+import Translate from './routes/Translate';
+import EditPage from './routes/Edit';
+import Catmapper from './routes/Catmapper';
+import ExploreNode from './routes/ExploreNode';
+import MergePage from './routes/Merge';
+import People from './routes/People';
+import News from './routes/News';
+import Funding from './routes/Funding';
+import Citation from './routes/Citation';
+import Terms from './routes/Terms';
+import Privacy from './routes/Privacy';
+import Contact from './routes/Contact';
+import Download from './routes/Download';
+import DownloadAll from './routes/DownloadAll';
+import ApiGuide from './routes/APIGuide';
+import UserGuide from './routes/UserGuide';
+import Logins from './routes/Logins';
+import ForgotPassword from './routes/ForgotPassword';
+import RegisterPage from './routes/RegisterPage';
+import AdminPage from './routes/Admin';
+import FAQ from './routes/FAQ';
+import AppHome from './routes/AppHome';
+import LogsViewer from './routes/LogsViewer';
+import Profile from './routes/Profile';
 
 import ReactGA from 'react-ga4';
 import CookieBanner from './components/CookieBanner';
-
-// Lazy load all page components
-const Map1 = lazy(() => import('./routes/Map1'));
-const Map2 = lazy(() => import('./routes/Map2'));
-const Map3 = lazy(() => import('./routes/Map3'));
-const Map4 = lazy(() => import('./routes/Map4'));
-const Explore = lazy(() => import('./routes/Explore'));
-const Translate = lazy(() => import('./routes/Translate'));
-const EditPage = lazy(() => import('./routes/Edit'));
-const Catmapper = lazy(() => import('./routes/Catmapper'));
-const ExploreNode = lazy(() => import('./routes/ExploreNode'));
-const MergePage = lazy(() => import('./routes/Merge'));
-const People = lazy(() => import('./routes/People'));
-const News = lazy(() => import('./routes/News'));
-const Funding = lazy(() => import('./routes/Funding'));
-const Citation = lazy(() => import('./routes/Citation'));
-const Terms = lazy(() => import('./routes/Terms'));
-const Contact = lazy(() => import('./routes/Contact'));
-const Download = lazy(() => import('./routes/Download'));
-const DownloadAll = lazy(() => import('./routes/DownloadAll'));
-const ApiGuide = lazy(() => import('./routes/APIGuide'));
-const UserGuide = lazy(() => import('./routes/UserGuide'));
-const Logins = lazy(() => import('./routes/Logins'));
-const RegisterPage = lazy(() => import('./routes/RegisterPage'));
-const AdminPage = lazy(() => import('./routes/Admin'));
-const FAQ = lazy(() => import('./routes/FAQ'));
-const AppHome = lazy(() => import('./routes/AppHome'));
-const LogsViewer = lazy(() => import('./routes/LogsViewer'));
 
 const usePageTracking = () => {
   const location = useLocation();
@@ -64,19 +66,20 @@ const App = () => {
   usePageTracking();
 
   return (
-    <Suspense fallback={<div style={{ padding: '20px', textAlign: 'center' }}>Loading...</div>}>
+    <>
       <CookieBanner />
       <Routes>
         <Route path='/' element={<Catmapper />} />
-        <Route path='/:database' element={<AppHome />} />
-        <Route path='/:database/login' element={<Logins />} />
-        <Route path="/:database/register" element={<RegisterPage />} />
-        <Route path='/:database/explore' element={<Explore />} />
-        <Route path='/:database/translate' element={<Translate />} />
-        <Route path='/:database/:cmid' element={<ExploreNode />} />
-        <Route path='/:database/:cmid/logs' element={<LogsViewer />} />
-        <Route path='/:database/:cmid/:tabval' element={<ExploreNode />} />
-        <Route path='/:database/merge' element={<MergePage />} />
+        <Route path='/:database' element={<DatabaseRoute><AppHome /></DatabaseRoute>} />
+        <Route path='/:database/login' element={<DatabaseRoute><Logins /></DatabaseRoute>} />
+        <Route path='/:database/forgot-password' element={<DatabaseRoute><ForgotPassword /></DatabaseRoute>} />
+        <Route path="/:database/register" element={<DatabaseRoute><RegisterPage /></DatabaseRoute>} />
+        <Route path='/:database/explore' element={<DatabaseRoute><Explore /></DatabaseRoute>} />
+        <Route path='/:database/translate' element={<DatabaseRoute><Translate /></DatabaseRoute>} />
+        <Route path='/:database/:cmid' element={<DatabaseRoute><ExploreNode /></DatabaseRoute>} />
+        <Route path='/:database/:cmid/logs' element={<DatabaseRoute><LogsViewer /></DatabaseRoute>} />
+        <Route path='/:database/:cmid/:tabval' element={<DatabaseRoute><ExploreNode /></DatabaseRoute>} />
+        <Route path='/:database/merge' element={<DatabaseRoute><MergePage /></DatabaseRoute>} />
         <Route path='/help/api-guide' element={<ApiGuide />} />
         <Route path='/help/user-guide' element={<UserGuide />} />
         <Route path='/people' element={<People />} />
@@ -84,6 +87,7 @@ const App = () => {
         <Route path='/funding' element={<Funding />} />
         <Route path='/citation' element={<Citation />} />
         <Route path='/terms' element={<Terms />} />
+        <Route path='/privacy' element={<Privacy />} />
         <Route path='/download' element={<Download />} />
         <Route path='/download/all' element={<DownloadAll />} />
         <Route path='/contact' element={<Contact />} />
@@ -92,12 +96,16 @@ const App = () => {
         <Route path='/map3' element={<Map3 />} />
         <Route path='/map4' element={<Map4 />} />
         <Route path='/FAQ' element={<FAQ />} />
-        <Route path='/:database/edit' element={<ProtectedRoute requiredLevel={1}><EditPage /></ProtectedRoute>} />
-        <Route path='/:database/admin' element={<ProtectedRoute requiredLevel={2}><AdminPage /></ProtectedRoute>} />
-        <Route path='/editMetadata/:cmid' element={<ProtectedRoute requiredLevel={2}><DynamicPropertiesForm /></ProtectedRoute>} />
-
+        <Route path='/:database/edit' element={<DatabaseRoute><ProtectedRoute requiredLevel={1}><EditPage /></ProtectedRoute></DatabaseRoute>} />
+        <Route path='/:database/profile' element={<DatabaseRoute><ProtectedRoute requiredLevel={1}><Profile /></ProtectedRoute></DatabaseRoute>} />
+        <Route path='/:database/profile/:tab' element={<DatabaseRoute><ProtectedRoute requiredLevel={1}><Profile /></ProtectedRoute></DatabaseRoute>} />
+        <Route path='/:database/admin' element={<DatabaseRoute><ProtectedRoute requiredLevel={2}><AdminPage /></ProtectedRoute></DatabaseRoute>} />
+        <Route path='/admin/metadata' element={<ProtectedRoute requiredLevel={2}><DynamicPropertiesForm /></ProtectedRoute>} />
+        <Route path='/admin/metadata/:database/:cmid/view' element={<ProtectedRoute requiredLevel={2}><DynamicPropertiesForm /></ProtectedRoute>} />
+        <Route path='/admin/metadata/:database/:cmid/edit' element={<ProtectedRoute requiredLevel={2}><DynamicPropertiesForm /></ProtectedRoute>} />
+        <Route path='/editMetadata/:legacyCmid' element={<ProtectedRoute requiredLevel={2}><DynamicPropertiesForm /></ProtectedRoute>} />
       </Routes >
-    </Suspense >
+    </>
   );
 }
 

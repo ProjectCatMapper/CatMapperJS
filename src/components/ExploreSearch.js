@@ -83,7 +83,7 @@ export default function Searchbar({ database }) {
 
   const fallbackOptions = ["Name", "Key", "CatMapper ID (CMID)"];
 
-  const { infodata, loading: metadataLoading } = useMetadata(database);
+  const { infodata } = useMetadata(database);
 
 
   const [countries, setCountries] = useState([

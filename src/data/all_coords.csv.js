@@ -1,5 +1,3 @@
-import React, { useEffect, useState } from 'react';
-
 const parseCsvData = (csvString) => {
     const lines = csvString.trim().split('\n');
     const headers = lines[0].split(',');

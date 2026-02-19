@@ -1,5 +1,5 @@
 import Navbar from '../components/NavbarHome'
-import { Container, Typography, List, ListItem, ListItemText, Paper } from '@mui/material';
+import { Container, Typography, Paper } from '@mui/material';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import './../components/Funding.css'
 
