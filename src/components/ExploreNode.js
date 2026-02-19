@@ -1075,7 +1075,7 @@ export default function Tableclick({ cmid, database, tabval }) {
   const isMergingTemplateNode = domainLabels.includes("MERGING");
   const isDatasetLike = cmid.startsWith("SD") || cmid.startsWith("AD") || isStackNode || isMergingTemplateNode || domainLabels.includes("DATASET");
   const showMergingTemplateTab = isStackNode || isMergingTemplateNode;
-  const hasNetworkTab = orderedProperties.length > 0;
+  const hasNetworkTab = orderOfProperties.some((prop) => fdrop.includes(prop));
   const hasPolygonData = Array.isArray(mapt)
     ? mapt.length > 0
     : Array.isArray(mapt?.features)
@@ -1131,7 +1131,9 @@ export default function Tableclick({ cmid, database, tabval }) {
         hasCategoryCategoriesTab ? "categories" : null
       ].filter(Boolean);
 
-    const resolvedTab = getResolvedExploreTab(requestedTab, availableTabs);
+    const resolvedTab = getResolvedExploreTab(requestedTab, availableTabs, {
+      allowFallback: !loadingInfo && !loadingBackground && !navigationLoading,
+    });
     if (!resolvedTab) return;
     if (value !== resolvedTab) {
       setValue(resolvedTab);
@@ -1154,7 +1156,10 @@ export default function Tableclick({ cmid, database, tabval }) {
     hasCategoryMapTab,
     hasCategoryTimespanTab,
     hasCategoryDatasetsTab,
-    hasCategoryCategoriesTab
+    hasCategoryCategoriesTab,
+    loadingInfo,
+    loadingBackground,
+    navigationLoading,
   ]);
 
   const [boxHeight, setBoxHeight] = useState("auto");
