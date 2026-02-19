@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { FaBars, FaTimes } from 'react-icons/fa'
 import './NavCommon.css';
 import './NavbarHome.css'
+import catmapperWhiteSmall from '../assets/catmapperWhite_small.webp';
 
 const Navbar = () => {
     const [click, setClick] = useState(false)
@@ -11,7 +12,7 @@ const Navbar = () => {
     return (
         <div className='cm-nav cm-nav--home'>
             <div className='cm-nav-image'>
-                <Link to='/'><img src="/catmapperWhite_small.webp" width={100} height={70} alt="CatMapper logo"></img></Link>
+                <Link to='/'><img src={catmapperWhiteSmall} width={100} height={70} alt="CatMapper logo"></img></Link>
             </div>
             <ul className={click ? 'cm-nav-menu active' : 'cm-nav-menu'}>
                 <li >
