@@ -3,16 +3,18 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Box, MenuItem, Select, TextField, Typography, Alert } from '@mui/material';
 import Button from '@mui/material/Button';
+import { ensureDatabase } from '../utils/database';
 
 const RegisterPage = ({ database }) => {
     const navigate = useNavigate();
+    const safeDatabase = ensureDatabase(database);
     const [firstName, setFirstName] = useState('');
     const [lastName, setLastName] = useState('');
     const [email, setEmail] = useState('');
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
-    const [databaseOption, setDatabase] = useState(database || '');
+    const [databaseOption, setDatabase] = useState(safeDatabase);
     const [intendedUse, setintendedUse] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
 
@@ -48,7 +50,7 @@ const RegisterPage = ({ database }) => {
 
             if (response.ok) {
                 alert('Please wait while we verify your registration. You will receive an email when your account has been enabled. Contact support@catmapper.org for any questions.');
-                navigate('/login');
+                navigate(`/${ensureDatabase(databaseOption, safeDatabase)}/login`);
             } else {
                 const data = await response.json();
                 alert(data.error);
@@ -110,7 +112,7 @@ const RegisterPage = ({ database }) => {
                 Select database
             </Typography>
             <Select
-                value={database}
+                value={databaseOption}
                 onChange={(event) => {
                     setDatabase(event.target.value);
                 }}

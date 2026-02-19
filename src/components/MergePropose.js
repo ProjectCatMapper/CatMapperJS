@@ -1,19 +1,22 @@
 import React, { useState, useEffect } from 'react'
-import { Box, Button, FormControlLabel, Radio, RadioGroup, Checkbox, Typography, Divider, Select, NativeSelect, TextField, MenuItem, FormControl, FormGroup, Snackbar, Alert, Paper, Tooltip } from '@mui/material';
+import { Box, Button, FormControlLabel, Radio, RadioGroup, Checkbox, Typography, Divider, Select, NativeSelect, TextField, MenuItem, FormControl, FormGroup, Snackbar, Alert, Paper, Tooltip, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
 import * as XLSX from 'xlsx';
 import CircularProgress from '@mui/material/CircularProgress';
 import Backdrop from '@mui/material/Backdrop';
 import InfoIcon from '@mui/icons-material/Info';
 import { useMetadata } from './UseMetadata';
 import DownloadDatasetButton from './DownloadDatasetListButton';
+import { useAuth } from './AuthContext';
+import SavedCmidInsertPopover from './SavedCmidInsertPopover';
 // import infodata from './infodata.json';
 
 const Propose_Merge = ({ database }) => {
+  const { user, cred } = useAuth();
   const [loading, setLoading] = useState(false);
   const [inputValue, setInputValue] = useState('');
   const [open, setOpen] = useState(false);
-  const [data, setData] = useState();
   const [isValid, setIsValid] = useState(false);
+  const [, setData] = useState();
   const [mergeLevel, setMergeLevel] = useState(1);
   const [firstDropdownValue, setFirstDropdownValue] = useState('ANY DOMAIN');
   const [resultFormat, setResultFormat] = useState("key-to-key");
@@ -21,11 +24,34 @@ const Propose_Merge = ({ database }) => {
   const [showKeys, setShowKeys] = useState(false);
   const [keysByDataset, setkeysByDataset] = useState(false);
   const [selectedKeyVariables, setSelectedKeyVariables] = useState({});
-  const { infodata, loading: metadataLoading } = useMetadata(database);
+  const { infodata } = useMetadata(database);
   const [selectedCategory, setSelectedCategory] = useState({});
   const [advdomainDrop, setadvdomainDrop] = React.useState('ANY DOMAIN');
+  const [mergeInputError, setMergeInputError] = useState('');
+  const [validatedDatasets, setValidatedDatasets] = useState([]);
 
   const [advoptions, setadvoptions] = React.useState(['ANY DOMAIN']);
+
+  const parseDatasetIds = () =>
+    inputValue
+      .split(',')
+      .map((value) => value.trim())
+      .filter(Boolean);
+
+  const validateDatasetInputs = () => {
+    const datasetIds = parseDatasetIds();
+    const invalid = datasetIds.filter((cmid) => !/^(SD|AD)\d+$/i.test(cmid));
+    if (invalid.length > 0) {
+      setMergeInputError(`Only DATASET CMIDs are allowed here. Invalid values: ${invalid.join(', ')}`);
+      return false;
+    }
+    if (selectedOption === 'Extended' && datasetIds.length > 2) {
+      setMergeInputError('Extended merge supports at most two dataset CMIDs.');
+      return false;
+    }
+    setMergeInputError('');
+    return true;
+  };
 
   useEffect(() => {
     fetch(`${process.env.REACT_APP_API_URL}/metadata/subdomains/${database}`)
@@ -130,32 +156,42 @@ const Propose_Merge = ({ database }) => {
   };
 
   const handleValidate = async () => {
+    if (!validateDatasetInputs()) return;
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/validateDatasets`, {
-        method: 'POST',
+      const response = await fetch(process.env.REACT_APP_API_URL + "/validateDatasets", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          "names": inputValue,
-          "database": database,
+          names: inputValue,
+          database: database,
         }),
       });
 
       const result = await response.json();
-      console.log(result)
+      const rows = result.datasets || [];
+      setValidatedDatasets(rows);
+
       if (result.success === true) {
-        alert(`Validation successful: ${result.message || "All nodes exist."}`);
+        alert("Validation successful: " + (result.message || "All nodes exist."));
         setIsValid(true);
       } else {
-        alert(`Validation failed: ${result.message || "Some nodes are missing."}`);
+        const missing = Array.isArray(result.missing) && result.missing.length > 0
+          ? " Missing IDs: " + result.missing.join(", ") + "."
+          : "";
+        alert("Validation failed: " + (result.message || "Some nodes are missing.") + missing);
+        setIsValid(false);
       }
     } catch (error) {
-      alert('Validation failed. Please try again.');
+      setIsValid(false);
+      setValidatedDatasets([]);
+      alert("Validation failed. Please try again.");
     }
   };
 
   const getKeys = async () => {
+    if (!validateDatasetInputs()) return;
     try {
       const response = await fetch(`${process.env.REACT_APP_API_URL}/getKeys`, {
         method: 'POST',
@@ -186,6 +222,7 @@ const Propose_Merge = ({ database }) => {
 
 
   const handleSubmit = async () => {
+    if (!validateDatasetInputs()) return;
     if (!isValid) {
       alert('Please validate successfully before submitting.');
       return;
@@ -276,12 +313,34 @@ const Propose_Merge = ({ database }) => {
           label="Enter DatasetIDs separated by commas"
           variant="outlined"
           value={inputValue}
-          onChange={(e) => setInputValue(e.target.value)}
+          onChange={(e) => {
+            setInputValue(e.target.value);
+            setMergeInputError('');
+            setIsValid(false);
+            setValidatedDatasets([]);
+          }}
+          error={Boolean(mergeInputError)}
+          helperText={mergeInputError || 'Only DATASET CMIDs are valid here (SD/AD).'}
           sx={{ mr: 2, width: '34vw' }}
         />
         <Button variant="contained" onClick={handleValidate}>
           Validate DatasetIDs
         </Button>
+      </Box>
+      <Box sx={{ mt: 1 }}>
+        <SavedCmidInsertPopover
+          user={user}
+          cred={cred}
+          database={database}
+          datasetOnly
+          title="Insert Dataset from Bookmarks/History"
+          onInsert={(cmid) => {
+            const ids = parseDatasetIds();
+            if (!ids.includes(cmid)) {
+              setInputValue([...ids, cmid].join(', '));
+            }
+          }}
+        />
       </Box>
 
       <Snackbar
@@ -294,6 +353,32 @@ const Propose_Merge = ({ database }) => {
           Merge proposal complete!
         </Alert>
       </Snackbar>
+
+      {validatedDatasets.length > 0 && (
+        <TableContainer component={Paper} variant="outlined" sx={{ mt: 2, mb: 2, maxWidth: "100%" }}>
+          <Table size="small" aria-label="validated dataset details">
+            <TableHead>
+              <TableRow>
+                <TableCell sx={{ fontWeight: 600, whiteSpace: "nowrap" }}>CMID</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>CMName</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>shortName</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>DatasetCitation</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {validatedDatasets.map((row) => (
+                <TableRow key={row.CMID || row.cmid}>
+                  <TableCell sx={{ whiteSpace: "nowrap" }}>{row.CMID || row.cmid || ""}</TableCell>
+                  <TableCell>{row.CMName || row.cmname || ""}</TableCell>
+                  <TableCell>{row.shortName || row.shortname || ""}</TableCell>
+                  <TableCell>{row.DatasetCitation || row.datasetcitation || ""}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      )}
+
       <Divider sx={{ my: 2 }} />
       <h4 style={{ color: 'black', padding: "1px" }}>Choose Domain</h4>
       <Box display="flex" alignItems="center" gap={2}>

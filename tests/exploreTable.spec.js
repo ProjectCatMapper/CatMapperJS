@@ -1,7 +1,10 @@
 import { test, expect } from '@playwright/test';
 
 test('Explore table renders buttons correctly', async ({ page }) => {
-    await page.goto('http://localhost:3000/sociomap/explore?domain=ALL+NODES&property=Name&term=yoruba&database=sociomap');
+    await Promise.all([
+        page.waitForResponse(resp => resp.url().includes('/explore?domain') && resp.status() === 200),
+        page.goto('http://localhost:3000/sociomap/explore?domain=ALL%20NODES&property=Name&term=yoruba&database=sociomap'),
+    ]);
     // Check for the Green "View" button
     const viewButton = page.locator('button:has-text("View")').first();
     await expect(viewButton).toBeVisible();

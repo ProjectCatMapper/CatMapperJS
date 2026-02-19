@@ -1,5 +1,6 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { useEffect, useState } from 'react';
-import { ResponsiveContainer, BarChart, XAxis, YAxis, Tooltip, Legend, Bar } from 'recharts';
+import { ResponsiveContainer, BarChart, XAxis, YAxis, Legend, Bar } from 'recharts';
 import { scaleOrdinal } from 'd3-scale';
 import { schemeCategory10 } from 'd3-scale-chromatic';
 import { Box, Tabs, Tab } from '@mui/material';
@@ -23,7 +24,6 @@ export default function TimespanTable({ data }) {
   const [minyear1, setMinYear1] = useState([]);
   const [maxyear1, setMaxYear1] = useState([]);
   const [bwidth1, setBwidth1] = useState([]);
-  let entries = {}
   const currentYear = new Date().getFullYear();
   let flag = false
 
@@ -105,10 +105,10 @@ yearSpans.forEach(({ source, Start, End }) => {
     
   }
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() =>{
-  
   //removes entries where both rStart and rEnd are null
-  entries = data.filter(entry => {
+  const entries = data.filter(entry => {
       const rStart = entry["rStart"]?.trim();
       const rEnd = entry['rEnd']?.trim()
       return (rStart && rStart !== "null") || (rEnd && rEnd !== "null");
@@ -137,7 +137,7 @@ yearSpans.forEach(({ source, Start, End }) => {
     setChartData("");
   }
 
-  entries = data.filter(entry => {
+  const yearEntries = data.filter(entry => {
       const rStart = entry["yStart"]?.trim();
       const rEnd = entry['yEnd']?.trim()
       return (rStart && rStart !== "null") || (rEnd && rEnd !== "null");
@@ -147,16 +147,16 @@ yearSpans.forEach(({ source, Start, End }) => {
     Source: entry["Source"] || "Unknown",
   }));
 
-  years = entries.flatMap(entry => [entry.Start, entry.End])
+  years = yearEntries.flatMap(entry => [entry.Start, entry.End])
   .map(val => parseInt(val))
   .filter(val => isFinite(val));
 
   minYear = Math.min(...years);
   maxYear = Math.max(...years); 
 
-  if (entries.length > 0) {
+  if (yearEntries.length > 0) {
 
-  const chart2 = generateChartData(entries,minYear,maxYear);
+  const chart2 = generateChartData(yearEntries,minYear,maxYear);
   console.log(chart2.filteredChartData)
   setChartData1(chart2.filteredChartData);
   setMinYear1(minYear);
