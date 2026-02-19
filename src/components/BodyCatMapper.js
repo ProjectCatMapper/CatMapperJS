@@ -13,12 +13,12 @@ import FooterLinks from "./FooterLinks";
 const footer = () => {
   return (
     <div className="footer">
-      <Box sx={{ flexGrow: 1, marginLeft: 1, marginRight: 1 }}>
+      <Box sx={{ flexGrow: 1, marginLeft: { xs: 0, sm: 1 }, marginRight: { xs: 0, sm: 1 } }}>
         <Grid container spacing={2} direction="column">
-          <Grid item xs={6} width={"100%"}>
+          <Grid item xs={12} width={"100%"}>
             <Card
               variant="outlined"
-              style={{ backgroundColor: "black", border: "1px solid white" }}
+              className="catmapper-footer-card"
             >
               <CardContent>
                 <FAQButton title="Description" />
@@ -47,10 +47,10 @@ const footer = () => {
               </CardContent>
             </Card>
           </Grid>
-          <Grid item xs={6} width={"100%"}>
+          <Grid item xs={12} width={"100%"}>
             <Card
               variant="outlined"
-              style={{ backgroundColor: "black", border: "1px solid white" }}
+              className="catmapper-footer-card"
             >
               <CardContent>
                 <Typography
