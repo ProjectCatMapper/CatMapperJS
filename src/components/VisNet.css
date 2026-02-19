@@ -1,0 +1,91 @@
+.visnet-layout {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  width: 100%;
+}
+
+#network.visnet-canvas {
+  height: 400px;
+  width: 100%;
+  max-width: 1000px;
+  border: 1px solid #d8d8d8;
+  border-radius: 6px;
+  background: #fff;
+}
+
+.visnet-legend {
+  margin: 0;
+  padding-left: 18px;
+  max-width: 280px;
+}
+
+.visnet-legend-color {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  margin-right: 5px;
+}
+
+.visnet-info-box {
+  background-color: rgba(255, 255, 255, 0.95);
+  padding: 8px;
+  border-radius: 3px;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+  z-index: 9999;
+  width: min(500px, calc(100vw - 24px));
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.visnet-info-box--edge {
+  position: fixed;
+  max-height: 280px;
+}
+
+.visnet-info-box--node {
+  position: absolute;
+}
+
+.visnet-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 8px;
+}
+
+.visnet-actions-between {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.visnet-btn {
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+
+.visnet-btn--view {
+  background-color: rgb(46, 125, 50);
+}
+
+.visnet-btn--close {
+  background-color: rgb(211, 47, 47);
+}
+
+@media (max-width: 900px) {
+  .visnet-layout {
+    flex-direction: column;
+  }
+
+  #network.visnet-canvas {
+    max-width: 100%;
+    height: 360px;
+  }
+
+  .visnet-legend {
+    max-width: 100%;
+  }
+}

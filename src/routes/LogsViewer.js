@@ -47,7 +47,7 @@ const LogsViewer = () => {
         if (cmid) {
             fetchLogs();
         }
-    }, [cmid]);
+    }, [cmid, database]);
 
     // --- Helper: Format the "Action" text with colors ---
     const renderActionText = (text) => {

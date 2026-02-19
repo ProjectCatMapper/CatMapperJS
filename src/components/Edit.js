@@ -1,14 +1,16 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { useState, useEffect } from 'react'
 import { Box, Button, FormControlLabel, Radio, RadioGroup, Checkbox, Typography, Divider, Select, TextField, MenuItem, InputLabel, FormControl, FormGroup, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TablePagination, Paper, Snackbar, Alert } from '@mui/material';
 import DatasetForm from './DatasetCreate';
-import { ExcelRenderer } from 'react-excel-renderer';
 import Tooltip from '@mui/material/Tooltip';
 import InfoIcon from '@mui/icons-material/Info';
 import { useAuth } from './AuthContext';
 import { CircularProgress } from '@mui/material';
 import { Dialog, DialogContent, DialogActions, DialogContentText, DialogTitle } from '@mui/material';
 import * as XLSX from 'xlsx';
-import domainOptions from "./dropdown.json";
+import domainFieldOptions from "./dropdown.json";
+import { parseTabularFile } from '../utils/tabularUpload';
+import SavedCmidInsertPopover from './SavedCmidInsertPopover';
 
 
 const TEMPLATE_FILES = {
@@ -18,12 +20,22 @@ const TEMPLATE_FILES = {
   update_uses: { label: "Update Uses Ties", file: "update_uses_template.xlsx" },
 };
 
+const getInitialFormData = () => ({
+  domain: '',
+  subdomain: '',
+  datasetID: '',
+  cmNameColumn: '',
+  categoryNamesColumn: '',
+  alternateCategoryNamesColumns: [],
+  cmidColumn: '',
+  keyColumn: '',
+});
+
 
 
 const Edit = ({ database }) => {
 
-  const [file, setFile] = useState(null);
-  const { user, authLevel } = useAuth();
+  const { user, cred, authLevel } = useAuth();
   const [open, setOpen] = useState(false);
   const [node_open, setNodeOpen] = useState(false);
   const [showFields, setShowFields] = useState(false);
@@ -35,7 +47,7 @@ const Edit = ({ database }) => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [jsonData, setJsondata] = useState([]);
-  const [linkContext, setLinkContext] = useState([]);
+  const [, setLinkContext] = useState([]);
   const [download, setDownload] = useState(null);
   const [error, setError] = useState(null);
   const [fileDownload, setFileDownload] = useState('');
@@ -43,35 +55,24 @@ const Edit = ({ database }) => {
   const [missingCount, setMissingCount] = useState(0);
   const [missingCol, setMissingCol] = useState(0);
   const [openDialog, setOpenDialog] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [formData, setFormData] = useState({
-    domain: 'ALL NODES',
-    datasetID: '',
-    cmNameColumn: '',
-    categoryNamesColumn: '',
-    alternateCategoryNamesColumn: '',
-    cmidColumn: '',
-    keyColumn: '',
-  });
+  const [selectedOption, setSelectedOption] = useState('standard');
+  const [advselectedOption, setadvSelectedOption] = useState('add_node');
+  const [formData, setFormData] = useState(getInitialFormData);
+  const [simpleDomainOptions, setSimpleDomainOptions] = useState([]);
+  const [simpleSubdomainOptions, setSimpleSubdomainOptions] = useState([]);
+  const [simpleDomainsData, setSimpleDomainsData] = useState([]);
   const [CMIDText, setCMIDText] = useState('The new dataset CMID is pending.');
   const [mergingType, setMergingType] = useState("0");
+  const editStorageKey = `catmapper.edit.uploadState.${database || 'unknown'}`;
   let required = [];
-  let finalProduct = [];
   const foundColumns = [];
   const notFoundColumns = [];
-
-  const handleOpen = () => {
-    setOpen(true);
-  };
 
   const handleClose = () => {
     setOpen(false);
   };
 
   const [openSnackbar, setOpenSnackbar] = useState(false);
-  const handleOpen1 = () => {
-    setOpenSnackbar(true);  // Open the snackbar on button click
-  };
   const handleClose1 = () => {
     setOpenSnackbar(false); // Close the snackbar after user interaction
   };
@@ -92,10 +93,45 @@ const Edit = ({ database }) => {
     }, 100);
   };
 
+  const clearUploadState = () => {
+    try {
+      sessionStorage.removeItem(editStorageKey);
+    } catch (_err) {
+      // ignore storage errors
+    }
+
+    setShowFields(false);
+    setIsDataset(false);
+    setNodeCount(null);
+    setColumns(['dummy']);
+    setRows([]);
+    setViewUploadedData(false);
+    setPage(0);
+    setRowsPerPage(10);
+    setJsondata([]);
+    setDownload(null);
+    setError('');
+    setFormData(getInitialFormData());
+    setSelectedOption('standard');
+    setadvSelectedOption('add_node');
+    setSelectedColumns({});
+    setMissingColumns([]);
+    setExtraColumns([]);
+    setSelectedExtraColumns([]);
+    setSelectedExtraColumn('');
+    setAllRequiredColumnsFound(false);
+    setMissingCount(0);
+    setMissingCol(0);
+    setMergingType("0");
+    setCMIDText('The new dataset CMID is pending.');
+
+    const fileInput = document.getElementById('fileInput');
+    if (fileInput) fileInput.value = '';
+  };
+
 
   const handleFileChange = async (e) => {
     setError("")
-    setFile(null);
     const file = e.target.files[0];
     if (!file) return;
 
@@ -104,69 +140,32 @@ const Edit = ({ database }) => {
       return;
     }
 
-    const fileType = file.type;
-    if (
-      fileType === 'application/vnd.ms-excel' ||
-      fileType === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
-      fileType === 'text/csv'
-    ) {
-      setFile(file);
-      const fileObj = file;
+    try {
+      const parsed = await parseTabularFile(file, {
+        checkMergedCells: true,
+        stripWrappingQuotes: true,
+      });
 
-      try {
-        const data = await file.arrayBuffer();
-        const workbook = XLSX.read(data, { type: "array" });
+      setColumns(parsed.headers);
+      setRows(parsed.rows2d);
 
-        const sheetName = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[sheetName];
+      const table = parsed.records.map((rowData, index) => ({
+        ...rowData,
+        key: index + 1,
+      }));
 
-        const merges = worksheet["!merges"] || [];
-        if (merges.length > 0) {
-          alert("Merged cells detected. Please unmerge all cells before uploading.")
-          setFile(null);
-          return;
-        }
+      setNodeCount(table.length);
 
-        const resp = await new Promise((resolve, reject) => {
-          ExcelRenderer(fileObj, (err, resp) => {
-            if (err) {
-              reject(err);
-            } else {
-              resolve(resp);
-            }
-          });
-        });
-
-        setColumns(resp.rows[0]);
-        const filteredRows = resp.rows.slice(1).filter(row =>
-          row.some(value => value !== null && value !== undefined && value !== "")
-        );
-        setRows(filteredRows);
-
-        const table = filteredRows.map((row, index) => {
-          const rowData = {};
-          resp.rows[0].forEach((column, columnIndex) => {
-            rowData[column] = row[columnIndex];
-          });
-          rowData['key'] = index + 1;
-          return rowData;
-        });
-
-        setNodeCount(table.length);
-
-        await new Promise((resolve) => {
-          setJsondata(table);
-          setViewUploadedData(true);
-          setShowFields(true);
-          resolve();
-        });
-      } catch (error) {
-        alert('Error processing file: ' + error.message);
-      }
-    } else {
-      alert('Please upload a valid Excel file (CSV or XLSX).');
+      await new Promise((resolve) => {
+        setJsondata(table);
+        setViewUploadedData(true);
+        setShowFields(true);
+        resolve();
+      });
+    } catch (error) {
+      const msg = error?.message || 'Error processing file.';
+      alert(msg);
       e.target.value = null;
-      setFile(null);
     }
   };
 
@@ -177,6 +176,37 @@ const Edit = ({ database }) => {
     setFormData((prevState) => ({
       ...prevState,
       [name]: value,
+    }));
+  };
+
+  const getSimpleSubdomainsForDomain = (domainValue, domainsData) => {
+    return domainsData.filter((item) => item.display === domainValue);
+  };
+
+  const handleSimpleDomainChange = (event) => {
+    const nextDomain = event.target.value;
+    const subdomains = getSimpleSubdomainsForDomain(nextDomain, simpleDomainsData);
+    setSimpleSubdomainOptions(subdomains);
+    setFormData((prev) => ({
+      ...prev,
+      domain: nextDomain,
+      subdomain: subdomains[0]?.subdomain || '',
+    }));
+  };
+
+  const handleSimpleSubdomainChange = (event) => {
+    const nextSubdomain = event.target.value;
+    setFormData((prev) => ({
+      ...prev,
+      subdomain: nextSubdomain,
+    }));
+  };
+
+  const handleSimpleAltNamesColumnsChange = (event) => {
+    const value = event.target.value;
+    setFormData((prev) => ({
+      ...prev,
+      alternateCategoryNamesColumns: typeof value === 'string' ? value.split(',') : value,
     }));
   };
 
@@ -283,7 +313,7 @@ const Edit = ({ database }) => {
 
     }
 
-    if (advselectedOption == "add_merging" && mergingType == "merging_ties_to_datasets") {
+    if (advselectedOption === "add_merging" && mergingType === "merging_ties_to_datasets") {
 
       if (columns.includes('stackID')) {
         const stackIDIndex = columns.indexOf('stackID');
@@ -305,10 +335,190 @@ const Edit = ({ database }) => {
     }
   };
 
-  const fallbackOptions = ["Name", "Key", "CatMapper ID (CMID)"];
-  const fieldOptions = domainOptions[formData.domain] || fallbackOptions;
+  useEffect(() => {
+    if (!database) return;
+
+    const excluded = new Set([
+      'DATASET',
+      'DATASETS',
+      'CATEGORY',
+      'CATEGORIES',
+      'ANY NODES',
+      'ANY NODE',
+      'ANY DOMAIN',
+      'ALL DOMAINS',
+      'ALL DOMAIN',
+      'ALL NODES',
+      'ALL NODE',
+    ]);
+
+    const loadSimpleDomains = async () => {
+      try {
+        const response = await fetch(`${process.env.REACT_APP_API_URL}/getDomains/${database}`);
+        const data = await response.json();
+
+        const normalized = (Array.isArray(data) ? data : [])
+          .map((item) => ({
+            display: String(item?.display || '').trim(),
+            subdisplay: String(item?.subdisplay || '').trim(),
+            subdomain: String(item?.subdomain || '').trim(),
+            order: Number(item?.order ?? 9999),
+            suborder: Number(item?.suborder ?? 9999),
+          }))
+          .filter((item) => item.display)
+          .filter((item) => !excluded.has(item.display.toUpperCase()))
+          .sort((a, b) => {
+            if (a.order !== b.order) return a.order - b.order;
+            if (a.suborder !== b.suborder) return a.suborder - b.suborder;
+            return a.subdisplay.localeCompare(b.subdisplay);
+          });
+
+        const domains = [...new Set(normalized.map((item) => item.display))];
+        setSimpleDomainsData(normalized);
+        setSimpleDomainOptions(domains);
+
+        setFormData((prev) => {
+          const nextDomain = prev.domain && domains.includes(prev.domain) ? prev.domain : (domains[0] || '');
+          const subdomains = getSimpleSubdomainsForDomain(nextDomain, normalized);
+          const nextSubdomain = subdomains.some((item) => item.subdomain === prev.subdomain)
+            ? prev.subdomain
+            : (subdomains[0]?.subdomain || '');
+          setSimpleSubdomainOptions(subdomains);
+          return { ...prev, domain: nextDomain, subdomain: nextSubdomain };
+        });
+      } catch (err) {
+        const staticDomains = Object.keys(domainFieldOptions).filter((value) => !excluded.has(String(value).toUpperCase()));
+        const staticDomainRows = staticDomains.map((value) => ({
+          display: value,
+          subdisplay: value,
+          subdomain: value,
+          order: 9999,
+          suborder: 9999,
+        }));
+        setSimpleDomainsData(staticDomainRows);
+        setSimpleDomainOptions(staticDomains);
+
+        setFormData((prev) => {
+          const nextDomain = prev.domain && staticDomains.includes(prev.domain) ? prev.domain : (staticDomains[0] || '');
+          const subdomains = getSimpleSubdomainsForDomain(nextDomain, staticDomainRows);
+          const nextSubdomain = subdomains.some((item) => item.subdomain === prev.subdomain)
+            ? prev.subdomain
+            : (subdomains[0]?.subdomain || '');
+          setSimpleSubdomainOptions(subdomains);
+          return { ...prev, domain: nextDomain, subdomain: nextSubdomain };
+        });
+      }
+    };
+
+    loadSimpleDomains();
+  }, [database]);
+
+  useEffect(() => {
+    if (!database) return;
+    try {
+      const raw = sessionStorage.getItem(editStorageKey);
+      if (!raw) return;
+      const saved = JSON.parse(raw);
+
+      if (Array.isArray(saved.columns) && Array.isArray(saved.rows) && Array.isArray(saved.jsonData)) {
+        setColumns(saved.columns);
+        setRows(saved.rows);
+        setJsondata(saved.jsonData);
+        setNodeCount(Number(saved.nodecount || saved.jsonData.length || 0));
+        setShowFields(Boolean(saved.showFields));
+        setViewUploadedData(Boolean(saved.viewUploadedData));
+        setPage(Number(saved.page || 0));
+        setRowsPerPage(Number(saved.rowsPerPage || 10));
+      }
+
+      if (saved.formData && typeof saved.formData === 'object') {
+        setFormData((prev) => ({
+          ...prev,
+          ...saved.formData,
+          alternateCategoryNamesColumns: Array.isArray(saved.formData.alternateCategoryNamesColumns)
+            ? saved.formData.alternateCategoryNamesColumns
+            : [],
+        }));
+      }
+
+      if (saved.selectedOption) setSelectedOption(saved.selectedOption);
+      if (saved.advselectedOption) setadvSelectedOption(saved.advselectedOption);
+    } catch (_err) {
+      // ignore invalid persisted data
+    }
+  }, [database]);
+
+  useEffect(() => {
+    if (!database || !showFields) return;
+    try {
+      const payload = {
+        showFields,
+        viewUploadedData,
+        nodecount,
+        columns,
+        rows,
+        jsonData,
+        page,
+        rowsPerPage,
+        formData,
+        selectedOption,
+        advselectedOption,
+      };
+      sessionStorage.setItem(editStorageKey, JSON.stringify(payload));
+    } catch (_err) {
+      // storage quota exceeded or unavailable
+    }
+  }, [database, showFields, viewUploadedData, nodecount, columns, rows, jsonData, page, rowsPerPage, formData, selectedOption, advselectedOption]);
+
+  const validateSimpleWorkflow = () => {
+    if (selectedOption !== "simple") return true;
+
+    if (!formData.domain) {
+      setError("Please select a domain.");
+      return false;
+    }
+    if (!formData.subdomain) {
+      setError("Please select a subdomain.");
+      return false;
+    }
+    if (!formData.datasetID?.trim()) {
+      setError("Please enter a Dataset CMID.");
+      return false;
+    }
+    if (!/^(SD|AD)\d+$/i.test(formData.datasetID.trim())) {
+      setError("Dataset CMID must be a DATASET ID (SD/AD).");
+      return false;
+    }
+    if (!formData.cmNameColumn) {
+      setError("Please select a CMName column.");
+      return false;
+    }
+    if (!formData.keyColumn) {
+      setError("Please select a Key column.");
+      return false;
+    }
+
+    const requiredColumns = [formData.cmNameColumn, formData.keyColumn];
+    if (formData.categoryNamesColumn) requiredColumns.push(formData.categoryNamesColumn);
+    if (Array.isArray(formData.alternateCategoryNamesColumns) && formData.alternateCategoryNamesColumns.length > 0) {
+      requiredColumns.push(...formData.alternateCategoryNamesColumns);
+    }
+    if (formData.cmidColumn) requiredColumns.push(formData.cmidColumn);
+
+    const missingColumns = requiredColumns.filter((col) => !columns.includes(col));
+    if (missingColumns.length > 0) {
+      setError(`Selected columns not found in uploaded file: ${missingColumns.join(", ")}`);
+      return false;
+    }
+
+    setError('');
+    return true;
+  };
 
   const handleSubmit = async () => {
+    if (!validateSimpleWorkflow()) {
+      return;
+    }
 
     const validationResult = validateColumns();
 
@@ -430,9 +640,6 @@ const Edit = ({ database }) => {
     setPopen(false);
   };
 
-  const [selectedOption, setSelectedOption] = useState('standard');
-  const [advselectedOption, setadvSelectedOption] = useState('add_node');
-
   const handleOptionChange = (event) => {
     setSelectedOption(event.target.value);
   };
@@ -486,6 +693,7 @@ const Edit = ({ database }) => {
     "polity", "occupation", "culture", "yearPublished", "stackID", "stackTransform", "summaryStatistic", "datasetTransform"]
   let allowedDatasetColumns = []
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (columns.length === 0 || rows.length === 0) return;
 
@@ -594,19 +802,8 @@ const Edit = ({ database }) => {
           }
 
           else if (cols.includes("categoryID1") && cols.includes("categoryID2")) {
-
             setError("Adding or replacing proeprties for existing equivalence ties is not permitted for now.");
             return false;
-
-            setMergingType("equivalence_ties")
-            const keyColumns = cols.filter(c => c.startsWith("Key_"));
-
-            if (keyColumns.length === 2) {
-              required = ["categoryID1", "categoryID2", "Key", "datasetID", "stackID"];
-            } else {
-              required = ["categoryID1", "categoryID2", "Key", "datasetID", "stackID"];
-            }
-
           }
           else {
             if (advselectedOption !== 'add_merging') {
@@ -799,7 +996,7 @@ const Edit = ({ database }) => {
       <Box sx={{ mb: 2 }}>
         <h3 style={{ color: 'black', fontWeight: "bold", padding: "2px" }}> Choose file to import</h3>
 
-        <input id="fileInput" style={{ color: 'black', fontWeight: "bold", marginLeft: 7, padding: "2px" }} type="file" accept=".csv, .xlsx" onChange={handleFileChange} />
+        <input id="fileInput" style={{ color: 'black', fontWeight: "bold", marginLeft: 7, padding: "2px" }} type="file" accept=".csv,.tsv,.xls,.xlsx" onChange={handleFileChange} />
       </Box>
       {showFields && <Typography variant="body2">{`Number of nodes to import: ${nodecount}`}</Typography>}
       <FormControlLabel
@@ -865,13 +1062,33 @@ const Edit = ({ database }) => {
               id="domain"
               name="domain"
               value={formData.domain}
-              onChange={handleChange}
+              onChange={handleSimpleDomainChange}
               sx={{ width: 300, height: 40 }}
               margin="normal"
             >
-              {fieldOptions.map((key) => (
+              {simpleDomainOptions.map((key) => (
                 <MenuItem key={key} value={key}>
                   {key}
+                </MenuItem>
+              ))}
+            </Select>
+          </Box>
+          <br />
+          <Box sx={{ mb: 2 }}>
+            <InputLabel id="subdomain-label" style={{ color: "black " }}>Please select the <strong>subdomain</strong> to be uploaded:</InputLabel>
+            <br />
+            <Select
+              labelId="subdomain-label"
+              id="subdomain"
+              name="subdomain"
+              value={formData.subdomain}
+              onChange={handleSimpleSubdomainChange}
+              sx={{ width: 300, height: 40 }}
+              margin="normal"
+            >
+              {simpleSubdomainOptions.map((item) => (
+                <MenuItem key={`${item.subdomain}-${item.subdisplay}`} value={item.subdomain}>
+                  {item.subdisplay || item.subdomain}
                 </MenuItem>
               ))}
             </Select>
@@ -887,6 +1104,21 @@ const Edit = ({ database }) => {
               variant="outlined"
               margin="normal"
             />
+            <Box sx={{ mt: 1 }}>
+              <SavedCmidInsertPopover
+                user={user}
+                cred={cred}
+                database={database}
+                datasetOnly
+                title="Insert Dataset from Bookmarks/History"
+                onInsert={(cmid) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    datasetID: cmid,
+                  }))
+                }
+              />
+            </Box>
           </Box>
           <br />
           <Box sx={{ mb: 2 }}>
@@ -933,11 +1165,13 @@ const Edit = ({ database }) => {
             <InputLabel id="domain-label" style={{ color: "black " }}>Choose which column(s) contain the<br /> <strong>alternate category names</strong> from the<br /> dataset (separate multiple names using a <br /> semicolon):</InputLabel>
             <br />
             <Select
+              multiple
               labelId="domain-label"
               id="domain"
-              name="alternateCategoryNamesColumn"
-              value={formData.alternateCategoryNamesColumn}
-              onChange={handleChange}
+              name="alternateCategoryNamesColumns"
+              value={formData.alternateCategoryNamesColumns}
+              onChange={handleSimpleAltNamesColumnsChange}
+              renderValue={(selected) => selected.join(', ')}
               sx={{ width: 300, height: 40 }}
               margin="normal"
             >
@@ -1194,6 +1428,9 @@ const Edit = ({ database }) => {
         },
       }} onClick={handleSubmit}>
         UPLOAD
+      </Button>
+      <Button variant="outlined" sx={{ ml: "1vw" }} onClick={clearUploadState}>
+        CLEAR UPLOAD
       </Button>
       {loading && (
         <div style={{

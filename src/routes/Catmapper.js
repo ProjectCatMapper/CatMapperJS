@@ -1,5 +1,5 @@
 import CatHome from '../components/LandingCatMapper'
-import Cat_footer from '../components/BodyCatMapper'
+import CatFooter from '../components/BodyCatMapper'
 
 const Catmapper = () => {
   return (
@@ -13,7 +13,7 @@ const Catmapper = () => {
       <div style={{ flex: 1 }}>
         <CatHome />
       </div>
-      <Cat_footer />
+      <CatFooter />
     </div>
   )
 }
