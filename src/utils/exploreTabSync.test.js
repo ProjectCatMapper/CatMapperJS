@@ -19,6 +19,12 @@ describe("exploreTabSync", () => {
     expect(getResolvedExploreTab("timespan", ["network", "map"])).toBe("network");
   });
 
+  test("does not fallback while fallback is disabled", () => {
+    expect(
+      getResolvedExploreTab("network", ["timespan", "datasets"], { allowFallback: false })
+    ).toBe("network");
+  });
+
   test("does not resolve when there are no available tabs", () => {
     expect(getResolvedExploreTab("network", [])).toBeNull();
   });
