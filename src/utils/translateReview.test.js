@@ -123,16 +123,17 @@ describe('translateReview utils', () => {
     expect(groups).toHaveLength(0);
   });
 
-  test('resolveOneToManyGroup keeps chosen row and clears others in group', () => {
+  test('resolveOneToManyGroup keeps chosen row and removes other duplicates in group', () => {
     const rows = [
       { ...row, __reviewId: 'r-1', CMuniqueRowID: 'u1', CMID_Name: 'SM1' },
       { ...row, __reviewId: 'r-2', CMuniqueRowID: 'u1', CMID_Name: 'SM2' },
       { ...row, __reviewId: 'r-3', CMuniqueRowID: 'u2', CMID_Name: 'SM3' },
     ];
     const out = resolveOneToManyGroup({ rows, columns, termColumn: term, groupId: 'u1', keepRowId: 'r-2' });
-    expect(out.find((r) => r.__reviewId === 'r-1').CMID_Name).toBe('');
-    expect(out.find((r) => r.__reviewId === 'r-2').CMID_Name).toBe('SM2');
-    expect(out.find((r) => r.__reviewId === 'r-3').CMID_Name).toBe('SM3');
+    expect(out).toHaveLength(2);
+    expect(out.find((r) => r.__reviewId === 'r-1')).toBeUndefined();
+    expect(out.find((r) => r.__reviewId === 'r-2')?.CMID_Name).toBe('SM2');
+    expect(out.find((r) => r.__reviewId === 'r-3')?.CMID_Name).toBe('SM3');
   });
 
   test('resolveOneToManyGroup with no selection keeps one row, clears it, and removes duplicates', () => {
