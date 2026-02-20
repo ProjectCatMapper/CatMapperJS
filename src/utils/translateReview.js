@@ -91,10 +91,10 @@ export const resolveOneToManyGroup = ({
 }) => {
   const matchColumns = getMatchColumns(columns, termColumn);
   if (keepRowId) {
-    return rows.map((row) => {
-      if (row.CMuniqueRowID !== groupId) return row;
-      if (row.__reviewId === keepRowId) return row;
-      return clearGeneratedValues(row, matchColumns);
+    // "Resolve Group": keep the selected row and remove duplicate rows entirely.
+    return rows.filter((row) => {
+      if (row.CMuniqueRowID !== groupId) return true;
+      return row.__reviewId === keepRowId;
     });
   }
 
