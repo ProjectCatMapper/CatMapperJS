@@ -6,6 +6,7 @@ import Button from '@mui/material/Button';
 import { useAuth } from './AuthContext';
 import { APP_LOGOS } from './Logos';
 import { Link } from 'react-router-dom';
+import catmapperWhiteSmall from '../assets/catmapperWhite_small.webp';
 
 const NavbarApp = ({ database }) => {
     const currentLogo = APP_LOGOS[database] || APP_LOGOS[database];
