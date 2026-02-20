@@ -27,6 +27,13 @@ import {
   normalizeSelectedReviewIds,
 } from '../utils/translateReview';
 
+const MODE_STANDARD = 'standard';
+const MODE_COMPACT = 'compact';
+const DEFAULT_ACTION_WIDTH = {
+  [MODE_STANDARD]: 88,
+  [MODE_COMPACT]: 68,
+};
+
 const TranslateMatchReview = ({
   rows,
   columns,
@@ -42,8 +49,12 @@ const TranslateMatchReview = ({
   const [duplicateKeepRowId, setDuplicateKeepRowId] = useState('');
   const [notice, setNotice] = useState('');
   const [compactTable, setCompactTable] = useState(false);
-  const [columnWidths, setColumnWidths] = useState({ __actions: 88 });
+  const [columnWidthsByMode, setColumnWidthsByMode] = useState({
+    [MODE_STANDARD]: { __actions: DEFAULT_ACTION_WIDTH[MODE_STANDARD] },
+    [MODE_COMPACT]: { __actions: DEFAULT_ACTION_WIDTH[MODE_COMPACT] },
+  });
   const [filterModel, setFilterModel] = useState({ items: [] });
+  const modeKey = compactTable ? MODE_COMPACT : MODE_STANDARD;
 
   const selectedReviewIds = useMemo(
     () => normalizeSelectedReviewIds(selectionModel, rows),
@@ -85,23 +96,41 @@ const TranslateMatchReview = ({
     return rows.filter((row) => String(row.CMuniqueRowID) === String(duplicateGroupId));
   }, [duplicateGroupId, rows]);
 
+  const updateColumnWidth = (params) => {
+    const field = params?.colDef?.field || params?.field;
+    const nextWidth = Number(params?.width);
+    if (!field || !Number.isFinite(nextWidth)) return;
+    setColumnWidthsByMode((prev) => ({
+      ...prev,
+      [modeKey]: {
+        ...(prev[modeKey] || {}),
+        [field]: nextWidth,
+      },
+    }));
+  };
+
   const gridColumns = useMemo(() => {
+    const minWidth = compactTable ? 96 : 130;
+    const maxWidth = compactTable ? 320 : 420;
+    const headerCharWidth = compactTable ? 8 : 9;
+    const cellCharWidth = compactTable ? 6.8 : 8;
+    const modeWidths = columnWidthsByMode[modeKey] || {};
     const isCmidColumn = (name) => name === 'CMID' || name.startsWith('CMID_');
     const estimateWidth = (name) => {
-      const headerWidth = Math.max(130, name.length * 9 + 32);
+      const headerWidth = Math.max(minWidth, name.length * headerCharWidth + 32);
       const longestCell = rows.reduce((max, row) => {
         const valueLength = String(row[name] ?? '').length;
         return Math.max(max, valueLength);
       }, 0);
-      const cellWidth = Math.min(420, Math.max(130, longestCell * 8 + 40));
+      const cellWidth = Math.min(maxWidth, Math.max(minWidth, longestCell * cellCharWidth + 40));
       return Math.max(headerWidth, cellWidth);
     };
     const cols = [
       {
         field: '__actions',
         headerName: 'Row Actions',
-        width: columnWidths.__actions ?? 88,
-        minWidth: 88,
+        width: modeWidths.__actions ?? DEFAULT_ACTION_WIDTH[modeKey],
+        minWidth: DEFAULT_ACTION_WIDTH[modeKey],
         sortable: false,
         filterable: false,
         resizable: true,
@@ -129,8 +158,8 @@ const TranslateMatchReview = ({
       ...columns.map((col) => ({
         field: col,
         headerName: col,
-        width: columnWidths[col] ?? estimateWidth(col),
-        minWidth: 130,
+        width: modeWidths[col] ?? estimateWidth(col),
+        minWidth,
         resizable: true,
         renderCell: isCmidColumn(col)
           ? (params) => {
@@ -151,7 +180,7 @@ const TranslateMatchReview = ({
       })),
     ];
     return cols;
-  }, [columnWidths, columns, database, onRowsChange, rows, termColumn]);
+  }, [columnWidthsByMode, columns, compactTable, database, modeKey, onRowsChange, rows, termColumn]);
 
   const applyRemoveSelected = () => {
     if (!selectedReviewIds.length) {
@@ -329,11 +358,8 @@ const TranslateMatchReview = ({
           checkboxSelection
           rowSelectionModel={selectionModel}
           onRowSelectionModelChange={(model) => setSelectionModel(model)}
-          onColumnWidthChange={(params) => {
-            const field = params?.colDef?.field;
-            if (!field) return;
-            setColumnWidths((prev) => ({ ...prev, [field]: params.width }));
-          }}
+          onColumnResize={updateColumnWidth}
+          onColumnWidthChange={updateColumnWidth}
           pageSizeOptions={[10, 25, 50]}
           initialState={{ pagination: { paginationModel: { page: 0, pageSize: 10 } } }}
           disableRowSelectionOnClick
