@@ -36,19 +36,19 @@
     }
   }
   
-  .MuiDataGrid-root {
+.translate-table-container .MuiDataGrid-root {
     border: none !important;
   }
   
-  .MuiDataGrid-main {
+  .translate-table-container .MuiDataGrid-main {
     overflow: hidden !important;
   }
   
-  .MuiDataGrid-columnHeaders {
+  .translate-table-container .MuiDataGrid-columnHeaders {
     overflow: hidden !important;
   }
   
-  .MuiDataGrid-cell {
+  .translate-table-container .MuiDataGrid-cell {
     overflow: hidden !important;
     text-overflow: ellipsis;
     white-space: nowrap;
