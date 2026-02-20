@@ -153,6 +153,12 @@ function TranslateComponent({ database }) {
 
       setLoadingStage('Parsing results...');
       const responseData = await response.json();
+      const warnings = Array.isArray(responseData?.warnings)
+        ? responseData.warnings.filter((msg) => typeof msg === 'string' && msg.trim() !== '')
+        : [];
+      if (warnings.length > 0) {
+        alert(`Warning: ${warnings.join(' ')}`);
+      }
 
       const allKeys = responseData.order;
 
