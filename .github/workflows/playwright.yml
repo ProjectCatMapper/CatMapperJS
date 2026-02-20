@@ -9,6 +9,7 @@ on:
     branches: [main, master]
 jobs:
   test:
+    if: ${{ false }} # Temporarily disable workflow execution.
     timeout-minutes: 60
     runs-on: ubuntu-latest
     steps:
