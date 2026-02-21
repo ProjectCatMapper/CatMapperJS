@@ -11,6 +11,7 @@ import * as XLSX from 'xlsx';
 import domainFieldOptions from "./dropdown.json";
 import { parseTabularFile } from '../utils/tabularUpload';
 import SavedCmidInsertPopover from './SavedCmidInsertPopover';
+import { uploadInputNodes, updateWaitingUSES } from '../api/editUploadApi';
 
 
 const TEMPLATE_FILES = {
@@ -574,13 +575,9 @@ const Edit = ({ database }) => {
 
       console.log(`${process.env.REACT_APP_API_URL}`)
 
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/uploadInputNodes`, {
-        //const response = await fetch("http://127.0.0.1:5001/uploadInputNodes", {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+      const response = await uploadInputNodes({
+        cred,
+        payload: {
           formData: formData,
           database: database,
           df: finalProduct,
@@ -590,7 +587,7 @@ const Edit = ({ database }) => {
           user: user,
           allContext: columnsToUse,
           mergingType: mergingType
-        }),
+        },
       });
 
       const result = await response.json();
@@ -620,13 +617,10 @@ const Edit = ({ database }) => {
         setLoading(false);
       }
 
-      //await fetch("http://127.0.0.1:5001/updateWaitingUSES", {
-      await fetch(`${process.env.REACT_APP_API_URL}/updateWaitingUSES`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ database: database }),
+      await updateWaitingUSES({
+        cred,
+        database,
+        user,
       })
 
     } catch (error) {
