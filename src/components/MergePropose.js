@@ -45,10 +45,6 @@ const Propose_Merge = ({ database }) => {
       setMergeInputError(`Only DATASET CMIDs are allowed here. Invalid values: ${invalid.join(', ')}`);
       return false;
     }
-    if (selectedOption === 'Extended' && datasetIds.length > 2) {
-      setMergeInputError('Extended merge supports at most two dataset CMIDs.');
-      return false;
-    }
     setMergeInputError('');
     return true;
   };
