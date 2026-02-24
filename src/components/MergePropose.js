@@ -709,15 +709,21 @@ const Propose_Merge = ({ database }) => {
 
       {hasSubmittedMerge && (
         <Box sx={{ mt: 3 }}>
-          <Box
+          <Paper
+            elevation={1}
+            sx={{
+              p: 1.5,
+              mb: 1,
+            }}
+          >
+            <Box
             sx={{
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
               flexWrap: 'wrap',
               columnGap: 2,
-              rowGap: 1,
-              mb: 1,
+              rowGap: 1
             }}
           >
             <Typography variant="h6" style={{ color: 'black', flex: '1 1 auto' }}>
@@ -731,9 +737,10 @@ const Propose_Merge = ({ database }) => {
             >
               Download Results
             </Button>
-          </Box>
+            </Box>
+          </Paper>
           {mergeResults.length > 0 && (
-            <TableContainer component={Paper} variant="outlined" sx={{ maxHeight: "55vh", maxWidth: "100%", overflowX: "auto" }}>
+            <TableContainer component={Paper} variant="outlined" sx={{ maxHeight: "55vh", maxWidth: "100%", overflowX: "auto", mt: 0.5 }}>
               <Table size="small" stickyHeader aria-label="merge results table" sx={{ minWidth: "max-content" }}>
                 <TableHead>
                   <TableRow>
