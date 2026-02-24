@@ -709,21 +709,32 @@ const Propose_Merge = ({ database }) => {
 
       {hasSubmittedMerge && (
         <Box sx={{ mt: 3 }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-            <Typography variant="h6" style={{ color: 'black' }}>
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              flexWrap: 'wrap',
+              columnGap: 2,
+              rowGap: 1,
+              mb: 1,
+            }}
+          >
+            <Typography variant="h6" style={{ color: 'black', flex: '1 1 auto' }}>
               Merge Results ({mergeResults.length})
             </Typography>
             <Button
               variant="contained"
               onClick={() => downloadMerge(mergeResults)}
               disabled={mergeResults.length === 0}
+              sx={{ flexShrink: 0 }}
             >
               Download Results
             </Button>
           </Box>
           {mergeResults.length > 0 && (
-            <TableContainer component={Paper} variant="outlined" sx={{ maxHeight: "55vh" }}>
-              <Table size="small" stickyHeader aria-label="merge results table">
+            <TableContainer component={Paper} variant="outlined" sx={{ maxHeight: "55vh", maxWidth: "100%", overflowX: "auto" }}>
+              <Table size="small" stickyHeader aria-label="merge results table" sx={{ minWidth: "max-content" }}>
                 <TableHead>
                   <TableRow>
                     {resultColumns.map((col) => (
