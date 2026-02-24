@@ -14,6 +14,7 @@ import EditPage from './routes/Edit';
 import Catmapper from './routes/Catmapper';
 import ExploreNode from './routes/ExploreNode';
 import MergePage from './routes/Merge';
+import About from './routes/About';
 import People from './routes/People';
 import News from './routes/News';
 import Funding from './routes/Funding';
@@ -82,6 +83,7 @@ const App = () => {
         <Route path='/:database/merge' element={<DatabaseRoute><MergePage /></DatabaseRoute>} />
         <Route path='/help/api-guide' element={<ApiGuide />} />
         <Route path='/help/user-guide' element={<UserGuide />} />
+        <Route path='/about' element={<About />} />
         <Route path='/people' element={<People />} />
         <Route path='/news' element={<News />} />
         <Route path='/funding' element={<Funding />} />

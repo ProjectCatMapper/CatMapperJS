@@ -7,6 +7,7 @@ import './FooterLinks.css';
 
 const FooterLinks = () => {
     const navLinks = [
+        { name: "About", path: "/about" },
         { name: "People", path: "/people" },
         { name: "News", path: "/news" },
         { name: "Funding", path: "/funding" },
