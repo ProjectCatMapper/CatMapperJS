@@ -708,12 +708,14 @@ const Propose_Merge = ({ database }) => {
       )}
 
       {hasSubmittedMerge && (
-        <Box sx={{ mt: 3 }}>
+        <Box sx={{ mt: 3, width: "100%", maxWidth: "100%" }}>
           <Paper
             elevation={1}
             sx={{
               p: 1.5,
               mb: 1,
+              width: "100%",
+              maxWidth: "100%",
             }}
           >
             <Box
@@ -740,30 +742,32 @@ const Propose_Merge = ({ database }) => {
             </Box>
           </Paper>
           {mergeResults.length > 0 && (
-            <TableContainer component={Paper} variant="outlined" sx={{ maxHeight: "55vh", maxWidth: "100%", overflowX: "auto", mt: 0.5 }}>
-              <Table size="small" stickyHeader aria-label="merge results table" sx={{ minWidth: "max-content" }}>
-                <TableHead>
-                  <TableRow>
-                    {resultColumns.map((col) => (
-                      <TableCell key={col} sx={{ fontWeight: 600, whiteSpace: "nowrap" }}>
-                        {col}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {mergeResults.map((row, rowIndex) => (
-                    <TableRow key={`merge-row-${rowIndex}`}>
+            <Box sx={{ width: "100%", maxWidth: "100%", overflowX: "auto", mt: 0.5 }}>
+              <TableContainer component={Paper} variant="outlined" sx={{ width: "max-content", minWidth: "100%", maxHeight: "55vh" }}>
+                <Table size="small" stickyHeader aria-label="merge results table" sx={{ minWidth: "max-content" }}>
+                  <TableHead>
+                    <TableRow>
                       {resultColumns.map((col) => (
-                        <TableCell key={`${rowIndex}-${col}`} sx={{ whiteSpace: "nowrap" }}>
-                          {Array.isArray(row[col]) ? row[col].join(", ") : String(row[col] ?? "")}
+                        <TableCell key={col} sx={{ fontWeight: 600, whiteSpace: "nowrap" }}>
+                          {col}
                         </TableCell>
                       ))}
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
+                  </TableHead>
+                  <TableBody>
+                    {mergeResults.map((row, rowIndex) => (
+                      <TableRow key={`merge-row-${rowIndex}`}>
+                        {resultColumns.map((col) => (
+                          <TableCell key={`${rowIndex}-${col}`} sx={{ whiteSpace: "nowrap" }}>
+                            {Array.isArray(row[col]) ? row[col].join(", ") : String(row[col] ?? "")}
+                          </TableCell>
+                        ))}
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </Box>
           )}
         </Box>
       )}
