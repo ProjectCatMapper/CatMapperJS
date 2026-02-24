@@ -29,8 +29,20 @@ const Propose_Merge = ({ database }) => {
   const [advdomainDrop, setadvdomainDrop] = React.useState('ANY DOMAIN');
   const [mergeInputError, setMergeInputError] = useState('');
   const [validatedDatasets, setValidatedDatasets] = useState([]);
+  const [mergeResults, setMergeResults] = useState([]);
+  const [mergeWarning, setMergeWarning] = useState('');
+  const [mergeError, setMergeError] = useState('');
 
   const [advoptions, setadvoptions] = React.useState(['ANY DOMAIN']);
+  const resultColumns = React.useMemo(() => {
+    const columns = [];
+    mergeResults.forEach((row) => {
+      Object.keys(row || {}).forEach((key) => {
+        if (!columns.includes(key)) columns.push(key);
+      });
+    });
+    return columns;
+  }, [mergeResults]);
 
   const parseDatasetIds = () =>
     inputValue
@@ -227,6 +239,9 @@ const Propose_Merge = ({ database }) => {
       alert("Please select a category domain to match")
       return;
     }
+    setMergeResults([]);
+    setMergeWarning('');
+    setMergeError('');
     setLoading(true)
     try {
       const response = await fetch(`${process.env.REACT_APP_API_URL}/proposeMergeSubmit`, {
@@ -247,18 +262,28 @@ const Propose_Merge = ({ database }) => {
       });
 
       const result = await response.json();
+      if (!response.ok) {
+        const message = result?.error || result?.message || 'Unable to generate merge proposal.';
+        setMergeError(message);
+        return;
+      }
       if (
         !result ||
         (Array.isArray(result) && result.length === 0) ||
         (typeof result === "object" && Object.keys(result).length === 0)
       ) {
-        alert("No results found. No merge results found.");
+        setMergeWarning("No merge results found for the current settings.");
         return;
       }
+      if (!Array.isArray(result)) {
+        setMergeError(result?.message || result?.error || 'Unexpected response format.');
+        return;
+      }
+      setMergeResults(result);
       setData(result)
       setOpen(true);
-      downloadMerge(result);
     } catch (error) {
+      setMergeError('Error submitting form. Please try again.');
       console.error('Error submitting form:', error);
     }
     finally {
@@ -667,6 +692,55 @@ const Propose_Merge = ({ database }) => {
         <CircularProgress color="inherit" />
         <span style={{ marginLeft: 16 }}>Processing...</span>
       </Backdrop>
+
+      {mergeError && (
+        <Alert severity="error" sx={{ mt: 2 }}>
+          {mergeError}
+        </Alert>
+      )}
+
+      {mergeWarning && (
+        <Alert severity="warning" sx={{ mt: 2 }}>
+          {mergeWarning}
+        </Alert>
+      )}
+
+      {mergeResults.length > 0 && (
+        <Box sx={{ mt: 3 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+            <Typography variant="h6" style={{ color: 'black' }}>
+              Merge Results ({mergeResults.length})
+            </Typography>
+            <Button variant="contained" onClick={() => downloadMerge(mergeResults)}>
+              Download Results
+            </Button>
+          </Box>
+          <TableContainer component={Paper} variant="outlined" sx={{ maxHeight: "55vh" }}>
+            <Table size="small" stickyHeader aria-label="merge results table">
+              <TableHead>
+                <TableRow>
+                  {resultColumns.map((col) => (
+                    <TableCell key={col} sx={{ fontWeight: 600, whiteSpace: "nowrap" }}>
+                      {col}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {mergeResults.map((row, rowIndex) => (
+                  <TableRow key={`merge-row-${rowIndex}`}>
+                    {resultColumns.map((col) => (
+                      <TableCell key={`${rowIndex}-${col}`} sx={{ whiteSpace: "nowrap" }}>
+                        {Array.isArray(row[col]) ? row[col].join(", ") : String(row[col] ?? "")}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Box>
+      )}
     </Box>
   )
 }
