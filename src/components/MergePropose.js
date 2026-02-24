@@ -32,6 +32,7 @@ const Propose_Merge = ({ database }) => {
   const [mergeResults, setMergeResults] = useState([]);
   const [mergeWarning, setMergeWarning] = useState('');
   const [mergeError, setMergeError] = useState('');
+  const [hasSubmittedMerge, setHasSubmittedMerge] = useState(false);
 
   const [advoptions, setadvoptions] = React.useState(['ANY DOMAIN']);
   const resultColumns = React.useMemo(() => {
@@ -239,6 +240,7 @@ const Propose_Merge = ({ database }) => {
       alert("Please select a category domain to match")
       return;
     }
+    setHasSubmittedMerge(true);
     setMergeResults([]);
     setMergeWarning('');
     setMergeError('');
@@ -705,40 +707,46 @@ const Propose_Merge = ({ database }) => {
         </Alert>
       )}
 
-      {mergeResults.length > 0 && (
+      {hasSubmittedMerge && (
         <Box sx={{ mt: 3 }}>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
             <Typography variant="h6" style={{ color: 'black' }}>
               Merge Results ({mergeResults.length})
             </Typography>
-            <Button variant="contained" onClick={() => downloadMerge(mergeResults)}>
+            <Button
+              variant="contained"
+              onClick={() => downloadMerge(mergeResults)}
+              disabled={mergeResults.length === 0}
+            >
               Download Results
             </Button>
           </Box>
-          <TableContainer component={Paper} variant="outlined" sx={{ maxHeight: "55vh" }}>
-            <Table size="small" stickyHeader aria-label="merge results table">
-              <TableHead>
-                <TableRow>
-                  {resultColumns.map((col) => (
-                    <TableCell key={col} sx={{ fontWeight: 600, whiteSpace: "nowrap" }}>
-                      {col}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {mergeResults.map((row, rowIndex) => (
-                  <TableRow key={`merge-row-${rowIndex}`}>
+          {mergeResults.length > 0 && (
+            <TableContainer component={Paper} variant="outlined" sx={{ maxHeight: "55vh" }}>
+              <Table size="small" stickyHeader aria-label="merge results table">
+                <TableHead>
+                  <TableRow>
                     {resultColumns.map((col) => (
-                      <TableCell key={`${rowIndex}-${col}`} sx={{ whiteSpace: "nowrap" }}>
-                        {Array.isArray(row[col]) ? row[col].join(", ") : String(row[col] ?? "")}
+                      <TableCell key={col} sx={{ fontWeight: 600, whiteSpace: "nowrap" }}>
+                        {col}
                       </TableCell>
                     ))}
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
+                </TableHead>
+                <TableBody>
+                  {mergeResults.map((row, rowIndex) => (
+                    <TableRow key={`merge-row-${rowIndex}`}>
+                      {resultColumns.map((col) => (
+                        <TableCell key={`${rowIndex}-${col}`} sx={{ whiteSpace: "nowrap" }}>
+                          {Array.isArray(row[col]) ? row[col].join(", ") : String(row[col] ?? "")}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          )}
         </Box>
       )}
     </Box>
