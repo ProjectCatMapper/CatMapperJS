@@ -200,7 +200,7 @@ export default function Tableclick({ cmid, database, tabval }) {
   const [mergeTemplateSummary, setMergeTemplateSummary] = useState(null);
   const [loadingMergeTemplateSummary, setLoadingMergeTemplateSummary] = useState(false);
 
-  let limit = 300;
+  let limit = 500;
 
   const { infodata } = useMetadata(database);
   const clearNodeData = useCallback(() => {
