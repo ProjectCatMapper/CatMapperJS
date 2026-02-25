@@ -19,6 +19,9 @@ const Navbar = () => {
                     <Link className='cm-nav-link' to='/'>Home</Link>
                 </li>
                 <li >
+                    <Link className='cm-nav-link' to='/about'>About</Link>
+                </li>
+                <li >
                     <Link className='cm-nav-link' to='/people'>People</Link>
                 </li>
                 <li >
