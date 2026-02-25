@@ -710,7 +710,6 @@ export default function Tableclick({ cmid, database, tabval }) {
     }
   };
 
-
   const fetchData = async (event) => {
     setLoadingNetwork(true);
     try {
@@ -787,7 +786,10 @@ export default function Tableclick({ cmid, database, tabval }) {
         return {
           id: nodeData.id,
           label: nodeData.CMName,
+          // Domain labels for legend/color rendering (subdomain-preferred).
           domain: effectiveLabels,
+          // Raw node labels for dropdown filtering; includes top-level labels.
+          filterDomains: uniqueLabels(nodeData.labels || []),
           legendLabel: normalizedLegendLabel,
           CMID: nodeData.CMID,
           tooltipcon: generateTooltipContent({
@@ -828,10 +830,9 @@ export default function Tableclick({ cmid, database, tabval }) {
         return edge;
       });
 
-      let domains = nodes.map((object) => object.domain).slice(1);
-      domains = Array.from(new Set(domains.flat())).filter(
-        (value) => value !== "CATEGORY"
-      );
+      let domains = nodes.map((object) => object.filterDomains || object.domain).slice(1);
+      domains = Array.from(new Set(domains.flat()));
+      domains = domains.filter((value) => value !== "CATEGORY");
       // domains = Array.from(new Set(domains.flat())).filter(
       //   (value) => value !== "DISTRICT"
       // );
@@ -952,12 +953,13 @@ export default function Tableclick({ cmid, database, tabval }) {
       if (filters.domain && filters.domain.length > 0 && filters.domain !== "All") {
         // If the node's domain list doesn't overlap with selected domains, hide it
         // (Assuming filters.domain is the value from the dropdown)
-        const searchDomains = Array.isArray(filters.domain) ? filters.domain : [filters.domain];
+        const nodeSearchDomains = Array.isArray(filters.domain) ? filters.domain : [filters.domain];
         // Special check: If "All" or empty is passed, ignore
-        const validSearch = searchDomains.filter(d => d !== "All");
+        const validSearch = nodeSearchDomains.filter(d => d !== "All");
 
         if (validSearch.length > 0) {
-          const hasMatch = node.domain.some(tag =>
+          const filterDomains = node.filterDomains || node.domain || [];
+          const hasMatch = filterDomains.some(tag =>
             validSearch.some(s => s.includes(tag) || tag.includes(s))
           );
           if (!hasMatch) return false;
