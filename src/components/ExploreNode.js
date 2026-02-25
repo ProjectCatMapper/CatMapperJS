@@ -712,6 +712,8 @@ export default function Tableclick({ cmid, database, tabval }) {
 
   const fetchData = async (event) => {
     setLoadingNetwork(true);
+    // Keep the dropdown selection stable even if the request fails.
+    setFirstDropdownValue(event.target.value);
     try {
       const response = await fetch(
         `${process.env.REACT_APP_API_URL}/networksjs?cmid=` +
@@ -877,7 +879,6 @@ export default function Tableclick({ cmid, database, tabval }) {
         setSelectedDatasets(datasetvalues);
       }
 
-      setFirstDropdownValue(event.target.value);
       setoriginaldata({ nodes, edges });
       setVisData({ nodes, edges });
 
