@@ -200,7 +200,7 @@ export default function Tableclick({ cmid, database, tabval }) {
   const [mergeTemplateSummary, setMergeTemplateSummary] = useState(null);
   const [loadingMergeTemplateSummary, setLoadingMergeTemplateSummary] = useState(false);
 
-  let limit = 500;
+  let limit = 1000;
 
   const { infodata } = useMetadata(database);
   const clearNodeData = useCallback(() => {
@@ -1465,200 +1465,200 @@ export default function Tableclick({ cmid, database, tabval }) {
 
               {hasNetworkTab && (
                 <CustomTabPanel value={value} index={"network"}>
-                {/* Show loading bar only if fetching network data */}
-                {loadingNetwork && <LinearProgress sx={{ marginBottom: 2 }} />}
-                <NetworkExplorerView
-                  database={database}
-                  domainType="DATASET"
-                  limit={limit}
-                  dropdownNodeLimit={dropdownNodeLimit}
-                  setDropdownNodeLimit={setDropdownNodeLimit}
-                  firstDropdownValue={firstDropdownValue}
-                  fetchData={fetchData}
-                  orderedProperties={orderedProperties}
-                  selectedValues={selectedValues}
-                  updateData={updateData}
-                  domains={domains}
-                  thirdDropdownValue={thirdDropdownValue}
-                  updateNodeData={updateNodeData}
-                  selectedNodes={selectedNodes}
-                  visData={visData}
-                  fourthDropdownValue={fourthDropdownValue}
-                  updateDatasetNodeData={updateDatasetNodeData}
-                  selectedDatasets={selectedDatasets}
-                  eventTypes={eventTypes}
-                  selectedEventTypes={selectedEventTypes}
-                  updateEventTypeData={updateEventTypeData}
-                  onNodeNavigateStart={handleNodeNavigateStart}
-                />
+                  {/* Show loading bar only if fetching network data */}
+                  {loadingNetwork && <LinearProgress sx={{ marginBottom: 2 }} />}
+                  <NetworkExplorerView
+                    database={database}
+                    domainType="DATASET"
+                    limit={limit}
+                    dropdownNodeLimit={dropdownNodeLimit}
+                    setDropdownNodeLimit={setDropdownNodeLimit}
+                    firstDropdownValue={firstDropdownValue}
+                    fetchData={fetchData}
+                    orderedProperties={orderedProperties}
+                    selectedValues={selectedValues}
+                    updateData={updateData}
+                    domains={domains}
+                    thirdDropdownValue={thirdDropdownValue}
+                    updateNodeData={updateNodeData}
+                    selectedNodes={selectedNodes}
+                    visData={visData}
+                    fourthDropdownValue={fourthDropdownValue}
+                    updateDatasetNodeData={updateDatasetNodeData}
+                    selectedDatasets={selectedDatasets}
+                    eventTypes={eventTypes}
+                    selectedEventTypes={selectedEventTypes}
+                    updateEventTypeData={updateEventTypeData}
+                    onNodeNavigateStart={handleNodeNavigateStart}
+                  />
                 </CustomTabPanel>
               )}
 
               {hasDatasetMapTab && (
                 <CustomTabPanel value={value} index={"map"}>
-                {/* Show loading bar if background data is loading */}
-                {loadingBackground && <LinearProgress sx={{ marginBottom: 2 }} />}
-                <div
-                  style={{
-                    position: "relative",
-                    top: "10",
-                    left: "200",
-                    width: "95%",
-                    height: "80vh",
-                  }}
-                >
-                  {loadingBackground ? null : (
-                    mapt.length !== 0 || datasetpoints.length !== 0 ? (
-                      <MapComponent points={datasetpoints} mapt={mapt} sources={sources} />
-                    ) : (
-                      <p>No map available for this dataset.</p>
-                    )
-                  )}
-                  <Dialog open={open} onClose={handleClose}>
-                    <DialogTitle>Alert</DialogTitle>
-                    <DialogContent>
-                      {badsources && badsources.length > 0 ? (
-                        <ul>
-                          {badsources.map((source, index) => (
-                            <li key={index}>
-                              <strong>Source:</strong> {source.source}
-                              <br />
-                              <strong>Error:</strong> {source.error}
-                            </li>
-                          ))}
-                        </ul>
+                  {/* Show loading bar if background data is loading */}
+                  {loadingBackground && <LinearProgress sx={{ marginBottom: 2 }} />}
+                  <div
+                    style={{
+                      position: "relative",
+                      top: "10",
+                      left: "200",
+                      width: "95%",
+                      height: "80vh",
+                    }}
+                  >
+                    {loadingBackground ? null : (
+                      mapt.length !== 0 || datasetpoints.length !== 0 ? (
+                        <MapComponent points={datasetpoints} mapt={mapt} sources={sources} />
                       ) : (
-                        <p>No bad sources</p>
-                      )}
-                    </DialogContent>
-                    <DialogActions>
-                      <Button onClick={handleClose} color="primary">
-                        Close
-                      </Button>
-                    </DialogActions>
-                  </Dialog>
-                </div>
+                        <p>No map available for this dataset.</p>
+                      )
+                    )}
+                    <Dialog open={open} onClose={handleClose}>
+                      <DialogTitle>Alert</DialogTitle>
+                      <DialogContent>
+                        {badsources && badsources.length > 0 ? (
+                          <ul>
+                            {badsources.map((source, index) => (
+                              <li key={index}>
+                                <strong>Source:</strong> {source.source}
+                                <br />
+                                <strong>Error:</strong> {source.error}
+                              </li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <p>No bad sources</p>
+                        )}
+                      </DialogContent>
+                      <DialogActions>
+                        <Button onClick={handleClose} color="primary">
+                          Close
+                        </Button>
+                      </DialogActions>
+                    </Dialog>
+                  </div>
                 </CustomTabPanel>
               )}
 
               {hasDatasetCategoriesTab && (
                 <CustomTabPanel value={value} index={"categories"}>
-                {/* Show loading bar if background data is loading */}
-                {loadingBackground && <LinearProgress sx={{ marginBottom: 2 }} />}
-                <CategoriesTable categories={categories} childcategories={childcategories} rememberChoice={rememberChoice} normalized={normalizedRef.current} />
+                  {/* Show loading bar if background data is loading */}
+                  {loadingBackground && <LinearProgress sx={{ marginBottom: 2 }} />}
+                  <CategoriesTable categories={categories} childcategories={childcategories} rememberChoice={rememberChoice} normalized={normalizedRef.current} />
                 </CustomTabPanel>
               )}
               {showMergingTemplateTabWithData && (
                 <CustomTabPanel value={value} index={"merging-template"}>
-                {loadingMergeTemplateSummary && <LinearProgress sx={{ marginBottom: 2 }} />}
-                {!loadingMergeTemplateSummary && !mergeTemplateSummary && (
-                  <p>No merging template summary available.</p>
-                )}
+                  {loadingMergeTemplateSummary && <LinearProgress sx={{ marginBottom: 2 }} />}
+                  {!loadingMergeTemplateSummary && !mergeTemplateSummary && (
+                    <p>No merging template summary available.</p>
+                  )}
 
-                {!loadingMergeTemplateSummary && mergeTemplateSummary?.nodeType === "MERGING" && (
-                  <Box>
-                    <Box sx={{ display: "flex", gap: 1, mb: 2 }}>
-                      <Button variant="contained" onClick={() => downloadMergingTemplateTies("merging")}>
-                        Download Merging Ties
-                      </Button>
-                      <Button variant="contained" onClick={() => downloadMergingTemplateTies("equivalence")}>
-                        Download Equivalence Ties
-                      </Button>
-                    </Box>
-                    <TableContainer component={Paper} variant="outlined">
-                      <Table size="small">
-                        <TableHead>
-                          <TableRow>
-                            <TableCell>Stack CMID</TableCell>
-                            <TableCell>Stack CMName</TableCell>
-                            <TableCell># of Datasets</TableCell>
-                            <TableCell># of Equivalence Ties</TableCell>
-                            <TableCell># of Key Reassignment</TableCell>
-                            <TableCell># of Variables</TableCell>
-                          </TableRow>
-                        </TableHead>
-                        <TableBody>
-                          {(mergeTemplateSummary.stackSummary || []).map((row) => (
-                            <TableRow key={row.stackID}>
-                              <TableCell>
-                                <Button
-                                  size="small"
-                                  variant="text"
-                                  sx={{ p: 0, minWidth: 0 }}
-                                  onClick={() => goToCmidInfo(row.stackID)}
-                                >
-                                  {row.stackID}
-                                </Button>
-                              </TableCell>
-                              <TableCell>{row.stackCMName || ""}</TableCell>
-                              <TableCell>{row.datasetCount || 0}</TableCell>
-                              <TableCell>{row.equivalenceTieCount || 0}</TableCell>
-                              <TableCell>{row.keyReassignmentCount || 0}</TableCell>
-                              <TableCell>{row.variableCount || 0}</TableCell>
+                  {!loadingMergeTemplateSummary && mergeTemplateSummary?.nodeType === "MERGING" && (
+                    <Box>
+                      <Box sx={{ display: "flex", gap: 1, mb: 2 }}>
+                        <Button variant="contained" onClick={() => downloadMergingTemplateTies("merging")}>
+                          Download Merging Ties
+                        </Button>
+                        <Button variant="contained" onClick={() => downloadMergingTemplateTies("equivalence")}>
+                          Download Equivalence Ties
+                        </Button>
+                      </Box>
+                      <TableContainer component={Paper} variant="outlined">
+                        <Table size="small">
+                          <TableHead>
+                            <TableRow>
+                              <TableCell>Stack CMID</TableCell>
+                              <TableCell>Stack CMName</TableCell>
+                              <TableCell># of Datasets</TableCell>
+                              <TableCell># of Equivalence Ties</TableCell>
+                              <TableCell># of Key Reassignment</TableCell>
+                              <TableCell># of Variables</TableCell>
                             </TableRow>
-                          ))}
-                          <TableRow>
-                            <TableCell sx={{ fontWeight: 700 }}>Total</TableCell>
-                            <TableCell />
-                            <TableCell sx={{ fontWeight: 700 }}>{mergeTemplateSummary.stackSummaryTotals?.datasetCount || 0}</TableCell>
-                            <TableCell sx={{ fontWeight: 700 }}>{mergeTemplateSummary.stackSummaryTotals?.equivalenceTieCount || 0}</TableCell>
-                            <TableCell sx={{ fontWeight: 700 }}>{mergeTemplateSummary.stackSummaryTotals?.keyReassignmentCount || 0}</TableCell>
-                            <TableCell sx={{ fontWeight: 700 }}>{mergeTemplateSummary.stackSummaryTotals?.variableCount || 0}</TableCell>
-                          </TableRow>
-                        </TableBody>
-                      </Table>
-                    </TableContainer>
-                  </Box>
-                )}
+                          </TableHead>
+                          <TableBody>
+                            {(mergeTemplateSummary.stackSummary || []).map((row) => (
+                              <TableRow key={row.stackID}>
+                                <TableCell>
+                                  <Button
+                                    size="small"
+                                    variant="text"
+                                    sx={{ p: 0, minWidth: 0 }}
+                                    onClick={() => goToCmidInfo(row.stackID)}
+                                  >
+                                    {row.stackID}
+                                  </Button>
+                                </TableCell>
+                                <TableCell>{row.stackCMName || ""}</TableCell>
+                                <TableCell>{row.datasetCount || 0}</TableCell>
+                                <TableCell>{row.equivalenceTieCount || 0}</TableCell>
+                                <TableCell>{row.keyReassignmentCount || 0}</TableCell>
+                                <TableCell>{row.variableCount || 0}</TableCell>
+                              </TableRow>
+                            ))}
+                            <TableRow>
+                              <TableCell sx={{ fontWeight: 700 }}>Total</TableCell>
+                              <TableCell />
+                              <TableCell sx={{ fontWeight: 700 }}>{mergeTemplateSummary.stackSummaryTotals?.datasetCount || 0}</TableCell>
+                              <TableCell sx={{ fontWeight: 700 }}>{mergeTemplateSummary.stackSummaryTotals?.equivalenceTieCount || 0}</TableCell>
+                              <TableCell sx={{ fontWeight: 700 }}>{mergeTemplateSummary.stackSummaryTotals?.keyReassignmentCount || 0}</TableCell>
+                              <TableCell sx={{ fontWeight: 700 }}>{mergeTemplateSummary.stackSummaryTotals?.variableCount || 0}</TableCell>
+                            </TableRow>
+                          </TableBody>
+                        </Table>
+                      </TableContainer>
+                    </Box>
+                  )}
 
-                {!loadingMergeTemplateSummary && mergeTemplateSummary?.nodeType === "STACK" && (
-                  <Box>
-                    <Typography sx={{ fontWeight: 700, mb: 1 }}>
-                      # of Merging Templates using this Stack: {mergeTemplateSummary.mergingTemplateCount || 0}
-                    </Typography>
-                    <Box sx={{ display: "flex", gap: 1, mb: 2 }}>
-                      <Button variant="contained" onClick={() => downloadMergingTemplateTies("merging")}>
-                        Download Merging Ties
-                      </Button>
-                      <Button variant="contained" onClick={() => downloadMergingTemplateTies("equivalence")}>
-                        Download Equivalence Ties
-                      </Button>
-                    </Box>
-                    <TableContainer component={Paper} variant="outlined">
-                      <Table size="small">
-                        <TableHead>
-                          <TableRow>
-                            <TableCell>Dataset CMID</TableCell>
-                            <TableCell>Dataset CMName</TableCell>
-                            <TableCell># of Equivalence Ties</TableCell>
-                            <TableCell># of Key Reassignment</TableCell>
-                            <TableCell># of Variables</TableCell>
-                          </TableRow>
-                        </TableHead>
-                        <TableBody>
-                          {(mergeTemplateSummary.datasetSummary || []).map((row) => (
-                            <TableRow key={row.datasetID}>
-                              <TableCell>
-                                <Button
-                                  size="small"
-                                  variant="text"
-                                  sx={{ p: 0, minWidth: 0 }}
-                                  onClick={() => goToCmidInfo(row.datasetID)}
-                                >
-                                  {row.datasetID}
-                                </Button>
-                              </TableCell>
-                              <TableCell>{row.datasetCMName || ""}</TableCell>
-                              <TableCell>{row.equivalenceTieCount || 0}</TableCell>
-                              <TableCell>{row.keyReassignmentCount || 0}</TableCell>
-                              <TableCell>{row.variableCount || 0}</TableCell>
+                  {!loadingMergeTemplateSummary && mergeTemplateSummary?.nodeType === "STACK" && (
+                    <Box>
+                      <Typography sx={{ fontWeight: 700, mb: 1 }}>
+                        # of Merging Templates using this Stack: {mergeTemplateSummary.mergingTemplateCount || 0}
+                      </Typography>
+                      <Box sx={{ display: "flex", gap: 1, mb: 2 }}>
+                        <Button variant="contained" onClick={() => downloadMergingTemplateTies("merging")}>
+                          Download Merging Ties
+                        </Button>
+                        <Button variant="contained" onClick={() => downloadMergingTemplateTies("equivalence")}>
+                          Download Equivalence Ties
+                        </Button>
+                      </Box>
+                      <TableContainer component={Paper} variant="outlined">
+                        <Table size="small">
+                          <TableHead>
+                            <TableRow>
+                              <TableCell>Dataset CMID</TableCell>
+                              <TableCell>Dataset CMName</TableCell>
+                              <TableCell># of Equivalence Ties</TableCell>
+                              <TableCell># of Key Reassignment</TableCell>
+                              <TableCell># of Variables</TableCell>
                             </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    </TableContainer>
-                  </Box>
-                )}
+                          </TableHead>
+                          <TableBody>
+                            {(mergeTemplateSummary.datasetSummary || []).map((row) => (
+                              <TableRow key={row.datasetID}>
+                                <TableCell>
+                                  <Button
+                                    size="small"
+                                    variant="text"
+                                    sx={{ p: 0, minWidth: 0 }}
+                                    onClick={() => goToCmidInfo(row.datasetID)}
+                                  >
+                                    {row.datasetID}
+                                  </Button>
+                                </TableCell>
+                                <TableCell>{row.datasetCMName || ""}</TableCell>
+                                <TableCell>{row.equivalenceTieCount || 0}</TableCell>
+                                <TableCell>{row.keyReassignmentCount || 0}</TableCell>
+                                <TableCell>{row.variableCount || 0}</TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </TableContainer>
+                    </Box>
+                  )}
                 </CustomTabPanel>
               )}
             </React.Fragment>
@@ -1683,89 +1683,89 @@ export default function Tableclick({ cmid, database, tabval }) {
               </Box>
               {hasNetworkTab && (
                 <CustomTabPanel value={value} index={"network"}>
-                {/* Show loading bar if background data is loading */}
-                {loadingBackground && <LinearProgress sx={{ marginBottom: 2 }} />}
-                <NetworkExplorerView
-                  database={database}
-                  domainType="CATEGORY"
-                  limit={limit}
-                  dropdownNodeLimit={dropdownNodeLimit}
-                  setDropdownNodeLimit={setDropdownNodeLimit}
-                  firstDropdownValue={firstDropdownValue}
-                  fetchData={fetchData}
-                  orderedProperties={orderedProperties}
-                  selectedValues={selectedValues}
-                  updateData={updateData}
-                  domains={domains}
-                  thirdDropdownValue={thirdDropdownValue}
-                  updateNodeData={updateNodeData}
-                  selectedNodes={selectedNodes}
-                  visData={visData}
-                  fourthDropdownValue={fourthDropdownValue}
-                  updateDatasetNodeData={updateDatasetNodeData}
-                  selectedDatasets={selectedDatasets}
-                  eventTypes={eventTypes}
-                  selectedEventTypes={selectedEventTypes}
-                  updateEventTypeData={updateEventTypeData}
-                  onNodeNavigateStart={handleNodeNavigateStart}
-                />
+                  {/* Show loading bar if background data is loading */}
+                  {loadingBackground && <LinearProgress sx={{ marginBottom: 2 }} />}
+                  <NetworkExplorerView
+                    database={database}
+                    domainType="CATEGORY"
+                    limit={limit}
+                    dropdownNodeLimit={dropdownNodeLimit}
+                    setDropdownNodeLimit={setDropdownNodeLimit}
+                    firstDropdownValue={firstDropdownValue}
+                    fetchData={fetchData}
+                    orderedProperties={orderedProperties}
+                    selectedValues={selectedValues}
+                    updateData={updateData}
+                    domains={domains}
+                    thirdDropdownValue={thirdDropdownValue}
+                    updateNodeData={updateNodeData}
+                    selectedNodes={selectedNodes}
+                    visData={visData}
+                    fourthDropdownValue={fourthDropdownValue}
+                    updateDatasetNodeData={updateDatasetNodeData}
+                    selectedDatasets={selectedDatasets}
+                    eventTypes={eventTypes}
+                    selectedEventTypes={selectedEventTypes}
+                    updateEventTypeData={updateEventTypeData}
+                    onNodeNavigateStart={handleNodeNavigateStart}
+                  />
                 </CustomTabPanel>
               )}
               {hasCategoryMapTab && (
                 <CustomTabPanel value={value} index={"map"}>
-                <div
-                  style={{
-                    position: "relative",
-                    top: "10",
-                    left: "200",
-                    width: "95%",
-                    height: "60vh",
-                  }}
-                >
-                  {mapt.length !== 0 || points.length !== 0 ? (
-                    <MapComponent points={points} mapt={mapt} sources={sources} />
-                  ) : (
-                    <p>No map available for this category.</p>
-                  )}
-                  <Dialog open={open} onClose={handleClose}>
-                    <DialogTitle>Alert</DialogTitle>
-                    <DialogContent>
-                      {badsources && badsources.length > 0 ? (
-                        <ul>
-                          {badsources.map((source, index) => (
-                            <li key={index}>
-                              <strong>Source:</strong> {source.source}
-                              <br />
-                              <strong>Error:</strong> {source.error}
-                            </li>
-                          ))}
-                        </ul>
-                      ) : (
-                        <p>No bad sources</p>
-                      )}
-                    </DialogContent>
-                    <DialogActions>
-                      <Button onClick={handleClose} color="primary">
-                        Close
-                      </Button>
-                    </DialogActions>
-                  </Dialog>
-                </div>
+                  <div
+                    style={{
+                      position: "relative",
+                      top: "10",
+                      left: "200",
+                      width: "95%",
+                      height: "60vh",
+                    }}
+                  >
+                    {mapt.length !== 0 || points.length !== 0 ? (
+                      <MapComponent points={points} mapt={mapt} sources={sources} />
+                    ) : (
+                      <p>No map available for this category.</p>
+                    )}
+                    <Dialog open={open} onClose={handleClose}>
+                      <DialogTitle>Alert</DialogTitle>
+                      <DialogContent>
+                        {badsources && badsources.length > 0 ? (
+                          <ul>
+                            {badsources.map((source, index) => (
+                              <li key={index}>
+                                <strong>Source:</strong> {source.source}
+                                <br />
+                                <strong>Error:</strong> {source.error}
+                              </li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <p>No bad sources</p>
+                        )}
+                      </DialogContent>
+                      <DialogActions>
+                        <Button onClick={handleClose} color="primary">
+                          Close
+                        </Button>
+                      </DialogActions>
+                    </Dialog>
+                  </div>
                 </CustomTabPanel>
               )}
               {hasCategoryTimespanTab && (
                 <CustomTabPanel value={value} index={"timespan"}>
-                {usert ? (<TimespanTable data={usert} />) : (<p> No Timespan available for this category.</p>)}
+                  {usert ? (<TimespanTable data={usert} />) : (<p> No Timespan available for this category.</p>)}
                 </CustomTabPanel>
               )}
               {hasCategoryDatasetsTab && (
                 <CustomTabPanel value={value} index={"datasets"}>
-                <ClickTable usert={usert} />
+                  <ClickTable usert={usert} />
                 </CustomTabPanel>
               )}
               {hasCategoryCategoriesTab && (
                 <CustomTabPanel value={value} index={"categories"}>
-                <CategoriesTable categories={categories} />
+                  <CategoriesTable categories={categories} />
                 </CustomTabPanel>
               )}
             </React.Fragment>
