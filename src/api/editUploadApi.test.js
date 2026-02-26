@@ -1,4 +1,4 @@
-import { uploadInputNodes, updateWaitingUSES } from './editUploadApi';
+import { uploadInputNodes, updateWaitingUSES, getWaitingUSESStatus } from './editUploadApi';
 
 describe('editUploadApi auth headers', () => {
   beforeEach(() => {
@@ -38,5 +38,18 @@ describe('editUploadApi auth headers', () => {
     expect(url).toBe('http://api.test/updateWaitingUSES');
     expect(options.headers.Authorization).toBe('Bearer token-abc');
     expect(JSON.parse(options.body)).toEqual({ database: 'SocioMap', user: '42' });
+  });
+
+  test('getWaitingUSESStatus sends bearer authorization and task id payload', async () => {
+    await getWaitingUSESStatus({
+      cred: 'token-xyz',
+      taskId: 'task-001',
+      user: '42',
+    });
+
+    const [url, options] = global.fetch.mock.calls[0];
+    expect(url).toBe('http://api.test/uploadWaitingUSESStatus');
+    expect(options.headers.Authorization).toBe('Bearer token-xyz');
+    expect(JSON.parse(options.body)).toEqual({ taskId: 'task-001', user: '42' });
   });
 });

@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Box, Button, FormControlLabel, Radio, RadioGroup, Checkbox, Typography, Divider, Select, TextField, MenuItem, InputLabel, FormControl, FormGroup, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TablePagination, Paper, Snackbar, Alert } from '@mui/material';
 import DatasetForm from './DatasetCreate';
 import Tooltip from '@mui/material/Tooltip';
@@ -11,7 +11,7 @@ import * as XLSX from 'xlsx';
 import domainFieldOptions from "./dropdown.json";
 import { parseTabularFile } from '../utils/tabularUpload';
 import SavedCmidInsertPopover from './SavedCmidInsertPopover';
-import { uploadInputNodes, updateWaitingUSES } from '../api/editUploadApi';
+import { uploadInputNodes, getWaitingUSESStatus } from '../api/editUploadApi';
 
 
 const TEMPLATE_FILES = {
@@ -74,8 +74,89 @@ const Edit = ({ database }) => {
   };
 
   const [openSnackbar, setOpenSnackbar] = useState(false);
+  const [waitingUsesOpen, setWaitingUsesOpen] = useState(false);
+  const [waitingUsesNotice, setWaitingUsesNotice] = useState('');
+  const [waitingUsesSeverity, setWaitingUsesSeverity] = useState('info');
+  const waitingUsesPollTimeoutRef = useRef(null);
   const handleClose1 = () => {
     setOpenSnackbar(false); // Close the snackbar after user interaction
+  };
+  const handleWaitingUsesClose = () => {
+    setWaitingUsesOpen(false);
+  };
+
+  const clearWaitingUsesPoll = () => {
+    if (waitingUsesPollTimeoutRef.current) {
+      clearTimeout(waitingUsesPollTimeoutRef.current);
+      waitingUsesPollTimeoutRef.current = null;
+    }
+  };
+
+  const showWaitingUsesNotice = (message, severity = 'info') => {
+    setWaitingUsesNotice(message);
+    setWaitingUsesSeverity(severity);
+    setWaitingUsesOpen(true);
+  };
+
+  const pollWaitingUsesStatus = (taskId, attempt = 0) => {
+    const maxAttempts = 240;
+    const pollDelayMs = 5000;
+
+    clearWaitingUsesPoll();
+    waitingUsesPollTimeoutRef.current = setTimeout(async () => {
+      try {
+        const response = await getWaitingUSESStatus({
+          cred,
+          taskId,
+          user,
+        });
+        const statusPayload = await response.json().catch(() => ({}));
+
+        if (!response.ok) {
+          if (response.status === 404 && attempt < maxAttempts) {
+            pollWaitingUsesStatus(taskId, attempt + 1);
+            return;
+          }
+
+          const errorMessage = statusPayload?.error || 'Unable to read USES update status.';
+          showWaitingUsesNotice(errorMessage, 'error');
+          return;
+        }
+
+        const status = String(statusPayload?.status || '').toLowerCase();
+        if (status === 'completed') {
+          showWaitingUsesNotice(
+            statusPayload?.message || 'USES update completed for this upload.',
+            'success',
+          );
+          return;
+        }
+
+        if (status === 'failed') {
+          showWaitingUsesNotice(
+            statusPayload?.error || 'USES update failed after upload.',
+            'error',
+          );
+          return;
+        }
+
+        if (attempt < maxAttempts) {
+          pollWaitingUsesStatus(taskId, attempt + 1);
+          return;
+        }
+
+        showWaitingUsesNotice(
+          'Upload completed, but USES update is still running. Check again shortly.',
+          'info',
+        );
+      } catch (_error) {
+        if (attempt < maxAttempts) {
+          pollWaitingUsesStatus(taskId, attempt + 1);
+          return;
+        }
+        showWaitingUsesNotice('Unable to confirm USES update completion.', 'error');
+      }
+    }, pollDelayMs);
   };
 
 
@@ -95,6 +176,7 @@ const Edit = ({ database }) => {
   };
 
   const clearUploadState = () => {
+    clearWaitingUsesPoll();
     try {
       sessionStorage.removeItem(editStorageKey);
     } catch (_err) {
@@ -471,6 +553,12 @@ const Edit = ({ database }) => {
     }
   }, [database, showFields, viewUploadedData, nodecount, columns, rows, jsonData, page, rowsPerPage, formData, selectedOption, advselectedOption]);
 
+  useEffect(() => {
+    return () => {
+      clearWaitingUsesPoll();
+    };
+  }, []);
+
   const validateSimpleWorkflow = () => {
     if (selectedOption !== "simple") return true;
 
@@ -609,22 +697,20 @@ const Edit = ({ database }) => {
       if (result.error) {
         setCMIDText(result.error);
         setPopen(true);
-        setLoading(false);
       } else {
         setDownload(orderedData)
         setCMIDText(result.message);
         setPopen(true);
-        setLoading(false);
+        if (result.waitingUsesTask) {
+          showWaitingUsesNotice('Upload completed. Processing USES updates in the background.', 'info');
+          pollWaitingUsesStatus(result.waitingUsesTask);
+        }
       }
-
-      await updateWaitingUSES({
-        cred,
-        database,
-        user,
-      })
-
     } catch (error) {
       console.error('Error submitting form:', error);
+      setError('Error submitting upload request.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -1455,6 +1541,16 @@ const Edit = ({ database }) => {
           <p>{CMIDText}</p>
         </DialogContent>
       </Dialog>
+      <Snackbar
+        open={waitingUsesOpen}
+        autoHideDuration={6000}
+        onClose={handleWaitingUsesClose}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert onClose={handleWaitingUsesClose} severity={waitingUsesSeverity} sx={{ width: '100%' }}>
+          {waitingUsesNotice}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }

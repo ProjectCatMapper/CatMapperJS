@@ -20,3 +20,11 @@ export const updateWaitingUSES = ({ cred, database, user }) => {
     body: JSON.stringify({ database, user }),
   });
 };
+
+export const getWaitingUSESStatus = ({ cred, taskId, user }) => {
+  return fetch(`${getApiBase()}/uploadWaitingUSESStatus`, {
+    method: 'POST',
+    headers: authHeaders(cred),
+    body: JSON.stringify({ taskId, user }),
+  });
+};
