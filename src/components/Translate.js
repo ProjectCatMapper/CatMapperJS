@@ -42,6 +42,24 @@ const getTooltipContent = (nm) => {
 };
 
 const fallbackOptions = ["Name", "Key", "CatMapper ID (CMID)"];
+const EXCEL_CELL_CHAR_LIMIT = 32767;
+
+const sanitizeRowsForExcelExport = (rows, limit = EXCEL_CELL_CHAR_LIMIT) => {
+  let truncatedCells = 0;
+  const sanitizedRows = (Array.isArray(rows) ? rows : []).map((row) => {
+    if (!row || typeof row !== 'object') return row;
+    const nextRow = { ...row };
+    Object.keys(nextRow).forEach((key) => {
+      const value = nextRow[key];
+      if (typeof value !== 'string') return;
+      if (value.length <= limit) return;
+      nextRow[key] = value.slice(0, limit);
+      truncatedCells += 1;
+    });
+    return nextRow;
+  });
+  return { sanitizedRows, truncatedCells };
+};
 
 function TranslateComponent({ database }) {
   const { user, cred } = useAuth();
@@ -216,22 +234,34 @@ function TranslateComponent({ database }) {
   };
 
   const handleClicktwo = () => {
-    const exportRows = stripReviewFields(reviewRows);
-    const worksheet = XLSX.utils.json_to_sheet(exportRows, { header: columns });
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
+    try {
+      const exportRows = stripReviewFields(reviewRows);
+      const { sanitizedRows, truncatedCells } = sanitizeRowsForExcelExport(exportRows);
+      const worksheet = XLSX.utils.json_to_sheet(sanitizedRows, { header: columns });
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
 
-    const excelBuffer = XLSX.write(workbook, {
-      bookType: 'xlsx',
-      type: 'array',
-    });
+      const excelBuffer = XLSX.write(workbook, {
+        bookType: 'xlsx',
+        type: 'array',
+      });
 
-    const blob = new Blob([excelBuffer], { type: 'application/octet-stream' });
+      const blob = new Blob([excelBuffer], { type: 'application/octet-stream' });
 
-    const date = new Date().toISOString().split('T')[0];
-    const customFileName = `${filename}_Matched_${date}.xlsx`;
+      const date = new Date().toISOString().split('T')[0];
+      const customFileName = `${filename}_Matched_${date}.xlsx`;
 
-    saveAs(blob, customFileName);
+      saveAs(blob, customFileName);
+
+      if (truncatedCells > 0) {
+        alert(
+          `Downloaded file with ${truncatedCells} cell value(s) truncated to Excel's 32767-character limit.`
+        );
+      }
+    } catch (err) {
+      console.error('Error exporting translated spreadsheet:', err);
+      setError(err?.message || 'Unable to export translated spreadsheet.');
+    }
   };
 
   const [inputValue, setinputValue] = useState(-4000);
