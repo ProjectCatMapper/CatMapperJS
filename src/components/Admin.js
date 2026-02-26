@@ -12,7 +12,9 @@ import {
   MenuItem,
   InputLabel,
   Dialog,
+  DialogActions,
   DialogContent,
+  DialogTitle,
   ListSubheader,
   FormControlLabel,
   Table,
@@ -46,6 +48,8 @@ const Admin = ({ database }) => {
   const [tableDropdownValues, setTableDropdownValues] = useState({});
   const [datasetID, setDatasetID] = useState('')
   const [insertTargetField, setInsertTargetField] = useState('s1_2');
+  const [mergeConfirmOpen, setMergeConfirmOpen] = useState(false);
+  const [mergePreview, setMergePreview] = useState({ keep: null, discard: null });
 
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
@@ -387,6 +391,61 @@ const Admin = ({ database }) => {
     handleClose();
   };
 
+  const fetchMergeNodeSummary = async (cmid) => {
+    const response = await fetch(
+      `${process.env.REACT_APP_API_URL}/admin/nodeSummary?CMID=${encodeURIComponent(cmid)}&database=${encodeURIComponent(database)}`,
+      {
+        method: "GET",
+        headers: {
+          ...(cred ? { Authorization: `Bearer ${cred}` } : {}),
+        },
+      }
+    );
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.error || "Unable to fetch node summary.");
+    }
+    return data;
+  };
+
+  const handleMergePreview = async () => {
+    try {
+      const keepCmid = (formData.s1_2 || "").trim();
+      const discardCmid = (formData.s1_3 || "").trim();
+
+      if (!keepCmid || !discardCmid) {
+        alert("Both CMIDs are required.");
+        return;
+      }
+      if (keepCmid === discardCmid) {
+        alert("CMIDs to keep and discard cannot be the same.");
+        return;
+      }
+
+      setLoading(true);
+      const [keepSummary, discardSummary] = await Promise.all([
+        fetchMergeNodeSummary(keepCmid),
+        fetchMergeNodeSummary(discardCmid),
+      ]);
+
+      if (keepSummary.primaryDomain !== discardSummary.primaryDomain) {
+        alert(
+          `Primary domain mismatch. ` +
+          `${keepSummary.CMID} (${keepSummary.CMName || "Unknown"}) is ${keepSummary.primaryDomain}, ` +
+          `but ${discardSummary.CMID} (${discardSummary.CMName || "Unknown"}) is ${discardSummary.primaryDomain}.`
+        );
+        return;
+      }
+
+      setMergePreview({ keep: keepSummary, discard: discardSummary });
+      setMergeConfirmOpen(true);
+    } catch (error) {
+      alert(error.message || "Unable to validate merge nodes.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const [add_edit_delete_Nodeprops_Options, setDropdownOptions] = useState([]);
   const [add_edit_delete_usesprops_Options, setDropdown1Options] = useState([]);
   const [add_edit_delete_usesprops_properties, setDropdown2Options] = useState([]);
@@ -533,6 +592,8 @@ const Admin = ({ database }) => {
             sx={{ m: 1, width: 300 }}
             onChange={(event) => {
               setFirstDropdownValue(event.target.value);
+              setMergeConfirmOpen(false);
+              setMergePreview({ keep: null, discard: null });
               setFormData({
                 s1_1: "edit",
                 s1_2: "",
@@ -725,7 +786,7 @@ const Admin = ({ database }) => {
                     backgroundColor: "green",
                   },
                 }}
-                onClick={handleSubmit}
+                onClick={handleMergePreview}
               >
                 Submit{" "}
               </Button>
@@ -1496,6 +1557,31 @@ const Admin = ({ database }) => {
           <CircularProgress />
         </div>
       )}
+
+      <Dialog open={mergeConfirmOpen} onClose={() => setMergeConfirmOpen(false)}>
+        <DialogTitle>Confirm Merge Nodes</DialogTitle>
+        <DialogContent>
+          <Typography sx={{ mb: 2 }}>
+            Please confirm you want to merge these nodes:
+          </Typography>
+          <Typography><strong>Keep:</strong> {mergePreview.keep?.CMID} - {mergePreview.keep?.CMName}</Typography>
+          <Typography><strong>Discard:</strong> {mergePreview.discard?.CMID} - {mergePreview.discard?.CMName}</Typography>
+          <Typography sx={{ mt: 2 }}><strong>Primary domain:</strong> {mergePreview.keep?.primaryDomain}</Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setMergeConfirmOpen(false)}>Cancel</Button>
+          <Button
+            color="success"
+            variant="contained"
+            onClick={() => {
+              setMergeConfirmOpen(false);
+              handleSubmit();
+            }}
+          >
+            Confirm Merge
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       <Modal open={open} onClose={handleClose}>
         <Box sx={{
