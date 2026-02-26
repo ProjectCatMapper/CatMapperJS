@@ -786,7 +786,7 @@ const Admin = ({ database }) => {
                     backgroundColor: "green",
                   },
                 }}
-                onClick={handleMergePreview}
+                onClick={handleSubmit}
               >
                 Submit{" "}
               </Button>
@@ -910,7 +910,7 @@ const Admin = ({ database }) => {
                     backgroundColor: "green",
                   },
                 }}
-                onClick={handleSubmit}
+                onClick={handleMergePreview}
               >
                 Submit{" "}
               </Button>
