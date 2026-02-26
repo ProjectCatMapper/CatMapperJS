@@ -1,23 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Button, CircularProgress, Alert } from '@mui/material';
+import { ensureDatabase } from '../utils/database';
 
 const LogsViewer = () => {
     const { database, cmid } = useParams();
+    const safeDatabase = ensureDatabase(database);
     const [logs, setLogs] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-
-    // Hardcoded based on your route path "/sociomap/..."
-    const DATABASE_NAME = "sociomap";
 
     useEffect(() => {
         const fetchLogs = async () => {
             try {
                 setLoading(true);
-                // 3. Use the dynamic variable in the fetch string
                 const response = await fetch(
-                    `${process.env.REACT_APP_API_URL}/logs/${database}/${cmid}`
+                    `${process.env.REACT_APP_API_URL}/logs/${safeDatabase}/${cmid}`
                 );
 
                 if (!response.ok) {
@@ -47,7 +45,7 @@ const LogsViewer = () => {
         if (cmid) {
             fetchLogs();
         }
-    }, [cmid, database]);
+    }, [cmid, safeDatabase]);
 
     // --- Helper: Format the "Action" text with colors ---
     const renderActionText = (text) => {
@@ -71,7 +69,7 @@ const LogsViewer = () => {
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = `logs_${DATABASE_NAME}_${cmid}_${new Date().toISOString().slice(0, 10)}.json`;
+        a.download = `logs_${safeDatabase}_${cmid}_${new Date().toISOString().slice(0, 10)}.json`;
         document.body.appendChild(a);
         a.click();
         URL.revokeObjectURL(url);
@@ -105,7 +103,7 @@ const LogsViewer = () => {
                 <div>
                     <h2 style={{ margin: 0 }}>System Logs</h2>
                     <div style={{ fontSize: '0.9em', color: '#666', marginTop: 5 }}>
-                        Database: <b>{DATABASE_NAME}</b> | ID: <b>{cmid}</b>
+                        Database: <b>{safeDatabase}</b> | ID: <b>{cmid}</b>
                     </div>
                 </div>
                 <Button variant="contained" onClick={handleDownloadRaw}>
