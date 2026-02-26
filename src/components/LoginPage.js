@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Box from '@mui/material/Box';
 import TextField from '@mui/material/TextField';
@@ -6,6 +6,7 @@ import Button from '@mui/material/Button';
 import Alert from '@mui/material/Alert';
 import { useAuth } from './AuthContext';
 import { ensureDatabase } from '../utils/database';
+import { consumeAuthInvalidNotice, SESSION_EXPIRED_MESSAGE } from '../utils/authSession';
 
 const LoginPage = ({ database }) => {
     const { login } = useAuth();
@@ -16,6 +17,13 @@ const LoginPage = ({ database }) => {
     const [password, setPassword] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
     const [successMessage, setSuccessMessage] = useState('');
+
+    useEffect(() => {
+        const notice = consumeAuthInvalidNotice();
+        if (notice) {
+            setErrorMessage(notice || SESSION_EXPIRED_MESSAGE);
+        }
+    }, []);
 
     const handleLogin = async () => {
         setErrorMessage('');

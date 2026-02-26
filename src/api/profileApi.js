@@ -1,10 +1,5 @@
+import { looksLikeAuthFailure, SESSION_EXPIRED_MESSAGE, signalAuthInvalid } from '../utils/authSession';
 const API_BASE = process.env.REACT_APP_API_URL;
-
-const signalAuthInvalid = () => {
-  if (typeof window !== 'undefined') {
-    window.dispatchEvent(new CustomEvent('catmapper-auth-invalid'));
-  }
-};
 
 const normalizeScalar = (value) => (value == null ? '' : String(value).trim());
 
@@ -38,20 +33,13 @@ const parseError = async (response) => {
     payload = null;
   }
   if (response.status === 401 || response.status === 403) {
-    signalAuthInvalid();
-    throw new Error(payload?.error || 'Authentication failed. Please log in again.');
+    signalAuthInvalid(SESSION_EXPIRED_MESSAGE);
+    throw new Error(SESSION_EXPIRED_MESSAGE);
   }
   const message = payload?.error || payload?.message || `Request failed with status ${response.status}`;
-  const normalized = String(message).toLowerCase();
-  if (
-    normalized.includes('missing credentials') ||
-    (normalized.includes('credential') && normalized.includes('invalid')) ||
-    normalized.includes('credentials do not match') ||
-    normalized.includes('user is not verified') ||
-    (normalized.includes('auth') && normalized.includes('fail'))
-  ) {
-    signalAuthInvalid();
-    throw new Error('Session expired or invalid credentials. Please log in again.');
+  if (looksLikeAuthFailure(message)) {
+    signalAuthInvalid(SESSION_EXPIRED_MESSAGE);
+    throw new Error(SESSION_EXPIRED_MESSAGE);
   }
   throw new Error(message);
 };
@@ -87,8 +75,8 @@ const ensureAuth = ({ userId, cred }) => {
     throw new Error('Missing userId. User must be logged in.');
   }
   if (!cred) {
-    signalAuthInvalid();
-    throw new Error('Missing authentication token. Please log in again.');
+    signalAuthInvalid(SESSION_EXPIRED_MESSAGE);
+    throw new Error(SESSION_EXPIRED_MESSAGE);
   }
 };
 

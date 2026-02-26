@@ -51,8 +51,8 @@ const Admin = ({ database }) => {
   const [mergeConfirmOpen, setMergeConfirmOpen] = useState(false);
   const [mergePreview, setMergePreview] = useState({ keep: null, discard: null });
 
-  const handleOpen = () => setOpen(true);
-  const handleClose = () => setOpen(false);
+  const openAmbiguousTiesModal = () => setOpen(true);
+  const closeAmbiguousTiesModal = () => setOpen(false);
 
   const sections = [
     {
@@ -110,10 +110,10 @@ const Admin = ({ database }) => {
     ])
     .filter(Boolean);
 
-  const handleSubmit = async () => {
+  const submitAdminAction = async () => {
     try {
       if (firstDropdownValue === "move USES tie") {
-        handleClose();
+        closeAmbiguousTiesModal();
       }
       setLoading(true);
       if (firstDropdownValue === "delete node") {
@@ -171,9 +171,9 @@ const Admin = ({ database }) => {
     };
   };
 
-  const handleSubmitTable = async () => {
+  const submitAmbiguousTieResolutions = async () => {
     try {
-      handleClose();
+      closeAmbiguousTiesModal();
       setLoading(true);
 
       const combinedData = tableData.map((row, idx) => {
@@ -222,7 +222,7 @@ const Admin = ({ database }) => {
     };
   };
 
-  const handleAmbiguousTies = async () => {
+  const checkForAmbiguousUsesTies = async () => {
     try {
       setLoading(true);
       setTableData([])
@@ -258,7 +258,7 @@ const Admin = ({ database }) => {
           }));
 
           setnTableData(updatedTableData);
-          handleOpen()
+          openAmbiguousTiesModal()
         }
         else {
           console.log("Ambiguity detected:", result)
@@ -268,7 +268,7 @@ const Admin = ({ database }) => {
             initialDropdowns[idx] = "default"; // default value
           });
           setTableDropdownValues(initialDropdowns);
-          handleOpen();
+          openAmbiguousTiesModal();
         }
       }
 
@@ -280,7 +280,7 @@ const Admin = ({ database }) => {
     };
   };
 
-  const handleCheck = async () => {
+  const loadPendingUsersForApproval = async () => {
     try {
       const response = await fetch(`${process.env.REACT_APP_API_URL}/updateNewUsers`, {
         //const response = await fetch("http://127.0.0.1:5001/updateNewUsers", {
@@ -303,7 +303,7 @@ const Admin = ({ database }) => {
     }
   };
 
-  const handleApprove = async () => {
+  const approveSelectedUsers = async () => {
     try {
       const response = await fetch(`${process.env.REACT_APP_API_URL}/updateNewUsers`, {
         //const response = await fetch("http://127.0.0.1:5001/updateNewUsers", {
@@ -331,7 +331,7 @@ const Admin = ({ database }) => {
 
   const [popen, setPopen] = useState(false);
 
-  const handlePclose = () => {
+  const closeApprovalDialog = () => {
     setPopen(false);
   };
 
@@ -363,23 +363,23 @@ const Admin = ({ database }) => {
     { field: 'intendedUse', headerName: 'Intended Use', width: 200 },
   ];
 
-  const handleSelectionChange = (newSelectionModel) => {
+  const updateSelectedUserIds = (newSelectionModel) => {
     setSelectedUserIds(newSelectionModel);
   };
 
-  const handleRadioChange = (event) => {
+  const updateActionType = (event) => {
     setFormData(prevFormData => ({
       ...prevFormData,
       s1_1: event.target.value
     }));
   };
 
-  const handleDropdownChange = (idx, value) => {
+  const updateAmbiguousTieParentChoice = (idx, value) => {
     setTableDropdownValues((prev) => ({ ...prev, [idx]: value }));
   };
 
   // trims strings immediately for textboxes and leaves objects coming from Select intact, do not change this !!!
-  const handleChange = (e) => {
+  const updateFormFieldValue = (e) => {
     const { name, value } = e.target;
     setFormData(prevFormData => ({
       ...prevFormData,
@@ -387,8 +387,8 @@ const Admin = ({ database }) => {
     }));
   };
 
-  const handleCancel = () => {
-    handleClose();
+  const postponeAmbiguousTieUpdate = () => {
+    closeAmbiguousTiesModal();
   };
 
   const fetchMergeNodeSummary = async (cmid) => {
@@ -408,7 +408,7 @@ const Admin = ({ database }) => {
     return data;
   };
 
-  const handleMergePreview = async () => {
+  const previewMergeNodes = async () => {
     try {
       const keepCmid = (formData.s1_2 || "").trim();
       const discardCmid = (formData.s1_3 || "").trim();
@@ -638,7 +638,7 @@ const Admin = ({ database }) => {
               name="uploadOption"
               sx={{ mb: 2 }}
               value={formData.s1_1}
-              onChange={handleRadioChange}
+              onChange={updateActionType}
             >
               <FormControlLabel value="add" control={<Radio />} label="add" />
               <FormControlLabel value="edit" control={<Radio />} label="edit" />
@@ -654,7 +654,7 @@ const Admin = ({ database }) => {
             <TextField
               name="s1_2"
               value={formData.s1_2}
-              onChange={handleChange}
+              onChange={updateFormFieldValue}
               sx={{ width: 300, height: 22, mt: 0, mb: 5, fontSize: 12 }}
               variant="outlined"
               margin="normal"
@@ -669,7 +669,7 @@ const Admin = ({ database }) => {
                   name="s1_7"
                   sx={{ width: 300, height: 40, mb: 3 }}
                   value={formData.s1_7 || ""}
-                  onChange={handleChange}
+                  onChange={updateFormFieldValue}
                 >
                   {add_edit_delete_usesprops_Options.map(([n, r, d], index) => (
                     <MenuItem key={index} value={index + 1}>
@@ -712,7 +712,7 @@ const Admin = ({ database }) => {
                           name="s1_8"
                           sx={{ width: 300, height: 40, mb: 3 }}
                           value={formData.s1_8 || ""}
-                          onChange={handleChange}
+                          onChange={updateFormFieldValue}
                         >
                           {[...dropdown2Options].filter(option => option.toLowerCase() !== "id").sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
                             .map((option, index) => (
@@ -761,7 +761,7 @@ const Admin = ({ database }) => {
                 <TextField
                   name="s1_3"
                   value={formData.s1_3}
-                  onChange={handleChange}
+                  onChange={updateFormFieldValue}
                   sx={{ width: 300, height: 25, mb: 4, mt: 0 }}
                   variant="outlined"
                   margin="normal"
@@ -786,7 +786,7 @@ const Admin = ({ database }) => {
                     backgroundColor: "green",
                   },
                 }}
-                onClick={handleSubmit}
+                onClick={submitAdminAction}
               >
                 Submit{" "}
               </Button>
@@ -806,7 +806,7 @@ const Admin = ({ database }) => {
               name="uploadOption"
               sx={{ mb: 2 }}
               value={formData.s1_1}
-              onChange={handleRadioChange}
+              onChange={updateActionType}
             >
               <FormControlLabel value="add" control={<Radio />} label="add" disabled={formData.s1_2.startsWith("CP") || formData.s1_2.startsWith("CL")} />
               <FormControlLabel value="edit" control={<Radio />} label="edit" />
@@ -823,7 +823,7 @@ const Admin = ({ database }) => {
             <TextField
               name="s1_2"
               value={formData.s1_2}
-              onChange={handleChange}
+              onChange={updateFormFieldValue}
               sx={{ width: 300, height: 25, mb: 5, padding: "0 0", mt: 0 }}
               variant="outlined"
               size="small"
@@ -841,7 +841,7 @@ const Admin = ({ database }) => {
                     name="s1_7"
                     sx={{ width: 300, height: 25, mb: 3 }}
                     value={formData.s1_7 || ""}
-                    onChange={handleChange}
+                    onChange={updateFormFieldValue}
                   >
                     {add_edit_delete_Nodeprops_Options.map((value, index) => (
                       <MenuItem key={index} value={value}>
@@ -861,7 +861,7 @@ const Admin = ({ database }) => {
                       name="s1_7"
                       sx={{ width: 300, height: 25, mb: 3 }}
                       value={formData.s1_7 || ""}
-                      onChange={handleChange}
+                      onChange={updateFormFieldValue}
                     >
                       {Object.keys(add_edit_delete_Nodeprops_Options).map((key, index) => (
                         <MenuItem key={index} value={key}>
@@ -886,7 +886,7 @@ const Admin = ({ database }) => {
                 <TextField
                   name="s1_3"
                   value={formData.s1_3}
-                  onChange={handleChange}
+                  onChange={updateFormFieldValue}
                   sx={{ width: 300, height: 25, mb: 4, mt: 0 }}
                   variant="outlined"
                   size="small"
@@ -910,7 +910,7 @@ const Admin = ({ database }) => {
                     backgroundColor: "green",
                   },
                 }}
-                onClick={handleMergePreview}
+                onClick={submitAdminAction}
               >
                 Submit{" "}
               </Button>
@@ -927,7 +927,7 @@ const Admin = ({ database }) => {
             <TextField
               name="s1_2"
               value={formData.s1_2}
-              onChange={handleChange}
+              onChange={updateFormFieldValue}
               sx={{ width: 300, height: 40, mb: 3, mt: 0 }}
               variant="outlined"
               margin="normal"
@@ -939,7 +939,7 @@ const Admin = ({ database }) => {
             <TextField
               name="s1_3"
               value={formData.s1_3}
-              onChange={handleChange}
+              onChange={updateFormFieldValue}
               sx={{ width: 300, height: 40, mb: 4, mt: 0 }}
               variant="outlined"
               margin="normal"
@@ -961,7 +961,7 @@ const Admin = ({ database }) => {
                     backgroundColor: "green",
                   },
                 }}
-                onClick={handleSubmit}
+                onClick={previewMergeNodes}
               >
                 Submit{" "}
               </Button>
@@ -978,7 +978,7 @@ const Admin = ({ database }) => {
             <TextField
               name="s1_2"
               value={formData.s1_2}
-              onChange={handleChange}
+              onChange={updateFormFieldValue}
               sx={{ width: 300, height: 40, mb: 3, mt: 0 }}
               variant="outlined"
               margin="normal"
@@ -993,7 +993,7 @@ const Admin = ({ database }) => {
                   name="s1_7"
                   sx={{ width: 300, height: 40, mb: 3 }}
                   value={formData.s1_7 || ""}
-                  onChange={handleChange}
+                  onChange={updateFormFieldValue}
                 >
                   {add_edit_delete_usesprops_Options.map(([n, r, d], index) => (
                     <MenuItem key={index} value={JSON.stringify([n, r, d])}>
@@ -1009,7 +1009,7 @@ const Admin = ({ database }) => {
             <TextField
               name="s1_3"
               value={formData.s1_3}
-              onChange={handleChange}
+              onChange={updateFormFieldValue}
               sx={{ width: 300, height: 40, mb: 4, mt: 0 }}
               variant="outlined"
               margin="normal"
@@ -1031,7 +1031,7 @@ const Admin = ({ database }) => {
                     backgroundColor: "green",
                   },
                 }}
-                onClick={handleAmbiguousTies}
+                onClick={checkForAmbiguousUsesTies}
               >
                 Check for Ambiguous Ties{" "}
               </Button>
@@ -1050,7 +1050,7 @@ const Admin = ({ database }) => {
               name="uploadOption"
               sx={{ mb: 2 }}
               value={formData.s1_1}
-              onChange={handleRadioChange}
+              onChange={updateActionType}
             >
               <FormControlLabel value="TRUE" control={<Radio />} label="TRUE" />
               <FormControlLabel value="FALSE" control={<Radio />} label="FALSE" />
@@ -1061,7 +1061,7 @@ const Admin = ({ database }) => {
             <TextField
               name="s1_2"
               value={formData.s1_2}
-              onChange={handleChange}
+              onChange={updateFormFieldValue}
               sx={{ width: 300, height: 40, mb: 3, mt: 0 }}
               variant="outlined"
               margin="normal"
@@ -1073,7 +1073,7 @@ const Admin = ({ database }) => {
             <TextField
               name="s1_3"
               value={formData.s1_3}
-              onChange={handleChange}
+              onChange={updateFormFieldValue}
               sx={{ width: 300, height: 40, mb: 4, mt: 0 }}
               variant="outlined"
               margin="normal"
@@ -1091,7 +1091,7 @@ const Admin = ({ database }) => {
             <TextField
               name="s1_2"
               value={formData.s1_2}
-              onChange={handleChange}
+              onChange={updateFormFieldValue}
               sx={{ width: 300, height: 40, mb: 3, mt: 0 }}
               variant="outlined"
               margin="normal"
@@ -1113,7 +1113,7 @@ const Admin = ({ database }) => {
                     backgroundColor: "green",
                   },
                 }}
-                onClick={handleSubmit}
+                onClick={submitAdminAction}
               >
                 Submit{" "}
               </Button>
@@ -1130,7 +1130,7 @@ const Admin = ({ database }) => {
             <TextField
               name="s1_2"
               value={formData.s1_2}
-              onChange={handleChange}
+              onChange={updateFormFieldValue}
               sx={{ width: 300, height: 40, mb: 3, mt: 0 }}
               variant="outlined"
               margin="normal"
@@ -1145,7 +1145,7 @@ const Admin = ({ database }) => {
                   name="s1_7"
                   sx={{ width: 300, height: 40, mb: 3 }}
                   value={formData.s1_7 || ""}
-                  onChange={handleChange}
+                  onChange={updateFormFieldValue}
                 >
                   {add_edit_delete_usesprops_Options.map(([n, r, d], index) => (
                     <MenuItem key={index} value={JSON.stringify([n, r, d])}>
@@ -1171,7 +1171,7 @@ const Admin = ({ database }) => {
                     backgroundColor: "green",
                   },
                 }}
-                onClick={handleSubmit}
+                onClick={submitAdminAction}
               >
                 Submit{" "}
               </Button>
@@ -1188,7 +1188,7 @@ const Admin = ({ database }) => {
             <TextField
               name="s1_2"
               value={formData.s1_2}
-              onChange={handleChange}
+              onChange={updateFormFieldValue}
               sx={{ width: 300, height: 40, mb: 3, mt: 0 }}
               variant="outlined"
               margin="normal"
@@ -1201,7 +1201,7 @@ const Admin = ({ database }) => {
               id="domain"
               name="s1_7"
               value={formData.s1_7}
-              onChange={handleChange}
+              onChange={updateFormFieldValue}
               sx={{ width: 300, height: 40, mb: 3 }}
               margin="normal"
             >
@@ -1218,7 +1218,7 @@ const Admin = ({ database }) => {
             <TextField
               name="s1_3"
               value={formData.s1_3}
-              onChange={handleChange}
+              onChange={updateFormFieldValue}
               sx={{ width: 300, height: 40, mb: 3, mt: 0 }}
               variant="outlined"
               margin="normal"
@@ -1230,7 +1230,7 @@ const Admin = ({ database }) => {
             <TextField
               name="s1_4"
               value={formData.s1_4}
-              onChange={handleChange}
+              onChange={updateFormFieldValue}
               sx={{ width: 300, height: 40, mb: 12, mt: 0 }}
               multiline
               rows={4}
@@ -1243,7 +1243,7 @@ const Admin = ({ database }) => {
             <TextField
               name="s1_5"
               value={formData.s1_5}
-              onChange={handleChange}
+              onChange={updateFormFieldValue}
               sx={{ width: 300, height: 40, mb: 3, mt: 0 }}
               variant="outlined"
               margin="normal"
@@ -1255,7 +1255,7 @@ const Admin = ({ database }) => {
             <TextField
               name="s1_6"
               value={formData.s1_6}
-              onChange={handleChange}
+              onChange={updateFormFieldValue}
               sx={{ width: 300, height: 40, mb: 3, mt: 0 }}
               variant="outlined"
               margin="normal"
@@ -1277,7 +1277,7 @@ const Admin = ({ database }) => {
                     backgroundColor: "green",
                   },
                 }}
-                onClick={handleSubmit}
+                onClick={submitAdminAction}
               >
                 Submit{" "}
               </Button>
@@ -1294,7 +1294,7 @@ const Admin = ({ database }) => {
    <TextField
      name="s1_2"
      value={formData.s1_2}
-     onChange={handleChange}
+     onChange={updateFormFieldValue}
      sx={{ width: 300, height: 40, mb : 3 }}
      variant="outlined"
      margin="normal"
@@ -1305,7 +1305,7 @@ const Admin = ({ database }) => {
    <TextField
      name="s1_3"
      value={formData.s1_3}
-     onChange={handleChange}
+     onChange={updateFormFieldValue}
      sx={{ width: 300, height: 40, mb: 4 }}
      variant="outlined"
      margin="normal"
@@ -1321,7 +1321,7 @@ const Admin = ({ database }) => {
             <TextField
               name="s1_2"
               value={formData.s1_2}
-              onChange={handleChange}
+              onChange={updateFormFieldValue}
               sx={{ width: 300, height: 40, mb: 3, mt: 0 }}
               variant="outlined"
               margin="normal"
@@ -1332,7 +1332,7 @@ const Admin = ({ database }) => {
             <TextField
               name="s1_3"
               value={formData.s1_3}
-              onChange={handleChange}
+              onChange={updateFormFieldValue}
               sx={{ width: 300, height: 40, mb: 3, mt: 0 }}
               variant="outlined"
               margin="normal"
@@ -1343,7 +1343,7 @@ const Admin = ({ database }) => {
             <TextField
               name="s1_4"
               value={formData.s1_4}
-              onChange={handleChange}
+              onChange={updateFormFieldValue}
               sx={{ width: 300, height: 40, mb: 3, mt: 0 }}
               variant="outlined"
               margin="normal"
@@ -1353,7 +1353,7 @@ const Admin = ({ database }) => {
             <TextField
               name="s1_5"
               value={formData.s1_5}
-              onChange={handleChange}
+              onChange={updateFormFieldValue}
               sx={{ width: 300, height: 40, mb: 3, mt: 1 }}
               variant="outlined"
               margin="normal"
@@ -1366,7 +1366,7 @@ const Admin = ({ database }) => {
               id="domain"
               name="s1_7"
               value={formData.s1_7}
-              onChange={handleChange}
+              onChange={updateFormFieldValue}
               sx={{ width: 300, height: 40, mb: 3 }}
               margin="normal"
             >
@@ -1378,7 +1378,7 @@ const Admin = ({ database }) => {
             <TextField
               name="s1_6"
               value={formData.s1_6}
-              onChange={handleChange}
+              onChange={updateFormFieldValue}
               sx={{ width: 300, height: 40, mb: 3, mt: 0 }}
               variant="outlined"
               margin="normal"
@@ -1395,7 +1395,7 @@ const Admin = ({ database }) => {
             <TextField
               name="s1_2"
               value={formData.s1_2}
-              onChange={handleChange}
+              onChange={updateFormFieldValue}
               sx={{ width: 300, height: 40, mb: 3 }}
               variant="outlined"
               margin="normal"
@@ -1407,7 +1407,7 @@ const Admin = ({ database }) => {
             <TextField
               name="s1_3"
               value={formData.s1_3}
-              onChange={handleChange}
+              onChange={updateFormFieldValue}
               sx={{ width: 300, height: 40, mb: 4 }}
               variant="outlined"
               margin="normal"
@@ -1426,7 +1426,7 @@ const Admin = ({ database }) => {
               id="domain"
               name="s1_7"
               value={formData.s1_7}
-              onChange={handleChange}
+              onChange={updateFormFieldValue}
               sx={{ width: 300, height: 40 }}
               margin="normal"
             >
@@ -1453,7 +1453,7 @@ const Admin = ({ database }) => {
               id="domain"
               name="s1_7"
               value={formData.s1_7}
-              onChange={handleChange}
+              onChange={updateFormFieldValue}
               sx={{ width: 300, height: 40 }}
               margin="normal"
             >
@@ -1486,7 +1486,7 @@ const Admin = ({ database }) => {
                     backgroundColor: "green",
                   },
                 }}
-                onClick={handleCheck}
+                onClick={loadPendingUsersForApproval}
               >
                 Check for new users{" "}
               </Button>
@@ -1508,7 +1508,7 @@ const Admin = ({ database }) => {
                 rowsPerPageOptions={[5, 10, 20]}
                 checkboxSelection
                 onRowSelectionModelChange={(newSelectionModel) => {
-                  handleSelectionChange(newSelectionModel);
+                  updateSelectedUserIds(newSelectionModel);
                 }}
                 getRowId={(row) => row.userid}
               />
@@ -1532,13 +1532,13 @@ const Admin = ({ database }) => {
                       backgroundColor: "green",
                     },
                   }}
-                  onClick={handleApprove}
+                  onClick={approveSelectedUsers}
                 >
                   Approve users{" "}
                 </Button>
               </Box>
             }
-            <Dialog open={popen} onClose={handlePclose}>
+            <Dialog open={popen} onClose={closeApprovalDialog}>
               <DialogContent>
                 <p>{CMIDText}</p>
               </DialogContent>
@@ -1575,7 +1575,7 @@ const Admin = ({ database }) => {
             variant="contained"
             onClick={() => {
               setMergeConfirmOpen(false);
-              handleSubmit();
+              submitAdminAction();
             }}
           >
             Confirm Merge
@@ -1583,7 +1583,7 @@ const Admin = ({ database }) => {
         </DialogActions>
       </Dialog>
 
-      <Modal open={open} onClose={handleClose}>
+      <Modal open={open} onClose={closeAmbiguousTiesModal}>
         <Box sx={{
           position: "absolute",
           top: "50%",
@@ -1602,10 +1602,10 @@ const Admin = ({ database }) => {
                 There are no ambiguous parents. Press submit to continue moving the USES tie.
               </Typography>
               <Box display="flex" justifyContent="center" gap={2}>
-                <Button variant="contained" color="success" onClick={handleSubmit}>
+                <Button variant="contained" color="success" onClick={submitAdminAction}>
                   Submit
                 </Button>
-                <Button variant="outlined" color="secondary" onClick={handleCancel}>
+                <Button variant="outlined" color="secondary" onClick={postponeAmbiguousTieUpdate}>
                   Wait for later
                 </Button>
               </Box>
@@ -1632,7 +1632,7 @@ const Admin = ({ database }) => {
                         <TableCell>
                           <Select
                             value={tableDropdownValues[idx] || "From"}
-                            onChange={(e) => handleDropdownChange(idx, e.target.value)}
+                            onChange={(e) => updateAmbiguousTieParentChoice(idx, e.target.value)}
                             size="small"
                           >
                             <MenuItem value="From">From</MenuItem>
@@ -1645,10 +1645,10 @@ const Admin = ({ database }) => {
                 </Table>
               </TableContainer>
               <Box display="flex" justifyContent="center" mt={2} gap={2}>
-                <Button variant="contained" color="success" onClick={handleSubmitTable}>
+                <Button variant="contained" color="success" onClick={submitAmbiguousTieResolutions}>
                   Submit
                 </Button>
-                <Button variant="outlined" color="secondary" onClick={handleClose}>
+                <Button variant="outlined" color="secondary" onClick={closeAmbiguousTiesModal}>
                   Cancel
                 </Button>
               </Box>
