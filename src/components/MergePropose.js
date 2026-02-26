@@ -16,7 +16,6 @@ const Propose_Merge = ({ database }) => {
   const [inputValue, setInputValue] = useState('');
   const [open, setOpen] = useState(false);
   const [isValid, setIsValid] = useState(false);
-  const [, setData] = useState();
   const [mergeLevel, setMergeLevel] = useState(1);
   const [firstDropdownValue, setFirstDropdownValue] = useState('ANY DOMAIN');
   const [resultFormat, setResultFormat] = useState("key-to-key");
@@ -29,21 +28,10 @@ const Propose_Merge = ({ database }) => {
   const [advdomainDrop, setadvdomainDrop] = React.useState('ANY DOMAIN');
   const [mergeInputError, setMergeInputError] = useState('');
   const [validatedDatasets, setValidatedDatasets] = useState([]);
-  const [mergeResults, setMergeResults] = useState([]);
   const [mergeWarning, setMergeWarning] = useState('');
   const [mergeError, setMergeError] = useState('');
-  const [hasSubmittedMerge, setHasSubmittedMerge] = useState(false);
 
   const [advoptions, setadvoptions] = React.useState(['ANY DOMAIN']);
-  const resultColumns = React.useMemo(() => {
-    const columns = [];
-    mergeResults.forEach((row) => {
-      Object.keys(row || {}).forEach((key) => {
-        if (!columns.includes(key)) columns.push(key);
-      });
-    });
-    return columns;
-  }, [mergeResults]);
 
   const parseDatasetIds = () =>
     inputValue
@@ -240,8 +228,6 @@ const Propose_Merge = ({ database }) => {
       alert("Please select a category domain to match")
       return;
     }
-    setHasSubmittedMerge(true);
-    setMergeResults([]);
     setMergeWarning('');
     setMergeError('');
     setLoading(true)
@@ -281,8 +267,7 @@ const Propose_Merge = ({ database }) => {
         setMergeError(result?.message || result?.error || 'Unexpected response format.');
         return;
       }
-      setMergeResults(result);
-      setData(result)
+      downloadMerge(result);
       setOpen(true);
     } catch (error) {
       setMergeError('Error submitting form. Please try again.');
@@ -707,70 +692,6 @@ const Propose_Merge = ({ database }) => {
         </Alert>
       )}
 
-      {hasSubmittedMerge && (
-        <Box sx={{ mt: 3, width: "100%", maxWidth: "100%" }}>
-          <Paper
-            elevation={1}
-            sx={{
-              p: 1.5,
-              mb: 1,
-              width: "100%",
-              maxWidth: "100%",
-            }}
-          >
-            <Box
-            sx={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              flexWrap: 'wrap',
-              columnGap: 2,
-              rowGap: 1
-            }}
-          >
-            <Typography variant="h6" style={{ color: 'black', flex: '1 1 auto' }}>
-              Merge Results ({mergeResults.length})
-            </Typography>
-            <Button
-              variant="contained"
-              onClick={() => downloadMerge(mergeResults)}
-              disabled={mergeResults.length === 0}
-              sx={{ flexShrink: 0 }}
-            >
-              Download Results
-            </Button>
-            </Box>
-          </Paper>
-          {mergeResults.length > 0 && (
-            <Box sx={{ width: "100%", maxWidth: "100%", overflowX: "auto", mt: 0.5 }}>
-              <TableContainer component={Paper} variant="outlined" sx={{ width: "max-content", minWidth: "100%", maxHeight: "55vh" }}>
-                <Table size="small" stickyHeader aria-label="merge results table" sx={{ minWidth: "max-content" }}>
-                  <TableHead>
-                    <TableRow>
-                      {resultColumns.map((col) => (
-                        <TableCell key={col} sx={{ fontWeight: 600, whiteSpace: "nowrap" }}>
-                          {col}
-                        </TableCell>
-                      ))}
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {mergeResults.map((row, rowIndex) => (
-                      <TableRow key={`merge-row-${rowIndex}`}>
-                        {resultColumns.map((col) => (
-                          <TableCell key={`${rowIndex}-${col}`} sx={{ whiteSpace: "nowrap" }}>
-                            {Array.isArray(row[col]) ? row[col].join(", ") : String(row[col] ?? "")}
-                          </TableCell>
-                        ))}
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            </Box>
-          )}
-        </Box>
-      )}
     </Box>
   )
 }
