@@ -38,11 +38,24 @@ const nodePayload = [
       },
     },
   },
+  {
+    ArchaMap: {
+      id: 'a1',
+      labels: ['METADATA', 'CERAMIC_TYPE'],
+      properties: {
+        CMID: 'AM100001',
+        CMName: 'Sample Ceramic',
+        color: '#8855cc',
+        description: 'Archa description',
+      },
+    },
+  },
 ];
 
 test.describe('Admin metadata manager', () => {
   test.beforeEach(async ({ page }) => {
     await page.addInitScript(() => {
+      localStorage.setItem('userId', 'playwright-admin');
       localStorage.setItem('authLevel', '2');
       localStorage.setItem('authToken', 'fake-admin-token');
       localStorage.setItem('cookie-consent', 'false');
@@ -109,10 +122,22 @@ test.describe('Admin metadata manager', () => {
 
     await expect(page.getByRole('heading', { name: /Edit Metadata Node/i })).toBeVisible();
 
-    const descriptionInput = page.getByLabel('description');
+    const descriptionInput = page.getByLabel('description').first();
     await descriptionInput.fill('Updated description from test');
     await page.getByRole('button', { name: /Save Changes/i }).click();
 
     await expect(page.getByText(/Updated 1 nodes\./i)).toBeVisible();
+  });
+
+  test('adds a new property and can target both databases', async ({ page }) => {
+    await page.goto(`${BASE_URL}/admin/metadata`, { waitUntil: 'domcontentloaded' });
+    await page.getByRole('button', { name: 'Edit' }).first().click();
+
+    await page.getByLabel('New property name').first().fill('SharedProperty');
+    await page.getByLabel('Add to database').first().click();
+    await page.getByRole('option', { name: 'Both databases' }).click();
+    await page.getByRole('button', { name: 'Add Property' }).first().click();
+
+    await expect(page.getByLabel('SharedProperty')).toHaveCount(2);
   });
 });

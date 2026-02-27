@@ -63,6 +63,8 @@ const DynamicPropertiesForm = () => {
   const [successMessage, setSuccessMessage] = useState(null);
   const [addableProps, setAddableProps] = useState({});
   const [selectedAddProp, setSelectedAddProp] = useState({});
+  const [newAddProp, setNewAddProp] = useState({});
+  const [addPropTarget, setAddPropTarget] = useState({});
 
   const fetchHeaders = useMemo(() => ({
     "Content-Type": "application/json",
@@ -187,6 +189,11 @@ const DynamicPropertiesForm = () => {
     };
   }, [metadataIndex]);
 
+  const hasBothDatabasesInForm = useMemo(() => {
+    const dbSet = new Set(formData.map((item) => item?.database).filter(Boolean));
+    return dbSet.has('SocioMap') && dbSet.has('ArchaMap');
+  }, [formData]);
+
   const handleChange = (itemIndex, key, value) => {
     setFormData((prev) => {
       const updated = [...prev];
@@ -242,31 +249,55 @@ const DynamicPropertiesForm = () => {
   };
 
   const handleAddProperty = (itemIndex) => {
-    const propName = selectedAddProp[itemIndex];
+    const typedPropName = String(newAddProp[itemIndex] || '').trim();
+    const selectedPropName = selectedAddProp[itemIndex];
+    const propName = typedPropName || selectedPropName;
     if (!propName) return;
+
+    const blockedProps = new Set(['cmid', 'id', 'labels', 'database']);
+    if (blockedProps.has(String(propName).toLowerCase())) {
+      setError(`"${propName}" is reserved and cannot be added as a metadata property.`);
+      return;
+    }
+
+    const targetMode = addPropTarget[itemIndex] || 'current';
+    const targetIndexes = targetMode === 'both' && hasBothDatabasesInForm
+      ? formData.map((_item, index) => index)
+      : [itemIndex];
 
     setFormData((prev) => {
       const updated = [...prev];
-      const props = { ...(updated[itemIndex]?.properties || {}) };
-      if (!(propName in props)) {
-        props[propName] = '';
-      }
-      updated[itemIndex] = {
-        ...updated[itemIndex],
-        properties: props,
-      };
+      targetIndexes.forEach((targetIndex) => {
+        const props = { ...(updated[targetIndex]?.properties || {}) };
+        if (!(propName in props)) {
+          props[propName] = '';
+        }
+        updated[targetIndex] = {
+          ...updated[targetIndex],
+          properties: props,
+        };
+      });
       return updated;
     });
 
-    const nextOptions = (addableProps[itemIndex] || []).filter((name) => name !== propName);
-    setAddableProps((prev) => ({
+    const nextAddableProps = { ...addableProps };
+    targetIndexes.forEach((targetIndex) => {
+      nextAddableProps[targetIndex] = (nextAddableProps[targetIndex] || []).filter((name) => name !== propName);
+    });
+    setAddableProps(nextAddableProps);
+    setSelectedAddProp((prev) => {
+      const next = { ...prev };
+      targetIndexes.forEach((targetIndex) => {
+        const nextOptions = nextAddableProps[targetIndex] || [];
+        next[targetIndex] = nextOptions[0] || '';
+      });
+      return next;
+    });
+    setNewAddProp((prev) => ({
       ...prev,
-      [itemIndex]: nextOptions,
+      [itemIndex]: '',
     }));
-    setSelectedAddProp((prev) => ({
-      ...prev,
-      [itemIndex]: nextOptions[0] || '',
-    }));
+    setError(null);
   };
 
   return (
@@ -399,10 +430,38 @@ const DynamicPropertiesForm = () => {
                         </MenuItem>
                       ))}
                     </TextField>
+                    <TextField
+                      size="small"
+                      label="New property name"
+                      value={newAddProp[index] || ''}
+                      onChange={(e) =>
+                        setNewAddProp((prev) => ({
+                          ...prev,
+                          [index]: e.target.value,
+                        }))
+                      }
+                      sx={{ minWidth: 220 }}
+                    />
+                    <TextField
+                      select
+                      size="small"
+                      label="Add to database"
+                      value={addPropTarget[index] || 'current'}
+                      onChange={(e) =>
+                        setAddPropTarget((prev) => ({
+                          ...prev,
+                          [index]: e.target.value,
+                        }))
+                      }
+                      sx={{ minWidth: 200 }}
+                    >
+                      <MenuItem value="current">{item.database}</MenuItem>
+                      <MenuItem value="both" disabled={!hasBothDatabasesInForm}>Both databases</MenuItem>
+                    </TextField>
                     <Button
                       variant="outlined"
                       onClick={() => handleAddProperty(index)}
-                      disabled={!selectedAddProp[index]}
+                      disabled={!String(newAddProp[index] || '').trim() && !selectedAddProp[index]}
                     >
                       Add Property
                     </Button>
