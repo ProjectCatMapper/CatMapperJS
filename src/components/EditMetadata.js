@@ -65,6 +65,17 @@ const DynamicPropertiesForm = () => {
   const [selectedAddProp, setSelectedAddProp] = useState({});
   const [newAddProp, setNewAddProp] = useState({});
   const [addPropTarget, setAddPropTarget] = useState({});
+  const [listReloadKey, setListReloadKey] = useState(0);
+  const [creatingNode, setCreatingNode] = useState(false);
+  const [createNodeData, setCreateNodeData] = useState({
+    CMID: '',
+    CMName: '',
+    groupLabel: '',
+    description: '',
+    color: '#404040',
+    labels: 'LABEL',
+    databaseTarget: 'both',
+  });
 
   const fetchHeaders = useMemo(() => ({
     "Content-Type": "application/json",
@@ -131,7 +142,7 @@ const DynamicPropertiesForm = () => {
     };
 
     load();
-  }, [authLevel, cmid, database, isListView, fetchHeaders]);
+  }, [authLevel, cmid, database, isListView, fetchHeaders, listReloadKey]);
 
   useEffect(() => {
     if (isListView || isReadOnly || formData.length === 0) return;
@@ -300,6 +311,67 @@ const DynamicPropertiesForm = () => {
     setError(null);
   };
 
+  const handleCreateNodeFieldChange = (key, value) => {
+    setCreateNodeData((prev) => ({
+      ...prev,
+      [key]: value,
+    }));
+  };
+
+  const handleCreateNode = async () => {
+    const cmidValue = String(createNodeData.CMID || '').trim();
+    const cmnameValue = String(createNodeData.CMName || '').trim();
+    if (!cmidValue || !cmnameValue) {
+      setError('CMID and CMName are required to create a metadata node.');
+      return;
+    }
+
+    setCreatingNode(true);
+    setError(null);
+    setSuccessMessage(null);
+
+    try {
+      const labels = String(createNodeData.labels || '')
+        .split(',')
+        .map((label) => label.trim())
+        .filter(Boolean);
+
+      const payload = {
+        CMID: cmidValue,
+        CMName: cmnameValue,
+        groupLabel: String(createNodeData.groupLabel || '').trim(),
+        description: String(createNodeData.description || '').trim(),
+        color: String(createNodeData.color || '').trim(),
+        labels,
+        databaseTarget: String(createNodeData.databaseTarget || 'both').trim().toLowerCase(),
+      };
+
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/admin/metadata/create`, {
+        method: 'POST',
+        headers: fetchHeaders,
+        body: JSON.stringify(payload),
+      });
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || `Server error: ${response.status}`);
+      }
+
+      setSuccessMessage(result.message || 'Metadata node created.');
+      setCreateNodeData((prev) => ({
+        ...prev,
+        CMID: '',
+        CMName: '',
+        description: '',
+      }));
+      setListReloadKey((prev) => prev + 1);
+    } catch (err) {
+      setError(err.message || 'Failed to create metadata node.');
+    } finally {
+      setCreatingNode(false);
+    }
+  };
+
   return (
     <div className="metadata-page">
       <Navbar />
@@ -326,6 +398,89 @@ const DynamicPropertiesForm = () => {
                 Grouped by database and subdomain/type
               </Typography>
             </div>
+
+            <Paper elevation={2} sx={{ p: 2, mb: 2 }}>
+              <Typography variant="h6" sx={{ mb: 2 }}>Create Metadata Node</Typography>
+              <Grid container spacing={2}>
+                <Grid item xs={12} sm={6} md={3}>
+                  <TextField
+                    fullWidth
+                    label="Node CMID"
+                    size="small"
+                    value={createNodeData.CMID}
+                    onChange={(e) => handleCreateNodeFieldChange('CMID', e.target.value)}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                  <TextField
+                    fullWidth
+                    label="Node Name"
+                    size="small"
+                    value={createNodeData.CMName}
+                    onChange={(e) => handleCreateNodeFieldChange('CMName', e.target.value)}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                  <TextField
+                    fullWidth
+                    label="Group Label"
+                    size="small"
+                    value={createNodeData.groupLabel}
+                    onChange={(e) => handleCreateNodeFieldChange('groupLabel', e.target.value)}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                  <TextField
+                    fullWidth
+                    label="Color"
+                    size="small"
+                    value={createNodeData.color}
+                    onChange={(e) => handleCreateNodeFieldChange('color', e.target.value)}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6} md={4}>
+                  <TextField
+                    fullWidth
+                    label="Description"
+                    size="small"
+                    value={createNodeData.description}
+                    onChange={(e) => handleCreateNodeFieldChange('description', e.target.value)}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6} md={4}>
+                  <TextField
+                    fullWidth
+                    label="Node Labels (comma separated)"
+                    size="small"
+                    value={createNodeData.labels}
+                    onChange={(e) => handleCreateNodeFieldChange('labels', e.target.value)}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6} md={4}>
+                  <TextField
+                    fullWidth
+                    select
+                    label="Create In Database"
+                    size="small"
+                    value={createNodeData.databaseTarget}
+                    onChange={(e) => handleCreateNodeFieldChange('databaseTarget', e.target.value)}
+                  >
+                    <MenuItem value="both">Both databases</MenuItem>
+                    <MenuItem value="sociomap">SocioMap only</MenuItem>
+                    <MenuItem value="archamap">ArchaMap only</MenuItem>
+                  </TextField>
+                </Grid>
+              </Grid>
+              <Box sx={{ mt: 2 }}>
+                <Button
+                  variant="contained"
+                  onClick={handleCreateNode}
+                  disabled={creatingNode}
+                >
+                  {creatingNode ? 'Creating...' : 'Create Metadata Node'}
+                </Button>
+              </Box>
+            </Paper>
 
             <div className="metadata-grid">
               {["SocioMap", "ArchaMap"].map((dbName) => (

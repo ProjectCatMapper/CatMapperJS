@@ -54,6 +54,8 @@ const nodePayload = [
 
 test.describe('Admin metadata manager', () => {
   test.beforeEach(async ({ page }) => {
+    let createdNode = null;
+
     await page.addInitScript(() => {
       localStorage.setItem('userId', 'playwright-admin');
       localStorage.setItem('authLevel', '2');
@@ -62,10 +64,27 @@ test.describe('Admin metadata manager', () => {
     });
 
     await page.route('**/admin/metadata/nodes', async (route) => {
+      const payload = JSON.parse(JSON.stringify(metadataIndexPayload));
+      if (createdNode) {
+        const node = {
+          id: 'new-node-id',
+          CMID: createdNode.CMID,
+          CMName: createdNode.CMName,
+          groupLabel: createdNode.groupLabel || 'UNMAPPED',
+          color: createdNode.color || '#404040',
+          labels: createdNode.labels || ['METADATA'],
+        };
+        if (createdNode.databaseTarget === 'both' || createdNode.databaseTarget === 'sociomap') {
+          payload.SocioMap.push(node);
+        }
+        if (createdNode.databaseTarget === 'both' || createdNode.databaseTarget === 'archamap') {
+          payload.ArchaMap.push(node);
+        }
+      }
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
-        body: JSON.stringify(metadataIndexPayload),
+        body: JSON.stringify(payload),
       });
     });
 
@@ -95,6 +114,29 @@ test.describe('Admin metadata manager', () => {
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify({ message: 'Updated 1 nodes.', updatedCount: 1 }),
+      });
+    });
+
+    await page.route('**/admin/metadata/create', async (route) => {
+      const payload = route.request().postDataJSON();
+      const hasRequired = payload?.CMID && payload?.CMName;
+      if (!hasRequired) {
+        await route.fulfill({
+          status: 400,
+          contentType: 'application/json',
+          body: JSON.stringify({ error: 'CMID and CMName required' }),
+        });
+        return;
+      }
+
+      createdNode = payload;
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          message: `Created metadata node ${payload.CMID} in SocioMap, ArchaMap.`,
+          createdIn: ['SocioMap', 'ArchaMap'],
+        }),
       });
     });
   });
@@ -139,5 +181,21 @@ test.describe('Admin metadata manager', () => {
     await page.getByRole('button', { name: 'Add Property' }).first().click();
 
     await expect(page.getByLabel('SharedProperty')).toHaveCount(2);
+  });
+
+  test('creates a new metadata node from the metadata list page', async ({ page }) => {
+    await page.goto(`${BASE_URL}/admin/metadata`, { waitUntil: 'domcontentloaded' });
+
+    await page.getByLabel('Node CMID').fill('CL888888');
+    await page.getByLabel('Node Name').fill('Playwright New Label');
+    await page.getByLabel('Group Label').fill('FAMILY');
+    await page.getByLabel('Description').fill('Created from test');
+    await page.getByLabel('Node Labels (comma separated)').fill('LABEL');
+    await page.getByLabel('Create In Database').click();
+    await page.getByRole('option', { name: 'Both databases' }).click();
+    await page.getByRole('button', { name: 'Create Metadata Node' }).click();
+
+    await expect(page.getByText(/Created metadata node CL888888/i)).toBeVisible();
+    await expect(page.getByRole('cell', { name: 'CL888888' }).first()).toBeVisible();
   });
 });
