@@ -19,13 +19,17 @@ import './EditMetadata.css';
 
 const isHexColor = (value) => /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(String(value || '').trim());
 
-const getMetadataNodeType = (labels = []) => {
+const getMetadataNodeType = (labels = [], cmid = '') => {
   const upper = (Array.isArray(labels) ? labels : [])
     .map((label) => String(label || '').trim().toUpperCase())
     .filter(Boolean);
   if (upper.includes('LABEL')) return 'LABEL';
   if (upper.includes('PROPERTY')) return 'PROPERTY';
   if (upper.includes('TRANSLATION')) return 'TRANSLATION';
+  const upperCmid = String(cmid || '').trim().toUpperCase();
+  if (upperCmid.startsWith('CL')) return 'LABEL';
+  if (upperCmid.startsWith('CP')) return 'PROPERTY';
+  if (upperCmid.startsWith('CT')) return 'TRANSLATION';
   return 'OTHER';
 };
 
@@ -35,9 +39,9 @@ const normalizeNodeItem = (databaseName, item) => {
   const labels = Array.isArray(item.labels)
     ? item.labels
     : (Array.isArray(props.labels) ? props.labels : []);
-  const nodeType = getMetadataNodeType(labels);
-  const groupLabel = item.groupLabel || props.groupLabel || props.groupDomain || 'UNMAPPED';
   const cmid = item.CMID || item.cmid || props.CMID || props.cmid || '';
+  const nodeType = getMetadataNodeType(labels, cmid);
+  const groupLabel = item.groupLabel || props.groupLabel || props.groupDomain || 'UNMAPPED';
   const cmname = item.CMName || item.cmname || props.CMName || props.Name || props.name || '';
   const color = item.color || props.color || props.hexColor || null;
   if (!cmid && !cmname) return null;
