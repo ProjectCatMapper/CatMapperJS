@@ -19,12 +19,14 @@ import './EditMetadata.css';
 
 const isHexColor = (value) => /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(String(value || '').trim());
 
-const getMetadataDomainLabel = (labels = []) => {
-  const cleanLabels = (Array.isArray(labels) ? labels : [])
-    .map((label) => String(label || '').trim())
-    .filter(Boolean)
-    .filter((label) => label.toUpperCase() !== 'METADATA');
-  return cleanLabels[0] || '';
+const getMetadataNodeType = (labels = []) => {
+  const upper = (Array.isArray(labels) ? labels : [])
+    .map((label) => String(label || '').trim().toUpperCase())
+    .filter(Boolean);
+  if (upper.includes('LABEL')) return 'LABEL';
+  if (upper.includes('PROPERTY')) return 'PROPERTY';
+  if (upper.includes('TRANSLATION')) return 'TRANSLATION';
+  return 'OTHER';
 };
 
 const normalizeNodeItem = (databaseName, item) => {
@@ -33,8 +35,8 @@ const normalizeNodeItem = (databaseName, item) => {
   const labels = Array.isArray(item.labels)
     ? item.labels
     : (Array.isArray(props.labels) ? props.labels : []);
-  const domainLabel = getMetadataDomainLabel(labels);
-  const group = domainLabel || item.groupLabel || props.groupLabel || props.groupDomain || 'UNMAPPED';
+  const nodeType = getMetadataNodeType(labels);
+  const groupLabel = item.groupLabel || props.groupLabel || props.groupDomain || 'UNMAPPED';
   const cmid = item.CMID || item.cmid || props.CMID || props.cmid || '';
   const cmname = item.CMName || item.cmname || props.CMName || props.Name || props.name || '';
   const color = item.color || props.color || props.hexColor || null;
@@ -45,7 +47,8 @@ const normalizeNodeItem = (databaseName, item) => {
     CMID: cmid,
     CMName: cmname,
     color,
-    group,
+    nodeType,
+    groupLabel,
     labels,
   };
 };
@@ -243,16 +246,58 @@ const DynamicPropertiesForm = () => {
   }, [isListView, authLevel, createNodeData.nodeLabel, createNodeData.databaseTarget, fetchHeaders]);
 
   const groupedIndex = useMemo(() => {
-    const groupBySubdomain = (rows = []) => rows.reduce((acc, row) => {
-      const key = row.group || 'UNMAPPED';
-      if (!acc[key]) acc[key] = [];
-      acc[key].push(row);
-      return acc;
-    }, {});
+    const sortByName = (rows = []) => [...rows].sort((a, b) => {
+      const nameA = String(a?.CMName || '').toLowerCase();
+      const nameB = String(b?.CMName || '').toLowerCase();
+      if (nameA < nameB) return -1;
+      if (nameA > nameB) return 1;
+      return String(a?.CMID || '').localeCompare(String(b?.CMID || ''));
+    });
+
+    const mergedByCmid = new Map();
+    const allRows = [...(metadataIndex.SocioMap || []), ...(metadataIndex.ArchaMap || [])];
+    allRows.forEach((row, index) => {
+      const key = row?.CMID || `${row?.database || 'unknown'}:${row?.id || row?.CMName || `row-${index}`}`;
+      const existing = mergedByCmid.get(key);
+      if (!existing) {
+        mergedByCmid.set(key, {
+          ...row,
+          databases: [row.database],
+        });
+        return;
+      }
+
+      const nextDatabases = new Set([...(existing.databases || []), row.database]);
+      mergedByCmid.set(key, {
+        ...existing,
+        CMName: existing.CMName || row.CMName,
+        color: existing.color || row.color,
+        nodeType: existing.nodeType !== 'OTHER' ? existing.nodeType : row.nodeType,
+        groupLabel: existing.groupLabel !== 'UNMAPPED' ? existing.groupLabel : row.groupLabel,
+        labels: Array.from(new Set([...(existing.labels || []), ...(row.labels || [])])),
+        databases: Array.from(nextDatabases),
+      });
+    });
+
+    const mergedRows = sortByName(Array.from(mergedByCmid.values()));
+
+    const labelByDomain = mergedRows
+      .filter((row) => row.nodeType === 'LABEL')
+      .reduce((acc, row) => {
+        const key = row.groupLabel || 'UNMAPPED';
+        if (!acc[key]) acc[key] = [];
+        acc[key].push(row);
+        return acc;
+      }, {});
+
+    Object.keys(labelByDomain).forEach((domain) => {
+      labelByDomain[domain] = sortByName(labelByDomain[domain]);
+    });
 
     return {
-      SocioMap: groupBySubdomain(metadataIndex.SocioMap || []),
-      ArchaMap: groupBySubdomain(metadataIndex.ArchaMap || []),
+      LABEL: labelByDomain,
+      PROPERTY: sortByName(mergedRows.filter((row) => row.nodeType === 'PROPERTY')),
+      TRANSLATION: sortByName(mergedRows.filter((row) => row.nodeType === 'TRANSLATION')),
     };
   }, [metadataIndex]);
 
@@ -465,7 +510,7 @@ const DynamicPropertiesForm = () => {
             <div className="metadata-toolbar">
               <Typography variant="h4">Metadata Nodes (Admin)</Typography>
               <Typography variant="body2" color="text.secondary">
-                Grouped by database and metadata domain label
+                Combined across databases, grouped by metadata node label
               </Typography>
             </div>
 
@@ -561,62 +606,190 @@ const DynamicPropertiesForm = () => {
             </Paper>
 
             <div className="metadata-grid">
-              {["SocioMap", "ArchaMap"].map((dbName) => (
-                <Paper key={dbName} elevation={2} sx={{ p: 2 }}>
-                  <Typography variant="h5" sx={{ mb: 1 }}>{dbName}</Typography>
-                  <Divider sx={{ mb: 2 }} />
+              <Paper elevation={2} sx={{ p: 2 }}>
+                <Typography variant="h5" sx={{ mb: 1 }}>LABEL</Typography>
+                <Divider sx={{ mb: 2 }} />
 
-                  {Object.keys(groupedIndex[dbName] || {}).length === 0 && (
-                    <Typography variant="body2" color="text.secondary">No metadata nodes found.</Typography>
-                  )}
+                {Object.keys(groupedIndex.LABEL || {}).length === 0 && (
+                  <Typography variant="body2" color="text.secondary">No LABEL metadata nodes found.</Typography>
+                )}
 
-                  {Object.entries(groupedIndex[dbName] || {}).map(([groupName, rows]) => (
-                    <Box key={`${dbName}-${groupName}`} sx={{ mb: 2 }}>
-                      <Typography className="metadata-section-title" variant="h6">{groupName}</Typography>
-                      <div className="metadata-table-wrap">
-                        <table className="metadata-table">
-                          <thead>
-                            <tr>
-                              <th>CMID</th>
-                              <th>Name</th>
-                              <th>Color</th>
-                              <th>Actions</th>
+                {Object.entries(groupedIndex.LABEL || {}).map(([groupName, rows]) => (
+                  <Box key={`LABEL-${groupName}`} sx={{ mb: 2 }}>
+                    <Typography className="metadata-section-title" variant="h6">{groupName}</Typography>
+                    <div className="metadata-table-wrap">
+                      <table className="metadata-table">
+                        <thead>
+                          <tr>
+                            <th>CMID</th>
+                            <th>Name</th>
+                            <th>Color</th>
+                            <th>Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {rows.map((row) => (
+                            <tr key={`LABEL-${row.CMID || row.id}`}>
+                              <td>{row.CMID || '-'}</td>
+                              <td>{row.CMName || '-'}</td>
+                              <td>
+                                {isHexColor(row.color) ? (
+                                  <span className="metadata-color-chip">
+                                    <span className="metadata-color-swatch" style={{ backgroundColor: row.color }} />
+                                    {row.color}
+                                  </span>
+                                ) : (
+                                  row.color || "-"
+                                )}
+                              </td>
+                              <td>
+                                <Stack direction="row" spacing={1}>
+                                  <Button
+                                    size="small"
+                                    variant="outlined"
+                                    disabled={!row.CMID}
+                                    onClick={() => handleOpenNode(row.databases?.[0] || 'SocioMap', row.CMID, 'view')}
+                                  >
+                                    View
+                                  </Button>
+                                  <Button
+                                    size="small"
+                                    variant="contained"
+                                    disabled={!row.CMID}
+                                    onClick={() => handleOpenNode(row.databases?.[0] || 'SocioMap', row.CMID, 'edit')}
+                                  >
+                                    Edit
+                                  </Button>
+                                </Stack>
+                              </td>
                             </tr>
-                          </thead>
-                          <tbody>
-                            {rows.map((row) => (
-                              <tr key={`${dbName}-${row.id}`}>
-                                <td>{row.CMID || '-'}</td>
-                                <td>{row.CMName || '-'}</td>
-                                <td>
-                                  {isHexColor(row.color) ? (
-                                    <span className="metadata-color-chip">
-                                      <span className="metadata-color-swatch" style={{ backgroundColor: row.color }} />
-                                      {row.color}
-                                    </span>
-                                  ) : (
-                                    row.color || "-"
-                                  )}
-                                </td>
-                                <td>
-                                  <Stack direction="row" spacing={1}>
-                                    <Button size="small" variant="outlined" disabled={!row.CMID} onClick={() => handleOpenNode(dbName, row.CMID, 'view')}>
-                                      View
-                                    </Button>
-                                    <Button size="small" variant="contained" disabled={!row.CMID} onClick={() => handleOpenNode(dbName, row.CMID, 'edit')}>
-                                      Edit
-                                    </Button>
-                                  </Stack>
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    </Box>
-                  ))}
-                </Paper>
-              ))}
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </Box>
+                ))}
+              </Paper>
+
+              <Paper elevation={2} sx={{ p: 2 }}>
+                <Typography variant="h5" sx={{ mb: 1 }}>PROPERTY</Typography>
+                <Divider sx={{ mb: 2 }} />
+                {groupedIndex.PROPERTY.length === 0 && (
+                  <Typography variant="body2" color="text.secondary">No PROPERTY metadata nodes found.</Typography>
+                )}
+                {groupedIndex.PROPERTY.length > 0 && (
+                  <div className="metadata-table-wrap">
+                    <table className="metadata-table">
+                      <thead>
+                        <tr>
+                          <th>CMID</th>
+                          <th>Name</th>
+                          <th>Color</th>
+                          <th>Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {groupedIndex.PROPERTY.map((row) => (
+                          <tr key={`PROPERTY-${row.CMID || row.id}`}>
+                            <td>{row.CMID || '-'}</td>
+                            <td>{row.CMName || '-'}</td>
+                            <td>
+                              {isHexColor(row.color) ? (
+                                <span className="metadata-color-chip">
+                                  <span className="metadata-color-swatch" style={{ backgroundColor: row.color }} />
+                                  {row.color}
+                                </span>
+                              ) : (
+                                row.color || "-"
+                              )}
+                            </td>
+                            <td>
+                              <Stack direction="row" spacing={1}>
+                                <Button
+                                  size="small"
+                                  variant="outlined"
+                                  disabled={!row.CMID}
+                                  onClick={() => handleOpenNode(row.databases?.[0] || 'SocioMap', row.CMID, 'view')}
+                                >
+                                  View
+                                </Button>
+                                <Button
+                                  size="small"
+                                  variant="contained"
+                                  disabled={!row.CMID}
+                                  onClick={() => handleOpenNode(row.databases?.[0] || 'SocioMap', row.CMID, 'edit')}
+                                >
+                                  Edit
+                                </Button>
+                              </Stack>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </Paper>
+
+              <Paper elevation={2} sx={{ p: 2 }}>
+                <Typography variant="h5" sx={{ mb: 1 }}>TRANSLATION</Typography>
+                <Divider sx={{ mb: 2 }} />
+                {groupedIndex.TRANSLATION.length === 0 && (
+                  <Typography variant="body2" color="text.secondary">No TRANSLATION metadata nodes found.</Typography>
+                )}
+                {groupedIndex.TRANSLATION.length > 0 && (
+                  <div className="metadata-table-wrap">
+                    <table className="metadata-table">
+                      <thead>
+                        <tr>
+                          <th>CMID</th>
+                          <th>Name</th>
+                          <th>Color</th>
+                          <th>Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {groupedIndex.TRANSLATION.map((row) => (
+                          <tr key={`TRANSLATION-${row.CMID || row.id}`}>
+                            <td>{row.CMID || '-'}</td>
+                            <td>{row.CMName || '-'}</td>
+                            <td>
+                              {isHexColor(row.color) ? (
+                                <span className="metadata-color-chip">
+                                  <span className="metadata-color-swatch" style={{ backgroundColor: row.color }} />
+                                  {row.color}
+                                </span>
+                              ) : (
+                                row.color || "-"
+                              )}
+                            </td>
+                            <td>
+                              <Stack direction="row" spacing={1}>
+                                <Button
+                                  size="small"
+                                  variant="outlined"
+                                  disabled={!row.CMID}
+                                  onClick={() => handleOpenNode(row.databases?.[0] || 'SocioMap', row.CMID, 'view')}
+                                >
+                                  View
+                                </Button>
+                                <Button
+                                  size="small"
+                                  variant="contained"
+                                  disabled={!row.CMID}
+                                  onClick={() => handleOpenNode(row.databases?.[0] || 'SocioMap', row.CMID, 'edit')}
+                                >
+                                  Edit
+                                </Button>
+                              </Stack>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </Paper>
             </div>
           </>
         )}

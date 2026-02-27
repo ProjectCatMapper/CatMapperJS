@@ -178,10 +178,9 @@ test.describe('Admin metadata manager', () => {
     await page.goto(`${BASE_URL}/admin/metadata`, { waitUntil: 'domcontentloaded' });
 
     await expect(page.getByRole('heading', { name: /Metadata Nodes \(Admin\)/i })).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'SocioMap' })).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'ArchaMap' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'LABEL' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'PROPERTY' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'TRANSLATION' })).toBeVisible();
     await expect(page.getByRole('cell', { name: '#22aa44' })).toBeVisible();
 
     const row = page.locator('tr', { hasText: 'SM241131' });
