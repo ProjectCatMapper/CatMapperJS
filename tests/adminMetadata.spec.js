@@ -10,7 +10,7 @@ const metadataIndexPayload = {
       CMName: 'Sample Family',
       groupLabel: 'FAMILY',
       color: '#22aa44',
-      labels: ['FAMILY', 'METADATA'],
+      labels: ['LABEL', 'METADATA'],
     },
   ],
   ArchaMap: [
@@ -20,7 +20,7 @@ const metadataIndexPayload = {
       CMName: 'Sample Ceramic',
       groupLabel: 'CERAMIC_TYPE',
       color: '#8855cc',
-      labels: ['CERAMIC_TYPE', 'METADATA'],
+      labels: ['PROPERTY', 'METADATA'],
     },
   ],
 };
@@ -55,6 +55,11 @@ const nodePayload = [
 test.describe('Admin metadata manager', () => {
   test.beforeEach(async ({ page }) => {
     let createdNode = null;
+    const nextByPrefix = {
+      CP: 800000,
+      CL: 800000,
+      CT: 800000,
+    };
 
     await page.addInitScript(() => {
       localStorage.setItem('userId', 'playwright-admin');
@@ -72,7 +77,7 @@ test.describe('Admin metadata manager', () => {
           CMName: createdNode.CMName,
           groupLabel: createdNode.groupLabel || 'UNMAPPED',
           color: createdNode.color || '#404040',
-          labels: createdNode.labels || ['METADATA'],
+          labels: [String(createdNode.nodeLabel || 'LABEL').toUpperCase(), 'METADATA'],
         };
         if (createdNode.databaseTarget === 'both' || createdNode.databaseTarget === 'sociomap') {
           payload.SocioMap.push(node);
@@ -119,22 +124,29 @@ test.describe('Admin metadata manager', () => {
 
     await page.route('**/admin/metadata/create', async (route) => {
       const payload = route.request().postDataJSON();
-      const hasRequired = payload?.CMID && payload?.CMName;
+      const hasRequired = payload?.CMName && payload?.nodeLabel;
       if (!hasRequired) {
         await route.fulfill({
           status: 400,
           contentType: 'application/json',
-          body: JSON.stringify({ error: 'CMID and CMName required' }),
+          body: JSON.stringify({ error: 'CMName and nodeLabel required' }),
         });
         return;
       }
 
-      createdNode = payload;
+      const upperNodeLabel = String(payload.nodeLabel).toUpperCase();
+      const prefixMap = { PROPERTY: 'CP', LABEL: 'CL', TRANSLATION: 'CT' };
+      const prefix = prefixMap[upperNodeLabel];
+      nextByPrefix[prefix] += 1;
+      const generatedCMID = `${prefix}${nextByPrefix[prefix]}`;
+
+      createdNode = { ...payload, CMID: generatedCMID };
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify({
-          message: `Created metadata node ${payload.CMID} in SocioMap, ArchaMap.`,
+          message: `Created metadata node ${generatedCMID} in SocioMap, ArchaMap.`,
+          generatedCMID,
           createdIn: ['SocioMap', 'ArchaMap'],
         }),
       });
@@ -147,8 +159,8 @@ test.describe('Admin metadata manager', () => {
     await expect(page.getByRole('heading', { name: /Metadata Nodes \(Admin\)/i })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'SocioMap' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'ArchaMap' })).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'FAMILY' })).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'CERAMIC_TYPE' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'LABEL' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'PROPERTY' })).toBeVisible();
     await expect(page.getByRole('cell', { name: '#22aa44' })).toBeVisible();
 
     const row = page.locator('tr', { hasText: 'SM241131' });
@@ -186,16 +198,16 @@ test.describe('Admin metadata manager', () => {
   test('creates a new metadata node from the metadata list page', async ({ page }) => {
     await page.goto(`${BASE_URL}/admin/metadata`, { waitUntil: 'domcontentloaded' });
 
-    await page.getByLabel('Node CMID').fill('CL888888');
     await page.getByLabel('Node Name').fill('Playwright New Label');
+    await page.getByLabel('Node Label').click();
+    await page.getByRole('option', { name: 'LABEL' }).click();
     await page.getByLabel('Group Label').fill('FAMILY');
     await page.getByLabel('Description').fill('Created from test');
-    await page.getByLabel('Node Labels (comma separated)').fill('LABEL');
     await page.getByLabel('Create In Database').click();
     await page.getByRole('option', { name: 'Both databases' }).click();
     await page.getByRole('button', { name: 'Create Metadata Node' }).click();
 
-    await expect(page.getByText(/Created metadata node CL888888/i)).toBeVisible();
-    await expect(page.getByRole('cell', { name: 'CL888888' }).first()).toBeVisible();
+    await expect(page.getByText(/Created metadata node CL800001/i)).toBeVisible();
+    await expect(page.getByRole('cell', { name: 'CL800001' }).first()).toBeVisible();
   });
 });

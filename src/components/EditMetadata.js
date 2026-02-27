@@ -19,13 +19,22 @@ import './EditMetadata.css';
 
 const isHexColor = (value) => /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(String(value || '').trim());
 
+const getMetadataDomainLabel = (labels = []) => {
+  const cleanLabels = (Array.isArray(labels) ? labels : [])
+    .map((label) => String(label || '').trim())
+    .filter(Boolean)
+    .filter((label) => label.toUpperCase() !== 'METADATA');
+  return cleanLabels[0] || '';
+};
+
 const normalizeNodeItem = (databaseName, item) => {
   if (!item || typeof item !== 'object') return null;
   const props = (item.props && typeof item.props === 'object') ? item.props : {};
   const labels = Array.isArray(item.labels)
     ? item.labels
     : (Array.isArray(props.labels) ? props.labels : []);
-  const group = item.groupLabel || props.groupLabel || props.groupDomain || labels[0] || 'UNMAPPED';
+  const domainLabel = getMetadataDomainLabel(labels);
+  const group = domainLabel || item.groupLabel || props.groupLabel || props.groupDomain || 'UNMAPPED';
   const cmid = item.CMID || item.cmid || props.CMID || props.cmid || '';
   const cmname = item.CMName || item.cmname || props.CMName || props.Name || props.name || '';
   const color = item.color || props.color || props.hexColor || null;
@@ -68,12 +77,11 @@ const DynamicPropertiesForm = () => {
   const [listReloadKey, setListReloadKey] = useState(0);
   const [creatingNode, setCreatingNode] = useState(false);
   const [createNodeData, setCreateNodeData] = useState({
-    CMID: '',
     CMName: '',
+    nodeLabel: 'PROPERTY',
     groupLabel: '',
     description: '',
     color: '#404040',
-    labels: 'LABEL',
     databaseTarget: 'both',
   });
 
@@ -319,10 +327,9 @@ const DynamicPropertiesForm = () => {
   };
 
   const handleCreateNode = async () => {
-    const cmidValue = String(createNodeData.CMID || '').trim();
     const cmnameValue = String(createNodeData.CMName || '').trim();
-    if (!cmidValue || !cmnameValue) {
-      setError('CMID and CMName are required to create a metadata node.');
+    if (!cmnameValue) {
+      setError('CMName is required to create a metadata node.');
       return;
     }
 
@@ -331,18 +338,12 @@ const DynamicPropertiesForm = () => {
     setSuccessMessage(null);
 
     try {
-      const labels = String(createNodeData.labels || '')
-        .split(',')
-        .map((label) => label.trim())
-        .filter(Boolean);
-
       const payload = {
-        CMID: cmidValue,
         CMName: cmnameValue,
+        nodeLabel: String(createNodeData.nodeLabel || 'PROPERTY').trim().toUpperCase(),
         groupLabel: String(createNodeData.groupLabel || '').trim(),
         description: String(createNodeData.description || '').trim(),
         color: String(createNodeData.color || '').trim(),
-        labels,
         databaseTarget: String(createNodeData.databaseTarget || 'both').trim().toLowerCase(),
       };
 
@@ -360,7 +361,6 @@ const DynamicPropertiesForm = () => {
       setSuccessMessage(result.message || 'Metadata node created.');
       setCreateNodeData((prev) => ({
         ...prev,
-        CMID: '',
         CMName: '',
         description: '',
       }));
@@ -395,7 +395,7 @@ const DynamicPropertiesForm = () => {
             <div className="metadata-toolbar">
               <Typography variant="h4">Metadata Nodes (Admin)</Typography>
               <Typography variant="body2" color="text.secondary">
-                Grouped by database and subdomain/type
+                Grouped by database and metadata domain label
               </Typography>
             </div>
 
@@ -405,20 +405,25 @@ const DynamicPropertiesForm = () => {
                 <Grid item xs={12} sm={6} md={3}>
                   <TextField
                     fullWidth
-                    label="Node CMID"
-                    size="small"
-                    value={createNodeData.CMID}
-                    onChange={(e) => handleCreateNodeFieldChange('CMID', e.target.value)}
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6} md={3}>
-                  <TextField
-                    fullWidth
                     label="Node Name"
                     size="small"
                     value={createNodeData.CMName}
                     onChange={(e) => handleCreateNodeFieldChange('CMName', e.target.value)}
                   />
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                  <TextField
+                    fullWidth
+                    select
+                    label="Node Label"
+                    size="small"
+                    value={createNodeData.nodeLabel}
+                    onChange={(e) => handleCreateNodeFieldChange('nodeLabel', e.target.value)}
+                  >
+                    <MenuItem value="PROPERTY">PROPERTY</MenuItem>
+                    <MenuItem value="LABEL">LABEL</MenuItem>
+                    <MenuItem value="TRANSLATION">TRANSLATION</MenuItem>
+                  </TextField>
                 </Grid>
                 <Grid item xs={12} sm={6} md={3}>
                   <TextField
@@ -445,15 +450,6 @@ const DynamicPropertiesForm = () => {
                     size="small"
                     value={createNodeData.description}
                     onChange={(e) => handleCreateNodeFieldChange('description', e.target.value)}
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6} md={4}>
-                  <TextField
-                    fullWidth
-                    label="Node Labels (comma separated)"
-                    size="small"
-                    value={createNodeData.labels}
-                    onChange={(e) => handleCreateNodeFieldChange('labels', e.target.value)}
                   />
                 </Grid>
                 <Grid item xs={12} sm={6} md={4}>
