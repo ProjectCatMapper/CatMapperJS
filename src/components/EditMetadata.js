@@ -76,13 +76,13 @@ const DynamicPropertiesForm = () => {
   const [addPropTarget, setAddPropTarget] = useState({});
   const [listReloadKey, setListReloadKey] = useState(0);
   const [creatingNode, setCreatingNode] = useState(false);
+  const [createPropOptions, setCreatePropOptions] = useState([]);
+  const [selectedCreateProp, setSelectedCreateProp] = useState('');
   const [createNodeData, setCreateNodeData] = useState({
     CMName: '',
     nodeLabel: 'PROPERTY',
-    groupLabel: '',
-    description: '',
-    color: '#404040',
     databaseTarget: 'both',
+    properties: {},
   });
 
   const fetchHeaders = useMemo(() => ({
@@ -193,6 +193,54 @@ const DynamicPropertiesForm = () => {
 
     loadAddableProps();
   }, [cmid, formData, isListView, isReadOnly, fetchHeaders]);
+
+  useEffect(() => {
+    if (!isListView || authLevel !== 2) return;
+
+    const loadCreatePropOptions = async () => {
+      try {
+        const nodeLabel = String(createNodeData.nodeLabel || 'PROPERTY').trim().toUpperCase();
+        const target = String(createNodeData.databaseTarget || 'both').trim().toLowerCase();
+        const query = new URLSearchParams({ databaseTarget: target });
+        const response = await fetch(
+          `${process.env.REACT_APP_API_URL}/admin/metadata/properties/${nodeLabel}?${query.toString()}`,
+          { headers: fetchHeaders },
+        );
+        const result = await response.json();
+        if (!response.ok) {
+          throw new Error(result.error || `Server error: ${response.status}`);
+        }
+
+        const options = Array.isArray(result?.properties)
+          ? result.properties
+            .map((prop) => String(prop || '').trim())
+            .filter(Boolean)
+            .filter((prop) => !['CMID', 'CMName'].includes(prop))
+          : [];
+
+        setCreatePropOptions(options);
+        setSelectedCreateProp((prev) => (options.includes(prev) ? prev : (options[0] || '')));
+        setCreateNodeData((prev) => {
+          const kept = {};
+          Object.entries(prev.properties || {}).forEach(([key, value]) => {
+            if (options.includes(key)) {
+              kept[key] = value;
+            }
+          });
+          return {
+            ...prev,
+            properties: kept,
+          };
+        });
+      } catch (err) {
+        setCreatePropOptions([]);
+        setSelectedCreateProp('');
+        setError(err.message || 'Failed to load metadata property options.');
+      }
+    };
+
+    loadCreatePropOptions();
+  }, [isListView, authLevel, createNodeData.nodeLabel, createNodeData.databaseTarget, fetchHeaders]);
 
   const groupedIndex = useMemo(() => {
     const groupBySubdomain = (rows = []) => rows.reduce((acc, row) => {
@@ -326,6 +374,30 @@ const DynamicPropertiesForm = () => {
     }));
   };
 
+  const handleCreateNodePropertyChange = (key, value) => {
+    setCreateNodeData((prev) => ({
+      ...prev,
+      properties: {
+        ...(prev.properties || {}),
+        [key]: value,
+      },
+    }));
+  };
+
+  const handleAddCreatePropertyField = () => {
+    if (!selectedCreateProp) return;
+    setCreateNodeData((prev) => {
+      const nextProps = { ...(prev.properties || {}) };
+      if (!(selectedCreateProp in nextProps)) {
+        nextProps[selectedCreateProp] = '';
+      }
+      return {
+        ...prev,
+        properties: nextProps,
+      };
+    });
+  };
+
   const handleCreateNode = async () => {
     const cmnameValue = String(createNodeData.CMName || '').trim();
     if (!cmnameValue) {
@@ -341,10 +413,8 @@ const DynamicPropertiesForm = () => {
       const payload = {
         CMName: cmnameValue,
         nodeLabel: String(createNodeData.nodeLabel || 'PROPERTY').trim().toUpperCase(),
-        groupLabel: String(createNodeData.groupLabel || '').trim(),
-        description: String(createNodeData.description || '').trim(),
-        color: String(createNodeData.color || '').trim(),
         databaseTarget: String(createNodeData.databaseTarget || 'both').trim().toLowerCase(),
+        properties: { ...(createNodeData.properties || {}) },
       };
 
       const response = await fetch(`${process.env.REACT_APP_API_URL}/admin/metadata/create`, {
@@ -362,7 +432,7 @@ const DynamicPropertiesForm = () => {
       setCreateNodeData((prev) => ({
         ...prev,
         CMName: '',
-        description: '',
+        properties: {},
       }));
       setListReloadKey((prev) => prev + 1);
     } catch (err) {
@@ -428,33 +498,6 @@ const DynamicPropertiesForm = () => {
                 <Grid item xs={12} sm={6} md={3}>
                   <TextField
                     fullWidth
-                    label="Group Label"
-                    size="small"
-                    value={createNodeData.groupLabel}
-                    onChange={(e) => handleCreateNodeFieldChange('groupLabel', e.target.value)}
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6} md={3}>
-                  <TextField
-                    fullWidth
-                    label="Color"
-                    size="small"
-                    value={createNodeData.color}
-                    onChange={(e) => handleCreateNodeFieldChange('color', e.target.value)}
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6} md={4}>
-                  <TextField
-                    fullWidth
-                    label="Description"
-                    size="small"
-                    value={createNodeData.description}
-                    onChange={(e) => handleCreateNodeFieldChange('description', e.target.value)}
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6} md={4}>
-                  <TextField
-                    fullWidth
                     select
                     label="Create In Database"
                     size="small"
@@ -466,6 +509,45 @@ const DynamicPropertiesForm = () => {
                     <MenuItem value="archamap">ArchaMap only</MenuItem>
                   </TextField>
                 </Grid>
+                <Grid item xs={12} sm={6} md={4}>
+                  <TextField
+                    fullWidth
+                    select
+                    label="Add Property Field"
+                    size="small"
+                    value={selectedCreateProp}
+                    onChange={(e) => setSelectedCreateProp(e.target.value)}
+                  >
+                    {createPropOptions.map((prop) => (
+                      <MenuItem key={prop} value={prop}>
+                        {prop}
+                      </MenuItem>
+                    ))}
+                  </TextField>
+                </Grid>
+                <Grid item xs={12} sm={6} md={4}>
+                  <Button
+                    variant="outlined"
+                    onClick={handleAddCreatePropertyField}
+                    disabled={!selectedCreateProp}
+                    sx={{ height: '40px' }}
+                  >
+                    Add Selected Property
+                  </Button>
+                </Grid>
+              </Grid>
+              <Grid container spacing={2} sx={{ mt: 0.5 }}>
+                {Object.entries(createNodeData.properties || {}).map(([key, value]) => (
+                  <Grid item xs={12} sm={6} md={4} key={`create-prop-${key}`}>
+                    <TextField
+                      fullWidth
+                      label={key}
+                      size="small"
+                      value={value ?? ''}
+                      onChange={(e) => handleCreateNodePropertyChange(key, e.target.value)}
+                    />
+                  </Grid>
+                ))}
               </Grid>
               <Box sx={{ mt: 2 }}>
                 <Button

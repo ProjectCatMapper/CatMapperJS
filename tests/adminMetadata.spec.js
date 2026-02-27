@@ -75,8 +75,8 @@ test.describe('Admin metadata manager', () => {
           id: 'new-node-id',
           CMID: createdNode.CMID,
           CMName: createdNode.CMName,
-          groupLabel: createdNode.groupLabel || 'UNMAPPED',
-          color: createdNode.color || '#404040',
+          groupLabel: createdNode.properties?.groupLabel || 'UNMAPPED',
+          color: createdNode.properties?.color || '#404040',
           labels: [String(createdNode.nodeLabel || 'LABEL').toUpperCase(), 'METADATA'],
         };
         if (createdNode.databaseTarget === 'both' || createdNode.databaseTarget === 'sociomap') {
@@ -119,6 +119,27 @@ test.describe('Admin metadata manager', () => {
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify({ message: 'Updated 1 nodes.', updatedCount: 1 }),
+      });
+    });
+
+    await page.route('**/admin/metadata/properties/**', async (route) => {
+      const url = route.request().url();
+      const upper = url.toUpperCase();
+
+      let properties = ['CMID', 'CMName', 'groupLabel', 'description', 'color'];
+      if (upper.includes('/LABEL')) {
+        properties = ['CMID', 'CMName', 'groupLabel', 'description', 'color', 'displayName'];
+      } else if (upper.includes('/TRANSLATION')) {
+        properties = ['CMID', 'CMName', 'groupLabel', 'description', 'language', 'source'];
+      }
+
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          nodeLabel: upper.includes('/TRANSLATION') ? 'TRANSLATION' : (upper.includes('/LABEL') ? 'LABEL' : 'PROPERTY'),
+          properties,
+        }),
       });
     });
 
@@ -201,8 +222,10 @@ test.describe('Admin metadata manager', () => {
     await page.getByLabel('Node Name').fill('Playwright New Label');
     await page.getByLabel('Node Label').click();
     await page.getByRole('option', { name: 'LABEL' }).click();
-    await page.getByLabel('Group Label').fill('FAMILY');
-    await page.getByLabel('Description').fill('Created from test');
+    await page.getByLabel('Add Property Field').click();
+    await page.getByRole('option', { name: 'groupLabel' }).click();
+    await page.getByRole('button', { name: 'Add Selected Property' }).click();
+    await page.getByRole('textbox', { name: 'groupLabel' }).fill('FAMILY');
     await page.getByLabel('Create In Database').click();
     await page.getByRole('option', { name: 'Both databases' }).click();
     await page.getByRole('button', { name: 'Create Metadata Node' }).click();
