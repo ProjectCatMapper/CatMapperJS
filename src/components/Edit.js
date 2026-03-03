@@ -1167,6 +1167,11 @@ const Edit = ({ database }) => {
     window.URL.revokeObjectURL(url);
   };
 
+  const uploadTaskStatus = String(uploadTaskState?.status || '').toLowerCase();
+  const uploadStatusModalOpen =
+    loading && (uploadTaskStatus === '' || uploadTaskStatus === 'queued' || uploadTaskStatus === 'running');
+  const uploadPercent = Math.max(0, Math.min(100, Number(uploadTaskState?.progress?.percent ?? 0)));
+
   return (
     <Box sx={{ p: 4 }}>
       <Box sx={{ mb: 3 }} style={{ marginBottom: "50px" }}>
@@ -1656,19 +1661,25 @@ const Edit = ({ database }) => {
       <Button variant="outlined" sx={{ ml: "1vw" }} onClick={clearUploadState}>
         CLEAR UPLOAD
       </Button>
-      {loading && (
-        <Paper elevation={3} sx={{ mt: 2, p: 2, width: '100%', maxWidth: '850px' }}>
-          <Typography sx={{ mb: 1, fontWeight: 600 }}>
-            Upload In Progress
-          </Typography>
+      <Dialog
+        open={uploadStatusModalOpen}
+        maxWidth="md"
+        fullWidth
+        aria-labelledby="upload-progress-dialog-title"
+      >
+        <DialogTitle id="upload-progress-dialog-title">Upload In Progress</DialogTitle>
+        <DialogContent>
           <Typography variant="body2" sx={{ mb: 1 }}>
             Batch {uploadTaskState?.progress?.completedBatches ?? 0} of {uploadTaskState?.progress?.totalBatches ?? 0}
           </Typography>
           <LinearProgress
             variant="determinate"
-            value={Math.max(0, Math.min(100, Number(uploadTaskState?.progress?.percent ?? 0)))}
+            value={uploadPercent}
             sx={{ mb: 1.5 }}
           />
+          <Typography variant="caption" sx={{ display: 'block', mb: 1.5 }}>
+            {uploadPercent}% complete
+          </Typography>
           <Button
             variant="outlined"
             color="error"
@@ -1682,7 +1693,7 @@ const Edit = ({ database }) => {
             sx={{
               mt: 1,
               p: 1.25,
-              maxHeight: 220,
+              maxHeight: 260,
               overflowY: 'auto',
               border: '1px solid #ccc',
               backgroundColor: '#fafafa',
@@ -1693,8 +1704,8 @@ const Edit = ({ database }) => {
           >
             {uploadLogLines.length > 0 ? uploadLogLines.join('\n') : 'Waiting for upload logs...'}
           </Box>
-        </Paper>
-      )}
+        </DialogContent>
+      </Dialog>
 
       <Button variant="contained" disabled={!download} sx={{
         backgroundColor: 'black',
