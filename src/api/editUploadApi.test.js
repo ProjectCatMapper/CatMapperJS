@@ -1,4 +1,10 @@
-import { uploadInputNodes, updateWaitingUSES, getWaitingUSESStatus } from './editUploadApi';
+import {
+  uploadInputNodes,
+  updateWaitingUSES,
+  getWaitingUSESStatus,
+  getUploadInputNodesStatus,
+  cancelUploadInputNodes,
+} from './editUploadApi';
 
 describe('editUploadApi auth headers', () => {
   beforeEach(() => {
@@ -51,5 +57,33 @@ describe('editUploadApi auth headers', () => {
     expect(url).toBe('http://api.test/uploadWaitingUSESStatus');
     expect(options.headers.Authorization).toBe('Bearer token-xyz');
     expect(JSON.parse(options.body)).toEqual({ taskId: 'task-001', user: '42' });
+  });
+
+  test('getUploadInputNodesStatus sends bearer authorization and cursor payload', async () => {
+    await getUploadInputNodesStatus({
+      cred: 'token-upload',
+      taskId: 'upload-001',
+      user: '42',
+      cursor: 12,
+    });
+
+    const [url, options] = global.fetch.mock.calls[0];
+    expect(url).toBe('http://api.test/uploadInputNodesStatus');
+    expect(options.headers.Authorization).toBe('Bearer token-upload');
+    expect(JSON.parse(options.body)).toEqual({ taskId: 'upload-001', user: '42', cursor: 12 });
+  });
+
+  test('cancelUploadInputNodes sends bearer authorization and task id payload', async () => {
+    await cancelUploadInputNodes({
+      cred: 'token-upload',
+      taskId: 'upload-002',
+      user: '42',
+      cursor: 3,
+    });
+
+    const [url, options] = global.fetch.mock.calls[0];
+    expect(url).toBe('http://api.test/uploadInputNodesCancel');
+    expect(options.headers.Authorization).toBe('Bearer token-upload');
+    expect(JSON.parse(options.body)).toEqual({ taskId: 'upload-002', user: '42', cursor: 3 });
   });
 });

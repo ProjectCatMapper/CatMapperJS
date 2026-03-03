@@ -28,3 +28,19 @@ export const getWaitingUSESStatus = ({ cred, taskId, user }) => {
     body: JSON.stringify({ taskId, user }),
   });
 };
+
+export const getUploadInputNodesStatus = ({ cred, taskId, user, cursor = 0 }) => {
+  return fetch(`${getApiBase()}/uploadInputNodesStatus`, {
+    method: 'POST',
+    headers: authHeaders(cred),
+    body: JSON.stringify({ taskId, user, cursor }),
+  });
+};
+
+export const cancelUploadInputNodes = ({ cred, taskId, user, cursor = 0 }) => {
+  return fetch(`${getApiBase()}/uploadInputNodesCancel`, {
+    method: 'POST',
+    headers: authHeaders(cred),
+    body: JSON.stringify({ taskId, user, cursor }),
+  });
+};

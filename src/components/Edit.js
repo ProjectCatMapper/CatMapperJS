@@ -1,17 +1,21 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { useState, useEffect, useRef } from 'react'
-import { Box, Button, FormControlLabel, Radio, RadioGroup, Checkbox, Typography, Divider, Select, TextField, MenuItem, InputLabel, FormControl, FormGroup, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TablePagination, Paper, Snackbar, Alert } from '@mui/material';
+import { Box, Button, FormControlLabel, Radio, RadioGroup, Checkbox, Typography, Divider, Select, TextField, MenuItem, InputLabel, FormControl, FormGroup, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TablePagination, Paper, Snackbar, Alert, LinearProgress } from '@mui/material';
 import DatasetForm from './DatasetCreate';
 import Tooltip from '@mui/material/Tooltip';
 import InfoIcon from '@mui/icons-material/Info';
 import { useAuth } from './AuthContext';
-import { CircularProgress } from '@mui/material';
 import { Dialog, DialogContent, DialogActions, DialogContentText, DialogTitle } from '@mui/material';
 import * as XLSX from 'xlsx';
 import domainFieldOptions from "./dropdown.json";
 import { parseTabularFile } from '../utils/tabularUpload';
 import SavedCmidInsertPopover from './SavedCmidInsertPopover';
-import { uploadInputNodes, getWaitingUSESStatus } from '../api/editUploadApi';
+import {
+  uploadInputNodes,
+  getWaitingUSESStatus,
+  getUploadInputNodesStatus,
+  cancelUploadInputNodes,
+} from '../api/editUploadApi';
 
 
 const TEMPLATE_FILES = {
@@ -78,6 +82,12 @@ const Edit = ({ database }) => {
   const [waitingUsesNotice, setWaitingUsesNotice] = useState('');
   const [waitingUsesSeverity, setWaitingUsesSeverity] = useState('info');
   const waitingUsesPollTimeoutRef = useRef(null);
+  const uploadPollTimeoutRef = useRef(null);
+  const [uploadTaskState, setUploadTaskState] = useState(null);
+  const [uploadTaskId, setUploadTaskId] = useState('');
+  const [uploadLogLines, setUploadLogLines] = useState([]);
+  const [uploadCursor, setUploadCursor] = useState(0);
+  const [cancelUploadPending, setCancelUploadPending] = useState(false);
   const handleClose1 = () => {
     setOpenSnackbar(false); // Close the snackbar after user interaction
   };
@@ -92,10 +102,138 @@ const Edit = ({ database }) => {
     }
   };
 
+  const clearUploadPoll = () => {
+    if (uploadPollTimeoutRef.current) {
+      clearTimeout(uploadPollTimeoutRef.current);
+      uploadPollTimeoutRef.current = null;
+    }
+  };
+
   const showWaitingUsesNotice = (message, severity = 'info') => {
     setWaitingUsesNotice(message);
     setWaitingUsesSeverity(severity);
     setWaitingUsesOpen(true);
+  };
+
+  const appendUploadLogs = (events = []) => {
+    if (!Array.isArray(events) || events.length === 0) return;
+    setUploadLogLines((previous) => {
+      const next = [...previous, ...events];
+      return next.slice(-1000);
+    });
+  };
+
+  const normalizeUploadResponseRows = (payload) => {
+    if (!Array.isArray(payload?.file)) return null;
+    if (!Array.isArray(payload?.order) || payload.order.length === 0) {
+      return payload.file;
+    }
+
+    return payload.file.map((row) => {
+      const orderedRow = {};
+      payload.order.forEach((columnName) => {
+        if (columnName in row) {
+          orderedRow[columnName] = row[columnName];
+        }
+      });
+      return orderedRow;
+    });
+  };
+
+  const pollUploadTaskStatus = (taskId, cursor = 0) => {
+    const pollDelayMs = 1500;
+    clearUploadPoll();
+
+    uploadPollTimeoutRef.current = setTimeout(async () => {
+      try {
+        const response = await getUploadInputNodesStatus({
+          cred,
+          taskId,
+          user,
+          cursor,
+        });
+        const payload = await response.json().catch(() => ({}));
+
+        if (!response.ok) {
+          setLoading(false);
+          const message = payload?.error || 'Unable to read upload status.';
+          setError(message);
+          return;
+        }
+
+        const events = Array.isArray(payload?.events) ? payload.events : [];
+        appendUploadLogs(events);
+        const nextCursor = Number.isInteger(payload?.nextCursor)
+          ? payload.nextCursor
+          : cursor + events.length;
+        setUploadCursor(nextCursor);
+        setUploadTaskState(payload);
+
+        const status = String(payload?.status || '').toLowerCase();
+        if (status === 'queued' || status === 'running') {
+          pollUploadTaskStatus(taskId, nextCursor);
+          return;
+        }
+
+        setLoading(false);
+        clearUploadPoll();
+
+        if (status === 'completed') {
+          const orderedData = normalizeUploadResponseRows(payload);
+          if (orderedData) {
+            setDownload(orderedData);
+          }
+          setCMIDText(payload?.message || 'Upload completed.');
+          setPopen(true);
+          if (payload?.waitingUsesTask) {
+            showWaitingUsesNotice('Upload completed. Processing USES updates in the background.', 'info');
+            pollWaitingUsesStatus(payload.waitingUsesTask);
+          }
+          return;
+        }
+
+        if (status === 'canceled') {
+          setCMIDText(payload?.message || 'Upload canceled.');
+          setPopen(true);
+          return;
+        }
+
+        setError(payload?.error || 'Upload failed.');
+      } catch (_error) {
+        setLoading(false);
+        setError('Unable to read upload status.');
+      }
+    }, pollDelayMs);
+  };
+
+  const handleCancelUpload = async () => {
+    if (!uploadTaskId || cancelUploadPending) return;
+
+    setCancelUploadPending(true);
+    try {
+      const response = await cancelUploadInputNodes({
+        cred,
+        taskId: uploadTaskId,
+        user,
+        cursor: uploadCursor,
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        setError(payload?.error || 'Unable to cancel upload.');
+        return;
+      }
+
+      const events = Array.isArray(payload?.events) ? payload.events : [];
+      appendUploadLogs(events);
+      if (Number.isInteger(payload?.nextCursor)) {
+        setUploadCursor(payload.nextCursor);
+      }
+      setUploadTaskState(payload);
+    } catch (_error) {
+      setError('Unable to cancel upload.');
+    } finally {
+      setCancelUploadPending(false);
+    }
   };
 
   const pollWaitingUsesStatus = (taskId, attempt = 0) => {
@@ -177,6 +315,7 @@ const Edit = ({ database }) => {
 
   const clearUploadState = () => {
     clearWaitingUsesPoll();
+    clearUploadPoll();
     try {
       sessionStorage.removeItem(editStorageKey);
     } catch (_err) {
@@ -207,6 +346,12 @@ const Edit = ({ database }) => {
     setMissingCol(0);
     setMergingType("0");
     setCMIDText('The new dataset CMID is pending.');
+    setLoading(false);
+    setCancelUploadPending(false);
+    setUploadTaskState(null);
+    setUploadTaskId('');
+    setUploadLogLines([]);
+    setUploadCursor(0);
 
     const fileInput = document.getElementById('fileInput');
     if (fileInput) fileInput.value = '';
@@ -556,6 +701,7 @@ const Edit = ({ database }) => {
   useEffect(() => {
     return () => {
       clearWaitingUsesPoll();
+      clearUploadPoll();
     };
   }, []);
 
@@ -626,6 +772,16 @@ const Edit = ({ database }) => {
 
   const continueWithSubmit = async () => {
     setLoading(true);
+    setError('');
+    setDownload(null);
+    clearWaitingUsesPoll();
+    clearUploadPoll();
+    setCancelUploadPending(false);
+    setUploadTaskState(null);
+    setUploadTaskId('');
+    setUploadLogLines([]);
+    setUploadCursor(0);
+
     try {
 
       const columnsToUse = advselectedOption === 'update_replace' || advselectedOption === 'node_replace' ? [selectedExtraColumn] : selectedExtraColumns;
@@ -678,38 +834,26 @@ const Edit = ({ database }) => {
         },
       });
 
-      const result = await response.json();
+      const result = await response.json().catch(() => ({}));
 
-      let orderedData = result.file;
-
-      if (Array.isArray(result.order) && result.order.length > 0) {
-        orderedData = result.file.map(row => {
-          const orderedRow = {};
-          result.order.forEach(col => {
-            if (col in row) {
-              orderedRow[col] = row[col];
-            }
-          });
-          return orderedRow;
-        });
+      if (!response.ok) {
+        setLoading(false);
+        setError(result?.error || 'Error submitting upload request.');
+        return;
       }
 
-      if (result.error) {
-        setCMIDText(result.error);
-        setPopen(true);
-      } else {
-        setDownload(orderedData)
-        setCMIDText(result.message);
-        setPopen(true);
-        if (result.waitingUsesTask) {
-          showWaitingUsesNotice('Upload completed. Processing USES updates in the background.', 'info');
-          pollWaitingUsesStatus(result.waitingUsesTask);
-        }
+      if (result?.taskId) {
+        setUploadTaskId(result.taskId);
+        setUploadTaskState(result);
+        pollUploadTaskStatus(result.taskId, 0);
+        return;
       }
+
+      setLoading(false);
+      setError('Upload task did not start.');
     } catch (error) {
       console.error('Error submitting form:', error);
       setError('Error submitting upload request.');
-    } finally {
       setLoading(false);
     }
   };
@@ -1506,22 +1650,50 @@ const Edit = ({ database }) => {
         '&:hover': {
           backgroundColor: 'green',
         },
-      }} onClick={handleSubmit}>
+      }} onClick={handleSubmit} disabled={loading}>
         UPLOAD
       </Button>
       <Button variant="outlined" sx={{ ml: "1vw" }} onClick={clearUploadState}>
         CLEAR UPLOAD
       </Button>
       {loading && (
-        <div style={{
-          position: "fixed",
-          top: "50%",
-          left: "50%",
-          transform: "translate(-50%, -50%)",
-          zIndex: 1300,
-        }}>
-          <CircularProgress />
-        </div>
+        <Paper elevation={3} sx={{ mt: 2, p: 2, width: '100%', maxWidth: '850px' }}>
+          <Typography sx={{ mb: 1, fontWeight: 600 }}>
+            Upload In Progress
+          </Typography>
+          <Typography variant="body2" sx={{ mb: 1 }}>
+            Batch {uploadTaskState?.progress?.completedBatches ?? 0} of {uploadTaskState?.progress?.totalBatches ?? 0}
+          </Typography>
+          <LinearProgress
+            variant="determinate"
+            value={Math.max(0, Math.min(100, Number(uploadTaskState?.progress?.percent ?? 0)))}
+            sx={{ mb: 1.5 }}
+          />
+          <Button
+            variant="outlined"
+            color="error"
+            onClick={handleCancelUpload}
+            disabled={cancelUploadPending || !uploadTaskId}
+            sx={{ mb: 1.5 }}
+          >
+            {cancelUploadPending ? 'Canceling...' : 'Cancel Upload'}
+          </Button>
+          <Box
+            sx={{
+              mt: 1,
+              p: 1.25,
+              maxHeight: 220,
+              overflowY: 'auto',
+              border: '1px solid #ccc',
+              backgroundColor: '#fafafa',
+              fontFamily: 'monospace',
+              fontSize: '0.8rem',
+              whiteSpace: 'pre-wrap',
+            }}
+          >
+            {uploadLogLines.length > 0 ? uploadLogLines.join('\n') : 'Waiting for upload logs...'}
+          </Box>
+        </Paper>
       )}
 
       <Button variant="contained" disabled={!download} sx={{
