@@ -2,11 +2,14 @@ import { useEffect, useState } from "react";
 import {
   Box,
   Button,
+  Collapse,
+  List,
+  ListItemButton,
+  ListItemText,
   Radio,
   Modal,
   RadioGroup,
   Typography,
-  Divider,
   Select,
   TextField,
   MenuItem,
@@ -15,7 +18,6 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  ListSubheader,
   FormControlLabel,
   Table,
   TableBody,
@@ -31,6 +33,43 @@ import CircularProgress from "@mui/material/CircularProgress";
 import FooterLinks from "./FooterLinks";
 import CardContent from '@mui/material/CardContent';
 import SavedCmidInsertPopover from './SavedCmidInsertPopover';
+
+const INITIAL_FORM_STATE = {
+  s1_1: "edit",
+  s1_2: "",
+  s1_3: "",
+  s1_4: "",
+  s1_5: "",
+  s1_6: "",
+  s1_7: "",
+  s1_8: ""
+};
+
+const ROUTINE_OPTIONS = [
+  { key: "is_valid_json", label: "is_valid_json" },
+  { key: "validateJSON", label: "validateJSON" },
+  { key: "checkDomains", label: "checkDomains" },
+  { key: "backup2CSV", label: "backup2CSV" },
+  { key: "getBadCMID", label: "getBadCMID" },
+  { key: "getMultipleLabels", label: "getMultipleLabels" },
+  { key: "getBadComplexProperties", label: "getBadComplexProperties" },
+  { key: "getBadDomains", label: "getBadDomains" },
+  { key: "getBadRelations", label: "getBadRelations" },
+  { key: "CMNameNotInName", label: "CMNameNotInName" },
+  { key: "fixMetaTypes", label: "fixMetaTypes" },
+  { key: "noUSES", label: "noUSES" },
+  { key: "checkUSES", label: "checkUSES" },
+  { key: "reportChanges", label: "reportChanges" },
+  { key: "missingCMName", label: "missingCMName" },
+  { key: "getBadContextual", label: "getBadContextual" },
+  { key: "get_duplicate_empty_USES", label: "get_duplicate_empty_USES" },
+  { key: "get_empty_nodeprops", label: "get_empty_nodeprops" },
+  { key: "get_duplicate_triplets", label: "get_duplicate_triplets" },
+  { key: "getInappropriateprops_Nodes_Rels", label: "getInappropriateprops_Nodes_Rels" },
+  { key: "get_label_check", label: "get_label_check" },
+  { key: "getNumeric_Checks", label: "getNumeric_Checks" },
+  { key: "runRoutinesStream", label: "runRoutinesStream" },
+];
 
 const Admin = ({ database }) => {
   const { cred, user } = useAuth();
@@ -50,13 +89,29 @@ const Admin = ({ database }) => {
   const [insertTargetField, setInsertTargetField] = useState('s1_2');
   const [mergeConfirmOpen, setMergeConfirmOpen] = useState(false);
   const [mergePreview, setMergePreview] = useState({ keep: null, discard: null });
+  const [collapsedSections, setCollapsedSections] = useState({
+    "Edit Options": true,
+    "User Options": true,
+    "Database Checks": true,
+  });
+  const [routineParams, setRoutineParams] = useState({
+    return_type: "info",
+    save: "true",
+    dateStart: "",
+    dateEnd: "",
+    action: "default",
+    user: "",
+    property: "parentContext",
+    value: "",
+  });
+  const [routineOutput, setRoutineOutput] = useState("");
 
   const openAmbiguousTiesModal = () => setOpen(true);
   const closeAmbiguousTiesModal = () => setOpen(false);
 
   const sections = [
     {
-      label: "Database Options",
+      label: "Edit Options",
       keys: [
         "add/edit/delete USES property",
         "add/edit/delete node property",
@@ -75,40 +130,21 @@ const Admin = ({ database }) => {
     },
     {
       label: "Database Checks",
-      keys: [
-        "CSV database backup",
-        "duplicate relations",
-        "duplicate keys",
-        "get database schema",
-        "find numeric names",
-        "fix USES defined relationships",
-        "missing names",
-      ],
+      keys: ROUTINE_OPTIONS.map((option) => option.key),
     },
   ];
+  const routineOptionByKey = Object.fromEntries(
+    ROUTINE_OPTIONS.map((option) => [option.key, option])
+  );
+  const routineKeys = ROUTINE_OPTIONS.map((option) => option.key);
+  const isDatabaseRoutineSelected = routineKeys.includes(firstDropdownValue);
 
-  const menuItems = sections
-    .flatMap((section, index) => [
-      index > 0 ? <Divider key={`divider-${section.label}`} /> : null,
-      <ListSubheader
-        key={`header-${section.label}`}
-        disableGutters
-        sx={{
-          fontWeight: "bold",
-          color: "text.primary",
-          fontSize: "medium",
-          marginLeft: "10px",
-        }}
-      >
-        {section.label}
-      </ListSubheader>,
-      ...section.keys.map((key, idx) => (
-        <MenuItem key={key} value={key}>
-          {key}
-        </MenuItem>
-      )),
-    ])
-    .filter(Boolean);
+  const toggleSectionCollapse = (sectionLabel) => {
+    setCollapsedSections((prev) => ({
+      ...prev,
+      [sectionLabel]: !prev[sectionLabel],
+    }));
+  };
 
   const submitAdminAction = async () => {
     try {
@@ -335,16 +371,19 @@ const Admin = ({ database }) => {
     setPopen(false);
   };
 
-  const [formData, setFormData] = useState({
-    s1_1: "edit",  // radio
-    s1_2: "",
-    s1_3: "",
-    s1_4: "",
-    s1_5: "",
-    s1_6: "",
-    s1_7: "",
-    s1_8: ""
-  });
+  const [formData, setFormData] = useState(INITIAL_FORM_STATE);
+
+  const resetAdminForm = () => {
+    setMergeConfirmOpen(false);
+    setMergePreview({ keep: null, discard: null });
+    setFormData(INITIAL_FORM_STATE);
+    setRoutineOutput("");
+  };
+
+  const selectAdminOption = (optionKey) => {
+    setFirstDropdownValue(optionKey);
+    resetAdminForm();
+  };
 
   const insertSavedIntoForm = (selectedSavedCmid) => {
     if (!selectedSavedCmid) return;
@@ -385,6 +424,81 @@ const Admin = ({ database }) => {
       ...prevFormData,
       [name]: value
     }));
+  };
+
+  const updateRoutineParam = (event) => {
+    const { name, value } = event.target;
+    setRoutineParams((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const runDatabaseRoutine = async () => {
+    try {
+      if (firstDropdownValue === "is_valid_json" && !routineParams.value.trim()) {
+        alert("Enter a JSON value to validate.");
+        return;
+      }
+
+      setLoading(true);
+
+      const params = new URLSearchParams();
+      if (routineParams.return_type) {
+        params.set("return_type", routineParams.return_type);
+      }
+      if (firstDropdownValue === "reportChanges") {
+        if (routineParams.dateStart.trim()) {
+          params.set("dateStart", routineParams.dateStart.trim());
+        }
+        if (routineParams.dateEnd.trim()) {
+          params.set("dateEnd", routineParams.dateEnd.trim());
+        }
+        if (routineParams.action.trim()) {
+          params.set("action", routineParams.action.trim());
+        }
+        if (routineParams.user.trim()) {
+          params.set("user", routineParams.user.trim());
+        }
+      }
+      if (firstDropdownValue === "noUSES" || firstDropdownValue === "checkUSES") {
+        params.set("save", routineParams.save);
+      }
+      if (firstDropdownValue === "validateJSON") {
+        params.set("property", routineParams.property);
+      }
+      if (firstDropdownValue === "is_valid_json") {
+        params.set("value", routineParams.value.trim());
+      }
+
+      const queryString = params.toString();
+      const response = await fetch(
+        `${process.env.REACT_APP_API_URL}/routines/${encodeURIComponent(firstDropdownValue)}/${encodeURIComponent(database)}${queryString ? `?${queryString}` : ""}`,
+        {
+          method: "GET",
+          headers: {
+            ...(cred ? { Authorization: `Bearer ${cred}` } : {}),
+          },
+        }
+      );
+
+      const contentType = response.headers.get("content-type") || "";
+      const result = contentType.includes("application/json")
+        ? JSON.stringify(await response.json(), null, 2)
+        : await response.text();
+
+      if (!response.ok) {
+        throw new Error(result || `Routine failed (${response.status})`);
+      }
+
+      setRoutineOutput(result || "Routine completed with no output.");
+    } catch (error) {
+      const message = error?.message || "Unable to run routine.";
+      setRoutineOutput(message);
+      alert(message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const postponeAmbiguousTieUpdate = () => {
@@ -566,65 +680,91 @@ const Admin = ({ database }) => {
     }
   }, [database, firstDropdownValue]);
 
+  useEffect(() => {
+    setRoutineParams((prev) => ({
+      ...prev,
+      user: user || "",
+    }));
+  }, [user]);
+
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
-      <Box sx={{ p: 4, flex: 1, display: 'flex', flexDirection: 'column', bgcolor: "white" }}>
-        <Box sx={{ mb: 1 }}>
-          <h4 style={{ color: "black", padding: "2px", fontSize: "larger" }}>
-            Admin panel: these functions are intended for admin users to identify and fix problems in the database, add and modify users, and to initiate database integrity checks
-          </h4>
-          <br />
-          <p
-            style={{
-              color: "White",
-              fontWeight: "bold",
-              marginLeft: 7,
-              padding: "2px",
-            }}
-          >
-            Select option
-          </p>
-          <Select
-            label="First Dropdown"
-            value={firstDropdownValue}
-            style={{ height: 40 }}
-            sx={{ m: 1, width: 300 }}
-            onChange={(event) => {
-              setFirstDropdownValue(event.target.value);
-              setMergeConfirmOpen(false);
-              setMergePreview({ keep: null, discard: null });
-              setFormData({
-                s1_1: "edit",
-                s1_2: "",
-                s1_3: "",
-                s1_4: "",
-                s1_5: "",
-                s1_6: "",
-                s1_7: "",
-                s1_8: ""
-              });
-            }
-            }
-          >
-            {menuItems}
-          </Select>
-          <Box sx={{ mt: 1 }}>
-            <SavedCmidInsertPopover
-              user={user}
-              cred={cred}
-              database={database}
-              title="Insert from Bookmarks/History"
-              targetField={insertTargetField}
-              onTargetFieldChange={setInsertTargetField}
-              targetFieldOptions={[
-                { value: "s1_2", label: "Target Field 1" },
-                { value: "s1_3", label: "Target Field 2" }
-              ]}
-              onInsert={insertSavedIntoForm}
-            />
-          </Box>
+      <Box sx={{ p: { xs: 2, md: 3 }, flex: 1, display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 2, bgcolor: "white", minHeight: 0 }}>
+        <Box
+          sx={{
+            width: { xs: "100%", md: 320 },
+            border: "1px solid #d9d9d9",
+            borderRadius: 1,
+            overflowY: "auto",
+            flexShrink: 0,
+          }}
+        >
+          <Typography sx={{ fontWeight: 700, p: 1.5, borderBottom: "1px solid #ececec" }}>
+            Admin Options
+          </Typography>
+          <List disablePadding>
+            {sections.map((section) => (
+              <Box key={section.label}>
+                <ListItemButton
+                  onClick={() => toggleSectionCollapse(section.label)}
+                  sx={{ borderRadius: 1, mx: 0.5, my: 0.5 }}
+                >
+                  <ListItemText
+                    primary={section.label}
+                    primaryTypographyProps={{ fontWeight: 700 }}
+                  />
+                  <Typography variant="body2">
+                    {collapsedSections[section.label] ? "−" : "+"}
+                  </Typography>
+                </ListItemButton>
+                <Collapse in={collapsedSections[section.label]} timeout="auto" unmountOnExit>
+                  <List dense disablePadding>
+                    {section.keys.map((key) => (
+                      <ListItemButton
+                        key={key}
+                        selected={firstDropdownValue === key}
+                        onClick={() => selectAdminOption(key)}
+                        sx={{ borderRadius: 1, mx: 1, mb: 0.5, pl: 3 }}
+                      >
+                        <ListItemText
+                          primary={routineOptionByKey[key]?.label || key}
+                        />
+                      </ListItemButton>
+                    ))}
+                  </List>
+                </Collapse>
+              </Box>
+            ))}
+          </List>
         </Box>
+
+        <Box sx={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0, overflowY: "auto", pr: { md: 1 } }}>
+          <Box sx={{ mb: 2 }}>
+            <h4 style={{ color: "black", padding: "2px", fontSize: "larger" }}>
+              Admin panel: these functions are intended for admin users to identify and fix problems in the database, add and modify users, and to initiate database integrity checks
+            </h4>
+            <Typography sx={{ mt: 1, fontWeight: 600 }}>
+              Selected option: {routineOptionByKey[firstDropdownValue]?.label || firstDropdownValue}
+            </Typography>
+            {!isDatabaseRoutineSelected && (
+              <Box sx={{ mt: 1 }}>
+                <SavedCmidInsertPopover
+                  user={user}
+                  cred={cred}
+                  database={database}
+                  title="Insert from Bookmarks/History"
+                  targetField={insertTargetField}
+                  onTargetFieldChange={setInsertTargetField}
+                  targetFieldOptions={[
+                    { value: "s1_2", label: "Target Field 1" },
+                    { value: "s1_3", label: "Target Field 2" }
+                  ]}
+                  onInsert={insertSavedIntoForm}
+                />
+              </Box>
+            )}
+          </Box>
 
         {firstDropdownValue === "add/edit/delete USES property" && (
           <Box sx={{ ml: 1 }}>
@@ -1466,6 +1606,135 @@ const Admin = ({ database }) => {
           </Box>
         )
         }
+        {isDatabaseRoutineSelected && (
+          <Box sx={{ ml: 1, maxWidth: 900 }}>
+            <Typography variant="h6" sx={{ mb: 1 }}>
+              Routine Runner: {routineOptionByKey[firstDropdownValue]?.label || firstDropdownValue}
+            </Typography>
+            <Typography variant="body2" sx={{ mb: 2 }}>
+              Runs routine endpoint `/routines/{firstDropdownValue}/{database}`.
+            </Typography>
+
+            <InputLabel sx={{ color: "black" }}>Return type</InputLabel>
+            <Select
+              name="return_type"
+              value={routineParams.return_type}
+              onChange={updateRoutineParam}
+              sx={{ width: 300, height: 40, mb: 2 }}
+            >
+              <MenuItem value="info">info</MenuItem>
+              <MenuItem value="data">data</MenuItem>
+            </Select>
+
+            {(firstDropdownValue === "noUSES" || firstDropdownValue === "checkUSES") && (
+              <>
+                <InputLabel sx={{ color: "black" }}>Save results to DB</InputLabel>
+                <Select
+                  name="save"
+                  value={routineParams.save}
+                  onChange={updateRoutineParam}
+                  sx={{ width: 300, height: 40, mb: 2 }}
+                >
+                  <MenuItem value="true">true</MenuItem>
+                  <MenuItem value="false">false</MenuItem>
+                </Select>
+              </>
+            )}
+
+            {firstDropdownValue === "validateJSON" && (
+              <>
+                <InputLabel sx={{ color: "black" }}>JSON property</InputLabel>
+                <Select
+                  name="property"
+                  value={routineParams.property}
+                  onChange={updateRoutineParam}
+                  sx={{ width: 300, height: 40, mb: 2 }}
+                >
+                  <MenuItem value="parentContext">parentContext</MenuItem>
+                  <MenuItem value="geoCoords">geoCoords</MenuItem>
+                </Select>
+              </>
+            )}
+
+            {firstDropdownValue === "reportChanges" && (
+              <>
+                <InputLabel sx={{ color: "black" }}>Start date (YYYY-MM-DD)</InputLabel>
+                <TextField
+                  name="dateStart"
+                  value={routineParams.dateStart}
+                  onChange={updateRoutineParam}
+                  sx={{ width: 300, mb: 2 }}
+                  size="small"
+                />
+                <InputLabel sx={{ color: "black" }}>End date (YYYY-MM-DD)</InputLabel>
+                <TextField
+                  name="dateEnd"
+                  value={routineParams.dateEnd}
+                  onChange={updateRoutineParam}
+                  sx={{ width: 300, mb: 2 }}
+                  size="small"
+                />
+                <InputLabel sx={{ color: "black" }}>Action</InputLabel>
+                <TextField
+                  name="action"
+                  value={routineParams.action}
+                  onChange={updateRoutineParam}
+                  sx={{ width: 300, mb: 2 }}
+                  size="small"
+                />
+                <InputLabel sx={{ color: "black" }}>User</InputLabel>
+                <TextField
+                  name="user"
+                  value={routineParams.user}
+                  onChange={updateRoutineParam}
+                  sx={{ width: 300, mb: 2 }}
+                  size="small"
+                />
+              </>
+            )}
+
+            {firstDropdownValue === "is_valid_json" && (
+              <>
+                <InputLabel sx={{ color: "black" }}>Value to validate</InputLabel>
+                <TextField
+                  name="value"
+                  value={routineParams.value}
+                  onChange={updateRoutineParam}
+                  sx={{ width: "100%", maxWidth: 700, mb: 2 }}
+                  size="small"
+                  multiline
+                  minRows={3}
+                />
+              </>
+            )}
+
+            <Box sx={{ display: "flex", justifyContent: "flex-start", pb: 2 }}>
+              <Button
+                variant="contained"
+                sx={{
+                  backgroundColor: "black",
+                  color: "white",
+                  "&:hover": {
+                    backgroundColor: "green",
+                  },
+                }}
+                onClick={runDatabaseRoutine}
+              >
+                Run Routine
+              </Button>
+            </Box>
+
+            <InputLabel sx={{ color: "black" }}>Output</InputLabel>
+            <TextField
+              value={routineOutput}
+              placeholder="Routine output will appear here."
+              sx={{ width: "100%", maxWidth: 900, mb: 2 }}
+              multiline
+              minRows={8}
+              InputProps={{ readOnly: true }}
+            />
+          </Box>
+        )}
         {firstDropdownValue === "approve new users" && (
           <div>
             <Typography variant="p">Check for new users and approve them:</Typography>
@@ -1544,6 +1813,7 @@ const Admin = ({ database }) => {
               </DialogContent>
             </Dialog>
           </div>)}
+        </Box>
       </Box>
 
       {loading && (
