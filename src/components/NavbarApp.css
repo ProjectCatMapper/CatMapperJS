@@ -1,7 +1,7 @@
 .cm-nav--app {
   min-height: 10vh;
   display: grid;
-  grid-template-columns: 170px 1fr minmax(0, max-content);
+  grid-template-columns: minmax(170px, 1fr) auto minmax(170px, 1fr);
   align-items: center;
   column-gap: 12px;
   overflow: visible;
@@ -11,6 +11,7 @@
   grid-column: 1;
   justify-self: start;
   margin-right: 0;
+  min-width: 170px;
   z-index: 3;
 }
 
@@ -77,15 +78,56 @@
   display: flex;
   align-items: center;
   justify-content: flex-end;
+  justify-self: end;
   min-width: 0;
 }
 
-@media screen and (max-width: 600px) {
-  .cm-nav--app {
-    display: flex;
+@media screen and (max-width: 1300px) {
+  .cm-nav--app .cm-nav-hamburger {
+    display: block;
   }
 
-  .cm-nav--app .cm-nav-image {
-    margin-right: auto;
+  .cm-nav--app .cm-nav-menu {
+    position: absolute;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    top: 0;
+    left: -100%;
+    text-align: center;
+    width: 100%;
+    height: 100vh;
+    transition: 0.3s;
+    z-index: -1;
+    background: rgba(0, 0, 0, 0.9);
+    padding: 0;
+  }
+
+  .cm-nav--app .cm-nav-menu.active {
+    left: 0;
+  }
+
+  .cm-nav--app .cm-nav-menu li {
+    padding: 1rem 0;
+  }
+
+  .cm-nav--app .cm-nav-link {
+    font-size: 1.6rem;
+  }
+}
+
+@media screen and (max-width: 700px) {
+  .cm-nav--app {
+    grid-template-columns: auto 1fr auto;
+    column-gap: 8px;
+  }
+
+  .cm-nav--app .cm-nav-image,
+  .cm-nav--app .cm-nav-right {
+    min-width: auto;
+  }
+
+  .cm-nav-app-logo img {
+    height: 42px;
   }
 }
