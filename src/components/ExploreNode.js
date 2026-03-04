@@ -1048,11 +1048,7 @@ export default function Tableclick({ cmid, database, tabval }) {
 
     setActiveFilters(newFilters);
     setThirdDropdownValue(newVal);
-    if (newVal.length === 1 && newVal[0] !== "All") {
-      setSelectedNodes(["All", newVal[0]]);
-    } else {
-      setSelectedNodes(allNodeOptions);
-    }
+    setSelectedNodes(allNodeOptions);
 
     applyFilters(newFilters);
   };
