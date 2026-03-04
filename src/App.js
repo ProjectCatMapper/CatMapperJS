@@ -38,12 +38,14 @@ import Profile from './routes/Profile';
 import ReactGA from 'react-ga4';
 import CookieBanner from './components/CookieBanner';
 
+const GA_ID = process.env.REACT_APP_GOOGLE_ANALYTICS_ID;
+
 const usePageTracking = () => {
   const location = useLocation();
 
   useEffect(() => {
     const consent = localStorage.getItem('cookie-consent');
-    if (consent === 'true') {
+    if (consent === 'true' && GA_ID) {
       ReactGA.send({ hitType: "pageview", page: location.pathname });
     }
   }, [location]);

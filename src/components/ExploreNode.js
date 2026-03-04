@@ -139,12 +139,13 @@ export default function Tableclick({ cmid, database, tabval }) {
   const [fdrop, setfdrop] = useState(["CONTAINS"]);
   const [orderedProperties, setOrderedProperties] = useState([]);
   const [firstDropdownValue, setFirstDropdownValue] = useState("");
-  const [thirdDropdownValue, setThirdDropdownValue] = useState("All");
+  const [thirdDropdownValue, setThirdDropdownValue] = useState(["All"]);
   const [fourthDropdownValue, setFourthDropdownValue] = useState("All");
   const [selectedValues, setSelectedValues] = useState([]);
   const [selectedNodes, setSelectedNodes] = useState(["All"]);
+  const [allNodeOptions, setAllNodeOptions] = useState(["All"]);
   const [selectedDatasets, setSelectedDatasets] = useState([]);
-  const [dropdownNodeLimit, setDropdownNodeLimit] = useState(10);
+  const [dropdownNodeLimit, setDropdownNodeLimit] = useState(500);
   const [eventTypes, setEventTypes] = useState([]);
   const [selectedEventTypes, setSelectedEventTypes] = useState(["All"]);
   const [originaldata, setoriginaldata] = useState(null);
@@ -168,7 +169,7 @@ export default function Tableclick({ cmid, database, tabval }) {
 
   const [activeFilters, setActiveFilters] = useState({
     domain: [],      // From updateData (was string, now array for safety)
-    nodeLabel: "All",// From updateNodeData
+    nodeLabel: ["All"],// From updateNodeData
     dataset: "All",  // From updateDatasetNodeData
     eventType: ["All"] // From updateEventTypeData
   });
@@ -220,10 +221,11 @@ export default function Tableclick({ cmid, database, tabval }) {
     setdomains([]);
     setSelectedValues([]);
     setSelectedNodes(["All"]);
+    setAllNodeOptions(["All"]);
     setSelectedDatasets([]);
     setEventTypes([]);
     setSelectedEventTypes(["All"]);
-    setThirdDropdownValue("All");
+    setThirdDropdownValue(["All"]);
     setFourthDropdownValue("All");
   }, []);
 
@@ -710,26 +712,34 @@ export default function Tableclick({ cmid, database, tabval }) {
     }
   };
 
-  const fetchData = async (event) => {
+  const fetchData = async (eventOrOptions = {}) => {
     setLoadingNetwork(true);
-    // Keep the dropdown selection stable even if the request fails.
-    setFirstDropdownValue(event.target.value);
+    const relationValue = eventOrOptions?.target?.value ?? eventOrOptions?.relation ?? firstDropdownValue;
+    const requestedDomainsRaw = eventOrOptions?.domains ?? [];
+    const requestedDomains = (Array.isArray(requestedDomainsRaw) ? requestedDomainsRaw : [requestedDomainsRaw])
+      .map((value) => String(value || "").trim())
+      .filter(Boolean)
+      .filter((value) => value !== "All");
+
+    setFirstDropdownValue(relationValue);
     try {
-      const response = await fetch(
-        `${process.env.REACT_APP_API_URL}/networksjs?cmid=` +
-        cmid +
-        "&database=" +
-        database +
-        "&relation=" +
-        event.target.value +
-        "&response=records" +
-        "&limit=" + limit
-      );
+      const queryParams = new URLSearchParams({
+        cmid,
+        database,
+        relation: relationValue,
+        response: "records",
+        limit: String(limit),
+      });
+      if (requestedDomains.length > 0) {
+        queryParams.set("domain", requestedDomains.join(","));
+      }
+
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/networksjs?${queryParams.toString()}`);
       const result = await response.json();
 
       const rawNodes = [
-        ...Object.entries(result["node"]),
-        ...Object.entries(result["relNodes"]),
+        ...(Array.isArray(result?.node) ? result.node : []),
+        ...(Array.isArray(result?.relNodes) ? result.relNodes : []),
       ];
 
       const groupDomains = new Set(Object.keys(normalizedRef.current || {}));
@@ -780,8 +790,7 @@ export default function Tableclick({ cmid, database, tabval }) {
         return effectiveLabels.length > 0 ? effectiveLabels.join(":") : "UNMAPPED";
       };
 
-      const node = rawNodes.map((entry) => {
-        const nodeData = entry["1"];
+      const node = rawNodes.map((nodeData) => {
         const effectiveLabels = getEffectiveLabels(nodeData.labels || []);
         const normalizedLegendLabel = normalizeLegendLabel(nodeData.legendLabel, effectiveLabels);
 
@@ -806,8 +815,8 @@ export default function Tableclick({ cmid, database, tabval }) {
         JSON.parse
       );
 
-      const edges = Object.entries(result["relations"]).map((relationship) => {
-        const { start_node_id, end_node_id, eventType, ...rest } = relationship["1"];
+      const edges = (Array.isArray(result?.relations) ? result.relations : []).map((relationship) => {
+        const { start_node_id, end_node_id, eventType, ...rest } = relationship;
 
         const edge =
         {
@@ -817,7 +826,7 @@ export default function Tableclick({ cmid, database, tabval }) {
           color: "black",
         };
 
-        if (event.target.value === "CONTAINS") {
+        if (relationValue === "CONTAINS") {
           if (eventType && Array.isArray(eventType)) {
             const filtered = eventType.filter(e => e !== "HIERARCHY");
             if (filtered.length > 0) {
@@ -832,24 +841,27 @@ export default function Tableclick({ cmid, database, tabval }) {
         return edge;
       });
 
-      let domains = nodes.map((object) => object.filterDomains || object.domain).slice(1);
-      domains = Array.from(new Set(domains.flat()));
-      domains = domains.filter((value) => value !== "CATEGORY");
-      // domains = Array.from(new Set(domains.flat())).filter(
-      //   (value) => value !== "DISTRICT"
-      // );
-      setSelectedValues(domains);
-      setdomains(domains);
+      let domainOptions = nodes.map((object) => object.filterDomains || object.domain).slice(1);
+      domainOptions = Array.from(new Set(domainOptions.flat()));
+      domainOptions = domainOptions.filter((value) => value !== "CATEGORY");
+      setdomains(domainOptions);
+      const selectedDomainOptions = requestedDomains.length > 0
+        ? domainOptions.filter((option) => requestedDomains.includes(option))
+        : domainOptions;
+      setSelectedValues(selectedDomainOptions);
 
       let nodevalues = nodes
         .map((object) => object.label)
         .slice(1)
-        .sort();
+        .sort()
+        .slice(0, limit);
       nodevalues.unshift("All");
+      setAllNodeOptions([...nodevalues]);
       setSelectedNodes([...nodevalues]);
+      setThirdDropdownValue(["All"]);
 
       if (
-        event.target.value !== "USES" &&
+        relationValue !== "USES" &&
         !cmid.startsWith("SD") &&
         !cmid.startsWith("AD")
       ) {
@@ -882,7 +894,7 @@ export default function Tableclick({ cmid, database, tabval }) {
       setoriginaldata({ nodes, edges });
       setVisData({ nodes, edges });
 
-      if (event.target.value === "CONTAINS") {
+      if (relationValue === "CONTAINS") {
         let eventSet = new Set();
 
         edges.forEach((edge) => {
@@ -895,7 +907,19 @@ export default function Tableclick({ cmid, database, tabval }) {
         evTypes.unshift("All");
         setEventTypes(evTypes);
         setSelectedEventTypes(["All"]);
+      } else {
+        setEventTypes([]);
+        setSelectedEventTypes(["All"]);
       }
+
+      setFourthDropdownValue("All");
+      setActiveFilters((prev) => ({
+        ...prev,
+        domain: selectedDomainOptions,
+        nodeLabel: ["All"],
+        dataset: "All",
+        eventType: ["All"],
+      }));
     } catch (error) {
       console.error("Error fetching data:", error);
     } finally {
@@ -904,17 +928,24 @@ export default function Tableclick({ cmid, database, tabval }) {
   };
 
   const applyFilters = (filters) => {
+    if (!originaldata) return;
+
     // Always start fresh from originaldata
-    let currentEdges = originaldata.edges;
-    let currentNodes = originaldata.nodes;
+    let currentEdges = originaldata.edges || [];
+    let currentNodes = originaldata.nodes || [];
 
     // --- STEP 1: FILTER EDGES ---
 
     // A. Filter by Dataset (Reference Key)
     if (filters.dataset !== "All") {
-      currentEdges = currentEdges.filter((edge) =>
-        edge.referenceKey?.some((key) => key.includes(filters.dataset))
-      );
+      currentEdges = currentEdges.filter((edge) => {
+        const keys = Array.isArray(edge.referenceKey)
+          ? edge.referenceKey
+          : edge.referenceKey
+            ? [edge.referenceKey]
+            : [];
+        return keys.some((key) => String(key).includes(filters.dataset));
+      });
     }
 
     // B. Filter by Event Type
@@ -945,18 +976,16 @@ export default function Tableclick({ cmid, database, tabval }) {
       if (!validNodeIds.has(node.id)) return false;
 
       // Rule 3: Filter by Node Label (Specific Name)
-      if (filters.nodeLabel !== "All") {
-        if (node.label !== filters.nodeLabel) return false;
+      if (Array.isArray(filters.nodeLabel) && !filters.nodeLabel.includes("All")) {
+        if (!filters.nodeLabel.includes(node.label)) return false;
       }
 
       // Rule 4: Filter by Domain (Category)
       // filters.domain can be a string or array, handle both
-      if (filters.domain && filters.domain.length > 0 && filters.domain !== "All") {
+      if (Array.isArray(filters.domain) && filters.domain.length > 0 && !filters.domain.includes("All")) {
         // If the node's domain list doesn't overlap with selected domains, hide it
         // (Assuming filters.domain is the value from the dropdown)
-        const nodeSearchDomains = Array.isArray(filters.domain) ? filters.domain : [filters.domain];
-        // Special check: If "All" or empty is passed, ignore
-        const validSearch = nodeSearchDomains.filter(d => d !== "All");
+        const validSearch = filters.domain.filter((d) => d !== "All");
 
         if (validSearch.length > 0) {
           const filterDomains = node.filterDomains || node.domain || [];
@@ -978,37 +1007,52 @@ export default function Tableclick({ cmid, database, tabval }) {
       finalNodeIds.has(e.from) && finalNodeIds.has(e.to)
     );
 
-    // --- STEP 5: UPDATE DERIVED UI STATE ---
-    // Update the "Node Select" dropdown based on what's currently visible
-    if (filters.domain !== "All") {
-      let nodevalues = currentNodes.map((object) => object.label).slice(1).sort();
-      nodevalues.unshift("All");
-      setSelectedNodes([...nodevalues]);
-    }
-
-    // Finally, update the graph
+    // Finally, update the graph.
     setVisData({ nodes: currentNodes, edges: currentEdges });
   };
 
   // 1. Domain Handler
   const updateData = (event) => {
-    const newVal = event.target.value; // Likely a string or array of strings
-    const newFilters = { ...activeFilters, domain: newVal };
-
+    const rawValue = event.target.value;
+    const newVal = Array.from(
+      new Set((Array.isArray(rawValue) ? rawValue : [rawValue]).map((value) => String(value || "").trim()).filter(Boolean))
+    );
+    const newFilters = { ...activeFilters, domain: newVal, nodeLabel: ["All"], dataset: "All", eventType: ["All"] };
     setActiveFilters(newFilters);
-
-    setSelectedValues(newVal);     // Update UI Dropdown
-
-    applyFilters(newFilters);
+    setSelectedValues(newVal);
+    setFourthDropdownValue("All");
+    setSelectedEventTypes(["All"]);
+    setThirdDropdownValue(["All"]);
+    setSelectedNodes(allNodeOptions);
+    fetchData({ relation: firstDropdownValue, domains: newVal });
   };
 
   // 2. Node Label Handler
   const updateNodeData = (event) => {
-    const newVal = event.target.value;
+    const rawValue = event.target.value;
+    const value = Array.isArray(rawValue) ? rawValue : [rawValue];
+    const lastSelected = value[value.length - 1];
+
+    let newVal;
+    if (lastSelected === "All") {
+      newVal = ["All"];
+    } else {
+      newVal = value.filter((entry) => entry !== "All");
+      if (newVal.length === 0) {
+        newVal = ["All"];
+      }
+    }
+
+    newVal = Array.from(new Set(newVal));
     const newFilters = { ...activeFilters, nodeLabel: newVal };
 
     setActiveFilters(newFilters);
-    setThirdDropdownValue(newVal); // Update UI Dropdown
+    setThirdDropdownValue(newVal);
+    if (newVal.length === 1 && newVal[0] !== "All") {
+      setSelectedNodes(["All", newVal[0]]);
+    } else {
+      setSelectedNodes(allNodeOptions);
+    }
 
     applyFilters(newFilters);
   };

@@ -13,13 +13,19 @@ const initAnalytics = () => {
   const consent = localStorage.getItem('cookie-consent');
 
   if (consent === 'true') {
-    // User accepted: Initialize and track
+    if (!GA_ID) {
+      console.warn('Google Analytics is enabled by consent, but REACT_APP_GOOGLE_ANALYTICS_ID is not set.');
+      return;
+    }
+
+    // User accepted: initialize and track page view.
     ReactGA.initialize(GA_ID);
-    // GA4 uses the 'send' method for pageviews
     ReactGA.send({ hitType: "pageview", page: window.location.pathname + window.location.search });
   } else {
     // User declined or hasn't decided: Disable tracking
-    window[`ga-disable-${GA_ID}`] = true;
+    if (GA_ID) {
+      window[`ga-disable-${GA_ID}`] = true;
+    }
   }
 };
 

@@ -39,7 +39,7 @@ const NetworkExplorerView = ({
                 <Tooltip
                     title={
                         <span style={{ fontSize: '14px', lineHeight: '1.4' }}>
-                            No more than {dropdownNodeLimit} nodes are shown in the network (Use "Limit Display Nodes" dropdown to increase this up to 50).
+                            No more than {dropdownNodeLimit} nodes are shown in the network (Use "Limit Display Nodes" dropdown to increase this up to 500).
                             Use the "Nodes" dropdown to select specific nodes (only {limit} total nodes are returned. Additional nodes cannot be selected).
                         </span>
                     }
@@ -89,9 +89,11 @@ const NetworkExplorerView = ({
             <FormControl sx={{ m: 1, width: 300 }}>
                 <InputLabel htmlFor="third-dropdown">Nodes</InputLabel>
                 <Select
+                    multiple
                     label="Nodes"
                     value={thirdDropdownValue}
                     onChange={updateNodeData}
+                    renderValue={(selected) => Array.isArray(selected) ? selected.join(", ") : selected}
                 >
                     {selectedNodes.map((option) => (
                         <MenuItem key={option} value={option}>{option}</MenuItem>
@@ -109,7 +111,7 @@ const NetworkExplorerView = ({
                     value={dropdownNodeLimit}
                     onChange={(event) => setDropdownNodeLimit(event.target.value)}
                 >
-                    {[5, 10, 25, 50].map((num) => (
+                    {[50, 100, 250, 500].map((num) => (
                         <MenuItem key={num} value={num}>
                             {num}
                         </MenuItem>
