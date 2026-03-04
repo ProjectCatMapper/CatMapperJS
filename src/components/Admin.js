@@ -33,6 +33,7 @@ import CircularProgress from "@mui/material/CircularProgress";
 import FooterLinks from "./FooterLinks";
 import CardContent from '@mui/material/CardContent';
 import SavedCmidInsertPopover from './SavedCmidInsertPopover';
+import { Link } from "react-router-dom";
 
 const INITIAL_FORM_STATE = {
   s1_1: "edit",
@@ -89,6 +90,7 @@ const Admin = ({ database }) => {
   const [insertTargetField, setInsertTargetField] = useState('s1_2');
   const [mergeConfirmOpen, setMergeConfirmOpen] = useState(false);
   const [mergePreview, setMergePreview] = useState({ keep: null, discard: null });
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [collapsedSections, setCollapsedSections] = useState({
     "Edit Options": true,
     "User Options": true,
@@ -693,57 +695,84 @@ const Admin = ({ database }) => {
       <Box sx={{ p: { xs: 2, md: 3 }, flex: 1, display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 2, bgcolor: "white", minHeight: 0 }}>
         <Box
           sx={{
-            width: { xs: "100%", md: 320 },
+            width: { xs: isSidebarOpen ? "100%" : 44, md: isSidebarOpen ? 320 : 44 },
+            minWidth: { xs: isSidebarOpen ? "100%" : 44, md: isSidebarOpen ? 320 : 44 },
             border: "1px solid #d9d9d9",
             borderRadius: 1,
-            overflowY: "auto",
             flexShrink: 0,
+            display: "flex",
+            flexDirection: "column",
+            overflow: "hidden",
+            transition: "width 0.2s ease, min-width 0.2s ease",
           }}
         >
-          <Typography sx={{ fontWeight: 700, p: 1.5, borderBottom: "1px solid #ececec" }}>
-            Admin Options
-          </Typography>
-          <List disablePadding>
-            {sections.map((section) => (
-              <Box key={section.label}>
-                <ListItemButton
-                  onClick={() => toggleSectionCollapse(section.label)}
-                  sx={{ borderRadius: 1, mx: 0.5, my: 0.5 }}
-                >
-                  <ListItemText
-                    primary={section.label}
-                    primaryTypographyProps={{ fontWeight: 700 }}
-                  />
-                  <Typography variant="body2">
-                    {collapsedSections[section.label] ? "−" : "+"}
-                  </Typography>
-                </ListItemButton>
-                <Collapse in={collapsedSections[section.label]} timeout="auto" unmountOnExit>
-                  <List dense disablePadding>
-                    {section.keys.map((key) => (
+          <Box sx={{ display: "flex", alignItems: "center", justifyContent: isSidebarOpen ? "space-between" : "center", p: 1.5, borderBottom: "1px solid #ececec" }}>
+            {isSidebarOpen && (
+              <Typography sx={{ fontWeight: 700 }}>
+                Admin Options
+              </Typography>
+            )}
+            <Button
+              size="small"
+              onClick={() => setIsSidebarOpen((prev) => !prev)}
+              sx={{ minWidth: 28, px: 0.5 }}
+            >
+              {isSidebarOpen ? ">" : "<"}
+            </Button>
+          </Box>
+
+          {isSidebarOpen && (
+            <>
+              <Typography sx={{ px: 1.5, py: 1.25, fontSize: "0.85rem", color: "text.secondary", borderBottom: "1px solid #ececec" }}>
+                Admin panel: these functions are intended for admin users to identify and fix problems in the database, add and modify users, and to initiate database integrity checks
+              </Typography>
+              <Box sx={{ flex: 1, overflowY: "auto" }}>
+                <List disablePadding>
+                  {sections.map((section) => (
+                    <Box key={section.label}>
                       <ListItemButton
-                        key={key}
-                        selected={firstDropdownValue === key}
-                        onClick={() => selectAdminOption(key)}
-                        sx={{ borderRadius: 1, mx: 1, mb: 0.5, pl: 3 }}
+                        onClick={() => toggleSectionCollapse(section.label)}
+                        sx={{ borderRadius: 1, mx: 0.5, my: 0.5 }}
                       >
                         <ListItemText
-                          primary={routineOptionByKey[key]?.label || key}
+                          primary={section.label}
+                          primaryTypographyProps={{ fontWeight: 700 }}
                         />
+                        <Typography variant="body2">
+                          {collapsedSections[section.label] ? "−" : "+"}
+                        </Typography>
                       </ListItemButton>
-                    ))}
-                  </List>
-                </Collapse>
+                      <Collapse in={collapsedSections[section.label]} timeout="auto" unmountOnExit>
+                        <List dense disablePadding>
+                          {section.keys.map((key) => (
+                            <ListItemButton
+                              key={key}
+                              selected={firstDropdownValue === key}
+                              onClick={() => selectAdminOption(key)}
+                              sx={{ borderRadius: 1, mx: 1, mb: 0.5, pl: 3 }}
+                            >
+                              <ListItemText
+                                primary={routineOptionByKey[key]?.label || key}
+                              />
+                            </ListItemButton>
+                          ))}
+                        </List>
+                      </Collapse>
+                    </Box>
+                  ))}
+                </List>
               </Box>
-            ))}
-          </List>
+              <Box sx={{ p: 1.5, borderTop: "1px solid #ececec" }}>
+                <Button component={Link} to="/admin/metadata" variant="outlined" fullWidth>
+                  Open Metadata Manager
+                </Button>
+              </Box>
+            </>
+          )}
         </Box>
 
         <Box sx={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0, overflowY: "auto", pr: { md: 1 } }}>
           <Box sx={{ mb: 2 }}>
-            <h4 style={{ color: "black", padding: "2px", fontSize: "larger" }}>
-              Admin panel: these functions are intended for admin users to identify and fix problems in the database, add and modify users, and to initiate database integrity checks
-            </h4>
             <Typography sx={{ mt: 1, fontWeight: 600 }}>
               Selected option: {routineOptionByKey[firstDropdownValue]?.label || firstDropdownValue}
             </Typography>
