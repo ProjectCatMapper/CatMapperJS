@@ -406,6 +406,9 @@ export default function Searchbar({ database }) {
     <div style={{ height: "auto" }}>
       <Box
         sx={{
+          position: 'sticky',
+          top: 90,
+          zIndex: 9,
           p: 2,
           bgcolor: 'rgba(0, 0, 0, 0.9)',
           backdropFilter: 'blur(10px)',
