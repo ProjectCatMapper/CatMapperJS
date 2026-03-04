@@ -335,43 +335,15 @@ export default function Searchbar({ database }) {
     </div>
   );
 
-  function handleSearch(tvalue, domain) {
-    setLoading(true);
-
-    // 1. Define the params object first
-    const params = {
-      domain: domain,
-      property: selectedOption,
-      term: tvalue,
-      database: database,
-      yearStart: yearStart,
-      yearEnd: yearEnd,
-      country: selectedcountry,
-      context: contextID,
-      dataset: datasetID
-    };
-
-    // 2. "clean" the object to remove null/empty values
-    const cleanParams = Object.fromEntries(
-      Object.entries(params).filter(([_, value]) => value != null && value !== "")
-    );
-
-    // 3. Update the URL
-    setSearchParams(cleanParams);
-  }
-
-  React.useEffect(() => {
-    // Only trigger the fetch if there's actually a 'term' or 'domain' in the URL
-    const term = searchParams.get("term");
-    const dom = searchParams.get("domain");
+  const runSearchRequest = (paramsToUse) => {
+    const term = paramsToUse.get("term");
+    const dom = paramsToUse.get("domain");
 
     if (!term && !dom) return;
 
     setLoading(true);
 
-    // We build the query string directly from the URL params
-    // .toString() handles the encoding (like & and ?) for you!
-    fetch(`${process.env.REACT_APP_API_URL}/search?${searchParams.toString()}&query=false`, {
+    fetch(`${process.env.REACT_APP_API_URL}/search?${paramsToUse.toString()}&query=false`, {
       method: "GET"
     })
       .then(response => response.json())
@@ -392,6 +364,42 @@ export default function Searchbar({ database }) {
       .finally(() => {
         setLoading(false);
       });
+  };
+
+  function handleSearch(tvalue, domain) {
+    // 1. Define the params object first
+    const params = {
+      domain: domain,
+      property: selectedOption,
+      term: tvalue,
+      database: database,
+      yearStart: yearStart,
+      yearEnd: yearEnd,
+      country: selectedcountry,
+      context: contextID,
+      dataset: datasetID
+    };
+
+    // 2. "clean" the object to remove null/empty values
+    const cleanParams = Object.fromEntries(
+      Object.entries(params).filter(([_, value]) => value != null && value !== "")
+    );
+
+    // 3. Update the URL
+    const nextParams = new URLSearchParams(cleanParams);
+    const currentParams = new URLSearchParams(searchParams.toString());
+
+    if (nextParams.toString() === currentParams.toString()) {
+      // Re-run search for repeated click on identical query params.
+      runSearchRequest(nextParams);
+      return;
+    }
+
+    setSearchParams(cleanParams);
+  }
+
+  React.useEffect(() => {
+    runSearchRequest(searchParams);
   }, [searchParams]);
 
   return (
