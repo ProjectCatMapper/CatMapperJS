@@ -155,8 +155,13 @@ const Admin = ({ database }) => {
       }
       setLoading(true);
       if (firstDropdownValue === "delete node") {
+        const nodeCmid = (formData.s1_2 || "").trim();
+        const nodeName = (formData.s1_7 || "").trim();
+        const nodeLabel = nodeName
+          ? `${nodeCmid} (${nodeName})`
+          : nodeCmid;
         const confirmed = window.confirm(
-          `Are you sure you want to ${firstDropdownValue} of ${formData.s1_2}? This action cannot be undone.`
+          `Are you sure you want to ${firstDropdownValue} of ${nodeLabel}? This action cannot be undone.`
         );
         if (!confirmed) {
           return;
@@ -576,6 +581,12 @@ const Admin = ({ database }) => {
     const cmid = formData.s1_2.trim();
     const pattern = /^(AM|CP|CL|SM|AD|SD)\d+$/;
 
+    if (firstDropdownValue === "delete node") {
+      setFormData((prevFormData) => (
+        prevFormData.s1_7 === "" ? prevFormData : { ...prevFormData, s1_7: "" }
+      ));
+    }
+
     if (pattern.test(cmid)) {
       const fetchData = async () => {
         try {
@@ -591,8 +602,12 @@ const Admin = ({ database }) => {
           }
 
           if (firstDropdownValue === "delete node") {
-            formData.s1_7 = data.r["CMName"]
-            console.log(formData.s1_7)
+            const cmName = data?.r?.CMName || "";
+            setFormData((prevFormData) => (
+              prevFormData.s1_7 === cmName
+                ? prevFormData
+                : { ...prevFormData, s1_7: cmName }
+            ));
             return;
           }
 
@@ -611,7 +626,7 @@ const Admin = ({ database }) => {
     } else {
       setDropdownOptions([]); // reset dropdown if input does not match
     }
-  }, [database, formData, formData.s1_1, formData.s1_2, firstDropdownValue]);
+  }, [database, formData.s1_1, formData.s1_2, firstDropdownValue]);
 
   useEffect(() => {
     if (firstDropdownValue !== "add/edit/delete USES property" && firstDropdownValue !== "delete USES relation" && firstDropdownValue !== "move USES tie") {
