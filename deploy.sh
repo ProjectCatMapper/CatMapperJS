@@ -5,6 +5,8 @@ set -e
 
 DEPLOY_USER="rjbischo"
 APP_DIR="/mnt/storage/app/CatMapperJS"
+DEPLOY_USER_LOCAL_BIN="/home/$DEPLOY_USER/.local/bin"
+SYSTEM_PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 
 if [ ! -d "$APP_DIR" ]; then
   echo "❌ Error: App directory not found: $APP_DIR"
@@ -26,7 +28,11 @@ if ! id "$DEPLOY_USER" >/dev/null 2>&1; then
 fi
 
 run_as_deploy_user() {
-  sudo -u "$DEPLOY_USER" -H "$@"
+  if [ -d "$DEPLOY_USER_LOCAL_BIN" ]; then
+    sudo -u "$DEPLOY_USER" -H env PATH="$DEPLOY_USER_LOCAL_BIN:$SYSTEM_PATH" "$@"
+  else
+    sudo -u "$DEPLOY_USER" -H "$@"
+  fi
 }
 
 verify_git_write_access() {
