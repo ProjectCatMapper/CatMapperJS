@@ -108,13 +108,13 @@ fi
 # 4. Run the build
 echo "📦 Running npm build..."
 
-# Ensure build/cache paths are writable by deploy user before build.
-mkdir -p build node_modules/.cache
-chown -R "$DEPLOY_USER":catmapper build node_modules/.cache
+# Ensure output/cache paths are writable by deploy user before build.
+mkdir -p dist node_modules/.vite
+chown -R "$DEPLOY_USER":catmapper dist node_modules/.vite
 
 if [ "$FAST_BUILD" = true ]; then
-  echo "⚡ Fast build mode enabled (DISABLE_ESLINT_PLUGIN=true, GENERATE_SOURCEMAP=false)"
-  run_as_deploy_user env DISABLE_ESLINT_PLUGIN=true GENERATE_SOURCEMAP=false npm run build
+  echo "⚡ Fast build mode enabled (Vite default production build)"
+  run_as_deploy_user npm run build
 else
   echo "🧪 Full build mode enabled"
   run_as_deploy_user npm run build
@@ -122,7 +122,7 @@ fi
 
 # 5. Deploy the files
 echo "🚚 Syncing files to Nginx storage..."
-rsync -av --delete build/ /mnt/storage/app/nginx/html/
+rsync -av --delete dist/ /mnt/storage/app/nginx/html/
 
 # 6. Git Tagging & Pushing (Only if not skipped)
 if [ "$SKIP_VERSION" = false ]; then
