@@ -315,7 +315,11 @@ function TranslateComponent({ database }) {
         checkMergedCells: true,
         stripWrappingQuotes: true,
         normalizeEmptyToNull: true,
+        dropDuplicateHeaders: true,
       });
+      if (Array.isArray(parsed.warnings) && parsed.warnings.length > 0) {
+        alert(`Warning: ${parsed.warnings.join(' ')}`);
+      }
 
       setColumns(parsed.headers);
       setPreviewRows(parsed.records);

@@ -372,7 +372,11 @@ const Edit = ({ database }) => {
       const parsed = await parseTabularFile(file, {
         checkMergedCells: true,
         stripWrappingQuotes: true,
+        dropDuplicateHeaders: true,
       });
+      if (Array.isArray(parsed.warnings) && parsed.warnings.length > 0) {
+        alert(`Warning: ${parsed.warnings.join(' ')}`);
+      }
 
       setColumns(parsed.headers);
       setRows(parsed.rows2d);

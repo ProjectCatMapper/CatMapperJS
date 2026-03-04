@@ -19,6 +19,26 @@ function normalizeHeader(headers, trimHeaders) {
   });
 }
 
+function getDuplicateHeaderInfo(headers = []) {
+  const seen = new Set();
+  const keepIndices = [];
+  const duplicateHeaders = [];
+
+  headers.forEach((header, index) => {
+    if (!seen.has(header)) {
+      seen.add(header);
+      keepIndices.push(index);
+      return;
+    }
+    duplicateHeaders.push(header);
+  });
+
+  return {
+    keepIndices,
+    duplicateHeaders: Array.from(new Set(duplicateHeaders)),
+  };
+}
+
 function toRecords(headers, rows, options) {
   const { stripWrappingQuotes, normalizeEmptyToNull } = options;
   return rows.map((row) => {
@@ -44,6 +64,7 @@ export async function parseTabularFile(file, options = {}) {
     stripWrappingQuotes: false,
     normalizeEmptyToNull: false,
     checkMergedCells: false,
+    dropDuplicateHeaders: false,
     ...options,
   };
 
@@ -84,6 +105,9 @@ export async function parseTabularFile(file, options = {}) {
     throw new Error('Missing column name in header row.');
   }
 
+  const { keepIndices, duplicateHeaders } = getDuplicateHeaderInfo(headers);
+  const warnings = [];
+
   let rows2d = rows2dRaw.slice(1).map((row) => {
     const padded = Array(headers.length).fill('');
     row.forEach((cell, idx) => {
@@ -92,20 +116,29 @@ export async function parseTabularFile(file, options = {}) {
     return padded;
   });
 
+  let finalHeaders = headers;
+  if (opts.dropDuplicateHeaders && duplicateHeaders.length > 0) {
+    finalHeaders = keepIndices.map((index) => headers[index]);
+    rows2d = rows2d.map((row) => keepIndices.map((index) => row[index]));
+    warnings.push(
+      `Duplicate column name(s) removed: ${duplicateHeaders.join(', ')}`
+    );
+  }
+
   if (opts.dropEmptyRows) {
     rows2d = rows2d.filter((row) =>
       row.some((cell) => String(cell ?? '').trim() !== '')
     );
   }
 
-  const records = toRecords(headers, rows2d, opts);
+  const records = toRecords(finalHeaders, rows2d, opts);
 
   return {
     extension,
     sheetName,
-    headers,
+    headers: finalHeaders,
     rows2d,
     records,
+    warnings,
   };
 }
-
