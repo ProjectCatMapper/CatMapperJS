@@ -145,7 +145,7 @@ export default function Tableclick({ cmid, database, tabval }) {
   const [selectedNodes, setSelectedNodes] = useState(["All"]);
   const [allNodeOptions, setAllNodeOptions] = useState(["All"]);
   const [selectedDatasets, setSelectedDatasets] = useState([]);
-  const [dropdownNodeLimit, setDropdownNodeLimit] = useState(500);
+  const [dropdownNodeLimit, setDropdownNodeLimit] = useState(10);
   const [eventTypes, setEventTypes] = useState([]);
   const [selectedEventTypes, setSelectedEventTypes] = useState(["All"]);
   const [originaldata, setoriginaldata] = useState(null);
@@ -716,6 +716,7 @@ export default function Tableclick({ cmid, database, tabval }) {
     setLoadingNetwork(true);
     const relationValue = eventOrOptions?.target?.value ?? eventOrOptions?.relation ?? firstDropdownValue;
     const requestedDomainsRaw = eventOrOptions?.domains ?? [];
+    const preserveDomainOptions = Boolean(eventOrOptions?.preserveDomainOptions);
     const requestedDomains = (Array.isArray(requestedDomainsRaw) ? requestedDomainsRaw : [requestedDomainsRaw])
       .map((value) => String(value || "").trim())
       .filter(Boolean)
@@ -841,13 +842,16 @@ export default function Tableclick({ cmid, database, tabval }) {
         return edge;
       });
 
-      let domainOptions = nodes.map((object) => object.filterDomains || object.domain).slice(1);
-      domainOptions = Array.from(new Set(domainOptions.flat()));
-      domainOptions = domainOptions.filter((value) => value !== "CATEGORY");
-      setdomains(domainOptions);
+      let domainOptions = domains;
+      if (!preserveDomainOptions) {
+        domainOptions = nodes.map((object) => object.filterDomains || object.domain).slice(1);
+        domainOptions = Array.from(new Set(domainOptions.flat()));
+        domainOptions = domainOptions.filter((value) => value !== "CATEGORY");
+        setdomains(domainOptions);
+      }
       const selectedDomainOptions = requestedDomains.length > 0
         ? domainOptions.filter((option) => requestedDomains.includes(option))
-        : domainOptions;
+        : (preserveDomainOptions ? [] : domainOptions);
       setSelectedValues(selectedDomainOptions);
 
       let nodevalues = nodes
@@ -1024,7 +1028,7 @@ export default function Tableclick({ cmid, database, tabval }) {
     setSelectedEventTypes(["All"]);
     setThirdDropdownValue(["All"]);
     setSelectedNodes(allNodeOptions);
-    fetchData({ relation: firstDropdownValue, domains: newVal });
+    fetchData({ relation: firstDropdownValue, domains: newVal, preserveDomainOptions: true });
   };
 
   // 2. Node Label Handler
