@@ -81,7 +81,7 @@
   min-width: 0;
 }
 
-@media screen and (max-width: 1300px) {
+@media screen and (max-width: 599px) {
   .cm-nav--app .cm-nav-hamburger {
     display: block;
   }
