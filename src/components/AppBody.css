@@ -36,6 +36,17 @@
     border: 1px solid white !important;
 }
 
+.cm-about-link,
+.cm-about-link:visited {
+    color: #8ad3ff !important;
+    text-decoration: underline;
+}
+
+.cm-about-link:hover,
+.cm-about-link:focus {
+    color: #b9e6ff !important;
+}
+
 .body .MuiTableContainer-root {
     overflow-x: auto;
 }

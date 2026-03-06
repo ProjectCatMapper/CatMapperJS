@@ -15,8 +15,8 @@ const footer = () => {
   return (
     <div className="footer">
       <Box sx={{ flexGrow: 1, marginLeft: { xs: 0, sm: 1 }, marginRight: { xs: 0, sm: 1 } }}>
-        <Grid container spacing={2} direction="column">
-          <Grid item xs={12} width={"100%"}>
+        <Grid container spacing={2}>
+          <Grid item xs={12} md={6}>
             <Card
               variant="outlined"
               className="catmapper-footer-card"
@@ -32,12 +32,12 @@ const footer = () => {
                   Tired of losing weeks to the tedious task of harmonizing complex categories across diverse datasets? Born from the shared frustrations of researchers across the social sciences, CatMapper is a community-driven tool designed to solve the headache of data integration. By providing an intuitive system to explore, match, and publicly share category translations—from ethnic groups to archaeological sites—CatMapper dramatically reduces reconciliation time while boosting open science transparency. Join a growing network of scholars who have already linked thousands of datasets, and discover how CatMapper can eliminate the friction of data cleaning so you can focus on your comparative research.
                   <br />
                   <br />
-                  Read our <Link to="/about" style={{ color: 'inherit', textDecoration: 'underline' }}>about</Link> page to learn more.
+                  Read our <Link className="cm-about-link" to="/about">about</Link> page to learn more.
                 </Typography>
               </CardContent>
             </Card>
           </Grid>
-          <Grid item xs={12} width={"100%"}>
+          <Grid item xs={12} md={6}>
             <Card
               variant="outlined"
               className="catmapper-footer-card"
@@ -54,30 +54,13 @@ const footer = () => {
                   component="div"
                   id="catmapperfooter"
                 >
-                  CatMapper currently houses two apps - SocioMap and ArchaMap:
+                  CatMapper currently houses two apps:
                   <br />
                   <br />
-                  <b>SocioMap</b> organizes the thousands of sociopolitical
-                  categories e.g., ethnicities, languages, religions, districts,
-                  and political parties-frequently used by social scientists and
-                  policymakers. Users can search for basic contextual
-                  information on each category-geographical location, population
-                  size, alternative names, and language as well as the datasets
-                  containing specific social, demographic, cultural and economic
-                  data for each category. In the future, SocioMap will also
-                  provide tools for facilitating and sharing merges of diverse
-                  and heterogenous external datasets by these category systems
-                  to enable novel analyses.
+                  <b>SocioMap</b> helps researchers reconcile inconsistent sociopolitical categories across datasets, including ethnicities, languages, religions, and administrative units. It provides a shared system to search category context, compare naming conventions, and connect records across major global data sources. By documenting and sharing translation decisions, SocioMap enables faster, more transparent, and reproducible comparative research.
                   <br />
                   <br />
-                  <b>Archa Map</b> will organize artifact types e.g., ceramics,
-                  lithics-frequently used by archaeologists in analyses of
-                  material culture. ArchaMap will share SocioMap's
-                  functionalities for merging data from multiple sources by
-                  diverse category systems.
-                  <br />
-                  <br />
-                  Read our <Link to="/about" style={{ color: 'inherit', textDecoration: 'underline' }}>about</Link> page to learn more.
+                  <b>ArchaMap</b> brings CatMapper&apos;s harmonization workflow to archaeology, organizing complex typologies such as ceramic wares, lithic traditions, faunal categories, sites, and time periods. It supports translation and merge workflows that make fragmented regional datasets interoperable at scale. By preserving auditable category mappings, ArchaMap enables clearer synthesis of material culture evidence across space and time.
                 </Typography>
               </CardContent>
             </Card>
