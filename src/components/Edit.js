@@ -1,6 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { useState, useEffect, useRef } from 'react'
-import { Box, Button, FormControlLabel, Radio, RadioGroup, Checkbox, Typography, Divider, Select, TextField, MenuItem, InputLabel, FormControl, FormGroup, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TablePagination, Paper, Snackbar, Alert, LinearProgress } from '@mui/material';
+import { Box, Button, IconButton, FormControlLabel, Radio, RadioGroup, Checkbox, Typography, Divider, Select, TextField, MenuItem, InputLabel, FormControl, FormGroup, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TablePagination, Paper, Snackbar, Alert, LinearProgress } from '@mui/material';
 import DatasetForm from './DatasetCreate';
 import Tooltip from '@mui/material/Tooltip';
 import InfoIcon from '@mui/icons-material/Info';
@@ -907,6 +907,18 @@ const Edit = ({ database }) => {
     </div>
   );
 
+  const SimpleFieldInfoButton = ({ helpText }) => (
+    <Tooltip title={helpText} arrow>
+      <IconButton
+        size="small"
+        aria-label="Field help"
+        sx={{ ml: 0.5, p: 0.25 }}
+      >
+        <InfoIcon sx={{ fontSize: 18 }} />
+      </IconButton>
+    </Tooltip>
+  );
+
   const [selectedColumns, setSelectedColumns] = useState({});
   const [missingColumns, setMissingColumns] = useState([]);
   const [extraColumns, setExtraColumns] = useState([]);
@@ -1288,7 +1300,12 @@ const Edit = ({ database }) => {
       {showFields && selectedOption === "simple" && (
         <Box sx={{ mt: 3 }}>
           <Box sx={{ mb: 2 }}>
-            <InputLabel id="domain-label" style={{ color: "black " }}>Please select the <strong>domain of categories</strong> to be uploaded:</InputLabel>
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <InputLabel id="domain-label" style={{ color: "black " }}>
+                Select the <strong>domain</strong> for this upload:
+              </InputLabel>
+              <SimpleFieldInfoButton helpText="Used when assigning category labels. If Subdomain is selected, Subdomain becomes the upload label; otherwise Domain is used." />
+            </Box>
             <br />
             <Select
               labelId="domain-label"
@@ -1308,7 +1325,12 @@ const Edit = ({ database }) => {
           </Box>
           <br />
           <Box sx={{ mb: 2 }}>
-            <InputLabel id="subdomain-label" style={{ color: "black " }}>Please select the <strong>subdomain</strong> to be uploaded:</InputLabel>
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <InputLabel id="subdomain-label" style={{ color: "black " }}>
+                Select the <strong>subdomain</strong> for this upload:
+              </InputLabel>
+              <SimpleFieldInfoButton helpText="If provided, this is the exact label written to each uploaded row (it overrides Domain for label assignment)." />
+            </Box>
             <br />
             <Select
               labelId="subdomain-label"
@@ -1328,7 +1350,12 @@ const Edit = ({ database }) => {
           </Box>
           <br />
           <Box sx={{ mb: 2 }}>
-            <InputLabel id="domain-label" style={{ color: "black " }}>Enter the <strong>Dataset CMID</strong></InputLabel>
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <InputLabel id="domain-label" style={{ color: "black " }}>
+                Enter the <strong>Dataset CMID</strong>:
+              </InputLabel>
+              <SimpleFieldInfoButton helpText="Mapped to datasetID for every uploaded row. Must be a dataset CMID such as SD... or AD...." />
+            </Box>
             <TextField
               name="datasetID"
               value={formData.datasetID}
@@ -1355,7 +1382,12 @@ const Edit = ({ database }) => {
           </Box>
           <br />
           <Box sx={{ mb: 2 }}>
-            <InputLabel id="domain-label" style={{ color: "black " }}>Choose which column is the <strong>CMName</strong> of <br /> the new or existing node/category:</InputLabel>
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <InputLabel id="domain-label" style={{ color: "black " }}>
+                Select the column for <strong>CMName</strong>:
+              </InputLabel>
+              <SimpleFieldInfoButton helpText="This column is mapped to CMName in the upload payload. It identifies the category/node name used during node creation or updates." />
+            </Box>
             <br />
             <Select
               labelId="domain-label"
@@ -1375,7 +1407,12 @@ const Edit = ({ database }) => {
           </Box>
           <br />
           <Box sx={{ mb: 2 }}>
-            <InputLabel id="domain-label" style={{ color: "black " }}>Choose which column(s) contain the <br /> <strong>category names</strong> from the dataset (if blank <br /> the CMName will be used):</InputLabel>
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <InputLabel id="domain-label" style={{ color: "black " }}>
+                Select the column for <strong>category names</strong>:
+              </InputLabel>
+              <SimpleFieldInfoButton helpText="Mapped to Name in the upload payload. If left blank, Name is auto-filled from the selected CMName column." />
+            </Box>
             <br />
             <Select
               labelId="domain-label"
@@ -1395,7 +1432,12 @@ const Edit = ({ database }) => {
           </Box>
           <br />
           <Box sx={{ mb: 2 }}>
-            <InputLabel id="domain-label" style={{ color: "black " }}>Choose which column(s) contain the<br /> <strong>alternate category names</strong> from the<br /> dataset (separate multiple names using a <br /> semicolon):</InputLabel>
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <InputLabel id="domain-label" style={{ color: "black " }}>
+                Select column(s) for <strong>alternate category names</strong>:
+              </InputLabel>
+              <SimpleFieldInfoButton helpText="Selected columns are combined into one altNames value per row and joined with semicolons during upload." />
+            </Box>
             <br />
             <Select
               multiple
@@ -1417,7 +1459,12 @@ const Edit = ({ database }) => {
           </Box>
           <br />
           <Box sx={{ mb: 2 }}>
-            <InputLabel id="domain-label" style={{ color: "black " }}>Choose which column is the <strong>CMID</strong> of the <br /> node/category or leave blank if all <br /> categories are new: </InputLabel>
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <InputLabel id="domain-label" style={{ color: "black " }}>
+                Select the column for <strong>CMID</strong> (optional):
+              </InputLabel>
+              <SimpleFieldInfoButton helpText="Mapped to CMID. Leave blank to create new categories; provide a CMID column to target existing categories." />
+            </Box>
             <br />
             <Select
               labelId="domain-label"
@@ -1437,7 +1484,12 @@ const Edit = ({ database }) => {
           </Box>
           <br />
           <Box sx={{ mb: 2 }}>
-            <InputLabel id="domain-label" style={{ color: "black " }}>Choose which column is the <strong>key</strong> (unique <br /> ID) of the node/category:</InputLabel>
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <InputLabel id="domain-label" style={{ color: "black " }}>
+                Select the column for <strong>Key</strong>:
+              </InputLabel>
+              <SimpleFieldInfoButton helpText="This selected column is mapped to Key and then formatted by the backend createKey function into CatMapper key format before validation and upload." />
+            </Box>
             <br />
             <Select
               labelId="domain-label"
