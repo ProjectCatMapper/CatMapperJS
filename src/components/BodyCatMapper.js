@@ -3,6 +3,7 @@ import Grid from "@mui/material/Grid";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import Typography from "@mui/material/Typography";
+import { Link } from "react-router-dom";
 // import image from "../assets/white.webp";
 // import Link from "@mui/material/Link";
 import "./BodyCatMapper.css";
@@ -28,21 +29,10 @@ const footer = () => {
                   component="div"
                   id="catmapperfooter"
                 >
-                  CatMapper assists users in:
+                  Tired of losing weeks to the tedious task of harmonizing complex categories across diverse datasets? Born from the shared frustrations of researchers across the social sciences, CatMapper is a community-driven tool designed to solve the headache of data integration. By providing an intuitive system to explore, match, and publicly share category translations—from ethnic groups to archaeological sites—CatMapper dramatically reduces reconciliation time while boosting open science transparency. Join a growing network of scholars who have already linked thousands of datasets, and discover how CatMapper can eliminate the friction of data cleaning so you can focus on your comparative research.
                   <br />
                   <br />
-                  (1) exploring key contextual information about categories of
-                  interest (e.g., Aymara ethnicity, Balochi language, Rajshahi
-                  district).
-                  <br />
-                  <br />
-                  (2) identifying which of thousands of datasets contain
-                  information about specific categories.
-                  <br />
-                  <br />
-                  (3) reconciling distinct and incompatible encodings for the
-                  same category across diverse datasets to enable novel
-                  analyses.
+                  Read our <Link to="/about" style={{ color: 'inherit', textDecoration: 'underline' }}>about</Link> page to learn more.
                 </Typography>
               </CardContent>
             </Card>
@@ -85,6 +75,9 @@ const footer = () => {
                   material culture. ArchaMap will share SocioMap's
                   functionalities for merging data from multiple sources by
                   diverse category systems.
+                  <br />
+                  <br />
+                  Read our <Link to="/about" style={{ color: 'inherit', textDecoration: 'underline' }}>about</Link> page to learn more.
                 </Typography>
               </CardContent>
             </Card>
