@@ -44,3 +44,10 @@ export const cancelUploadInputNodes = ({ cred, taskId, user, cursor = 0 }) => {
     body: JSON.stringify({ taskId, user, cursor }),
   });
 };
+
+export const getUploadProperties = ({ cred, database }) => {
+  return fetch(`${getApiBase()}/metadata/uploadProperties/${database}`, {
+    method: 'GET',
+    headers: authHeaders(cred),
+  });
+};

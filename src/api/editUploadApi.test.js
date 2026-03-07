@@ -4,6 +4,7 @@ import {
   getWaitingUSESStatus,
   getUploadInputNodesStatus,
   cancelUploadInputNodes,
+  getUploadProperties,
 } from './editUploadApi';
 
 describe('editUploadApi auth headers', () => {
@@ -85,5 +86,17 @@ describe('editUploadApi auth headers', () => {
     expect(url).toBe('http://api.test/uploadInputNodesCancel');
     expect(options.headers.Authorization).toBe('Bearer token-upload');
     expect(JSON.parse(options.body)).toEqual({ taskId: 'upload-002', user: '42', cursor: 3 });
+  });
+
+  test('getUploadProperties sends bearer authorization to metadata endpoint', async () => {
+    await getUploadProperties({
+      cred: 'token-upload',
+      database: 'archamap',
+    });
+
+    const [url, options] = global.fetch.mock.calls[0];
+    expect(url).toBe('http://api.test/metadata/uploadProperties/archamap');
+    expect(options.method).toBe('GET');
+    expect(options.headers.Authorization).toBe('Bearer token-upload');
   });
 });

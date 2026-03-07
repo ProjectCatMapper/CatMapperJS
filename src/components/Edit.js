@@ -15,6 +15,7 @@ import {
   getWaitingUSESStatus,
   getUploadInputNodesStatus,
   cancelUploadInputNodes,
+  getUploadProperties,
 } from '../api/editUploadApi';
 
 
@@ -88,6 +89,11 @@ const Edit = ({ database }) => {
   const [uploadLogLines, setUploadLogLines] = useState([]);
   const [uploadCursor, setUploadCursor] = useState(0);
   const [cancelUploadPending, setCancelUploadPending] = useState(false);
+  const [propertiesModalOpen, setPropertiesModalOpen] = useState(false);
+  const [propertiesLoading, setPropertiesLoading] = useState(false);
+  const [propertiesError, setPropertiesError] = useState('');
+  const [availableNodeProperties, setAvailableNodeProperties] = useState([]);
+  const [availableUsesProperties, setAvailableUsesProperties] = useState([]);
   const handleClose1 = () => {
     setOpenSnackbar(false); // Close the snackbar after user interaction
   };
@@ -876,36 +882,80 @@ const Edit = ({ database }) => {
     setadvSelectedOption(event.target.value);
   };
 
-  const advancedtooltip = [
-    { option: 'Adding new node', description: 'Use this if all rows in the spreadsheet are creating a new node and represent a unique node.' },
-    { option: 'Adding new uses ties', description: 'Use this if you are adding new uses ties with existing nodes or if you have a mix of new nodes and existing nodes or if you have new nodes that have multiple rows of data that represent each node. This function will aggregate rows by dataset, SocioMapID or ArchaMapID (if present), and Key.' },
-    { option: 'Updating existing USES only--add or add to properties ', description: 'Use this if you are updating properties for existing uses ties but not replacing any information.' },
-    { option: 'Updating existing USES only--replace one property ', description: 'Use this if you are replacing or removing data from a property. This is only valid for a single property.' },
-    { option: 'Updating existing Node properties--Add new property and add to existing property values ', description: 'Tbf.' },
-    { option: 'Updating existing Node properties--Add new property and replace existing property values ', description: 'Tbf.' },
-  ];
+  const standardOptionHelpText = {
+    add_node: 'Create a new node for each row. Use when each row represents a distinct new node.',
+    node_add: 'Update existing node properties by adding values without replacing current values.',
+    node_replace: 'Update one existing node property by replacing its value. Replace mode supports one property column.',
+    add_uses: 'Create USES ties for rows and include new or existing nodes. Rows can be aggregated by datasetID, CMID, and Key.',
+    update_add: 'Update existing USES ties by adding values without removing current values.',
+    update_replace: 'Replace one property on existing USES ties. Replace mode supports one property column.',
+    add_merging: 'Create merging ties for rows in the upload file.',
+    merging_add: 'Update existing merging tie properties by adding values without replacing current values.',
+    merging_replace: 'Replace one property on an existing merging tie. Replace mode supports one property column.',
+  };
 
-  const tooltipContent = (
-    <div style={{ maxWidth: '400px' }}>
-      <h4>Option Descriptions</h4>
-      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-        <thead>
-          <tr>
-            <th style={{ borderBottom: '1px solid #ddd', textAlign: 'left', padding: '8px' }}>Option</th>
-            <th style={{ borderBottom: '1px solid #ddd', textAlign: 'left', padding: '8px' }}>Description</th>
-          </tr>
-        </thead>
-        <tbody>
-          {advancedtooltip.map((category, index) => (
-            <tr key={index}>
-              <td style={{ borderBottom: '1px solid #ddd', padding: '8px' }}>{category.option}</td>
-              <td style={{ borderBottom: '1px solid #ddd', padding: '8px' }}>{category.description}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
+  const fetchAvailableUploadProperties = async () => {
+    if (!database) {
+      setPropertiesError('Database is not selected.');
+      return;
+    }
+
+    setPropertiesLoading(true);
+    setPropertiesError('');
+    try {
+      const response = await getUploadProperties({
+        cred,
+        database: String(database).toLowerCase(),
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        setPropertiesError(payload?.error || 'Unable to load available properties.');
+        return;
+      }
+
+      setAvailableNodeProperties(Array.isArray(payload?.nodeProperties) ? payload.nodeProperties : []);
+      setAvailableUsesProperties(Array.isArray(payload?.usesProperties) ? payload.usesProperties : []);
+    } catch (_error) {
+      setPropertiesError('Unable to load available properties.');
+    } finally {
+      setPropertiesLoading(false);
+    }
+  };
+
+  const openPropertiesModal = async () => {
+    setPropertiesModalOpen(true);
+    await fetchAvailableUploadProperties();
+  };
+
+  const closePropertiesModal = () => {
+    setPropertiesModalOpen(false);
+  };
+
+  const downloadAvailableProperties = () => {
+    const workbook = XLSX.utils.book_new();
+    const normalizedNodeRows = (availableNodeProperties || []).map((item) => ({
+      property: item?.property || '',
+      description: item?.description || '',
+    }));
+    const normalizedUsesRows = (availableUsesProperties || []).map((item) => ({
+      property: item?.property || '',
+      description: item?.description || '',
+    }));
+
+    XLSX.utils.book_append_sheet(
+      workbook,
+      XLSX.utils.json_to_sheet(normalizedNodeRows.length > 0 ? normalizedNodeRows : [{ property: '', description: '' }]),
+      'Node Properties',
+    );
+    XLSX.utils.book_append_sheet(
+      workbook,
+      XLSX.utils.json_to_sheet(normalizedUsesRows.length > 0 ? normalizedUsesRows : [{ property: '', description: '' }]),
+      'USES Properties',
+    );
+
+    const dbName = String(database || 'database').toLowerCase();
+    XLSX.writeFile(workbook, `${dbName}_upload_properties.xlsx`);
+  };
 
   const SimpleFieldInfoButton = ({ helpText }) => (
     <Tooltip title={helpText} arrow>
@@ -913,11 +963,26 @@ const Edit = ({ database }) => {
         size="small"
         aria-label="Field help"
         sx={{ ml: 0.5, p: 0.25 }}
+        onClick={(event) => event.stopPropagation()}
+        onMouseDown={(event) => event.stopPropagation()}
       >
         <InfoIcon sx={{ fontSize: 18 }} />
       </IconButton>
     </Tooltip>
   );
+
+  const StandardOptionLabel = ({ label, helpText }) => (
+    <Box sx={{ display: 'inline-flex', alignItems: 'center' }}>
+      <span>{label}</span>
+      <SimpleFieldInfoButton helpText={helpText} />
+    </Box>
+  );
+
+  useEffect(() => {
+    setAvailableNodeProperties([]);
+    setAvailableUsesProperties([]);
+    setPropertiesError('');
+  }, [database]);
 
   const [selectedColumns, setSelectedColumns] = useState({});
   const [missingColumns, setMissingColumns] = useState([]);
@@ -1511,23 +1576,75 @@ const Edit = ({ database }) => {
       )}
       {showFields && selectedOption === "standard" && (
         <Box sx={{ mb: 2 }}>
-          <h4 style={{ color: 'black', padding: "2px" }}>Select option<Tooltip title={tooltipContent} arrow>
-            <Button startIcon={<InfoIcon sx={{ height: '24px', width: '24px' }} />}>
-            </Button>
-          </Tooltip></h4>
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <Typography component="h4" sx={{ color: 'black', fontWeight: 'bold', p: '2px' }}>
+              Select option
+            </Typography>
+            <SimpleFieldInfoButton helpText="Choose the upload behavior first. This controls required columns and whether values are added or replaced." />
+          </Box>
+          <Button
+            variant="outlined"
+            size="small"
+            sx={{ mt: 0.5, mb: 1.5 }}
+            onClick={openPropertiesModal}
+          >
+            View Available Properties
+          </Button>
           <RadioGroup defaultValue="add_node" name="advuploadOption" sx={{ mb: 2 }} onChange={handleadvOptionChange}>
             <Typography variant="subtitle2" sx={{ mt: 2, color: "black", fontWeight: "bold" }}>Nodes</Typography>
-            <FormControlLabel value="add_node" control={<Radio />} label="Adding new node for every row" />
-            <FormControlLabel value="node_add" control={<Radio />} label="Updating existing Node properties--add or add to properties" />
-            {authLevel === 2 && <FormControlLabel value="node_replace" control={<Radio />} label="Updating existing Node properties--replace one property" />}
+            <FormControlLabel
+              value="add_node"
+              control={<Radio />}
+              label={<StandardOptionLabel label="Adding new node for every row" helpText={standardOptionHelpText.add_node} />}
+            />
+            <FormControlLabel
+              value="node_add"
+              control={<Radio />}
+              label={<StandardOptionLabel label="Updating existing Node properties--add or add to properties" helpText={standardOptionHelpText.node_add} />}
+            />
+            {authLevel === 2 && (
+              <FormControlLabel
+                value="node_replace"
+                control={<Radio />}
+                label={<StandardOptionLabel label="Updating existing Node properties--replace one property" helpText={standardOptionHelpText.node_replace} />}
+              />
+            )}
             <Typography variant="subtitle2" sx={{ mt: 2, color: "black", fontWeight: "bold" }}>Uses ties</Typography>
-            <FormControlLabel value="add_uses" control={<Radio />} label="Adding new uses ties (with old or new nodes)" />
-            <FormControlLabel value="update_add" control={<Radio />} label="Updating existing USES only--add or add to properties" />
-            {authLevel === 2 && <FormControlLabel value="update_replace" control={<Radio />} label="Updating existing USES only--replace one property" />}
+            <FormControlLabel
+              value="add_uses"
+              control={<Radio />}
+              label={<StandardOptionLabel label="Adding new uses ties (with old or new nodes)" helpText={standardOptionHelpText.add_uses} />}
+            />
+            <FormControlLabel
+              value="update_add"
+              control={<Radio />}
+              label={<StandardOptionLabel label="Updating existing USES only--add or add to properties" helpText={standardOptionHelpText.update_add} />}
+            />
+            {authLevel === 2 && (
+              <FormControlLabel
+                value="update_replace"
+                control={<Radio />}
+                label={<StandardOptionLabel label="Updating existing USES only--replace one property" helpText={standardOptionHelpText.update_replace} />}
+              />
+            )}
             <Typography variant="subtitle2" sx={{ mt: 2, color: "black", fontWeight: "bold" }}>Merging & Equivalence ties</Typography>
-            <FormControlLabel value="add_merging" control={<Radio />} label="Adding new merging ties for every row" />
-            <FormControlLabel value="merging_add" control={<Radio />} label="Updating existing Merging tie properties--add or add to properties" />
-            {authLevel === 2 && <FormControlLabel value="merging_replace" control={<Radio />} label="Updating existing Merging tie properties--replace one property" />}
+            <FormControlLabel
+              value="add_merging"
+              control={<Radio />}
+              label={<StandardOptionLabel label="Adding new merging ties for every row" helpText={standardOptionHelpText.add_merging} />}
+            />
+            <FormControlLabel
+              value="merging_add"
+              control={<Radio />}
+              label={<StandardOptionLabel label="Updating existing Merging tie properties--add or add to properties" helpText={standardOptionHelpText.merging_add} />}
+            />
+            {authLevel === 2 && (
+              <FormControlLabel
+                value="merging_replace"
+                control={<Radio />}
+                label={<StandardOptionLabel label="Updating existing Merging tie properties--replace one property" helpText={standardOptionHelpText.merging_replace} />}
+              />
+            )}
           </RadioGroup>
 
           <FormControl component="fieldset" sx={{ mb: 2 }}>
@@ -1536,7 +1653,12 @@ const Edit = ({ database }) => {
                 Error: Missing the following required columns: {missingColumns.join(', ')}
               </Typography>
             )}
-            <h4 style={{ color: 'black', padding: "2px" }}>Required Columns:</h4>
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <Typography component="h4" sx={{ color: 'black', fontWeight: 'bold', p: '2px' }}>
+                Required Columns:
+              </Typography>
+              <SimpleFieldInfoButton helpText="These columns are required for the selected upload option. Upload is blocked until all required columns are present in the file." />
+            </Box>
             <FormGroup>
               {Object.keys(selectedColumns).map((column) => (
                 <FormControlLabel
@@ -1581,7 +1703,12 @@ const Edit = ({ database }) => {
           <br />
           {["add_node", 'add_uses', 'update_add', 'add_merging'].includes(advselectedOption) && extraColumns.length > 0 && allRequiredColumnsFound && (
             <div>
-              <h4 style={{ color: 'black', padding: "2px" }}>Choose columns to enter as properties:</h4>
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <Typography component="h4" sx={{ color: 'black', fontWeight: 'bold', p: '2px' }}>
+                  Choose columns to enter as properties:
+                </Typography>
+                <SimpleFieldInfoButton helpText="Select uploaded columns that should be written as properties on the target node or tie." />
+              </Box>
               <Select
                 multiple
                 value={selectedExtraColumns}
@@ -1598,7 +1725,12 @@ const Edit = ({ database }) => {
           )}
           {advselectedOption === 'update_replace' && extraColumns.length > 0 && allRequiredColumnsFound && (
             <div>
-              <h4 style={{ color: 'black', padding: "2px" }}>Choose column to replace property:</h4>
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <Typography component="h4" sx={{ color: 'black', fontWeight: 'bold', p: '2px' }}>
+                  Choose column to replace property:
+                </Typography>
+                <SimpleFieldInfoButton helpText="Replace mode updates one property only. Choose the single uploaded column to use for replacement." />
+              </Box>
               <br />
               <Select
                 value={selectedExtraColumn}
@@ -1615,7 +1747,12 @@ const Edit = ({ database }) => {
           )}
           {advselectedOption === 'node_add' && extraColumns.length > 0 && IsDataset && allRequiredColumnsFound && (
             <div>
-              <h4 style={{ color: 'black', padding: "2px" }}>Choose columns to enter as properties:</h4>
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <Typography component="h4" sx={{ color: 'black', fontWeight: 'bold', p: '2px' }}>
+                  Choose columns to enter as properties:
+                </Typography>
+                <SimpleFieldInfoButton helpText="Select uploaded columns that should be written as properties on dataset nodes." />
+              </Box>
               <Select
                 multiple
                 value={selectedExtraColumns}
@@ -1632,7 +1769,12 @@ const Edit = ({ database }) => {
           )}
           {advselectedOption === 'node_replace' && extraColumns.length > 0 && allRequiredColumnsFound && (
             <div>
-              <h4 style={{ color: 'black', padding: "2px" }}>Choose column to replace property:</h4>
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <Typography component="h4" sx={{ color: 'black', fontWeight: 'bold', p: '2px' }}>
+                  Choose column to replace property:
+                </Typography>
+                <SimpleFieldInfoButton helpText="Replace mode updates one node property only. Choose the single uploaded column to use for replacement." />
+              </Box>
               <br />
               <Select
                 value={selectedExtraColumn}
@@ -1649,7 +1791,12 @@ const Edit = ({ database }) => {
           )}
           {advselectedOption === 'merging_add' && extraColumns.length > 0 && allRequiredColumnsFound && (
             <div>
-              <h4 style={{ color: 'black', padding: "2px" }}>Choose columns to enter as properties:</h4>
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <Typography component="h4" sx={{ color: 'black', fontWeight: 'bold', p: '2px' }}>
+                  Choose columns to enter as properties:
+                </Typography>
+                <SimpleFieldInfoButton helpText="Select uploaded columns that should be written as properties on merging ties." />
+              </Box>
               <Select
                 multiple
                 value={selectedExtraColumns}
@@ -1666,7 +1813,12 @@ const Edit = ({ database }) => {
           )}
           {advselectedOption === 'merging_replace' && extraColumns.length > 0 && allRequiredColumnsFound && (
             <div>
-              <h4 style={{ color: 'black', padding: "2px" }}>Choose column to replace property:</h4>
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <Typography component="h4" sx={{ color: 'black', fontWeight: 'bold', p: '2px' }}>
+                  Choose column to replace property:
+                </Typography>
+                <SimpleFieldInfoButton helpText="Replace mode updates one merging tie property only. Choose the single uploaded column to use for replacement." />
+              </Box>
               <br />
               <Select
                 value={selectedExtraColumn}
@@ -1683,7 +1835,12 @@ const Edit = ({ database }) => {
           )}
           <br />
           <FormControl component="fieldset" sx={{ mb: 2 }}>
-            <h4 style={{ color: 'black', padding: "2px" }}>Add from Dataset Properties:</h4>
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <Typography component="h4" sx={{ color: 'black', fontWeight: 'bold', p: '2px' }}>
+                Add from Dataset Properties:
+              </Typography>
+              <SimpleFieldInfoButton helpText="These options copy values from dataset metadata onto upload results. They are not read from the uploaded row columns." />
+            </Box>
             <FormGroup>
               <FormControlLabel
                 value="district"
@@ -1761,6 +1918,100 @@ const Edit = ({ database }) => {
             {uploadLogLines.length > 0 ? uploadLogLines.join('\n') : 'Waiting for upload logs...'}
           </Box>
         </DialogContent>
+      </Dialog>
+      <Dialog
+        open={propertiesModalOpen}
+        onClose={closePropertiesModal}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>
+          Available Upload Properties ({String(database || '').toLowerCase()})
+        </DialogTitle>
+        <DialogContent>
+          {propertiesLoading && (
+            <Typography variant="body2" sx={{ mb: 1.5 }}>
+              Loading available properties...
+            </Typography>
+          )}
+          {propertiesError && (
+            <Typography variant="body2" sx={{ mb: 1.5, color: 'red !important' }}>
+              {propertiesError}
+            </Typography>
+          )}
+
+          {!propertiesLoading && !propertiesError && (
+            <Box>
+              <Typography variant="subtitle1" sx={{ mt: 0.5, mb: 1, color: 'black', fontWeight: 'bold' }}>
+                Node Properties
+              </Typography>
+              <TableContainer component={Paper} sx={{ mb: 2 }}>
+                <Table size="small">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell sx={{ fontWeight: 'bold' }}>property</TableCell>
+                      <TableCell sx={{ fontWeight: 'bold' }}>description</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {availableNodeProperties.length > 0 ? (
+                      availableNodeProperties.map((item, index) => (
+                        <TableRow key={`node-prop-${index}`}>
+                          <TableCell>{item?.property || ''}</TableCell>
+                          <TableCell>{item?.description || ''}</TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={2}>No node properties available.</TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+
+              <Typography variant="subtitle1" sx={{ mt: 0.5, mb: 1, color: 'black', fontWeight: 'bold' }}>
+                USES Tie Properties
+              </Typography>
+              <TableContainer component={Paper}>
+                <Table size="small">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell sx={{ fontWeight: 'bold' }}>property</TableCell>
+                      <TableCell sx={{ fontWeight: 'bold' }}>description</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {availableUsesProperties.length > 0 ? (
+                      availableUsesProperties.map((item, index) => (
+                        <TableRow key={`uses-prop-${index}`}>
+                          <TableCell>{item?.property || ''}</TableCell>
+                          <TableCell>{item?.description || ''}</TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={2}>No USES tie properties available.</TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button
+            variant="outlined"
+            onClick={downloadAvailableProperties}
+            disabled={propertiesLoading || (!!propertiesError)}
+          >
+            Download Properties
+          </Button>
+          <Button onClick={closePropertiesModal} color="primary">
+            Close
+          </Button>
+        </DialogActions>
       </Dialog>
 
       <Button variant="contained" disabled={!download} sx={{
