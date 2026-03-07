@@ -87,6 +87,10 @@ function TranslateComponent({ database }) {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [loading, setLoading] = useState(false);
   const [loadingStage, setLoadingStage] = useState('');
+  const [loadingPercent, setLoadingPercent] = useState(0);
+  const [loadingElapsedSeconds, setLoadingElapsedSeconds] = useState(0);
+  const [translateTaskId, setTranslateTaskId] = useState('');
+  const translatePollTimeoutRef = useRef(null);
   const translateAbortRef = useRef(null);
   const [filename, setFilename] = useState("");
   const [jsonData, setJsondata] = useState();
@@ -129,7 +133,122 @@ function TranslateComponent({ database }) {
     setIsCheckedfour(!isCheckedfour);
   }
 
+  const clearTranslatePoll = () => {
+    if (translatePollTimeoutRef.current) {
+      clearTimeout(translatePollTimeoutRef.current);
+      translatePollTimeoutRef.current = null;
+    }
+  };
+
+  const applyTranslateResult = (responseData) => {
+    const warnings = Array.isArray(responseData?.warnings)
+      ? responseData.warnings.filter((msg) => typeof msg === 'string' && msg.trim() !== '')
+      : [];
+    if (warnings.length > 0) {
+      alert(`Warning: ${warnings.join(' ')}`);
+    }
+
+    const allKeys = Array.isArray(responseData?.order) ? responseData.order : [];
+    const matchedColumn = zeroDropdownValue;
+
+    const patternPrefixes = [
+      'matching_',
+      'matchingDistance_',
+      'matchType_',
+      'CMName_',
+      'CMID_',
+      'label_',
+      'CMcountry_',
+    ];
+
+    const suffixColumns = patternPrefixes.map(prefix => prefix + zeroDropdownValue).filter(col => allKeys.includes(col));
+    const usedColumns = new Set([matchedColumn, 'CMuniqueRowID', ...suffixColumns]);
+    const remainingColumns = allKeys.filter(key => !usedColumns.has(key));
+
+    const reorderedColumns = [
+      matchedColumn,
+      ...suffixColumns,
+      'CMuniqueRowID',
+      ...remainingColumns
+    ];
+
+    const withReviewIds = addReviewIds(responseData.file || []);
+    setReviewRows(withReviewIds);
+    setColumns(reorderedColumns);
+    setTcategories(getMatchTypePercentages(withReviewIds, zeroDropdownValue));
+  };
+
+  const pollTranslateTaskStatus = (taskId) => {
+    const pollDelayMs = 1000;
+    clearTranslatePoll();
+
+    translatePollTimeoutRef.current = setTimeout(async () => {
+      try {
+        const response = await fetch(`${process.env.REACT_APP_API_URL}/translate/status`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ taskId }),
+        });
+        const payload = await response.json().catch(() => ({}));
+
+        if (!response.ok) {
+          const message = payload?.error || 'Unable to read translation status.';
+          setError(message);
+          setLoading(false);
+          setLoadingStage('');
+          setLoadingPercent(0);
+          setTranslateTaskId('');
+          return;
+        }
+
+        setLoadingStage(payload?.message || 'Processing translation...');
+        setLoadingPercent(Math.max(0, Math.min(100, Number(payload?.percent ?? 0))));
+        setLoadingElapsedSeconds(Number(payload?.elapsedSeconds ?? 0));
+
+        const status = String(payload?.status || '').toLowerCase();
+        if (status === 'processing') {
+          pollTranslateTaskStatus(taskId);
+          return;
+        }
+
+        clearTranslatePoll();
+        setTranslateTaskId('');
+        setLoading(false);
+
+        if (status === 'completed') {
+          setLoadingStage('Parsing results...');
+          applyTranslateResult(payload);
+          setLoadingStage('');
+          setLoadingPercent(100);
+          return;
+        }
+
+        if (status === 'canceled') {
+          setLoadingStage('');
+          setLoadingPercent(0);
+          return;
+        }
+
+        setLoadingStage('');
+        setLoadingPercent(0);
+        setError(payload?.error || 'Propose translate failed.');
+      } catch (error) {
+        if (error?.name === 'AbortError') {
+          return;
+        }
+        setLoading(false);
+        setLoadingStage('');
+        setLoadingPercent(0);
+        setTranslateTaskId('');
+        setError('Unable to read translation status.');
+      }
+    }, pollDelayMs);
+  };
+
   const handleClick = async () => {
+    clearTranslatePoll();
     if (translateAbortRef.current) {
       translateAbortRef.current.abort();
     }
@@ -138,10 +257,10 @@ function TranslateComponent({ database }) {
 
     setLoading(true);
     setLoadingStage('Processing input...');
+    setLoadingPercent(10);
+    setLoadingElapsedSeconds(0);
     try {
-      setLoadingStage('Waiting on server...');
-      //const response = await fetch("http://127.0.0.1:5001/translate2", {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/translate`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/translate/start`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -160,78 +279,85 @@ function TranslateComponent({ database }) {
           table: jsonData,
           query: query,
           countsamename: isCountSameName,
-          uniqueRows: isUniqueRows
+          uniqueRows: isUniqueRows,
+          batchSize: 2000,
         }),
         signal: controller.signal,
       });
 
       if (!response.ok) {
         alert('Propose translate was not completed, please check your matching column for unusual characters and please contact the CatMapper team if the issue persists.');
+        setLoading(false);
+        setLoadingStage('');
+        setLoadingPercent(0);
+        return;
       }
 
-      setLoadingStage('Parsing results...');
-      const responseData = await response.json();
-      const warnings = Array.isArray(responseData?.warnings)
-        ? responseData.warnings.filter((msg) => typeof msg === 'string' && msg.trim() !== '')
-        : [];
-      if (warnings.length > 0) {
-        alert(`Warning: ${warnings.join(' ')}`);
+      const responseData = await response.json().catch(() => ({}));
+      const taskId = responseData?.taskId;
+      if (!taskId) {
+        throw new Error('Translation task did not start.');
       }
 
-      const allKeys = responseData.order;
-
-      const matchedColumn = zeroDropdownValue;
-
-      const patternPrefixes = [
-        'matching_',
-        'matchingDistance_',
-        'matchType_',
-        'CMName_',
-        'CMID_',
-        'label_',
-        'CMcountry_',
-      ];
-
-      const suffixColumns = patternPrefixes.map(prefix => prefix + zeroDropdownValue).filter(col => allKeys.includes(col));
-
-      const usedColumns = new Set([matchedColumn, 'CMuniqueRowID', ...suffixColumns]);
-      const remainingColumns = allKeys.filter(key => !usedColumns.has(key));
-
-      const reorderedColumns = [
-        matchedColumn,
-        ...suffixColumns,
-        'CMuniqueRowID',
-        ...remainingColumns
-      ];
-
-      const withReviewIds = addReviewIds(responseData.file || []);
-      setReviewRows(withReviewIds);
-      setColumns(reorderedColumns)
-      setTcategories(getMatchTypePercentages(withReviewIds, zeroDropdownValue));
+      setTranslateTaskId(taskId);
+      setLoadingStage(responseData?.message || 'Processing input...');
+      setLoadingPercent(Math.max(0, Math.min(100, Number(responseData?.percent ?? 10))));
+      setLoadingElapsedSeconds(Number(responseData?.elapsedSeconds ?? 0));
+      pollTranslateTaskStatus(taskId);
 
     } catch (error) {
       if (error?.name === 'AbortError') {
         return;
       }
       console.error('Error sending POST request:', error);
+      setError('Unable to start translation.');
+      setLoading(false);
+      setLoadingStage('');
+      setLoadingPercent(0);
+      setTranslateTaskId('');
     }
     finally {
       if (translateAbortRef.current === controller) {
         translateAbortRef.current = null;
       }
-      setLoading(false);
-      setLoadingStage('');
     }
   };
 
-  const handleCancelTranslate = () => {
+  const handleCancelTranslate = async () => {
+    clearTranslatePoll();
     if (translateAbortRef.current) {
       translateAbortRef.current.abort();
       translateAbortRef.current = null;
     }
+    if (translateTaskId) {
+      try {
+        await fetch(`${process.env.REACT_APP_API_URL}/translate/cancel`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ taskId: translateTaskId }),
+        });
+      } catch (_error) {
+        // ignore network errors while canceling
+      }
+    }
+    setTranslateTaskId('');
     setLoading(false);
     setLoadingStage('');
+    setLoadingPercent(0);
+    setLoadingElapsedSeconds(0);
   };
+
+  useEffect(() => {
+    return () => {
+      clearTranslatePoll();
+      if (translateAbortRef.current) {
+        translateAbortRef.current.abort();
+        translateAbortRef.current = null;
+      }
+    };
+  }, []);
 
   const handleClicktwo = () => {
     try {
@@ -341,7 +467,7 @@ function TranslateComponent({ database }) {
     setTcategories(getMatchTypePercentages(reviewRows, zeroDropdownValue));
   }, [reviewRows, zeroDropdownValue]);
 
-  const LoadingBar = ({ stage }) => (
+  const LoadingBar = ({ stage, percent, elapsedSeconds }) => (
     <Box
       sx={{
         width: 'min(560px, 80vw)',
@@ -355,7 +481,13 @@ function TranslateComponent({ database }) {
       <Typography variant="body1" sx={{ mb: 1, fontWeight: 600 }}>
         {stage || 'Working...'}
       </Typography>
-      <LinearProgress />
+      <LinearProgress variant="determinate" value={Math.max(0, Math.min(100, Number(percent || 0)))} />
+      <Typography variant="caption" sx={{ display: 'block', mt: 1 }}>
+        {Math.max(0, Math.min(100, Number(percent || 0))).toFixed(0)}% complete
+      </Typography>
+      <Typography variant="caption" sx={{ display: 'block', mt: 0.25 }}>
+        Elapsed: {Number(elapsedSeconds || 0).toFixed(1)}s
+      </Typography>
     </Box>
   );
 
@@ -872,7 +1004,7 @@ function TranslateComponent({ database }) {
               <Typography variant="h6" align="center" style={{ marginTop: '10px' }}>
                 Translating
               </Typography>
-              <LoadingBar stage={loadingStage} />
+              <LoadingBar stage={loadingStage} percent={loadingPercent} elapsedSeconds={loadingElapsedSeconds} />
               <Box sx={{ display: 'flex', justifyContent: 'center', mt: 1.5 }}>
                 <Button
                   variant="outlined"
