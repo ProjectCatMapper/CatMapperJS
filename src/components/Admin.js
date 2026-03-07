@@ -325,6 +325,7 @@ const Admin = ({ database }) => {
 
   const loadPendingUsersForApproval = async () => {
     try {
+      setLoading(true);
       const response = await fetch(`${process.env.REACT_APP_API_URL}/updateNewUsers`, {
         //const response = await fetch("http://127.0.0.1:5001/updateNewUsers", {
         method: "POST",
@@ -339,15 +340,41 @@ const Admin = ({ database }) => {
         }),
       });
 
-      const result = await response.json();
-      setUsers(result)
+      const contentType = response.headers.get("content-type") || "";
+      const result = contentType.includes("application/json")
+        ? await response.json()
+        : await response.text();
+
+      if (!response.ok) {
+        const message = typeof result === "string"
+          ? result
+          : (result && result.error) || "Unable to load pending users.";
+        throw new Error(message);
+      }
+
+      const pendingUsers = Array.isArray(result) ? result : [];
+      setUsers(pendingUsers);
+      setSelectedUserIds([]);
+      if (pendingUsers.length === 0) {
+        alert("No pending users found.");
+      }
     } catch (error) {
+      const message = error?.message || "Unable to load pending users.";
+      alert(message);
       console.error("Error:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
   const approveSelectedUsers = async () => {
     try {
+      if (selectedUserIds.length === 0) {
+        alert("Select at least one user to approve.");
+        return;
+      }
+
+      setLoading(true);
       const response = await fetch(`${process.env.REACT_APP_API_URL}/updateNewUsers`, {
         //const response = await fetch("http://127.0.0.1:5001/updateNewUsers", {
         method: "POST",
@@ -362,13 +389,31 @@ const Admin = ({ database }) => {
         }),
       });
 
-      const result = await response.json();
+      const contentType = response.headers.get("content-type") || "";
+      const result = contentType.includes("application/json")
+        ? await response.json()
+        : await response.text();
+
+      if (!response.ok) {
+        const message = typeof result === "string"
+          ? result
+          : (result && result.error) || "Unable to approve selected users.";
+        throw new Error(message);
+      }
+
       if (result) {
-        setCMIDText("Approved");
+        const selectedIds = new Set(selectedUserIds.map((id) => String(id)));
+        setUsers((prevUsers) => prevUsers.filter((row) => !selectedIds.has(String(row.userid))));
+        setSelectedUserIds([]);
+        setCMIDText("Selected users approved.");
         setPopen(true);
       }
     } catch (error) {
+      const message = error?.message || "Unable to approve selected users.";
+      alert(message);
       console.error("Error:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
