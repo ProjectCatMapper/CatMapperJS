@@ -41,6 +41,21 @@ export default defineConfig(({ mode }) => {
       host: true,
       port: 3000,
     },
+    build: {
+      rollupOptions: {
+        onwarn(warning, warn) {
+          const warningText = String(warning?.message || '');
+          const isLoadersChildProcessWarning =
+            warningText.includes('child-process-proxy.js') &&
+            warningText.includes('"spawn" is not exported by "__vite-browser-external"');
+
+          if (isLoadersChildProcessWarning) {
+            return;
+          }
+          warn(warning);
+        },
+      },
+    },
     test: {
       environment: 'jsdom',
       globals: true,
