@@ -280,7 +280,7 @@ function TranslateComponent({ database }) {
           query: query,
           countsamename: isCountSameName,
           uniqueRows: isUniqueRows,
-          batchSize: 2000,
+          batchSize: 500,
         }),
         signal: controller.signal,
       });
