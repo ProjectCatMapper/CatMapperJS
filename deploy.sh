@@ -36,7 +36,7 @@ run_as_deploy_user() {
 }
 
 run_node_cmd_as_deploy_user() {
-  run_as_deploy_user bash -lc '
+  run_as_deploy_user bash -c '
     if [ -s "$HOME/.nvm/nvm.sh" ]; then
       . "$HOME/.nvm/nvm.sh" >/dev/null 2>&1
       nvm use --silent default >/dev/null 2>&1 || true
