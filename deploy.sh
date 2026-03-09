@@ -35,6 +35,16 @@ run_as_deploy_user() {
   fi
 }
 
+run_node_cmd_as_deploy_user() {
+  run_as_deploy_user bash -c '
+    if [ -s "$HOME/.nvm/nvm.sh" ]; then
+      . "$HOME/.nvm/nvm.sh" >/dev/null 2>&1
+      nvm use --silent default >/dev/null 2>&1 || true
+    fi
+    "$@"
+  ' bash "$@"
+}
+
 verify_git_write_access() {
   run_as_deploy_user test -w .git/objects || return 1
   mkdir -p .git/refs/tags
@@ -105,7 +115,7 @@ if [ "$SKIP_VERSION" = false ]; then
   NEW_VERSION=$(date +%Y.%m.%d-%H%M)
 
   # 3. Update the package.json version
-  run_as_deploy_user npm version "$NEW_VERSION" --no-git-tag-version
+  run_node_cmd_as_deploy_user npm version "$NEW_VERSION" --no-git-tag-version
   echo "🔢 Version updated to $NEW_VERSION"
 else
   echo "⏩ Skipping version update and Git tagging..."
@@ -120,10 +130,10 @@ chown -R "$DEPLOY_USER":catmapper dist node_modules/.vite
 
 if [ "$FAST_BUILD" = true ]; then
   echo "⚡ Fast build mode enabled (Vite default production build)"
-  run_as_deploy_user npm run build
+  run_node_cmd_as_deploy_user npm run build
 else
   echo "🧪 Full build mode enabled"
-  run_as_deploy_user npm run build
+  run_node_cmd_as_deploy_user npm run build
 fi
 
 # 5. Deploy the files
