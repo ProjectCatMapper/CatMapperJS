@@ -14,19 +14,19 @@ const ApiGuide = () => {
 
         <Typography variant="body1" gutterBottom>
           This user guide documents public CatMapper API endpoints. The API base URL is{' '}
-          <Link className="link" href="https://catmapper.org/api" target="_blank" rel="noopener">
-            https://catmapper.org/api
+          <Link className="link" href="https://api.catmapper.org" target="_blank" rel="noopener">
+            https://api.catmapper.org
           </Link>.
         </Typography>
         <Typography variant="body1" gutterBottom>
           Example:{' '}
           <Link
             className="link"
-            href="https://catmapper.org/api/CMID/SocioMap/SM1"
+            href="https://api.catmapper.org/CMID/SocioMap/SM1"
             target="_blank"
             rel="noopener"
           >
-            https://catmapper.org/api/CMID/SocioMap/SM1
+            https://api.catmapper.org/CMID/SocioMap/SM1
           </Link>
         </Typography>
         <Typography variant="body1" gutterBottom>
@@ -37,8 +37,8 @@ const ApiGuide = () => {
         </Typography>
         <Typography variant="body1" gutterBottom>
           API explorer:{' '}
-          <Link className="link" href="https://catmapper.org/api/docs" target="_blank" rel="noopener">
-            https://catmapper.org/api/docs
+          <Link className="link" href="https://api.catmapper.org/docs" target="_blank" rel="noopener">
+            https://api.catmapper.org/docs
           </Link>
         </Typography>
 
