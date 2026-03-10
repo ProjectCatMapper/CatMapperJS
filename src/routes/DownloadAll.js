@@ -127,7 +127,7 @@ const DownloadAll = () => {
 
             <Typography variant="body1" paragraph>
               If you are interested in using an API to access this information, please visit{' '}
-              <Link href="https://catmapper.org/help/API.html" target="_blank" rel="noopener">
+              <Link href="https://catmapper.org/help/api-guide" target="_blank" rel="noopener">
                 this link
               </Link>.
             </Typography>
