@@ -2,7 +2,7 @@ import React from 'react';
 import { useState, useEffect } from 'react'
 import { styled } from '@mui/material/styles';
 import InputBase from '@mui/material/InputBase';
-import { Box, Button, FormControl, Grid, NativeSelect, Tooltip, Typography } from "@mui/material";
+import { Box, Button, FormControl, FormControlLabel, Grid, NativeSelect, Switch, Tooltip, Typography } from "@mui/material";
 import DataTable from './ExploreSearchTable';
 import domainOptions from "./../assets/dropdown.json"
 import InfoIcon from '@mui/icons-material/Info';
@@ -14,6 +14,7 @@ import { useMetadata } from './UseMetadata';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import { useSearchParams } from 'react-router-dom';
+import { parseNaturalLanguageSearch, resolveCountryContext, toUiProperty } from '../utils/nlpSearch';
 
 const BootstrapInput = styled(InputBase)(({ theme }) => ({
   'label + &': {
@@ -80,6 +81,10 @@ export default function Searchbar({ database }) {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
 
   const [loading, setLoading] = useState(false);
+
+  const [useNlpSearch, setUseNlpSearch] = useState(false);
+
+  const [nlpSummary, setNlpSummary] = useState("");
 
   const fallbackOptions = ["Name", "Key", "CatMapper ID (CMID)"];
 
@@ -182,7 +187,8 @@ export default function Searchbar({ database }) {
         isChecked,
         contextID,
         datasetID,
-        optionsForSelectedCategory
+        optionsForSelectedCategory,
+        useNlpSearch
       } = JSON.parse(storedState);
 
       setdomainDrop(domainDrop);
@@ -196,6 +202,7 @@ export default function Searchbar({ database }) {
       setIsChecked(isChecked);
       setcontextID(contextID);
       setdatasetID(datasetID);
+      setUseNlpSearch(Boolean(useNlpSearch));
       //setqlimit(qlimit);
       setoptionsForSelectedCategory(optionsForSelectedCategory);
     }
@@ -215,9 +222,10 @@ export default function Searchbar({ database }) {
       isChecked,
       contextID,
       datasetID,
-      optionsForSelectedCategory
+      optionsForSelectedCategory,
+      useNlpSearch
     }));
-  }, [searchStateKey, domainDrop, advdomainDrop, advoptions, selectedOption, selectedcountry, tvalue, yearStart, yearEnd, isChecked, contextID, datasetID, optionsForSelectedCategory]);
+  }, [searchStateKey, domainDrop, advdomainDrop, advoptions, selectedOption, selectedcountry, tvalue, yearStart, yearEnd, isChecked, contextID, datasetID, optionsForSelectedCategory, useNlpSearch]);
 
   // Fetch and save users data to sessionStorage
   useEffect(() => {
@@ -246,6 +254,7 @@ export default function Searchbar({ database }) {
     setyearEnd("")
     setcontextID("")
     setdatasetID("")
+    setNlpSummary("")
   }
 
   const tooltipContent = (
@@ -366,26 +375,10 @@ export default function Searchbar({ database }) {
       });
   };
 
-  function handleSearch(tvalue, domain) {
-    // 1. Define the params object first
-    const params = {
-      domain: domain,
-      property: selectedOption,
-      term: tvalue,
-      database: database,
-      yearStart: yearStart,
-      yearEnd: yearEnd,
-      country: selectedcountry,
-      context: contextID,
-      dataset: datasetID
-    };
-
-    // 2. "clean" the object to remove null/empty values
+  const applySearchParams = (params) => {
     const cleanParams = Object.fromEntries(
       Object.entries(params).filter(([_, value]) => value != null && value !== "")
     );
-
-    // 3. Update the URL
     const nextParams = new URLSearchParams(cleanParams);
     const currentParams = new URLSearchParams(searchParams.toString());
 
@@ -396,6 +389,103 @@ export default function Searchbar({ database }) {
     }
 
     setSearchParams(cleanParams);
+  };
+
+  const buildDirectSearchParams = (termValue, domainValue) => ({
+    domain: domainValue,
+    property: selectedOption,
+    term: termValue,
+    database: database,
+    yearStart: yearStart,
+    yearEnd: yearEnd,
+    country: selectedcountry,
+    context: contextID,
+    dataset: datasetID
+  });
+
+  const findCountryCode = (countryName = "") => {
+    const normalized = countryName.trim().toLowerCase();
+    if (!normalized) return "";
+
+    const match = countries.find(
+      (country) => country.name && country.name.trim().toLowerCase() === normalized
+    );
+    return match?.code || "";
+  };
+
+  const handleNlpSearch = async (termValue, domainValue) => {
+    const availableSubdomains = Object.values(selectedCategory).flat().filter(Boolean);
+    const parsed = parseNaturalLanguageSearch({
+      query: termValue,
+      fallbackDomain: domainValue,
+      fallbackProperty: selectedOption,
+      availableSubdomains
+    });
+
+    let resolvedContextID = parsed.contextID;
+    let resolvedCountryCode = "";
+    const summaryBits = [];
+
+    if (parsed.countryName && !resolvedContextID) {
+      resolvedContextID = await resolveCountryContext({
+        apiUrl: process.env.REACT_APP_API_URL,
+        database,
+        countryName: parsed.countryName
+      });
+
+      if (resolvedContextID) {
+        summaryBits.push(`Country "${parsed.countryName}" resolved to context ${resolvedContextID}`);
+      } else {
+        resolvedCountryCode = findCountryCode(parsed.countryName);
+        if (resolvedCountryCode) {
+          summaryBits.push(`Country "${parsed.countryName}" applied as country filter`);
+        } else {
+          summaryBits.push(`Unable to resolve country "${parsed.countryName}"`);
+        }
+      }
+    }
+
+    if (parsed.domain && parsed.domain !== advdomainDrop) {
+      setadvdomainDrop(parsed.domain);
+    }
+    if (parsed.property) {
+      setSelectedOption(toUiProperty(parsed.property));
+    }
+    if (parsed.yearStart) setyearStart(parsed.yearStart);
+    if (parsed.yearEnd) setyearEnd(parsed.yearEnd);
+    if (parsed.datasetID) setdatasetID(parsed.datasetID);
+    if (resolvedContextID) setcontextID(resolvedContextID);
+
+    const contextForQuery = resolvedContextID || contextID;
+    const countryForQuery = contextForQuery ? "" : (resolvedCountryCode || selectedcountry);
+
+    const nlpParams = {
+      database,
+      domain: parsed.domain || domainValue,
+      property: parsed.property || selectedOption,
+      term: parsed.term,
+      yearStart: parsed.yearStart || yearStart,
+      yearEnd: parsed.yearEnd || yearEnd,
+      context: contextForQuery,
+      dataset: parsed.datasetID || datasetID,
+      country: countryForQuery
+    };
+
+    setNlpSummary(
+      summaryBits.length
+        ? summaryBits.join(". ")
+        : "NLP mode translated your text into search parameters."
+    );
+    applySearchParams(nlpParams);
+  };
+
+  async function handleSearch(termValue, domainValue) {
+    if (useNlpSearch) {
+      await handleNlpSearch(termValue, domainValue);
+      return;
+    }
+    setNlpSummary("");
+    applySearchParams(buildDirectSearchParams(termValue, domainValue));
   }
 
   React.useEffect(() => {
@@ -434,7 +524,7 @@ export default function Searchbar({ database }) {
             id="myInput"
             value={tvalue}
             style={{ flexGrow: 1, minWidth: 150, height: 45, padding: "0 10px", borderRadius: 6, border: "1px solid #ccc", fontSize: 16 }}
-            placeholder="Search..."
+            placeholder={useNlpSearch ? "Try: look up Yoruba in Ghana" : "Search..."}
             onChange={(event) => {
               settvalue(event.target.value);
             }}
@@ -454,6 +544,25 @@ export default function Searchbar({ database }) {
             </div>
           )}
           <DownloadDialogButton users={users} database={database} domain={advdomainDrop} count={qcount} cmid_download={cmid_download} />
+          <FormControlLabel
+            sx={{ marginLeft: 0.5 }}
+            control={
+              <Switch
+                size="small"
+                color="success"
+                checked={useNlpSearch}
+                onChange={(event) => {
+                  setUseNlpSearch(event.target.checked);
+                  setNlpSummary("");
+                }}
+              />
+            }
+            label={
+              <Typography variant="body2" sx={{ color: "white" }}>
+                NLP Search
+              </Typography>
+            }
+          />
           <Button
             onClick={handleAdvancedSearchChange} // Toggles your existing isChecked state
             startIcon={isChecked ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
@@ -473,6 +582,11 @@ export default function Searchbar({ database }) {
             Advanced Search
           </Button>
         </Box>
+        {useNlpSearch && (
+          <Typography variant="caption" sx={{ color: "#d1ffd1", display: "block", mb: 1 }}>
+            {nlpSummary || "NLP search is enabled. Enter a natural language request."}
+          </Typography>
+        )}
         {isChecked && (
           <Box
             sx={{
