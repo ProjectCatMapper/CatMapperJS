@@ -14,7 +14,13 @@ import { useMetadata } from './UseMetadata';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import { useSearchParams } from 'react-router-dom';
-import { parseNaturalLanguageSearch, resolveCountryContext, toUiProperty } from '../utils/nlpSearch';
+import {
+  parseNaturalLanguageSearch,
+  parseNaturalLanguageSearchWithLlm,
+  resolveContextCmid,
+  toUiProperty,
+  validateApiSearchParams
+} from '../utils/nlpSearch';
 
 const BootstrapInput = styled(InputBase)(({ theme }) => ({
   'label + &': {
@@ -47,6 +53,8 @@ const BootstrapInput = styled(InputBase)(({ theme }) => ({
     },
   },
 }));
+
+const MAX_NLP_LOG_ENTRIES = 1200;
 
 export default function Searchbar({ database }) {
 
@@ -85,6 +93,7 @@ export default function Searchbar({ database }) {
   const [useNlpSearch, setUseNlpSearch] = useState(false);
 
   const [nlpSummary, setNlpSummary] = useState("");
+  const [nlpLogs, setNlpLogs] = useState([]);
 
   const fallbackOptions = ["Name", "Key", "CatMapper ID (CMID)"];
 
@@ -171,6 +180,31 @@ export default function Searchbar({ database }) {
 
   const searchStateKey = `${database}_searchState`;
   const usersKey = `${database}_myData`;
+  const nlpLogKey = `${database}_nlpQueryLog`;
+
+  useEffect(() => {
+    try {
+      const storedLogs = localStorage.getItem(nlpLogKey);
+      if (!storedLogs) {
+        setNlpLogs([]);
+        return;
+      }
+
+      const parsedLogs = JSON.parse(storedLogs);
+      setNlpLogs(Array.isArray(parsedLogs) ? parsedLogs : []);
+    } catch (error) {
+      console.error("Error loading NLP logs:", error);
+      setNlpLogs([]);
+    }
+  }, [nlpLogKey]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(nlpLogKey, JSON.stringify(nlpLogs));
+    } catch (error) {
+      console.error("Error saving NLP logs:", error);
+    }
+  }, [nlpLogKey, nlpLogs]);
 
   useEffect(() => {
     const storedState = sessionStorage.getItem(searchStateKey);
@@ -256,6 +290,52 @@ export default function Searchbar({ database }) {
     setdatasetID("")
     setNlpSummary("")
   }
+
+  const appendNlpLogEntry = (entry = {}) => {
+    const safeEntry = {
+      timestamp: new Date().toISOString(),
+      ...entry
+    };
+
+    setNlpLogs((previous) => {
+      const next = [...previous, safeEntry];
+      if (next.length <= MAX_NLP_LOG_ENTRIES) return next;
+      return next.slice(next.length - MAX_NLP_LOG_ENTRIES);
+    });
+  };
+
+  const exportNlpLogsToJson = () => {
+    if (!nlpLogs.length) {
+      setNlpSummary("No NLP logs to export yet.");
+      return;
+    }
+
+    const payload = {
+      schema_version: "nl2api_log_v1",
+      exported_at: new Date().toISOString(),
+      database,
+      count: nlpLogs.length,
+      entries: nlpLogs
+    };
+
+    const stamp = new Date().toISOString().replace(/[:.]/g, "-");
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = `catmapper_nlp_query_log_${database}_${stamp}.json`;
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    URL.revokeObjectURL(url);
+
+    setNlpSummary(`Exported ${nlpLogs.length} NLP log entries.`);
+  };
+
+  const clearNlpLogs = () => {
+    setNlpLogs([]);
+    setNlpSummary("Cleared NLP query log history.");
+  };
 
   const tooltipContent = (
     <div className="tooltip-width">
@@ -413,70 +493,263 @@ export default function Searchbar({ database }) {
     return match?.code || "";
   };
 
+  const findParentDomainForSubdomain = (subdomain = "") => {
+    if (!subdomain) return "";
+    for (const [parent, subdomains] of Object.entries(selectedCategory)) {
+      if (Array.isArray(subdomains) && subdomains.includes(subdomain)) {
+        return parent;
+      }
+    }
+    return "";
+  };
+
+  const syncAdvancedControlsFromParams = (params = {}) => {
+    const requestedDomain = params.domain || "";
+    const parentDomain =
+      findParentDomainForSubdomain(requestedDomain) ||
+      (selectedCategory[requestedDomain] ? requestedDomain : "");
+
+    if (parentDomain) {
+      const nextSubdomains = selectedCategory[parentDomain] || [];
+      setdomainDrop(parentDomain);
+      setadvoptions(nextSubdomains);
+    }
+
+    if (requestedDomain) {
+      setadvdomainDrop(requestedDomain);
+      setoptionsForSelectedCategory(domainOptions[requestedDomain] || fallbackOptions);
+    }
+
+    if (params.property) {
+      setSelectedOption(toUiProperty(params.property));
+    }
+
+    setyearStart(params.yearStart || "");
+    setyearEnd(params.yearEnd || "");
+    setcontextID(params.context || "");
+    setdatasetID(params.dataset || "");
+    setSelectedCountry(params.country || "");
+  };
+
   const handleNlpSearch = async (termValue, domainValue) => {
     const availableSubdomains = Object.values(selectedCategory).flat().filter(Boolean);
-    const parsed = parseNaturalLanguageSearch({
+    const countryNames = countries.map((country) => country.name).filter(Boolean);
+    const llmResult = await parseNaturalLanguageSearchWithLlm({
       query: termValue,
       fallbackDomain: domainValue,
       fallbackProperty: selectedOption,
-      availableSubdomains
+      availableSubdomains,
+      countryNames
     });
 
-    let resolvedContextID = parsed.contextID;
-    let resolvedCountryCode = "";
+    let parsed = llmResult.parsed;
     const summaryBits = [];
+    const logBase = {
+      database,
+      input: termValue,
+      fallback: {
+        domain: domainValue,
+        property: selectedOption
+      },
+      llm: {
+        model: llmResult.model || "",
+        status: llmResult.status,
+        prompt: llmResult.prompt || "",
+        output: llmResult.raw || "",
+        errors: llmResult.errors || []
+      }
+    };
+    let parserMode = "llm_validated_json";
+    let resolutionDetails = {};
 
-    if (parsed.countryName && !resolvedContextID) {
-      resolvedContextID = await resolveCountryContext({
+    const finalizeNlpResult = ({
+      outcome,
+      message,
+      parsedPayload = parsed,
+      finalQuery = {},
+      validationErrors = []
+    }) => {
+      appendNlpLogEntry({
+        ...logBase,
+        parser_mode: parserMode,
+        outcome,
+        summary: message,
+        parsed: parsedPayload,
+        resolution: resolutionDetails,
+        final_query: finalQuery,
+        validation_errors: validationErrors
+      });
+      setNlpSummary(message);
+    };
+
+    if (llmResult.status === "ok") {
+      summaryBits.push(`NLP model "${llmResult.model}" returned validated JSON`);
+    } else {
+      parserMode = "fallback_rule_parser";
+      parsed = parseNaturalLanguageSearch({
+        query: termValue,
+        fallbackDomain: domainValue,
+        fallbackProperty: selectedOption,
+        availableSubdomains,
+        countryNames
+      });
+      const firstError = llmResult.errors?.[0];
+      summaryBits.push(
+        `NLP model fallback parser used (${llmResult.status}${firstError ? `: ${firstError}` : ""})`
+      );
+    }
+
+    let resolvedContextID = parsed.contextID || "";
+    let resolvedDatasetID = parsed.datasetID || "";
+    let resolvedCountryCode = "";
+
+    if (parsed.contextTerm && !resolvedContextID && !resolvedDatasetID) {
+      const resolutionDomain = parsed.contextDomain || "CATEGORY";
+      const resolution = await resolveContextCmid({
         apiUrl: process.env.REACT_APP_API_URL,
         database,
-        countryName: parsed.countryName
+        contextTerm: parsed.contextTerm,
+        contextDomain: resolutionDomain
       });
+      resolutionDetails = {
+        status: resolution.status,
+        domain: resolutionDomain,
+        context_term: parsed.contextTerm,
+        cmid: resolution.cmid || "",
+        matched_name: resolution.matchedName || "",
+        candidates: (resolution.candidates || []).slice(0, 5)
+      };
 
-      if (resolvedContextID) {
-        summaryBits.push(`Country "${parsed.countryName}" resolved to context ${resolvedContextID}`);
-      } else {
-        resolvedCountryCode = findCountryCode(parsed.countryName);
-        if (resolvedCountryCode) {
-          summaryBits.push(`Country "${parsed.countryName}" applied as country filter`);
+      if (resolution.status === "resolved") {
+        if (resolutionDomain === "DATASET") {
+          resolvedDatasetID = resolution.cmid;
+          summaryBits.push(
+            `Dataset "${parsed.contextTerm}" resolved as ${resolution.cmid}`
+          );
         } else {
-          summaryBits.push(`Unable to resolve country "${parsed.countryName}"`);
+          resolvedContextID = resolution.cmid;
+          summaryBits.push(
+            `Context "${parsed.contextTerm}" resolved in ${resolutionDomain} as ${resolution.cmid}`
+          );
         }
+      } else if (resolution.status === "ambiguous") {
+        const candidateNames = resolution.candidates
+          .slice(0, 3)
+          .map((candidate) => candidate.CMName)
+          .filter(Boolean)
+          .join(", ");
+        finalizeNlpResult({
+          outcome: "blocked_ambiguous_context",
+          message: `NLP needs clarification: context "${parsed.contextTerm}" is ambiguous in ${resolutionDomain}. Candidates: ${candidateNames || "none"}.`
+        });
+        return;
+      } else if (resolutionDomain === "DISTRICT") {
+        resolvedCountryCode = findCountryCode(parsed.contextTerm);
+        if (resolvedCountryCode) {
+          summaryBits.push(`Place "${parsed.contextTerm}" applied as country filter`);
+        } else {
+          finalizeNlpResult({
+            outcome: "blocked_unresolved_place_context",
+            message: `NLP could not resolve place context "${parsed.contextTerm}" in ${resolutionDomain}.`
+          });
+          return;
+        }
+      } else if (resolutionDomain === "DATASET") {
+        finalizeNlpResult({
+          outcome: "blocked_unresolved_dataset_context",
+          message: `NLP could not resolve dataset context "${parsed.contextTerm}".`
+        });
+        return;
+      } else {
+        finalizeNlpResult({
+          outcome: "blocked_unresolved_context",
+          message: `NLP could not resolve context "${parsed.contextTerm}" in ${resolutionDomain}.`
+        });
+        return;
       }
     }
 
-    if (parsed.domain && parsed.domain !== advdomainDrop) {
-      setadvdomainDrop(parsed.domain);
-    }
-    if (parsed.property) {
-      setSelectedOption(toUiProperty(parsed.property));
-    }
-    if (parsed.yearStart) setyearStart(parsed.yearStart);
-    if (parsed.yearEnd) setyearEnd(parsed.yearEnd);
-    if (parsed.datasetID) setdatasetID(parsed.datasetID);
-    if (resolvedContextID) setcontextID(resolvedContextID);
+    const contextForQuery = resolvedContextID || "";
+    const datasetForQuery = resolvedDatasetID || "";
+    const countryForQuery = contextForQuery ? "" : resolvedCountryCode;
 
-    const contextForQuery = resolvedContextID || contextID;
-    const countryForQuery = contextForQuery ? "" : (resolvedCountryCode || selectedcountry);
+    const queryTerm = parsed.term;
+    const hasSpecificDomain =
+      Boolean(parsed.domain && parsed.domain.trim() !== "") &&
+      parsed.domain !== "ALL NODES";
+
+    if (!queryTerm && !parsed.intentAll && !hasSpecificDomain && !contextForQuery && !datasetForQuery) {
+      finalizeNlpResult({
+        outcome: "blocked_unclear_query",
+        message: "NLP could not extract a clear term or domain. Please rephrase (for example: 'Find Yoruba in Ghana')."
+      });
+      return;
+    }
 
     const nlpParams = {
       database,
       domain: parsed.domain || domainValue,
       property: parsed.property || selectedOption,
-      term: parsed.term,
-      yearStart: parsed.yearStart || yearStart,
-      yearEnd: parsed.yearEnd || yearEnd,
+      term: queryTerm,
+      yearStart: parsed.yearStart || "",
+      yearEnd: parsed.yearEnd || "",
       context: contextForQuery,
-      dataset: parsed.datasetID || datasetID,
+      dataset: datasetForQuery,
       country: countryForQuery
     };
 
-    setNlpSummary(
-      summaryBits.length
-        ? summaryBits.join(". ")
-        : "NLP mode translated your text into search parameters."
+    const validatedQuery = validateApiSearchParams({
+      ...nlpParams,
+      availableSubdomains,
+      fallbackDomain: domainValue,
+      fallbackProperty: selectedOption
+    });
+
+    if (!validatedQuery.valid) {
+      const details = validatedQuery.errors.join(" ");
+      finalizeNlpResult({
+        outcome: "blocked_validation",
+        message: `NLP query blocked by parameter validation. ${details}`,
+        finalQuery: nlpParams,
+        validationErrors: validatedQuery.errors
+      });
+      return;
+    }
+
+    const parsedSummaryParams = Object.fromEntries(
+      Object.entries({
+        term: queryTerm,
+        domain: parsed.domain || domainValue,
+        property: parsed.property || selectedOption,
+        yearStart: parsed.yearStart,
+        yearEnd: parsed.yearEnd,
+        dataset: datasetForQuery,
+        context_term: parsed.contextTerm,
+        context_domain: parsed.contextDomain,
+        context: contextForQuery,
+        country: parsed.countryName || countryForQuery,
+        intent_all: parsed.intentAll ? "true" : ""
+      }).filter(([_, value]) => value != null && value !== "")
     );
-    applySearchParams(nlpParams);
+
+    const finalSummaryParams = Object.fromEntries(
+      Object.entries(validatedQuery.params).filter(([_, value]) => value != null && value !== "")
+    );
+
+    const summaryPrefix = summaryBits.length
+      ? `${summaryBits.join(". ")}. `
+      : "";
+    const summaryMessage =
+      `${summaryPrefix}Parsed: ${JSON.stringify(parsedSummaryParams)} | Final query: ${JSON.stringify(finalSummaryParams)}`;
+
+    syncAdvancedControlsFromParams(validatedQuery.params);
+    finalizeNlpResult({
+      outcome: "applied",
+      message: summaryMessage,
+      parsedPayload: parsedSummaryParams,
+      finalQuery: finalSummaryParams
+    });
+    applySearchParams(validatedQuery.params);
   };
 
   async function handleSearch(termValue, domainValue) {
@@ -485,12 +758,32 @@ export default function Searchbar({ database }) {
       return;
     }
     setNlpSummary("");
-    applySearchParams(buildDirectSearchParams(termValue, domainValue));
+    const availableSubdomains = Object.values(selectedCategory).flat().filter(Boolean);
+    const directParams = buildDirectSearchParams(termValue, domainValue);
+    const validated = validateApiSearchParams({
+      ...directParams,
+      availableSubdomains,
+      fallbackDomain: domainValue,
+      fallbackProperty: selectedOption
+    });
+    if (!validated.valid) {
+      setNlpSummary(`Search blocked by parameter validation. ${validated.errors.join(" ")}`);
+      return;
+    }
+    syncAdvancedControlsFromParams(validated.params);
+    applySearchParams(validated.params);
   }
 
   React.useEffect(() => {
     runSearchRequest(searchParams);
   }, [searchParams]);
+
+  React.useEffect(() => {
+    if (!selectedCategory || Object.keys(selectedCategory).length === 0) return;
+    const paramsObject = Object.fromEntries(searchParams.entries());
+    if (!paramsObject || Object.keys(paramsObject).length === 0) return;
+    syncAdvancedControlsFromParams(paramsObject);
+  }, [searchParams, selectedCategory]);
 
   return (
     <div style={{ height: "auto" }}>
@@ -545,7 +838,10 @@ export default function Searchbar({ database }) {
           )}
           <DownloadDialogButton users={users} database={database} domain={advdomainDrop} count={qcount} cmid_download={cmid_download} />
           <FormControlLabel
-            sx={{ marginLeft: 0.5 }}
+            sx={{
+              marginLeft: 0.5,
+              "& .MuiFormControlLabel-label": { color: "white" }
+            }}
             control={
               <Switch
                 size="small"
@@ -557,12 +853,54 @@ export default function Searchbar({ database }) {
                 }}
               />
             }
-            label={
-              <Typography variant="body2" sx={{ color: "white" }}>
-                NLP Search
-              </Typography>
+            label="NLP Search"
+          />
+          <NeonButton
+            type="infoOutlined"
+            tooltipText={
+              <>
+                NLP Search converts natural language into CatMapper search parameters.
+                Example: <em>look up Yoruba in Ghana</em>. If a country is included,
+                CatMapper first tries to resolve it to a DISTRICT CMID context, then runs the normal search.
+              </>
             }
           />
+          {useNlpSearch && (
+            <Button
+              onClick={exportNlpLogsToJson}
+              size="small"
+              variant="outlined"
+              sx={{
+                textTransform: "none",
+                color: "white",
+                borderColor: "rgba(255,255,255,0.5)",
+                "&:hover": {
+                  borderColor: "white",
+                  backgroundColor: "rgba(255,255,255,0.08)"
+                }
+              }}
+            >
+              Export NLP JSON ({nlpLogs.length})
+            </Button>
+          )}
+          {useNlpSearch && (
+            <Button
+              onClick={clearNlpLogs}
+              size="small"
+              variant="text"
+              disabled={!nlpLogs.length}
+              sx={{
+                textTransform: "none",
+                color: "rgba(255,255,255,0.8)",
+                "&:hover": {
+                  color: "white",
+                  backgroundColor: "rgba(255,255,255,0.08)"
+                }
+              }}
+            >
+              Clear NLP Logs
+            </Button>
+          )}
           <Button
             onClick={handleAdvancedSearchChange} // Toggles your existing isChecked state
             startIcon={isChecked ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
@@ -583,8 +921,13 @@ export default function Searchbar({ database }) {
           </Button>
         </Box>
         {useNlpSearch && (
-          <Typography variant="caption" sx={{ color: "#d1ffd1", display: "block", mb: 1 }}>
+          <Typography variant="caption" sx={{ color: "white", display: "block", mb: 1 }}>
             {nlpSummary || "NLP search is enabled. Enter a natural language request."}
+          </Typography>
+        )}
+        {useNlpSearch && (
+          <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.75)", display: "block", mb: 1 }}>
+            NLP log entries saved locally: {nlpLogs.length}
           </Typography>
         )}
         {isChecked && (

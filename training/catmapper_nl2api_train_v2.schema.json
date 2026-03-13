@@ -1,0 +1,229 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://catmapper.org/schemas/catmapper_nl2api_train_v2.schema.json",
+  "title": "CatMapper NL2API Training Data v2",
+  "description": "Schema for supervised examples that map natural language to CatMapper /search resolver plans and final URL templates.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "resolver_policy",
+    "records"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "2.0"
+    },
+    "dataset_name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "created_at": {
+      "type": "string",
+      "description": "ISO-8601 timestamp for dataset creation."
+    },
+    "resolver_policy": {
+      "$ref": "#/$defs/resolver_policy"
+    },
+    "records": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/training_record"
+      }
+    }
+  },
+  "$defs": {
+    "resolver_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "place_context_domain",
+        "dataset_context_domain",
+        "non_place_context_domain",
+        "allow_empty_term"
+      ],
+      "properties": {
+        "place_context_domain": {
+          "const": "DISTRICT"
+        },
+        "dataset_context_domain": {
+          "const": "DATASET"
+        },
+        "non_place_context_domain": {
+          "const": "CATEGORY"
+        },
+        "allow_empty_term": {
+          "type": "boolean",
+          "const": true
+        },
+        "notes": {
+          "type": "string"
+        }
+      }
+    },
+    "training_record": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "instruction",
+        "input",
+        "output"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^v2_[0-9]{4,}$"
+        },
+        "instruction": {
+          "type": "string",
+          "minLength": 1
+        },
+        "input": {
+          "type": "string",
+          "minLength": 1
+        },
+        "output": {
+          "$ref": "#/$defs/output_payload"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        }
+      }
+    },
+    "output_payload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "resolver_steps",
+        "final_url_template"
+      ],
+      "properties": {
+        "resolver_steps": {
+          "type": "array",
+          "description": "Zero to three lookup steps run before constructing final_url_template.",
+          "minItems": 0,
+          "maxItems": 3,
+          "items": {
+            "$ref": "#/$defs/resolver_step"
+          }
+        },
+        "final_url_template": {
+          "type": "string",
+          "description": "Must target /search and include database placeholder.",
+          "pattern": "^/search\\?database=\\{database\\}.*$"
+        },
+        "parse_targets": {
+          "$ref": "#/$defs/parse_targets"
+        },
+        "context_routing_decision": {
+          "type": "string",
+          "enum": [
+            "DISTRICT",
+            "DATASET",
+            "CATEGORY",
+            "NONE"
+          ]
+        },
+        "ambiguity_policy": {
+          "type": "string",
+          "enum": [
+            "ask_clarification",
+            "best_match",
+            "return_no_query"
+          ]
+        },
+        "notes": {
+          "type": "string"
+        }
+      }
+    },
+    "resolver_step": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "url_template",
+        "store_as"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "enum": [
+            "resolve_context_cmid",
+            "resolve_country_cmid",
+            "resolve_dataset_cmid",
+            "resolve_category_cmid"
+          ]
+        },
+        "resolution_domain": {
+          "type": "string",
+          "enum": [
+            "DISTRICT",
+            "DATASET",
+            "CATEGORY",
+            "ADM0"
+          ]
+        },
+        "url_template": {
+          "type": "string",
+          "pattern": "^/search\\?database=\\{database\\}.*$"
+        },
+        "store_as": {
+          "type": "string",
+          "pattern": "^\\{[a-z][a-z0-9_]*\\}$"
+        },
+        "top_k": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 50
+        }
+      }
+    },
+    "parse_targets": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "term": {
+          "type": "string",
+          "description": "May be empty string for context-only browsing."
+        },
+        "domain": {
+          "type": "string",
+          "minLength": 1
+        },
+        "property": {
+          "type": "string",
+          "enum": [
+            "Name",
+            "Key",
+            "CMID"
+          ]
+        },
+        "context": {
+          "type": "string",
+          "pattern": "^\\{[a-z][a-z0-9_]*\\}$"
+        },
+        "dataset": {
+          "type": "string"
+        },
+        "country": {
+          "type": "string"
+        },
+        "yearStart": {
+          "type": "string",
+          "pattern": "^-?[0-9]{1,4}$"
+        },
+        "yearEnd": {
+          "type": "string",
+          "pattern": "^-?[0-9]{1,4}$"
+        }
+      }
+    }
+  }
+}
