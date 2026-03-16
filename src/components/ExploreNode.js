@@ -1209,7 +1209,7 @@ export default function Tableclick({ cmid, database, tabval }) {
     navigationLoading,
   ]);
 
-  const [boxHeight, setBoxHeight] = useState("auto");
+  const [boxHeight, setBoxHeight] = useState("0px");
 
   useEffect(() => {
     const element = document.getElementById("content");
@@ -1483,9 +1483,8 @@ export default function Tableclick({ cmid, database, tabval }) {
         </Box>
         <Box
           sx={{
-            position: "relative",
-            left: "10px",
-            top: boxHeight + 100,
+            marginLeft: "10px",
+            marginTop: `calc(${boxHeight} + 100px)`,
           }}
         >
           {/* Render tabs here--first check for DATASET view, otherwise use CATEGORY view */}

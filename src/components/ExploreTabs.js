@@ -75,7 +75,7 @@ export default function ClickTable(props) {
   };
 
   return (
-    <div style={{ marginLeft: "2vw", minHeight: 500, maxHeight: 750, width: "90vw" }}>
+    <div style={{ marginLeft: "2vw", width: "90vw" }}>
       <style>
         {`
           .wrap-header_data .MuiDataGrid-columnHeaderTitle {
@@ -91,25 +91,26 @@ export default function ClickTable(props) {
           }
         `}
       </style>
-      <DataGrid
-        className="custom-row-height"
-        rows={rows}
-        autoHeight
-        getRowHeight={getRowHeight}
-        columns={nonEmptyColumns}
-        sortModel={[
-          { field: "source", sort: "asc" },
-          { field: "location", sort: "asc" },
-          { field: "timespan", sort: "asc" },
-          { field: "version", sort: "asc" },
-        ]}
-        initialState={{
-          pagination: {
-            paginationModel: { page: 0, pageSize: 10 },
-          },
-        }}
-        pageSizeOptions={[10, 30, 50]}
-      />
+      <div style={{ width: "100%", height: "min(750px, 70vh)" }}>
+        <DataGrid
+          className="custom-row-height"
+          rows={rows}
+          getRowHeight={getRowHeight}
+          columns={nonEmptyColumns}
+          sortModel={[
+            { field: "source", sort: "asc" },
+            { field: "location", sort: "asc" },
+            { field: "timespan", sort: "asc" },
+            { field: "version", sort: "asc" },
+          ]}
+          initialState={{
+            pagination: {
+              paginationModel: { page: 0, pageSize: 10 },
+            },
+          }}
+          pageSizeOptions={[10, 30, 50]}
+        />
+      </div>
       <p>*population estimate reported directly from source or estimated from survey sample</p>
     </div>
   );
