@@ -1,8 +1,10 @@
 import { test, expect } from '@playwright/test';
 
+const BASE_URL = process.env.E2E_BASE_URL || 'http://localhost:3000';
+
 test('Home page loads the hero text correctly', async ({ page }) => {
     // 1. Navigate to the home page
-    await page.goto('http://localhost:3000/');
+    await page.goto(`${BASE_URL}/`);
 
     // 2. Locate the specific heading text
     // We use a regex /.../i to make it case-insensitive for better stability
