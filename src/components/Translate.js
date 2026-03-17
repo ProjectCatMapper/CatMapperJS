@@ -669,6 +669,8 @@ function TranslateComponent({ database }) {
     </div>
   );
 
+  const isDownloadDisabled = loading || reviewRows.length === 0 || columns.length === 0;
+
   return (
     <Box sx={{ backgroundColor: 'black', opacity: 1, flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
       <Box sx={{ display: 'flex', flexDirection: 'row', gap: 0.5, flexGrow: 1 }}>
@@ -1026,7 +1028,7 @@ function TranslateComponent({ database }) {
             '&:hover': {
               backgroundColor: 'green',
             },
-          }} onClick={handleClicktwo}>
+          }} onClick={handleClicktwo} disabled={isDownloadDisabled}>
             Download proposed matches
           </Button>
           <Dialog open={Boolean(error)} onClose={() => setError(null)}>

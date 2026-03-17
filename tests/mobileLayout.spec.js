@@ -10,14 +10,15 @@ test.describe('Mobile layout regression checks', () => {
   for (const route of routes) {
     test(`${route} should not have horizontal overflow on mobile`, async ({ page }) => {
       await page.goto(`${BASE_URL}${route}`, { waitUntil: 'domcontentloaded' });
-      await page.waitForTimeout(800);
-
-      const hasOverflow = await page.evaluate(() => {
-        const doc = document.documentElement;
-        return doc.scrollWidth > window.innerWidth + 1;
-      });
-
-      expect(hasOverflow).toBeFalsy();
+      await page.waitForLoadState('networkidle');
+      await expect
+        .poll(async () => {
+          return page.evaluate(() => {
+            const doc = document.documentElement;
+            return doc.scrollWidth > window.innerWidth + 1;
+          });
+        })
+        .toBeFalsy();
     });
   }
 

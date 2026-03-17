@@ -774,6 +774,11 @@ export default function Searchbar({ database }) {
     applySearchParams(validated.params);
   }
 
+  const handleSearchButtonClick = () => {
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    handleSearch(tvalue, advdomainDrop.trim());
+  };
+
   React.useEffect(() => {
     runSearchRequest(searchParams);
   }, [searchParams]);
@@ -829,7 +834,7 @@ export default function Searchbar({ database }) {
           />
           <NeonButton
             type="searchOutlined"
-            onClick={() => handleSearch(tvalue, advdomainDrop.trim())}
+            onClick={handleSearchButtonClick}
           />
           {loading && (
             <div style={{ position: "absolute", top: "40vh", left: "50vw", transform: "translate(-50%, -50%)" }}>

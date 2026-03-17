@@ -63,6 +63,8 @@ const selectByIndex = async (page, index, optionName) => {
 
 test.describe('Translate review workflow', () => {
   test.beforeEach(async ({ page }) => {
+    let statusPollCount = 0;
+
     await page.addInitScript(() => {
       localStorage.setItem('userId', 'tester');
       localStorage.setItem('authToken', 'fake-token');
@@ -94,15 +96,49 @@ test.describe('Translate review workflow', () => {
       });
     });
 
-    await page.route('**/translate', async (route) => {
-      if (route.request().method() !== 'POST') {
-        await route.continue();
-        return;
-      }
+    await page.route('**/translate/start', async (route) => {
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
-        body: JSON.stringify(translateResponse),
+        body: JSON.stringify({
+          status: 'processing',
+          taskId: 'translate-task-1',
+          percent: 10,
+          message: 'Processing input...',
+          elapsedSeconds: 0,
+        }),
+      });
+    });
+
+    await page.route('**/translate/status', async (route) => {
+      statusPollCount += 1;
+      if (statusPollCount < 2) {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            status: 'processing',
+            taskId: 'translate-task-1',
+            percent: 55,
+            message: 'Processing 1 of 2 rows...',
+            elapsedSeconds: 0.8,
+          }),
+        });
+        return;
+      }
+
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          status: 'completed',
+          taskId: 'translate-task-1',
+          percent: 100,
+          message: 'Completed.',
+          elapsedSeconds: 1.3,
+          ...translateResponse,
+          warnings: [],
+        }),
       });
     });
 
@@ -143,7 +179,7 @@ test.describe('Translate review workflow', () => {
     await expect(page.getByText('SM3')).toBeVisible();
     await expect(page.locator('a[href="/sociomap/SM1"][target="_blank"]').first()).toBeVisible();
 
-    await page.getByRole('button', { name: /Remove match row/i }).first().click();
+    await page.getByRole('button', { name: /remove matching data/i }).first().click();
     await expect(page.getByText('SM1')).toHaveCount(0);
     await expect(page.getByText('alpha').first()).toBeVisible();
 
@@ -163,7 +199,6 @@ test.describe('Translate review workflow', () => {
     await page.getByRole('option', { name: /SM999 - Saved Choice/i }).click();
     await popover.getByRole('button', { name: /Insert CMID/i }).click();
     await expect(page.getByText('Select at least one row before inserting bookmark CMID.')).toBeVisible();
-    await popover.getByRole('button', { name: /^Close$/i }).click();
 
     await betaCheckbox.click();
     await expect(betaCheckbox).toBeChecked();
@@ -173,7 +208,6 @@ test.describe('Translate review workflow', () => {
     await popover.getByRole('button', { name: /Insert CMID/i }).click();
     await expect(page.locator('div[role="row"]', { hasText: 'beta' }).first()).toContainText('SM999');
     await expect(betaCheckbox).not.toBeChecked();
-    await popover.getByRole('button', { name: /^Close$/i }).click();
 
     await page.locator('div[role="combobox"]', { hasText: 'Select one-to-many group' }).click();
     await page.getByRole('option', { name: 'Group u-1 (2 rows)', exact: true }).click();

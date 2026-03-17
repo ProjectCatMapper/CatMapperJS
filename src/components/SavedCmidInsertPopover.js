@@ -78,6 +78,7 @@ const SavedCmidInsertPopover = ({
       setError('Select a CMID to insert.');
       return;
     }
+    setAnchorEl(null);
     onInsert(selectedCmid);
     setError('');
   };
