@@ -21,7 +21,7 @@ import LiveMapCarousel from "./Carousel";
 
 const catMapperWorkflowParagraph = (
   <>
-    <strong>CatMapper&apos;s current workflow centers on four connected functions:</strong>
+    <strong>CatMapper&apos;s workflow centers on four connected functions:</strong>
     <Box component="ul" sx={{ mt: 1, mb: 0, pl: 3 }}>
       <li><strong>Explore:</strong> find category context and quickly identify where categories appear across datasets.</li>
       <li><strong>Translate:</strong> map raw category labels to CatMapper IDs and generate reusable crosswalks.</li>
