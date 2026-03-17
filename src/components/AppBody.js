@@ -21,7 +21,13 @@ import LiveMapCarousel from "./Carousel";
 
 const catMapperWorkflowParagraph = (
   <>
-    <strong>CatMapper&apos;s current workflow centers on four connected functions.</strong> <strong>Explore</strong> helps users find category context and quickly identify where categories appear across datasets. <strong>Translate</strong> maps raw category labels to CatMapper IDs and produces reusable crosswalks, with registered users able to save decision history. <strong>Merge</strong> supports building and documenting reusable merge plans so external datasets can be joined consistently. <strong>Share</strong> makes saved translations and merge plans available for reuse, reducing duplicate harmonization effort and improving transparency.
+    <strong>CatMapper&apos;s current workflow centers on four connected functions:</strong>
+    <Box component="ul" sx={{ mt: 1, mb: 0, pl: 3 }}>
+      <li><strong>Explore:</strong> find category context and quickly identify where categories appear across datasets.</li>
+      <li><strong>Translate:</strong> map raw category labels to CatMapper IDs and generate reusable crosswalks.</li>
+      <li><strong>Merge:</strong> build and document reusable merge plans so external datasets can be joined consistently.</li>
+      <li><strong>Edit:</strong> upload translations for permanent documentation.</li>
+    </Box>
   </>
 );
 
@@ -129,6 +135,7 @@ const AppBody = ({ database }) => {
                       <Typography
                         key={index}
                         variant="body2"
+                        component="div"
                         sx={{
                           color: "#fff !important;",
                           mb: 2,
