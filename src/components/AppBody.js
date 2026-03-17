@@ -19,6 +19,12 @@ import FooterLinks from "./FooterLinks";
 import DownloadDatasetButton from './DownloadDatasetListButton';
 import LiveMapCarousel from "./Carousel";
 
+const catMapperWorkflowParagraph = (
+  <>
+    <strong>CatMapper&apos;s current workflow centers on four connected functions.</strong> <strong>Explore</strong> helps users find category context and quickly identify where categories appear across datasets. <strong>Translate</strong> maps raw category labels to CatMapper IDs and produces reusable crosswalks, with registered users able to save decision history. <strong>Merge</strong> supports building and documenting reusable merge plans so external datasets can be joined consistently. <strong>Share</strong> makes saved translations and merge plans available for reuse, reducing duplicate harmonization effort and improving transparency.
+  </>
+);
+
 const descriptions = {
   archamap: [
     <>
@@ -27,6 +33,7 @@ const descriptions = {
     <>
       <strong>ArchaMap</strong> brings <strong>CatMapper&apos;s</strong> harmonization workflow to archaeology, organizing complex typologies such as ceramic wares, lithic traditions, faunal categories, sites, and time periods. It supports translation and merge workflows that make fragmented regional datasets interoperable at scale. By preserving auditable category mappings, <strong>ArchaMap</strong> enables clearer synthesis of material culture evidence across space and time.
     </>,
+    catMapperWorkflowParagraph,
     <>
       Read our <Link className="cm-about-link" to="/about">about</Link> page to learn more.
     </>
@@ -38,6 +45,7 @@ const descriptions = {
     <>
       <strong>SocioMap</strong> helps researchers reconcile inconsistent sociopolitical categories across datasets, including ethnicities, languages, religions, and administrative units. It provides a shared system to search category context, compare naming conventions, and connect records across major global data sources. By documenting and sharing translation decisions, <strong>SocioMap</strong> enables faster, more transparent, and reproducible comparative research.
     </>,
+    catMapperWorkflowParagraph,
     <>
       Read our <Link className="cm-about-link" to="/about">about</Link> page to learn more.
     </>
