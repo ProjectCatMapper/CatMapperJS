@@ -3,6 +3,7 @@
   gap: 16px;
   align-items: flex-start;
   width: 100%;
+  position: relative;
 }
 
 #network.visnet-canvas {

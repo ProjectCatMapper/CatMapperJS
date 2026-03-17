@@ -1209,17 +1209,6 @@ export default function Tableclick({ cmid, database, tabval }) {
     navigationLoading,
   ]);
 
-  const [boxHeight, setBoxHeight] = useState("0px");
-
-  useEffect(() => {
-    const element = document.getElementById("content");
-
-    // Only calculate height if the element exists in the DOM
-    if (element) {
-      setBoxHeight(element.offsetHeight + "px");
-    }
-  }, [rev, loadingInfo]);
-
   const handleDatasetCheckbox = () => {
     setRememberChoice((prev) => !prev);
   };
@@ -1483,8 +1472,8 @@ export default function Tableclick({ cmid, database, tabval }) {
         </Box>
         <Box
           sx={{
-            marginLeft: "10px",
-            marginTop: `calc(${boxHeight} + 100px)`,
+            position: "relative",
+            left: "10px",
           }}
         >
           {/* Render tabs here--first check for DATASET view, otherwise use CATEGORY view */}
