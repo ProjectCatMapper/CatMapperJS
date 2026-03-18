@@ -177,6 +177,84 @@ describe("resolveContextCmid", () => {
     expect(resolved.cmid).toBeNull();
     expect(resolved.candidates.length).toBeGreaterThan(1);
   });
+
+  it("prefers ADM0 candidate for DISTRICT context when top name scores tie", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          data: [
+            { CMID: "SM100", CMName: "Ghana", label: "ADM1" },
+            { CMID: "SM200", CMName: "Ghana", label: "ADM0" }
+          ]
+        })
+      })
+    );
+
+    const resolved = await resolveContextCmid({
+      apiUrl: "http://localhost:5000",
+      database: "sociomap",
+      contextTerm: "Ghana",
+      contextDomain: "DISTRICT"
+    });
+
+    expect(resolved.status).toBe("resolved");
+    expect(resolved.cmid).toBe("SM200");
+  });
+
+  it("prefers viable ADM0 candidate even when non-ADM0 has stronger text score", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          data: [
+            { CMID: "SM101", CMName: "Ghana", label: "ADM3" },
+            { CMID: "SM201", CMName: "Ghana Country", label: "ADM0" }
+          ]
+        })
+      })
+    );
+
+    const resolved = await resolveContextCmid({
+      apiUrl: "http://localhost:5000",
+      database: "sociomap",
+      contextTerm: "Ghana",
+      contextDomain: "DISTRICT"
+    });
+
+    expect(resolved.status).toBe("resolved");
+    expect(resolved.cmid).toBe("SM201");
+  });
+
+  it("can resolve ADM0 even when it appears after the first 10 API rows", async () => {
+    const noisyRows = Array.from({ length: 11 }, (_, idx) => ({
+      CMID: `SMX${idx}`,
+      CMName: `Ghana District ${idx}`,
+      label: "ADM3"
+    }));
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          data: [...noisyRows, { CMID: "SM999", CMName: "Ghana", label: "ADM0" }]
+        })
+      })
+    );
+
+    const resolved = await resolveContextCmid({
+      apiUrl: "http://localhost:5000",
+      database: "sociomap",
+      contextTerm: "Ghana",
+      contextDomain: "DISTRICT"
+    });
+
+    expect(resolved.status).toBe("resolved");
+    expect(resolved.cmid).toBe("SM999");
+  });
 });
 
 describe("parseNaturalLanguageSearchWithLlm", () => {
@@ -269,6 +347,37 @@ describe("validateApiSearchParams", () => {
     expect(validated.valid).toBe(true);
     expect(validated.params.property).toBe("CMID");
     expect(validated.params.context).toBe("CM9");
+  });
+
+  it("accepts multiple contexts and defaults contextMode to all", () => {
+    const validated = validateApiSearchParams({
+      database: "sociomap",
+      domain: "ETHNICITY",
+      property: "Name",
+      term: "Yoruba",
+      contexts: "SM1,SM2",
+      availableSubdomains: ["ALL NODES", "ETHNICITY"]
+    });
+
+    expect(validated.valid).toBe(true);
+    expect(validated.params.contexts).toBe("SM1,SM2");
+    expect(validated.params.contextMode).toBe("all");
+    expect(validated.params.context).toBe("");
+  });
+
+  it("rejects invalid contextMode", () => {
+    const validated = validateApiSearchParams({
+      database: "sociomap",
+      domain: "ETHNICITY",
+      property: "Name",
+      term: "Yoruba",
+      contexts: "SM1,SM2",
+      contextMode: "xor",
+      availableSubdomains: ["ALL NODES", "ETHNICITY"]
+    });
+
+    expect(validated.valid).toBe(false);
+    expect(validated.errors.join(" ")).toContain("Invalid contextMode value");
   });
 });
 

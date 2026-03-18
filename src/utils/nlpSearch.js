@@ -771,6 +771,8 @@ export function validateApiSearchParams({
   yearStart = "",
   yearEnd = "",
   context = "",
+  contexts = "",
+  contextMode = "",
   dataset = "",
   country = "",
   availableSubdomains = [],
@@ -813,6 +815,37 @@ export function validateApiSearchParams({
     errors.push("Invalid context value.");
   }
 
+  const contextParts = [];
+  if (cleanContext) {
+    contextParts.push(cleanContext);
+  }
+
+  if (Array.isArray(contexts)) {
+    contextParts.push(...contexts);
+  } else if (typeof contexts === "string" && contexts.trim()) {
+    contextParts.push(...contexts.split(/[,\s;]+/));
+  }
+
+  const cleanContexts = [];
+  contextParts.forEach((rawValue) => {
+    const cleanedValue = sanitizeIdentifier(rawValue || "");
+    if (!cleanedValue) {
+      if (String(rawValue || "").trim()) {
+        errors.push("Invalid context value.");
+      }
+      return;
+    }
+    if (!cleanContexts.includes(cleanedValue)) {
+      cleanContexts.push(cleanedValue);
+    }
+  });
+
+  const normalizedContextMode = normalizeWhitespace(String(contextMode || "")).toLowerCase();
+  if (normalizedContextMode && !["all", "any"].includes(normalizedContextMode)) {
+    errors.push("Invalid contextMode value.");
+  }
+  const cleanContextMode = cleanContexts.length > 1 ? (normalizedContextMode || "all") : "";
+
   const cleanDataset = sanitizeIdentifier(dataset || "");
   if (dataset && !cleanDataset) {
     errors.push("Invalid dataset value.");
@@ -830,7 +863,9 @@ export function validateApiSearchParams({
     term: cleanTerm,
     yearStart: cleanYearStart,
     yearEnd: cleanYearEnd,
-    context: cleanContext,
+    context: cleanContexts.length === 1 ? cleanContexts[0] : "",
+    contexts: cleanContexts.join(","),
+    contextMode: cleanContextMode,
     dataset: cleanDataset,
     country: cleanCountry
   };
@@ -851,6 +886,14 @@ const rankContextCandidate = (candidate = {}, contextTerm = "") => {
   if (matchName.includes(target)) return 2;
   return 3;
 };
+
+const getCandidateLabelText = (candidate = {}) => {
+  const rawLabel = candidate.label ?? candidate.Label ?? candidate.type ?? candidate.Type ?? "";
+  if (Array.isArray(rawLabel)) return rawLabel.join(":");
+  return String(rawLabel || "");
+};
+
+const isAdm0Candidate = (candidate = {}) => /\bADM0\b/i.test(getCandidateLabelText(candidate));
 
 export async function resolveContextCmid({
   apiUrl,
@@ -881,14 +924,25 @@ export async function resolveContextCmid({
     }
 
     const payload = await response.json();
-    const candidates = (Array.isArray(payload?.data) ? payload.data : [])
-      .slice(0, topK)
+    const preferAdm0 = String(contextDomain || "").toUpperCase() === "DISTRICT";
+    const mappedCandidates = (Array.isArray(payload?.data) ? payload.data : [])
       .map((candidate) => ({
         CMID: candidate.CMID,
         CMName: candidate.CMName,
+        label: getCandidateLabelText(candidate),
+        isAdm0: isAdm0Candidate(candidate),
         score: rankContextCandidate(candidate, contextTerm)
-      }))
-      .sort((left, right) => left.score - right.score);
+      }));
+    const hasViableAdm0 =
+      preferAdm0 && mappedCandidates.some((candidate) => candidate.isAdm0 && candidate.score <= 2);
+    const candidates = mappedCandidates
+      .sort((left, right) => {
+        if (hasViableAdm0 && left.isAdm0 !== right.isAdm0) return left.isAdm0 ? -1 : 1;
+        if (left.score !== right.score) return left.score - right.score;
+        if (preferAdm0 && left.isAdm0 !== right.isAdm0) return left.isAdm0 ? -1 : 1;
+        return 0;
+      })
+      .slice(0, topK);
 
     if (!candidates.length) {
       return { status: "not_found", cmid: null, candidates: [] };
@@ -904,7 +958,12 @@ export async function resolveContextCmid({
       };
     }
 
-    if ((second && second.score === best.score) || best.score >= 3) {
+    if (
+      (second &&
+        second.score === best.score &&
+        (!preferAdm0 || second.isAdm0 === best.isAdm0)) ||
+      best.score >= 3
+    ) {
       return {
         status: "ambiguous",
         cmid: null,

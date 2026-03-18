@@ -55,7 +55,7 @@ const ApiGuide = () => {
           <Typography variant="body1" gutterBottom>
             The <code className="codetext">/search</code> endpoint supports Explore-style search over
             CatMapper categories and datasets. You can filter by domain, year range, country, context,
-            and dataset.
+            contexts, and dataset.
           </Typography>
         </Box>
 
@@ -137,7 +137,21 @@ const ApiGuide = () => {
               <ListItemText
                 primary="context (optional)"
                 primaryTypographyProps={{ fontWeight: 'bold' }}
-                secondary="Parent/context CMID filter."
+                secondary="Single parent/context CMID filter."
+              />
+            </ListItem>
+            <ListItem sx={{ display: 'list-item' }}>
+              <ListItemText
+                primary="contexts (optional)"
+                primaryTypographyProps={{ fontWeight: 'bold' }}
+                secondary="Comma-separated or repeated context CMIDs for multi-context filtering."
+              />
+            </ListItem>
+            <ListItem sx={{ display: 'list-item' }}>
+              <ListItemText
+                primary="contextMode (optional)"
+                primaryTypographyProps={{ fontWeight: 'bold' }}
+                secondary="all (default) requires all listed contexts; any requires at least one."
               />
             </ListItem>
             <ListItem sx={{ display: 'list-item' }}>
@@ -168,6 +182,10 @@ const ApiGuide = () => {
             <br />
             <code className="codetext">
               GET /search?database=ArchaMap&term=Grasshopper&domain=SITE&property=Name&dataset=AD1&query=false
+            </code>
+            <br />
+            <code className="codetext">
+              GET /search?database=SocioMap&term=Yoruba&domain=ETHNICITY&property=Name&contexts=SM47,SM2508&contextMode=all&query=false
             </code>
           </Typography>
         </Box>

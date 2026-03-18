@@ -55,6 +55,7 @@ const BootstrapInput = styled(InputBase)(({ theme }) => ({
 }));
 
 const MAX_NLP_LOG_ENTRIES = 1200;
+const CONTEXT_SPLIT_REGEX = /[,\s;]+/;
 
 export default function Searchbar({ database }) {
 
@@ -79,6 +80,7 @@ export default function Searchbar({ database }) {
   const [isChecked, setIsChecked] = useState(false);
 
   const [contextID, setcontextID] = useState(null);
+  const [contextMode, setContextMode] = useState("all");
 
   const [datasetID, setdatasetID] = useState(null);
 
@@ -89,6 +91,7 @@ export default function Searchbar({ database }) {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
 
   const [loading, setLoading] = useState(false);
+  const [nlpProcessing, setNlpProcessing] = useState(false);
 
   const [useNlpSearch, setUseNlpSearch] = useState(false);
 
@@ -220,6 +223,7 @@ export default function Searchbar({ database }) {
         yearEnd,
         isChecked,
         contextID,
+        contextMode,
         datasetID,
         optionsForSelectedCategory,
         useNlpSearch
@@ -235,6 +239,7 @@ export default function Searchbar({ database }) {
       setyearEnd(yearEnd);
       setIsChecked(isChecked);
       setcontextID(contextID);
+      setContextMode(contextMode === "any" ? "any" : "all");
       setdatasetID(datasetID);
       setUseNlpSearch(Boolean(useNlpSearch));
       //setqlimit(qlimit);
@@ -255,11 +260,12 @@ export default function Searchbar({ database }) {
       yearEnd,
       isChecked,
       contextID,
+      contextMode,
       datasetID,
       optionsForSelectedCategory,
       useNlpSearch
     }));
-  }, [searchStateKey, domainDrop, advdomainDrop, advoptions, selectedOption, selectedcountry, tvalue, yearStart, yearEnd, isChecked, contextID, datasetID, optionsForSelectedCategory, useNlpSearch]);
+  }, [searchStateKey, domainDrop, advdomainDrop, advoptions, selectedOption, selectedcountry, tvalue, yearStart, yearEnd, isChecked, contextID, contextMode, datasetID, optionsForSelectedCategory, useNlpSearch]);
 
   // Fetch and save users data to sessionStorage
   useEffect(() => {
@@ -287,6 +293,7 @@ export default function Searchbar({ database }) {
     setyearStart("")
     setyearEnd("")
     setcontextID("")
+    setContextMode("all")
     setdatasetID("")
     setNlpSummary("")
   }
@@ -302,39 +309,22 @@ export default function Searchbar({ database }) {
       if (next.length <= MAX_NLP_LOG_ENTRIES) return next;
       return next.slice(next.length - MAX_NLP_LOG_ENTRIES);
     });
+
+    void persistNlpLogOnServer(safeEntry);
   };
 
-  const exportNlpLogsToJson = () => {
-    if (!nlpLogs.length) {
-      setNlpSummary("No NLP logs to export yet.");
-      return;
+  const persistNlpLogOnServer = async (entry = {}) => {
+    try {
+      await fetch(`${process.env.REACT_APP_API_URL}/nlp/parse-log`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(entry)
+      });
+    } catch (error) {
+      console.error("Error saving NLP parse log on server:", error);
     }
-
-    const payload = {
-      schema_version: "nl2api_log_v1",
-      exported_at: new Date().toISOString(),
-      database,
-      count: nlpLogs.length,
-      entries: nlpLogs
-    };
-
-    const stamp = new Date().toISOString().replace(/[:.]/g, "-");
-    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const anchor = document.createElement("a");
-    anchor.href = url;
-    anchor.download = `catmapper_nlp_query_log_${database}_${stamp}.json`;
-    document.body.appendChild(anchor);
-    anchor.click();
-    anchor.remove();
-    URL.revokeObjectURL(url);
-
-    setNlpSummary(`Exported ${nlpLogs.length} NLP log entries.`);
-  };
-
-  const clearNlpLogs = () => {
-    setNlpLogs([]);
-    setNlpSummary("Cleared NLP query log history.");
   };
 
   const tooltipContent = (
@@ -471,17 +461,29 @@ export default function Searchbar({ database }) {
     setSearchParams(cleanParams);
   };
 
-  const buildDirectSearchParams = (termValue, domainValue) => ({
-    domain: domainValue,
-    property: selectedOption,
-    term: termValue,
-    database: database,
-    yearStart: yearStart,
-    yearEnd: yearEnd,
-    country: selectedcountry,
-    context: contextID,
-    dataset: datasetID
-  });
+  const parseContextIds = (value = "") => {
+    const parsed = String(value || "")
+      .split(CONTEXT_SPLIT_REGEX)
+      .map((entry) => entry.trim())
+      .filter(Boolean);
+    return [...new Set(parsed)];
+  };
+
+  const buildDirectSearchParams = (termValue, domainValue) => {
+    const contextIds = parseContextIds(contextID);
+    return {
+      domain: domainValue,
+      property: selectedOption,
+      term: termValue,
+      database: database,
+      yearStart: yearStart,
+      yearEnd: yearEnd,
+      country: selectedcountry,
+      contexts: contextIds.join(","),
+      contextMode: contextIds.length > 1 ? contextMode : "",
+      dataset: datasetID
+    };
+  };
 
   const findCountryCode = (countryName = "") => {
     const normalized = countryName.trim().toLowerCase();
@@ -526,7 +528,9 @@ export default function Searchbar({ database }) {
 
     setyearStart(params.yearStart || "");
     setyearEnd(params.yearEnd || "");
-    setcontextID(params.context || "");
+    const contextValue = params.contexts || params.context || "";
+    setcontextID(parseContextIds(contextValue).join(","));
+    setContextMode(params.contextMode === "any" ? "any" : "all");
     setdatasetID(params.dataset || "");
     setSelectedCountry(params.country || "");
   };
@@ -583,7 +587,7 @@ export default function Searchbar({ database }) {
     };
 
     if (llmResult.status === "ok") {
-      summaryBits.push(`NLP model "${llmResult.model}" returned validated JSON`);
+      summaryBits.push("Natural language request interpreted successfully.");
     } else {
       parserMode = "fallback_rule_parser";
       parsed = parseNaturalLanguageSearch({
@@ -593,15 +597,33 @@ export default function Searchbar({ database }) {
         availableSubdomains,
         countryNames
       });
-      const firstError = llmResult.errors?.[0];
-      summaryBits.push(
-        `NLP model fallback parser used (${llmResult.status}${firstError ? `: ${firstError}` : ""})`
-      );
+      summaryBits.push("Used backup language parser for this request.");
     }
 
     let resolvedContextID = parsed.contextID || "";
     let resolvedDatasetID = parsed.datasetID || "";
     let resolvedCountryCode = "";
+
+    if (parsed.contextTerm && !resolvedContextID && !resolvedDatasetID) {
+      const normalizedContextDomain = String(parsed.contextDomain || "").toUpperCase();
+      if (normalizedContextDomain === "DISTRICT") {
+        const countryContextID = findCountryCode(parsed.contextTerm);
+        if (countryContextID) {
+          resolvedContextID = countryContextID;
+          resolutionDetails = {
+            status: "resolved_country_lookup",
+            domain: "DISTRICT",
+            context_term: parsed.contextTerm,
+            cmid: countryContextID,
+            matched_name: parsed.contextTerm,
+            candidates: []
+          };
+          summaryBits.push(
+            `Context "${parsed.contextTerm}" matched country-level (ADM0) as ${countryContextID}`
+          );
+        }
+      }
+    }
 
     if (parsed.contextTerm && !resolvedContextID && !resolvedDatasetID) {
       const resolutionDomain = parsed.contextDomain || "CATEGORY";
@@ -670,6 +692,7 @@ export default function Searchbar({ database }) {
     }
 
     const contextForQuery = resolvedContextID || "";
+    const contextIdsForQuery = contextForQuery ? [contextForQuery] : [];
     const datasetForQuery = resolvedDatasetID || "";
     const countryForQuery = contextForQuery ? "" : resolvedCountryCode;
 
@@ -693,7 +716,8 @@ export default function Searchbar({ database }) {
       term: queryTerm,
       yearStart: parsed.yearStart || "",
       yearEnd: parsed.yearEnd || "",
-      context: contextForQuery,
+      contexts: contextIdsForQuery.join(","),
+      contextMode: contextIdsForQuery.length > 1 ? "all" : "",
       dataset: datasetForQuery,
       country: countryForQuery
     };
@@ -726,7 +750,7 @@ export default function Searchbar({ database }) {
         dataset: datasetForQuery,
         context_term: parsed.contextTerm,
         context_domain: parsed.contextDomain,
-        context: contextForQuery,
+        contexts: contextIdsForQuery.join(","),
         country: parsed.countryName || countryForQuery,
         intent_all: parsed.intentAll ? "true" : ""
       }).filter(([_, value]) => value != null && value !== "")
@@ -736,11 +760,24 @@ export default function Searchbar({ database }) {
       Object.entries(validatedQuery.params).filter(([_, value]) => value != null && value !== "")
     );
 
-    const summaryPrefix = summaryBits.length
-      ? `${summaryBits.join(". ")}. `
-      : "";
-    const summaryMessage =
-      `${summaryPrefix}Parsed: ${JSON.stringify(parsedSummaryParams)} | Final query: ${JSON.stringify(finalSummaryParams)}`;
+    const summaryDetails = [];
+    if (finalSummaryParams.term) {
+      summaryDetails.push(`Search term: "${finalSummaryParams.term}".`);
+    }
+    if (finalSummaryParams.domain && finalSummaryParams.domain !== "ALL NODES") {
+      summaryDetails.push(`Domain: ${finalSummaryParams.domain}.`);
+    }
+    if (finalSummaryParams.country) {
+      summaryDetails.push("Country filter applied.");
+    }
+    if (finalSummaryParams.context || finalSummaryParams.contexts) {
+      summaryDetails.push("Context match applied.");
+    }
+    if (finalSummaryParams.dataset) {
+      summaryDetails.push("Dataset filter applied.");
+    }
+
+    const summaryMessage = [...summaryBits, ...summaryDetails].join(" ");
 
     syncAdvancedControlsFromParams(validatedQuery.params);
     finalizeNlpResult({
@@ -754,7 +791,12 @@ export default function Searchbar({ database }) {
 
   async function handleSearch(termValue, domainValue) {
     if (useNlpSearch) {
-      await handleNlpSearch(termValue, domainValue);
+      setNlpProcessing(true);
+      try {
+        await handleNlpSearch(termValue, domainValue);
+      } finally {
+        setNlpProcessing(false);
+      }
       return;
     }
     setNlpSummary("");
@@ -836,7 +878,7 @@ export default function Searchbar({ database }) {
             type="searchOutlined"
             onClick={handleSearchButtonClick}
           />
-          {loading && (
+          {(loading || nlpProcessing) && (
             <div style={{ position: "absolute", top: "40vh", left: "50vw", transform: "translate(-50%, -50%)" }}>
               <CircularProgress />
             </div>
@@ -860,52 +902,22 @@ export default function Searchbar({ database }) {
             }
             label="NLP Search"
           />
-          <NeonButton
-            type="infoOutlined"
-            tooltipText={
-              <>
-                NLP Search converts natural language into CatMapper search parameters.
-                Example: <em>look up Yoruba in Ghana</em>. If a country is included,
-                CatMapper first tries to resolve it to a DISTRICT CMID context, then runs the normal search.
-              </>
+          <Tooltip
+            title={
+              <div className="tooltip-width">
+                NLP stands for <strong>Natural Language Processing</strong>.
+                Turn this on to type a normal question, such as <em>look up Yoruba in Ghana</em>,
+                and CatMapper will convert it into search filters for you.
+                When multiple place levels exist, it prefers country-level (<strong>ADM0</strong>) matches.
+              </div>
             }
-          />
-          {useNlpSearch && (
+            arrow
+          >
             <Button
-              onClick={exportNlpLogsToJson}
-              size="small"
-              variant="outlined"
-              sx={{
-                textTransform: "none",
-                color: "white",
-                borderColor: "rgba(255,255,255,0.5)",
-                "&:hover": {
-                  borderColor: "white",
-                  backgroundColor: "rgba(255,255,255,0.08)"
-                }
-              }}
-            >
-              Export NLP JSON ({nlpLogs.length})
-            </Button>
-          )}
-          {useNlpSearch && (
-            <Button
-              onClick={clearNlpLogs}
-              size="small"
-              variant="text"
-              disabled={!nlpLogs.length}
-              sx={{
-                textTransform: "none",
-                color: "rgba(255,255,255,0.8)",
-                "&:hover": {
-                  color: "white",
-                  backgroundColor: "rgba(255,255,255,0.08)"
-                }
-              }}
-            >
-              Clear NLP Logs
-            </Button>
-          )}
+              startIcon={<InfoIcon sx={{ height: "28px", width: "28px" }} />}
+              sx={{ minWidth: 36, color: "white" }}
+            ></Button>
+          </Tooltip>
           <Button
             onClick={handleAdvancedSearchChange} // Toggles your existing isChecked state
             startIcon={isChecked ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
@@ -932,7 +944,7 @@ export default function Searchbar({ database }) {
         )}
         {useNlpSearch && (
           <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.75)", display: "block", mb: 1 }}>
-            NLP log entries saved locally: {nlpLogs.length}
+            Temporary testing mode: NLP query JSON is saved automatically in this browser and on the server.
           </Typography>
         )}
         {isChecked && (
@@ -1123,16 +1135,40 @@ export default function Searchbar({ database }) {
 
               <Grid item xs={12} sm={6} md={3}>
                 <FormControl variant="standard">
-                  <Typography variant="subtitle2" gutterBottom>Context ID</Typography>
+                  <Typography variant="subtitle2" gutterBottom>Context ID(s)</Typography>
                   <input
                     type="text"
                     id="myInput"
                     value={contextID}
-                    style={{ width: 100, height: 30, padding: "0 8px", borderRadius: 4, border: "1px solid #ccc" }}
+                    style={{ width: 160, height: 30, padding: "0 8px", borderRadius: 4, border: "1px solid #ccc" }}
                     onChange={(event) => {
                       setcontextID(event.target.value);
                     }}
                   />
+                  <Typography variant="caption" sx={{ mt: 0.5 }}>
+                    Multiple IDs: separate with comma
+                  </Typography>
+                  <NativeSelect
+                    value={contextMode}
+                    sx={{
+                      mt: 0.5,
+                      width: 120,
+                      fontSize: 14,
+                      letterSpacing: 0.5,
+                      borderRadius: 1,
+                      backgroundColor: "white",
+                      "& .MuiNativeSelect-select": {
+                        padding: "4px 8px",
+                      },
+                    }}
+                    onChange={(event) => {
+                      setContextMode(event.target.value === "any" ? "any" : "all");
+                    }}
+                    input={<BootstrapInput />}
+                  >
+                    <option value="all">all contexts</option>
+                    <option value="any">any context</option>
+                  </NativeSelect>
                 </FormControl>
               </Grid>
 
