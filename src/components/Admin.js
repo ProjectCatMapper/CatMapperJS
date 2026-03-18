@@ -60,6 +60,7 @@ const ROUTINE_OPTIONS = [
   { key: "fixMetaTypes", label: "fixMetaTypes" },
   { key: "noUSES", label: "noUSES" },
   { key: "checkUSES", label: "checkUSES" },
+  { key: "updateUSES", label: "updateUSES" },
   { key: "reportChanges", label: "reportChanges" },
   { key: "missingCMName", label: "missingCMName" },
   { key: "getBadContextual", label: "getBadContextual" },
@@ -98,6 +99,7 @@ const Admin = ({ database }) => {
   const [routineParams, setRoutineParams] = useState({
     return_type: "info",
     save: "true",
+    cmid: "",
     dateStart: "",
     dateEnd: "",
     action: "default",
@@ -523,6 +525,13 @@ const Admin = ({ database }) => {
         alert("Enter a JSON value to validate.");
         return;
       }
+      if (firstDropdownValue === "updateUSES") {
+        const cmidValue = routineParams.cmid.trim().toUpperCase();
+        if (cmidValue && !/^(AM|SM|AD|SD)\d+$/.test(cmidValue)) {
+          alert("CMID must start with AM, SM, AD, or SD and be followed by digits.");
+          return;
+        }
+      }
 
       setLoading(true);
 
@@ -552,6 +561,12 @@ const Admin = ({ database }) => {
       }
       if (firstDropdownValue === "is_valid_json") {
         params.set("value", routineParams.value.trim());
+      }
+      if (firstDropdownValue === "updateUSES") {
+        const cmidValue = routineParams.cmid.trim().toUpperCase();
+        if (cmidValue) {
+          params.set("CMID", cmidValue);
+        }
       }
 
       const queryString = params.toString();
@@ -1685,6 +1700,23 @@ const Admin = ({ database }) => {
                   <MenuItem value="true">true</MenuItem>
                   <MenuItem value="false">false</MenuItem>
                 </Select>
+              </>
+            )}
+
+            {firstDropdownValue === "updateUSES" && (
+              <>
+                <InputLabel sx={{ color: "black" }}>CMID (optional)</InputLabel>
+                <TextField
+                  name="cmid"
+                  value={routineParams.cmid}
+                  onChange={updateRoutineParam}
+                  sx={{ width: 300, mb: 1 }}
+                  size="small"
+                  placeholder="Leave blank to run for entire database"
+                />
+                <Typography variant="caption" sx={{ display: "block", mb: 2 }}>
+                  Uses the current admin page database (`{database}`). Provide one CMID to scope the run.
+                </Typography>
               </>
             )}
 
