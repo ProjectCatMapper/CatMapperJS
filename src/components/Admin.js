@@ -87,7 +87,6 @@ const Admin = ({ database }) => {
   const [ntableData, setnTableData] = useState([]);
   const [tableDropdownValues, setTableDropdownValues] = useState({});
   const [datasetID, setDatasetID] = useState('')
-  const [insertTargetField, setInsertTargetField] = useState('s1_2');
   const [mergeConfirmOpen, setMergeConfirmOpen] = useState(false);
   const [mergePreview, setMergePreview] = useState({ keep: null, discard: null });
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -437,14 +436,46 @@ const Admin = ({ database }) => {
     resetAdminForm();
   };
 
-  const insertSavedIntoForm = (selectedSavedCmid) => {
+  const insertSavedIntoForm = (selectedSavedCmid, targetField = "s1_2") => {
     if (!selectedSavedCmid) return;
     setFormData((prev) => {
-      const current = (prev[insertTargetField] || '').trim();
+      const current = (prev[targetField] || '').trim();
       const value = current ? `${current},${selectedSavedCmid}` : selectedSavedCmid;
-      return { ...prev, [insertTargetField]: value };
+      return { ...prev, [targetField]: value };
     });
   };
+
+  const renderCmidInput = ({
+    label,
+    name = "s1_2",
+    textFieldSx = {},
+    size = "small",
+    margin = "none",
+  }) => (
+    <>
+      <InputLabel id={`label-${name}`} style={{ color: "black " }}>
+        {label}
+      </InputLabel>
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1.5 }}>
+        <TextField
+          name={name}
+          value={formData[name]}
+          onChange={updateFormFieldValue}
+          sx={{ width: 300, mt: 0, mb: 0, ...textFieldSx }}
+          variant="outlined"
+          margin={margin}
+          size={size}
+        />
+        <SavedCmidInsertPopover
+          user={user}
+          cred={cred}
+          database={database}
+          title="Insert"
+          onInsert={(selectedSavedCmid) => insertSavedIntoForm(selectedSavedCmid, name)}
+        />
+      </Box>
+    </>
+  );
 
   const columns = [
     { field: 'userid', headerName: 'User ID', width: 150 },
@@ -832,27 +863,10 @@ const Admin = ({ database }) => {
         </Box>
 
         <Box sx={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0, overflowY: "auto", pr: { md: 1 } }}>
-          <Box sx={{ mb: 2 }}>
+          <Box sx={{ mb: 1 }}>
             <Typography sx={{ mt: 1, fontWeight: 600 }}>
               Selected option: {routineOptionByKey[firstDropdownValue]?.label || firstDropdownValue}
             </Typography>
-            {!isDatabaseRoutineSelected && (
-              <Box sx={{ mt: 1 }}>
-                <SavedCmidInsertPopover
-                  user={user}
-                  cred={cred}
-                  database={database}
-                  title="Insert from Bookmarks/History"
-                  targetField={insertTargetField}
-                  onTargetFieldChange={setInsertTargetField}
-                  targetFieldOptions={[
-                    { value: "s1_2", label: "Target Field 1" },
-                    { value: "s1_3", label: "Target Field 2" }
-                  ]}
-                  onInsert={insertSavedIntoForm}
-                />
-              </Box>
-            )}
           </Box>
 
         {firstDropdownValue === "add/edit/delete USES property" && (
@@ -877,18 +891,11 @@ const Admin = ({ database }) => {
                 label="delete"
               />
             </RadioGroup>
-            <InputLabel id="domain-label" style={{ color: "black " }}>
-              CMID of Category
-            </InputLabel>
-            <TextField
-              name="s1_2"
-              value={formData.s1_2}
-              onChange={updateFormFieldValue}
-              sx={{ width: 300, height: 22, mt: 0, mb: 5, fontSize: 12 }}
-              variant="outlined"
-              margin="normal"
-              size="small"
-            />
+            {renderCmidInput({
+              label: "CMID of Category",
+              name: "s1_2",
+              textFieldSx: { height: 36, fontSize: 12 },
+            })}
             {add_edit_delete_usesprops_Options !== "" &&
               <>
                 <InputLabel id="api-results-label" style={{ color: "black" }}>
@@ -896,7 +903,7 @@ const Admin = ({ database }) => {
                 </InputLabel>
                 <Select
                   name="s1_7"
-                  sx={{ width: 300, height: 40, mb: 3 }}
+                  sx={{ width: 300, height: 40, mb: 2 }}
                   value={formData.s1_7 || ""}
                   onChange={updateFormFieldValue}
                 >
@@ -939,7 +946,7 @@ const Admin = ({ database }) => {
                         </InputLabel>
                         <Select
                           name="s1_8"
-                          sx={{ width: 300, height: 40, mb: 3 }}
+                          sx={{ width: 300, height: 40, mb: 2 }}
                           value={formData.s1_8 || ""}
                           onChange={updateFormFieldValue}
                         >
@@ -991,7 +998,7 @@ const Admin = ({ database }) => {
                   name="s1_3"
                   value={formData.s1_3}
                   onChange={updateFormFieldValue}
-                  sx={{ width: 300, height: 25, mb: 4, mt: 0 }}
+                  sx={{ width: 300, height: 25, mb: 2, mt: 0 }}
                   variant="outlined"
                   margin="normal"
                   size="small"
@@ -1003,7 +1010,8 @@ const Admin = ({ database }) => {
               sx={{
                 display: 'flex',
                 justifyContent: 'flex-start',
-                padding: 2
+                pt: 1,
+                pb: 1
               }}
             >
               <Button
@@ -1046,18 +1054,11 @@ const Admin = ({ database }) => {
                 disabled={formData.s1_2.startsWith("CP") || formData.s1_2.startsWith("CL")}
               />
             </RadioGroup>
-            <InputLabel id="domain-label" style={{ color: "black " }}>
-              CMID of Node
-            </InputLabel>
-            <TextField
-              name="s1_2"
-              value={formData.s1_2}
-              onChange={updateFormFieldValue}
-              sx={{ width: 300, height: 25, mb: 5, padding: "0 0", mt: 0 }}
-              variant="outlined"
-              size="small"
-              margin="normal"
-            />
+            {renderCmidInput({
+              label: "CMID of Node",
+              name: "s1_2",
+              textFieldSx: { height: 25, padding: "0 0" },
+            })}
 
             {add_edit_delete_Nodeprops_Options.length !== 0 &&
               (Array.isArray(add_edit_delete_Nodeprops_Options) ? (
@@ -1068,7 +1069,7 @@ const Admin = ({ database }) => {
                   </InputLabel>
                   <Select
                     name="s1_7"
-                    sx={{ width: 300, height: 25, mb: 3 }}
+                    sx={{ width: 300, height: 25, mb: 2 }}
                     value={formData.s1_7 || ""}
                     onChange={updateFormFieldValue}
                   >
@@ -1088,7 +1089,7 @@ const Admin = ({ database }) => {
                     </InputLabel>
                     <Select
                       name="s1_7"
-                      sx={{ width: 300, height: 25, mb: 3 }}
+                      sx={{ width: 300, height: 25, mb: 2 }}
                       value={formData.s1_7 || ""}
                       onChange={updateFormFieldValue}
                     >
@@ -1116,7 +1117,7 @@ const Admin = ({ database }) => {
                   name="s1_3"
                   value={formData.s1_3}
                   onChange={updateFormFieldValue}
-                  sx={{ width: 300, height: 25, mb: 4, mt: 0 }}
+                  sx={{ width: 300, height: 25, mb: 2, mt: 0 }}
                   variant="outlined"
                   size="small"
                   margin="normal"
@@ -1127,7 +1128,8 @@ const Admin = ({ database }) => {
               sx={{
                 display: 'flex',
                 justifyContent: 'flex-start',
-                padding: 2
+                pt: 1,
+                pb: 1
               }}
             >
               <Button
@@ -1150,35 +1152,22 @@ const Admin = ({ database }) => {
 
         {firstDropdownValue === "merge nodes" && (
           <Box sx={{ ml: 1 }}>
-            <InputLabel id="domain-label" style={{ color: "black " }}>
-              ID to keep
-            </InputLabel>
-            <TextField
-              name="s1_2"
-              value={formData.s1_2}
-              onChange={updateFormFieldValue}
-              sx={{ width: 300, height: 40, mb: 3, mt: 0 }}
-              variant="outlined"
-              margin="normal"
-              size="small"
-            />
-            <InputLabel id="domain-label" style={{ color: "black " }}>
-              ID to discard
-            </InputLabel>
-            <TextField
-              name="s1_3"
-              value={formData.s1_3}
-              onChange={updateFormFieldValue}
-              sx={{ width: 300, height: 40, mb: 4, mt: 0 }}
-              variant="outlined"
-              margin="normal"
-              size="small"
-            />
+            {renderCmidInput({
+              label: "ID to keep",
+              name: "s1_2",
+              textFieldSx: { height: 40 },
+            })}
+            {renderCmidInput({
+              label: "ID to discard",
+              name: "s1_3",
+              textFieldSx: { height: 40 },
+            })}
             <Box
               sx={{
                 display: 'flex',
                 justifyContent: 'flex-start',
-                padding: 2
+                pt: 1,
+                pb: 1
               }}
             >
               <Button
@@ -1201,18 +1190,11 @@ const Admin = ({ database }) => {
 
         {firstDropdownValue === "move USES tie" && (
           <Box sx={{ ml: 1 }}>
-            <InputLabel id="domain-label" style={{ color: "black " }}>
-              CMID moving from
-            </InputLabel>
-            <TextField
-              name="s1_2"
-              value={formData.s1_2}
-              onChange={updateFormFieldValue}
-              sx={{ width: 300, height: 40, mb: 3, mt: 0 }}
-              variant="outlined"
-              margin="normal"
-              size="small"
-            />
+            {renderCmidInput({
+              label: "CMID moving from",
+              name: "s1_2",
+              textFieldSx: { height: 40 },
+            })}
             {add_edit_delete_usesprops_Options !== "" &&
               <>
                 <InputLabel id="api-results-label" style={{ color: "black" }}>
@@ -1220,7 +1202,7 @@ const Admin = ({ database }) => {
                 </InputLabel>
                 <Select
                   name="s1_7"
-                  sx={{ width: 300, height: 40, mb: 3 }}
+                  sx={{ width: 300, height: 40, mb: 2 }}
                   value={formData.s1_7 || ""}
                   onChange={updateFormFieldValue}
                 >
@@ -1232,23 +1214,17 @@ const Admin = ({ database }) => {
                 </Select>
               </>
             }
-            <InputLabel id="domain-label" style={{ color: "black " }}>
-              CMID moving to
-            </InputLabel>
-            <TextField
-              name="s1_3"
-              value={formData.s1_3}
-              onChange={updateFormFieldValue}
-              sx={{ width: 300, height: 40, mb: 4, mt: 0 }}
-              variant="outlined"
-              margin="normal"
-              size="small"
-            />
+            {renderCmidInput({
+              label: "CMID moving to",
+              name: "s1_3",
+              textFieldSx: { height: 40 },
+            })}
             <Box
               sx={{
                 display: 'flex',
                 justifyContent: 'flex-start',
-                padding: 2
+                pt: 1,
+                pb: 1
               }}
             >
               <Button
@@ -1284,18 +1260,11 @@ const Admin = ({ database }) => {
               <FormControlLabel value="TRUE" control={<Radio />} label="TRUE" />
               <FormControlLabel value="FALSE" control={<Radio />} label="FALSE" />
             </RadioGroup>
-            <InputLabel id="domain-label" style={{ color: "black " }}>
-              ID of node connected to relationship
-            </InputLabel>
-            <TextField
-              name="s1_2"
-              value={formData.s1_2}
-              onChange={updateFormFieldValue}
-              sx={{ width: 300, height: 40, mb: 3, mt: 0 }}
-              variant="outlined"
-              margin="normal"
-              size="small"
-            />
+            {renderCmidInput({
+              label: "ID of node connected to relationship",
+              name: "s1_2",
+              textFieldSx: { height: 40 },
+            })}
             <InputLabel id="domain-label" style={{ color: "black " }}>
               Reason why this comment is necessary
             </InputLabel>
@@ -1303,7 +1272,7 @@ const Admin = ({ database }) => {
               name="s1_3"
               value={formData.s1_3}
               onChange={updateFormFieldValue}
-              sx={{ width: 300, height: 40, mb: 4, mt: 0 }}
+              sx={{ width: 300, height: 40, mb: 2, mt: 0 }}
               variant="outlined"
               margin="normal"
               size="small"
@@ -1314,23 +1283,17 @@ const Admin = ({ database }) => {
 
         {firstDropdownValue === "delete node" && (
           <Box sx={{ ml: 1 }}>
-            <InputLabel id="domain-label" style={{ color: "black " }}>
-              CMID of node to delete
-            </InputLabel>
-            <TextField
-              name="s1_2"
-              value={formData.s1_2}
-              onChange={updateFormFieldValue}
-              sx={{ width: 300, height: 40, mb: 3, mt: 0 }}
-              variant="outlined"
-              margin="normal"
-              size="small"
-            />
+            {renderCmidInput({
+              label: "CMID of node to delete",
+              name: "s1_2",
+              textFieldSx: { height: 40 },
+            })}
             <Box
               sx={{
                 display: 'flex',
                 justifyContent: 'flex-start',
-                padding: 2
+                pt: 1,
+                pb: 1
               }}
             >
               <Button
@@ -1353,18 +1316,11 @@ const Admin = ({ database }) => {
 
         {firstDropdownValue === "delete USES relation" && (
           <Box sx={{ ml: 1 }}>
-            <InputLabel id="domain-label" style={{ color: "black " }}>
-              CMID of category
-            </InputLabel>
-            <TextField
-              name="s1_2"
-              value={formData.s1_2}
-              onChange={updateFormFieldValue}
-              sx={{ width: 300, height: 40, mb: 3, mt: 0 }}
-              variant="outlined"
-              margin="normal"
-              size="small"
-            />
+            {renderCmidInput({
+              label: "CMID of category",
+              name: "s1_2",
+              textFieldSx: { height: 40 },
+            })}
             {add_edit_delete_usesprops_Options !== "" &&
               <>
                 <InputLabel id="api-results-label" style={{ color: "black" }}>
@@ -1372,7 +1328,7 @@ const Admin = ({ database }) => {
                 </InputLabel>
                 <Select
                   name="s1_7"
-                  sx={{ width: 300, height: 40, mb: 3 }}
+                  sx={{ width: 300, height: 40, mb: 2 }}
                   value={formData.s1_7 || ""}
                   onChange={updateFormFieldValue}
                 >
@@ -1388,7 +1344,8 @@ const Admin = ({ database }) => {
               sx={{
                 display: 'flex',
                 justifyContent: 'flex-start',
-                padding: 2
+                pt: 1,
+                pb: 1
               }}
             >
               <Button
@@ -1460,7 +1417,7 @@ const Admin = ({ database }) => {
               name="s1_4"
               value={formData.s1_4}
               onChange={updateFormFieldValue}
-              sx={{ width: 300, height: 40, mb: 12, mt: 0 }}
+              sx={{ width: 300, height: 40, mb: 2, mt: 0 }}
               multiline
               rows={4}
               variant="outlined"
@@ -1494,7 +1451,8 @@ const Admin = ({ database }) => {
               sx={{
                 display: 'flex',
                 justifyContent: 'flex-start',
-                padding: 2
+                pt: 1,
+                pb: 1
               }}
             >
               <Button
@@ -1637,7 +1595,7 @@ const Admin = ({ database }) => {
               name="s1_3"
               value={formData.s1_3}
               onChange={updateFormFieldValue}
-              sx={{ width: 300, height: 40, mb: 4 }}
+              sx={{ width: 300, height: 40, mb: 2 }}
               variant="outlined"
               margin="normal"
               size="small"
@@ -1832,7 +1790,8 @@ const Admin = ({ database }) => {
               sx={{
                 display: 'flex',
                 justifyContent: 'flex-start',
-                padding: 2
+                pt: 1,
+                pb: 1
               }}
             >
               <Button
@@ -1878,7 +1837,8 @@ const Admin = ({ database }) => {
                 sx={{
                   display: 'flex',
                   justifyContent: 'flex-start',
-                  padding: 2
+                  pt: 1,
+                  pb: 1
                 }}
               >
                 <Button
