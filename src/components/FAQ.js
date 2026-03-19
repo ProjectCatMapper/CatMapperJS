@@ -2,18 +2,20 @@ import React from 'react';
 import './FAQ.css';
 
 const FAQContent = () => {
+    const externalLinkProps = { target: "_blank", rel: "noopener noreferrer" };
+
     return (
         <div className="faq-layout">
             <nav className="faq-sidebar">
                 <h2 className="faq-title-small">Contents</h2>
                 <ul className="faq-contents">
-                    <li><a href="/FAQ#categories">Catalogued Categories</a></li>
-                    <li><a href="/FAQ#sources">Category Sources</a></li>
-                    <li><a href="/FAQ#view-datasets">Viewing Datasets</a></li>
-                    <li><a href="/FAQ#completeness">Data Completeness</a></li>
-                    <li><a href="/FAQ#cataloguing-method">Cataloguing Method</a></li>
-                    <li><a href="/FAQ#data-types">Stored Data Types</a></li>
-                    <li><a href="/FAQ#download">Download Options</a></li>
+                    <li><a href="#categories">Catalogued Categories</a></li>
+                    <li><a href="#sources">Category Sources</a></li>
+                    <li><a href="#view-datasets">Viewing Datasets</a></li>
+                    <li><a href="#completeness">Data Completeness</a></li>
+                    <li><a href="#cataloguing-method">Cataloguing Method</a></li>
+                    <li><a href="#data-types">Stored Data Types</a></li>
+                    <li><a href="#download">Download Options</a></li>
                 </ul>
             </nav>
 
@@ -35,13 +37,23 @@ const FAQContent = () => {
                     <p>There are several places where you can find the full list of currently stored datasets:</p>
                     <ol className="faq-list">
                         <li>
-                            In the <strong>download page</strong> (<a href="https://catmapper.org/download">https://catmapper.org/download</a>), you can download the file starting with “datasetNodes”
+                            In the <strong><a href="https://catmapper.org/download" {...externalLinkProps}>download page</a></strong>, you can download the file starting with “datasetNodes”.
                         </li>
                         <li>
-                            In the <strong>home page</strong> for sociomap (<a href="https://catmapper.org/sociomap">https://catmapper.org/sociomap</a>) or archamap (<a href="https://catmapper.org/archamap">https://catmapper.org/archamap</a>), find and press the blue button “download datasets list” in the “dataset progress” section
+                            In the <strong>home page</strong> for
+                            {' '}
+                            <a href="https://catmapper.org/sociomap" {...externalLinkProps}>SocioMap</a>
+                            {' '}
+                            or
+                            {' '}
+                            <a href="https://catmapper.org/archamap" {...externalLinkProps}>ArchaMap</a>
+                            , find and press the blue button “download datasets list” in the “dataset progress” section.
                         </li>
                         <li>
-                            In the <strong>explore page</strong> (<a href="https://catmapper.org/sociomap/explore">https://catmapper.org/sociomap/explore</a>), leave the text box blank, click “advanced” search and select “DATASET” under Category Domain. Press the search button (magnifying glass icon), and the full list of datasets will show up in the search results. You can download metadata on these datasets by clicking “Download Results”
+                            In the
+                            {' '}
+                            <strong><a href="https://catmapper.org/sociomap/explore" {...externalLinkProps}>explore page</a></strong>
+                            , leave the text box blank, click “advanced” search and select “DATASET” under Category Domain. Press the search button (magnifying glass icon), and the full list of datasets will show up in the search results. You can download metadata on these datasets by clicking “Download Results”.
                         </li>
                     </ol>
                 </section>
@@ -53,7 +65,7 @@ const FAQContent = () => {
 
                 <section id="cataloguing-method" className="faq-section">
                     <h3>How does CatMapper catalogue categories?</h3>
-                    <p>CatMapper stores all categories and datasets as <strong>nodes</strong> in a vast network. When a specific dataset uses a category, CatMapper maintains a <strong>“USES” tie</strong> from that dataset to the category storing all the claims that dataset makes about that category (e.g. geospatial location, country, time period, and other contextual factors such as language, religion, and parent categories). Based on these claims, CatMapper also maintains <strong>contextual ties</strong> the show information such as what country a category is found in, what language or religion is associated with that category, and if there are any parents of that category (e.g. The U.S.A. is a parent of the state of Ohio). You can view and navigate this network in the network explorer tab in the info page for a given node (e.g., <a href="https://catmapper.org/sociomap/SM250827">https://catmapper.org/sociomap/SM250827</a> for the Yoruba ethnic category).</p>
+                    <p>CatMapper stores all categories and datasets as <strong>nodes</strong> in a vast network. When a specific dataset uses a category, CatMapper maintains a <strong>“USES” tie</strong> from that dataset to the category storing all the claims that dataset makes about that category (e.g. geospatial location, country, time period, and other contextual factors such as language, religion, and parent categories). Based on these claims, CatMapper also maintains <strong>contextual ties</strong> the show information such as what country a category is found in, what language or religion is associated with that category, and if there are any parents of that category (e.g. The U.S.A. is a parent of the state of Ohio). You can view and navigate this network in the network explorer tab in the info page for a given node, such as <a href="https://catmapper.org/sociomap/SM250827" {...externalLinkProps}>the Yoruba ethnic category</a>.</p>
                 </section>
 
                 <section id="data-types" className="faq-section">
@@ -63,7 +75,7 @@ const FAQContent = () => {
 
                 <section id="download" className="faq-section">
                     <h3>Where can I download the full set of data stored in CatMapper?</h3>
-                    <p>Current and past versions of both SocioMap and ArchaMap are available for download at <a href="https://catmapper.org/download">https://catmapper.org/download</a></p>
+                    <p>Current and past versions of both SocioMap and ArchaMap are available for download at <a href="https://catmapper.org/download" {...externalLinkProps}>catmapper.org/download</a>.</p>
                 </section>
             </main>
         </div>
