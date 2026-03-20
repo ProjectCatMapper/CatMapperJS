@@ -1,22 +1,88 @@
-import { useState, useEffect } from 'react'
-import { DataGrid } from '@mui/x-data-grid';
+import { useState, useEffect, useMemo } from 'react'
+import { DataGrid, GridToolbar } from '@mui/x-data-grid';
+import useMediaQuery from '@mui/material/useMediaQuery';
 import './ExploreTabs.css'
 
 export default function ClickTable(props) {
-  const ccolumns = [
-    { field: 'name', headerName: 'Name', flex: 1.3, cellClassName: (params) => params.row.hasLarge ? 'wrap-text-3-lines_dt' : '' },
-    { field: 'spacer', headerName: '', width: 20, sortable: false, filterable: false, disableColumnMenu: true, renderCell: () => null, },
-    { field: 'location', headerName: 'Location', flex: 1.3, cellClassName: (params) => params.row.hasLarge ? 'wrap-text-3-lines_dt' : '' },
-    { field: 'timespan', headerName: 'Time span', flex: 0.47, headerClassName: 'wrap-header_data', cellClassName: 'timespan_text', renderCell: (params) => (<div style={{ paddingLeft: '5px' }}>{params.value === 0 ? "" : params.value}</div>), },
-    { field: 'popest', headerName: 'Pop. est.', flex: 0.4, headerClassName: 'wrap-header_data', renderCell: (params) => (<div style={{ paddingLeft: '5px' }}>{params.value}</div>), },
-    { field: 'ctype', headerName: 'Type', flex: 0.4, headerClassName: 'wrap-header_data', renderCell: (params) => (<div style={{ paddingLeft: '5px' }}>{params.value}</div>), },
-    { field: 'samplesize', headerName: 'Sample size', flex: 0.37, headerClassName: 'wrap-header_data', renderCell: (params) => (<div style={{ paddingLeft: '5px' }}>{params.value}</div>), },
-    { field: 'source', headerName: 'Source', flex: 0.83, renderCell: (params1) => { return <a id='viewlink' href={params1.row.link2} target="_blank" rel="noopener noreferrer">{params1.row.source}</a> }, },
-    { field: 'version', headerName: 'Version', flex: 0.7, cellClassName: (params) => params.value && params.value.length > 10 ? 'wrap-text-3-lines_dt' : '', renderCell: (params) => (<div style={{ paddingLeft: '10px' }}>{params.value}</div>), },
-    { field: 'link', headerName: 'Link', flex: 0.4, renderCell: (params) => { if (params.row.link) { return <a id='viewlink' href={params.row.link} target="_blank" style={{ paddingLeft: '10px' }} rel="noopener noreferrer">{"View"}</a>; } }, },
-  ];
+  const isCompactLayout = useMediaQuery('(max-width: 1366px)');
+  const ccolumns = useMemo(() => ([
+    {
+      field: 'name',
+      headerName: 'Name',
+      flex: isCompactLayout ? 1.15 : 1.3,
+      minWidth: isCompactLayout ? 115 : 140,
+      cellClassName: (params) => params.row.hasLarge ? 'wrap-text-3-lines_dt' : ''
+    },
+    {
+      field: 'location',
+      headerName: 'Location',
+      flex: isCompactLayout ? 1.1 : 1.3,
+      minWidth: isCompactLayout ? 110 : 130,
+      cellClassName: (params) => params.row.hasLarge ? 'wrap-text-3-lines_dt' : ''
+    },
+    {
+      field: 'timespan',
+      headerName: 'Time span',
+      flex: isCompactLayout ? 0.5 : 0.47,
+      minWidth: isCompactLayout ? 84 : 92,
+      headerClassName: 'wrap-header_data',
+      cellClassName: 'timespan_text',
+      renderCell: (params) => (<div style={{ paddingLeft: '5px' }}>{params.value === 0 ? "" : params.value}</div>),
+    },
+    {
+      field: 'popest',
+      headerName: 'Pop. est.',
+      flex: isCompactLayout ? 0.45 : 0.4,
+      minWidth: isCompactLayout ? 82 : 90,
+      headerClassName: 'wrap-header_data',
+      renderCell: (params) => (<div style={{ paddingLeft: '5px' }}>{params.value}</div>),
+    },
+    {
+      field: 'ctype',
+      headerName: 'Type',
+      flex: isCompactLayout ? 0.45 : 0.4,
+      minWidth: isCompactLayout ? 76 : 84,
+      headerClassName: 'wrap-header_data',
+      renderCell: (params) => (<div style={{ paddingLeft: '5px' }}>{params.value}</div>),
+    },
+    {
+      field: 'samplesize',
+      headerName: 'Sample size',
+      flex: isCompactLayout ? 0.5 : 0.37,
+      minWidth: isCompactLayout ? 88 : 94,
+      headerClassName: 'wrap-header_data',
+      renderCell: (params) => (<div style={{ paddingLeft: '5px' }}>{params.value}</div>),
+    },
+    {
+      field: 'source',
+      headerName: 'Source',
+      flex: isCompactLayout ? 0.75 : 0.83,
+      minWidth: isCompactLayout ? 92 : 110,
+      renderCell: (params1) => <a id='viewlink' href={params1.row.link2} target="_blank" rel="noopener noreferrer">{params1.row.source}</a>,
+    },
+    {
+      field: 'version',
+      headerName: 'Version',
+      flex: isCompactLayout ? 0.58 : 0.7,
+      minWidth: isCompactLayout ? 86 : 98,
+      cellClassName: (params) => params.value && params.value.length > 10 ? 'wrap-text-3-lines_dt' : '',
+      renderCell: (params) => (<div style={{ paddingLeft: '10px' }}>{params.value}</div>),
+    },
+    {
+      field: 'link',
+      headerName: 'Link',
+      flex: isCompactLayout ? 0.32 : 0.4,
+      minWidth: isCompactLayout ? 64 : 72,
+      renderCell: (params) => {
+        if (params.row.link) {
+          return <a id='viewlink' href={params.row.link} target="_blank" style={{ paddingLeft: '10px' }} rel="noopener noreferrer">{"View"}</a>;
+        }
+        return null;
+      },
+    },
+  ]), [isCompactLayout]);
   const [rows, setRows] = useState([]);
-  let nonEmptyColumns = []
+  const [columnVisibilityModel, setColumnVisibilityModel] = useState({});
 
   useEffect(() => {
     setRows(props.usert.map((value, key) => {
@@ -63,19 +129,19 @@ export default function ClickTable(props) {
     }))
   }, [props.usert])
 
-  nonEmptyColumns = ccolumns.filter((col) =>
+  const nonEmptyColumns = useMemo(() => ccolumns.filter((col) =>
     rows.some((row) => (row[col.field] !== null) && row[col.field] !== undefined && row[col.field] !== '' && (row[col.field] !== "null"))
-  );
+  ), [ccolumns, rows]);
 
 
 
   const getRowHeight = (params) => {
+    if (isCompactLayout) return params.model.hasLarge ? 56 : 34;
     return params.model.hasLarge ? 63 : 40;
-
   };
 
   return (
-    <div style={{ marginLeft: "2vw", width: "90vw" }}>
+    <div style={{ width: "100%", maxWidth: "100%" }}>
       <style>
         {`
           .wrap-header_data .MuiDataGrid-columnHeaderTitle {
@@ -91,18 +157,42 @@ export default function ClickTable(props) {
           }
         `}
       </style>
-      <div style={{ width: "100%", height: "min(750px, 70vh)" }}>
+      <div style={{ width: "100%" }}>
         <DataGrid
           className="custom-row-height"
+          autoHeight
+          density={isCompactLayout ? "compact" : "standard"}
           rows={rows}
           getRowHeight={getRowHeight}
           columns={nonEmptyColumns}
+          columnVisibilityModel={columnVisibilityModel}
+          onColumnVisibilityModelChange={setColumnVisibilityModel}
+          slots={{ toolbar: GridToolbar }}
+          slotProps={{
+            toolbar: {
+              csvOptions: { disableToolbarButton: true },
+              printOptions: { disableToolbarButton: true },
+            },
+          }}
           sortModel={[
             { field: "source", sort: "asc" },
             { field: "location", sort: "asc" },
             { field: "timespan", sort: "asc" },
             { field: "version", sort: "asc" },
           ]}
+          sx={{
+            '& .MuiDataGrid-columnHeaders': {
+              fontSize: isCompactLayout ? '0.78rem' : '0.9rem',
+            },
+            '& .MuiDataGrid-cell': {
+              fontSize: isCompactLayout ? '0.78rem' : '0.88rem',
+              py: isCompactLayout ? 0.25 : 0.5,
+            },
+            '& .MuiDataGrid-toolbarContainer': {
+              justifyContent: 'flex-end',
+              px: 0,
+            },
+          }}
           initialState={{
             pagination: {
               paginationModel: { page: 0, pageSize: 10 },
