@@ -816,7 +816,7 @@ export default function Searchbar({ database }) {
     applySearchParams(validated.params);
   }
 
-  const handleSearchButtonClick = () => {
+  const handleSearchTrigger = () => {
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
     handleSearch(tvalue, advdomainDrop.trim());
   };
@@ -870,13 +870,14 @@ export default function Searchbar({ database }) {
             }}
             onKeyDown={(event) => {
               if (event.key === "Enter") {
-                handleSearch(tvalue, advdomainDrop.trim())
+                event.preventDefault();
+                handleSearchTrigger();
               }
             }}
           />
           <NeonButton
             type="searchOutlined"
-            onClick={handleSearchButtonClick}
+            onClick={handleSearchTrigger}
           />
           {(loading || nlpProcessing) && (
             <div style={{ position: "absolute", top: "40vh", left: "50vw", transform: "translate(-50%, -50%)" }}>

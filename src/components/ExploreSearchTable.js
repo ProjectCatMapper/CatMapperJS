@@ -12,6 +12,7 @@ export default function DataTable({ users, snackbarOpen, setSnackbarOpen, databa
   const [rows, setRows] = useState([]);
   const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 10 });
   const [bookmarkNotice, setBookmarkNotice] = useState({ open: false, severity: 'info', message: '' });
+  const tableContainerRef = React.useRef(null);
   const navigate = useNavigate();
   const { user, cred } = useAuth();
 
@@ -106,10 +107,22 @@ export default function DataTable({ users, snackbarOpen, setSnackbarOpen, databa
     setPaginationModel((prev) => ({ ...prev, page: 0 }));
   }, [users]);
 
+  React.useEffect(() => {
+    const rafId = window.requestAnimationFrame(() => {
+      const scroller = tableContainerRef.current?.querySelector('.MuiDataGrid-virtualScroller');
+      if (scroller) {
+        scroller.scrollTop = 0;
+        scroller.scrollLeft = 0;
+      }
+    });
+
+    return () => window.cancelAnimationFrame(rafId);
+  }, [users]);
+
   const getRowHeight = (params) => (params.model.hasLargeText ? 63 : 48);
 
   return (
-    <div style={{ height: 'auto', width: '100%' }}>
+    <div ref={tableContainerRef} style={{ height: 'auto', width: '100%' }}>
       <DataGrid
         className="custom-row-height"
         rows={rows}
