@@ -200,6 +200,7 @@ export default function Tableclick({ cmid, database, tabval }) {
   const historyLoggedRef = useRef("");
   const [mergeTemplateSummary, setMergeTemplateSummary] = useState(null);
   const [loadingMergeTemplateSummary, setLoadingMergeTemplateSummary] = useState(false);
+  const redirectNoticeStorageKey = "cmid_redirect_notice";
 
   let limit = 500;
 
@@ -266,6 +267,26 @@ export default function Tableclick({ cmid, database, tabval }) {
     }).catch(() => { });
   }, [user, cred, database, cmid, rev]);
 
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem(redirectNoticeStorageKey);
+      if (!raw) return;
+      const parsed = JSON.parse(raw);
+      const targetDatabase = String(parsed?.database || "").toLowerCase();
+      const targetCmid = String(parsed?.to || "");
+      if (targetDatabase === String(database || "").toLowerCase() && targetCmid === String(cmid || "")) {
+        setBookmarkNotice({
+          open: true,
+          severity: "info",
+          message: `Redirected from deleted CMID ${parsed.from} to ${parsed.to} via IS relationship.`
+        });
+        sessionStorage.removeItem(redirectNoticeStorageKey);
+      }
+    } catch (_error) {
+      sessionStorage.removeItem(redirectNoticeStorageKey);
+    }
+  }, [cmid, database]);
+
   // eslint-disable-next-line react-hooks/exhaustive-deps
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
@@ -316,7 +337,38 @@ export default function Tableclick({ cmid, database, tabval }) {
         }
         const infoData = await res.json();
         if (!isLatestRequest()) return;
+        const domainValues = Array.isArray(infoData?.Domains)
+          ? infoData.Domains
+          : infoData?.Domains
+            ? String(infoData.Domains).split(",").map((x) => x.trim()).filter(Boolean)
+            : [];
+        const isDeletedNodeInfo = domainValues.includes("DELETED");
+        const redirectTarget = typeof infoData?.Merged_into_CMID === "string"
+          ? infoData.Merged_into_CMID.trim()
+          : "";
+
+        if (isDeletedNodeInfo && redirectTarget && redirectTarget !== cmid) {
+          sessionStorage.setItem(
+            redirectNoticeStorageKey,
+            JSON.stringify({
+              from: cmid,
+              to: redirectTarget,
+              database: String(database || "").toLowerCase()
+            })
+          );
+          setNavigationLoading(true);
+          navigate(`/${String(database || "").toLowerCase()}/${redirectTarget}`, { replace: true });
+          return;
+        }
+
         setrev(infoData);
+        if (isDeletedNodeInfo && !redirectTarget) {
+          setBookmarkNotice({
+            open: true,
+            severity: "warning",
+            message: `CMID ${cmid} is DELETED and has no IS redirect relationship.`
+          });
+        }
       } catch (err) {
         if (err?.name === "AbortError") return;
         console.error("Error fetching info:", err);
@@ -1118,6 +1170,8 @@ export default function Tableclick({ cmid, database, tabval }) {
     : rev?.Domains
       ? String(rev.Domains).split(",").map((x) => x.trim())
       : [];
+  const isDeletedNode = domainLabels.includes("DELETED");
+  const hasDeletedRedirect = Boolean(rev?.Merged_into_CMID);
   const isStackNode = domainLabels.includes("STACK");
   const isMergingTemplateNode = domainLabels.includes("MERGING");
   const isDatasetLike = cmid.startsWith("SD") || cmid.startsWith("AD") || isStackNode || isMergingTemplateNode || domainLabels.includes("DATASET");
@@ -1264,7 +1318,7 @@ export default function Tableclick({ cmid, database, tabval }) {
               gap: "8px", // Adds spacing between the heading and the icon
             }}
           >
-            <h2 style={{ color: "black", margin: 0 }}>Category Info</h2>
+            <h2 style={{ color: "black", margin: 0 }}>{isDeletedNode ? "DELETED Node Info" : "Category Info"}</h2>
             <MuiTool
               title={
                 <Typography sx={{ fontSize: "1rem", fontWeight: "bold" }}>
@@ -1282,10 +1336,15 @@ export default function Tableclick({ cmid, database, tabval }) {
               variant="outlined"
               onClick={handleBookmarkCurrent}
               sx={{ ml: 1, backgroundColor: "white" }}
-            >
-              Bookmark
-            </Button>
+              >
+                Bookmark
+              </Button>
           </div>
+          {isDeletedNode && !hasDeletedRedirect && (
+            <Alert severity="warning" sx={{ mt: 1, mb: 1 }}>
+              This node is DELETED and does not have an IS redirect relationship.
+            </Alert>
+          )}
           <ul
             id="content"
             style={{
@@ -1300,8 +1359,12 @@ export default function Tableclick({ cmid, database, tabval }) {
                 value !== "" && value !== null && value !== undefined && value !== 0 ? (
                   <li key={key}>
                     <strong>{key}:</strong>{" "}
-                    {key === "Dataset Location" || key === "Merged_into_CMID" ? (
+                    {key === "Dataset Location" ? (
                       <a href={value} target="_blank" rel="noopener noreferrer">
+                        {value}
+                      </a>
+                    ) : key === "Merged_into_CMID" ? (
+                      <a href={`/${database.toLowerCase()}/${value}`}>
                         {value}
                       </a>
                     ) : (
