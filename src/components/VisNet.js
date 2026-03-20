@@ -70,17 +70,31 @@ const Neo4jVisualization = ({
     const node = visNodes.find(obj => obj.id === nodeId);
     if (!node) return null;
 
+    const getFieldKey = (item) => item.split(':')[0].trim().toLowerCase();
+    const excludedNodeFields = new Set([
+      'cmid',
+      'cmname',
+      'glottocode',
+      'iso3',
+      'fips',
+      'color',
+      'id',
+      'legendlabel',
+      'normnames',
+    ]);
+
     let details = (node.tooltipcon || []).filter(
       item => item !== 'SocioMapID' && item !== 'SocioMapName'
     );
-    const cmItems = details.filter(item => ['CMID', 'CMName'].includes(item.split(':')[0].trim()));
-    const glottoItems = details.filter(item => item.split(':')[0].trim().toLowerCase() === 'glottocode');
-    const ISOItems = details.filter(item => item.split(':')[0].trim() === 'ISO3');
-    const FIPSItems = details.filter(item => item.split(':')[0].trim() === 'FIPS');
-    details = details.filter(
-      item => !['CMID', 'CMName', 'glottocode', 'ISO3', 'FIPS'].includes(item.split(':')[0].trim()) &&
-        !item.toLowerCase().includes('log')
-    );
+    const cmItems = details.filter(item => ['cmid', 'cmname'].includes(getFieldKey(item)));
+    const glottoItems = details.filter(item => getFieldKey(item) === 'glottocode');
+    const ISOItems = details.filter(item => getFieldKey(item) === 'iso3');
+    const FIPSItems = details.filter(item => getFieldKey(item) === 'fips');
+    details = details.filter((item) => {
+      const key = getFieldKey(item);
+      if (excludedNodeFields.has(key)) return false;
+      return !key.includes('log');
+    });
 
     return {
       cmid: node.CMID,
