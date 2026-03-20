@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState, useRef } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useState, useRef } from 'react';
 import { Network } from 'vis-network';
 import { useNavigate } from 'react-router-dom'
 import './VisNet.css';
@@ -52,6 +52,7 @@ const Neo4jVisualization = ({
   const uniqueArray = Array.from(filteredMap.values());
   const [nodeInfo, setNodeInfo] = useState(null);
   const [edgeInfo, setEdgeInfo] = useState(null);
+  const [nodePopupPosition, setNodePopupPosition] = useState(null);
   const nodeInfoRef = useRef(null);
   const edgeInfoRef = useRef(null);
 
@@ -239,9 +240,13 @@ const Neo4jVisualization = ({
       if (!nodeDetails) return;
 
       singleClickTimer = setTimeout(() => {
+        const canvasRect = container.getBoundingClientRect();
+        const anchorX = canvasRect.left + params.pointer.DOM.x;
+        const anchorY = canvasRect.top + params.pointer.DOM.y;
+
         setNodeInfo({
           ...nodeDetails,
-          position: { x: params.pointer.DOM.x, y: params.pointer.DOM.y },
+          position: { x: anchorX, y: anchorY },
         });
       }, 200);
     });
@@ -280,6 +285,42 @@ const Neo4jVisualization = ({
   const handleNodeInfoClose = () => setNodeInfo(null);
   const handleEdgeInfoClose = () => setEdgeInfo(null);
 
+  const positionNodePopup = useCallback(() => {
+    if (!nodeInfo || !nodeInfoRef.current) return;
+
+    const popupRect = nodeInfoRef.current.getBoundingClientRect();
+    const margin = 12;
+    const offset = 14;
+
+    // Prefer right side of node; flip to left when right edge would overflow.
+    let left = nodeInfo.position.x + offset;
+    if (left + popupRect.width > window.innerWidth - margin) {
+      left = nodeInfo.position.x - popupRect.width - offset;
+    }
+    left = Math.max(margin, Math.min(left, window.innerWidth - popupRect.width - margin));
+
+    // Keep popup vertically near the node while staying inside current viewport.
+    let top = nodeInfo.position.y - popupRect.height / 2;
+    top = Math.max(margin, Math.min(top, window.innerHeight - popupRect.height - margin));
+
+    setNodePopupPosition({ left, top });
+  }, [nodeInfo]);
+
+  useLayoutEffect(() => {
+    if (!nodeInfo) {
+      setNodePopupPosition(null);
+      return;
+    }
+    positionNodePopup();
+  }, [nodeInfo, positionNodePopup]);
+
+  useEffect(() => {
+    if (!nodeInfo) return;
+    const handleResize = () => positionNodePopup();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [nodeInfo, positionNodePopup]);
+
   return (<div className="visnet-layout"><div id="network" className="visnet-canvas"></div>
     {edgeInfo && (
       <div
@@ -304,8 +345,8 @@ const Neo4jVisualization = ({
         ref={nodeInfoRef}
         className="visnet-info-box visnet-info-box--node"
         style={{
-          left: nodeInfo.position.x,
-          top: nodeInfo.position.y,
+          left: nodePopupPosition?.left ?? nodeInfo.position.x,
+          top: nodePopupPosition?.top ?? nodeInfo.position.y,
         }}
       >
         <div className="visnet-actions-between">

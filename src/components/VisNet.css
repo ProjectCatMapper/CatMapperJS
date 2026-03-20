@@ -44,7 +44,7 @@
 }
 
 .visnet-info-box--node {
-  position: absolute;
+  position: fixed;
 }
 
 .visnet-actions {
