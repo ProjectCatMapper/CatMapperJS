@@ -28,6 +28,32 @@ const About = () => {
               {paragraph}
             </Typography>
           ))}
+
+          <Typography variant="body1" paragraph sx={{ mt: 2 }}>
+            CatMapper&apos;s workflow centers on four connected functions:
+          </Typography>
+          <Box component="ul" sx={{ pl: 3, mt: 0 }}>
+            <li>
+              <Typography variant="body1">
+                Explore: find category context and quickly identify where categories appear across datasets.
+              </Typography>
+            </li>
+            <li>
+              <Typography variant="body1">
+                Translate: map raw category labels to CatMapper IDs and generate reusable crosswalks.
+              </Typography>
+            </li>
+            <li>
+              <Typography variant="body1">
+                Merge: build and document reusable merge plans so external datasets can be joined consistently.
+              </Typography>
+            </li>
+            <li>
+              <Typography variant="body1">
+                Edit: upload translations for permanent documentation.
+              </Typography>
+            </li>
+          </Box>
         </Box>
       </Container>
     </div>

@@ -885,40 +885,6 @@ export default function Searchbar({ database }) {
             </div>
           )}
           <DownloadDialogButton users={users} database={database} domain={advdomainDrop} count={qcount} cmid_download={cmid_download} />
-          <FormControlLabel
-            sx={{
-              marginLeft: 0.5,
-              "& .MuiFormControlLabel-label": { color: "white" }
-            }}
-            control={
-              <Switch
-                size="small"
-                color="success"
-                checked={useNlpSearch}
-                onChange={(event) => {
-                  setUseNlpSearch(event.target.checked);
-                  setNlpSummary("");
-                }}
-              />
-            }
-            label="NLP Search"
-          />
-          <Tooltip
-            title={
-              <div className="tooltip-width">
-                NLP stands for <strong>Natural Language Processing</strong>.
-                Turn this on to type a normal question, such as <em>look up Yoruba in Ghana</em>,
-                and CatMapper will convert it into search filters for you.
-                When multiple place levels exist, it prefers country-level (<strong>ADM0</strong>) matches.
-              </div>
-            }
-            arrow
-          >
-            <Button
-              startIcon={<InfoIcon sx={{ height: "28px", width: "28px" }} />}
-              sx={{ minWidth: 36, color: "white" }}
-            ></Button>
-          </Tooltip>
           <Button
             onClick={handleAdvancedSearchChange} // Toggles your existing isChecked state
             startIcon={isChecked ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
@@ -938,16 +904,6 @@ export default function Searchbar({ database }) {
             Advanced Search
           </Button>
         </Box>
-        {useNlpSearch && (
-          <Typography variant="caption" sx={{ color: "white", display: "block", mb: 1 }}>
-            {nlpSummary || "NLP search is enabled. Enter a natural language request."}
-          </Typography>
-        )}
-        {useNlpSearch && (
-          <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.75)", display: "block", mb: 1 }}>
-            Temporary testing mode: NLP query JSON is saved automatically in this browser and on the server.
-          </Typography>
-        )}
         {isChecked && (
           <Box
             sx={{
@@ -959,6 +915,55 @@ export default function Searchbar({ database }) {
             }}
           >
             <Grid container spacing={1}>
+              <Grid item xs={12}>
+                <Box sx={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 0.5 }}>
+                  <FormControlLabel
+                    sx={{
+                      marginLeft: 0,
+                      "& .MuiFormControlLabel-label": { color: "white" }
+                    }}
+                    control={
+                      <Switch
+                        size="small"
+                        color="success"
+                        checked={useNlpSearch}
+                        onChange={(event) => {
+                          setUseNlpSearch(event.target.checked);
+                          setNlpSummary("");
+                        }}
+                      />
+                    }
+                    label="NLP Search (Experimental)"
+                  />
+                  <Tooltip
+                    title={
+                      <div className="tooltip-width">
+                        NLP stands for <strong>Natural Language Processing</strong>.
+                        Experimental feature: turn this on to type a normal question, such as <em>look up Yoruba in Ghana</em>,
+                        and CatMapper will convert it into search filters for you.
+                        When multiple place levels exist, it prefers country-level (<strong>ADM0</strong>) matches.
+                      </div>
+                    }
+                    arrow
+                  >
+                    <Button
+                      startIcon={<InfoIcon sx={{ height: "28px", width: "28px" }} />}
+                      sx={{ minWidth: 36, color: "white" }}
+                    ></Button>
+                  </Tooltip>
+                </Box>
+                {useNlpSearch && (
+                  <Typography variant="caption" sx={{ color: "white", display: "block", mb: 0.5 }}>
+                    {nlpSummary || "NLP search is enabled. Enter a natural language request."}
+                  </Typography>
+                )}
+                {useNlpSearch && (
+                  <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.75)", display: "block", mb: 1 }}>
+                    Temporary testing mode: NLP query JSON is saved automatically in this browser and on the server.
+                  </Typography>
+                )}
+              </Grid>
+
               <Grid item xs={12} sm={4}>
                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
                   <FormControl sx={{ width: 320 }} variant="standard" size="small">

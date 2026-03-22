@@ -28,7 +28,11 @@ test.describe('Main app smoke rendering', () => {
       await open(page, `/${db}/explore`);
 
       await expect(page.getByPlaceholder('Search...')).toBeVisible();
-      await expect(page.getByRole('button', { name: /Advanced Search/i })).toBeVisible();
+      const advancedSearchButton = page.getByRole('button', { name: /Advanced Search/i });
+      await expect(advancedSearchButton).toBeVisible();
+      await expect(page.getByText('NLP Search (Experimental)')).toHaveCount(0);
+      await advancedSearchButton.click();
+      await expect(page.getByText('NLP Search (Experimental)')).toBeVisible();
     });
 
     test(`${db} translate page renders matching UI`, async ({ page }) => {
@@ -48,4 +52,3 @@ test.describe('Main app smoke rendering', () => {
     });
   }
 });
-
