@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react'
 import { Box, Button, FormControlLabel, Radio, RadioGroup, Checkbox, Typography, Divider, Select, NativeSelect, TextField, MenuItem, FormControl, FormGroup, Snackbar, Alert, Paper, Tooltip, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
-import * as XLSX from 'xlsx';
 import CircularProgress from '@mui/material/CircularProgress';
 import Backdrop from '@mui/material/Backdrop';
 import InfoIcon from '@mui/icons-material/Info';
@@ -8,6 +7,7 @@ import { useMetadata } from './UseMetadata';
 import DownloadDatasetButton from './DownloadDatasetListButton';
 import { useAuth } from './AuthContext';
 import SavedCmidInsertPopover from './SavedCmidInsertPopover';
+import { downloadJsonAsXlsx } from '../utils/excelExport';
 // import infodata from './infodata.json';
 
 const Propose_Merge = ({ database }) => {
@@ -267,7 +267,7 @@ const Propose_Merge = ({ database }) => {
         setMergeError(result?.message || result?.error || 'Unexpected response format.');
         return;
       }
-      downloadMerge(result);
+      await downloadMerge(result);
       setOpen(true);
     } catch (error) {
       setMergeError('Error submitting form. Please try again.');
@@ -278,7 +278,7 @@ const Propose_Merge = ({ database }) => {
     }
   };
 
-  const downloadMerge = (resultData) => {
+  const downloadMerge = async (resultData) => {
     const isInvalid = !resultData ||
       (Array.isArray(resultData) && resultData.length === 0) ||
       (typeof resultData === "object" && Object.keys(resultData).length === 0);
@@ -288,20 +288,11 @@ const Propose_Merge = ({ database }) => {
       alert("There is no data available to download.");
       return; // Exit the function early
     }
-    const worksheet = XLSX.utils.json_to_sheet(resultData);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
-    const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
-    const blob = new Blob([excelBuffer], { type: 'application/octet-stream' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
     const filename = inputValue.split(",").map(s => s.trim()).join("_");
-    a.download = `ProposedMerge_${filename}_${advdomainDrop}.xlsx`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    window.URL.revokeObjectURL(url);
+    await downloadJsonAsXlsx(resultData, {
+      fileName: `ProposedMerge_${filename}_${advdomainDrop}.xlsx`,
+      sheetName: 'Sheet1',
+    });
   };
 
   return (

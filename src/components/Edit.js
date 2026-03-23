@@ -6,10 +6,10 @@ import Tooltip from '@mui/material/Tooltip';
 import InfoIcon from '@mui/icons-material/Info';
 import { useAuth } from './AuthContext';
 import { Dialog, DialogContent, DialogActions, DialogContentText, DialogTitle } from '@mui/material';
-import * as XLSX from 'xlsx';
 import domainFieldOptions from "./dropdown.json";
 import { parseTabularFile } from '../utils/tabularUpload';
 import SavedCmidInsertPopover from './SavedCmidInsertPopover';
+import { downloadJsonAsXlsx, downloadSheetsAsXlsx } from '../utils/excelExport';
 import {
   uploadInputNodes,
   getWaitingUSESStatus,
@@ -931,8 +931,7 @@ const Edit = ({ database }) => {
     setPropertiesModalOpen(false);
   };
 
-  const downloadAvailableProperties = () => {
-    const workbook = XLSX.utils.book_new();
+  const downloadAvailableProperties = async () => {
     const normalizedNodeRows = (availableNodeProperties || []).map((item) => ({
       property: item?.property || '',
       description: item?.description || '',
@@ -942,19 +941,22 @@ const Edit = ({ database }) => {
       description: item?.description || '',
     }));
 
-    XLSX.utils.book_append_sheet(
-      workbook,
-      XLSX.utils.json_to_sheet(normalizedNodeRows.length > 0 ? normalizedNodeRows : [{ property: '', description: '' }]),
-      'Node Properties',
-    );
-    XLSX.utils.book_append_sheet(
-      workbook,
-      XLSX.utils.json_to_sheet(normalizedUsesRows.length > 0 ? normalizedUsesRows : [{ property: '', description: '' }]),
-      'USES Properties',
-    );
-
     const dbName = String(database || 'database').toLowerCase();
-    XLSX.writeFile(workbook, `${dbName}_upload_properties.xlsx`);
+    await downloadSheetsAsXlsx(
+      [
+        {
+          sheetName: 'Node Properties',
+          headers: ['property', 'description'],
+          rows: normalizedNodeRows.length > 0 ? normalizedNodeRows : [],
+        },
+        {
+          sheetName: 'USES Properties',
+          headers: ['property', 'description'],
+          rows: normalizedUsesRows.length > 0 ? normalizedUsesRows : [],
+        },
+      ],
+      { fileName: `${dbName}_upload_properties.xlsx` }
+    );
   };
 
   const SimpleFieldInfoButton = ({ helpText }) => (
@@ -1225,27 +1227,15 @@ const Edit = ({ database }) => {
     setLinkContext([event.target.value])
   };
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
     if (!download) {
       setError('No file data available for download.');
       return;
     }
-
-    const worksheet = XLSX.utils.json_to_sheet(download);
-
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Dataset');
-
-    const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
-    const blob = new Blob([excelBuffer], { type: 'application/octet-stream' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'uploaded_Dataset.xlsx';
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    window.URL.revokeObjectURL(url);
+    await downloadJsonAsXlsx(download, {
+      fileName: 'uploaded_Dataset.xlsx',
+      sheetName: 'Dataset',
+    });
   };
 
   const uploadTaskStatus = String(uploadTaskState?.status || '').toLowerCase();
@@ -1306,7 +1296,7 @@ const Edit = ({ database }) => {
       <Box sx={{ mb: 2 }}>
         <h3 style={{ color: 'black', fontWeight: "bold", padding: "2px" }}> Choose file to import</h3>
 
-        <input id="fileInput" style={{ color: 'black', fontWeight: "bold", marginLeft: 7, padding: "2px" }} type="file" accept=".csv,.tsv,.xls,.xlsx" onChange={handleFileChange} />
+        <input id="fileInput" style={{ color: 'black', fontWeight: "bold", marginLeft: 7, padding: "2px" }} type="file" accept=".csv,.tsv,.xlsx" onChange={handleFileChange} />
       </Box>
       {showFields && <Typography variant="body2">{`Number of nodes to import: ${nodecount}`}</Typography>}
       <FormControlLabel

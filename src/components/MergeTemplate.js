@@ -2,8 +2,8 @@ import React, { useState } from 'react'
 import { Box, Button, Divider, TextField, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from '@mui/material';
 import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
-import * as XLSX from 'xlsx';
 import { parseTabularFile } from '../utils/tabularUpload';
+import { downloadJsonAsXlsx } from '../utils/excelExport';
 
 
 const MergeTemplate = ({ database }) => {
@@ -137,27 +137,16 @@ const MergeTemplate = ({ database }) => {
     }
   };
 
-  const handleDownloadDatasetsXLSX = () => {
+  const handleDownloadDatasetsXLSX = async () => {
     if (!Array.isArray(templateData) || templateData.length === 0) {
       alert("No template data to download. Please find a merging template first.");
       return;
     }
 
-    const worksheet = XLSX.utils.json_to_sheet(templateData);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'MergingTemplate');
-
-    const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
-    const blob = new Blob([excelBuffer], { type: 'application/octet-stream' });
-
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', `merging_template_${inputValue}.xlsx`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+    await downloadJsonAsXlsx(templateData, {
+      fileName: `merging_template_${inputValue}.xlsx`,
+      sheetName: 'MergingTemplate',
+    });
   };
 
 
@@ -282,7 +271,7 @@ const MergeTemplate = ({ database }) => {
             id="fileInput"
             style={{ color: 'black', fontWeight: "bold", marginLeft: 7, padding: "2px" }}
             type="file"
-            accept=".csv,.tsv,.xls,.xlsx"
+            accept=".csv,.tsv,.xlsx"
             onChange={handleFileChange}
           />
           <Snackbar

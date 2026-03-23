@@ -3,8 +3,6 @@ import domainOptions from "./SearchSelectDropdown";
 import { Select, MenuItem } from '@mui/material';
 import Button from '@mui/material/Button';
 import { Typography, Box, FormControlLabel, Checkbox, IconButton } from '@mui/material';
-import * as XLSX from 'xlsx';
-import { saveAs } from 'file-saver';
 import TranslateTable from './TranslateResults';
 import Backdrop from '@mui/material/Backdrop';
 import LinearProgress from '@mui/material/LinearProgress';
@@ -21,6 +19,7 @@ import TranslateMatchReview from './TranslateMatchReview';
 import { useAuth } from './AuthContext';
 import { addReviewIds, getMatchTypePercentages, stripReviewFields } from '../utils/translateReview';
 import { DataGrid } from '@mui/x-data-grid';
+import { downloadJsonAsXlsx } from '../utils/excelExport';
 
 const getTooltipContent = (nm) => {
   const tooltipTexts = {
@@ -359,25 +358,19 @@ function TranslateComponent({ database }) {
     };
   }, []);
 
-  const handleClicktwo = () => {
+  const handleClicktwo = async () => {
     try {
       const exportRows = stripReviewFields(reviewRows);
       const { sanitizedRows, truncatedCells } = sanitizeRowsForExcelExport(exportRows);
-      const worksheet = XLSX.utils.json_to_sheet(sanitizedRows, { header: columns });
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
-
-      const excelBuffer = XLSX.write(workbook, {
-        bookType: 'xlsx',
-        type: 'array',
-      });
-
-      const blob = new Blob([excelBuffer], { type: 'application/octet-stream' });
 
       const date = new Date().toISOString().split('T')[0];
       const customFileName = `${filename}_Matched_${date}.xlsx`;
 
-      saveAs(blob, customFileName);
+      await downloadJsonAsXlsx(sanitizedRows, {
+        fileName: customFileName,
+        sheetName: 'Sheet1',
+        headers: columns,
+      });
 
       if (truncatedCells > 0) {
         alert(
@@ -452,7 +445,7 @@ function TranslateComponent({ database }) {
       setJsondata(parsed.records);
       setReviewRows([]);
     } catch (err) {
-      const msg = err?.message || 'Please upload a valid CSV/TSV/Excel (.csv/.tsv/.xlsx/.xls) file.';
+      const msg = err?.message || 'Please upload a valid CSV/TSV/Excel (.csv/.tsv/.xlsx) file.';
       if (msg.toLowerCase().includes('please upload a valid file')) {
         alert(msg);
       } else {
@@ -704,7 +697,7 @@ function TranslateComponent({ database }) {
               <Button startIcon={<InfoIcon sx={{ height: '28px', width: '28px' }} />} />
             </Tooltip>
           </Box>
-          <input id="fileInput" style={{ color: 'black', fontWeight: "bold", marginLeft: 7, padding: "2px" }} type="file" accept=".csv,.tsv,.xls,.xlsx" onChange={handleFileChange} />
+          <input id="fileInput" style={{ color: 'black', fontWeight: "bold", marginLeft: 7, padding: "2px" }} type="file" accept=".csv,.tsv,.xlsx" onChange={handleFileChange} />
           <br />
           {selectedFile !== null && (
             <div>

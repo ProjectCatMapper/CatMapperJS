@@ -18,8 +18,7 @@
     "@mui/x-data-grid": "^6.16.0",
     "d3-scale": "^4.0.2",
     "d3-scale-chromatic": "^3.1.0",
-    "eslint-config-react-app": "^7.0.1",
-    "file-saver": "^2.0.5",
+    "exceljs": "^4.4.0",
     "framer-motion": "^12.12.2",
     "json2csv": "^6.0.0-alpha.2",
     "leaflet": "^1.9.4",
@@ -30,7 +29,6 @@
     "prop-types": "^15.8.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-excel-renderer": "^1.1.0",
     "react-ga4": "^2.1.0",
     "react-icons": "^4.11.0",
     "react-leaflet": "^4.2.1",
@@ -39,8 +37,7 @@
     "react-router-dom": "^6.16.0",
     "recharts": "^2.15.3",
     "vis-data": "^7.1.9",
-    "vis-network": "^9.1.9",
-    "xlsx": "^0.18.5"
+    "vis-network": "^9.1.9"
   },
   "scripts": {
     "start": "vite --host --port 3000",

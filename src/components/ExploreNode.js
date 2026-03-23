@@ -36,7 +36,7 @@ import InfoIcon from "@mui/icons-material/Info";
 import BookmarkBorderIcon from "@mui/icons-material/BookmarkBorder";
 
 import PropTypes from "prop-types";
-import * as XLSX from "xlsx";
+import { downloadJsonAsXlsx } from "../utils/excelExport";
 
 import CategoriesTable from "./TableCategories";
 import ClickTable from "./ExploreTabs";
@@ -657,35 +657,14 @@ export default function Tableclick({ cmid, database, tabval }) {
         return;
       }
 
-      const worksheet = XLSX.utils.json_to_sheet(result);
-
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet1");
-
-      const workbookBinaryString = XLSX.write(workbook, {
-        bookType: "xlsx",
-        type: "binary",
-      });
-
-      const buffer = new ArrayBuffer(workbookBinaryString.length);
-      const view = new Uint8Array(buffer);
-      for (let i = 0; i < workbookBinaryString.length; i++) {
-        view[i] = workbookBinaryString.charCodeAt(i) & 0xff;
-      }
-      const blob = new Blob([buffer], { type: "application/octet-stream" });
-
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.style.display = "none";
-      a.href = url;
       const today = new Date();
       const formattedDate = `${today.getFullYear()}-${String(
         today.getMonth() + 1
       ).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
-      a.download = rev.CMName + " " + formattedDate + ".xlsx";
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
+      await downloadJsonAsXlsx(result, {
+        fileName: `${rev.CMName} ${formattedDate}.xlsx`,
+        sheetName: "Sheet1",
+      });
     } catch (error) {
       if (error.name === 'AbortError') {
         console.log("Fetch successfully aborted");
@@ -715,34 +694,15 @@ export default function Tableclick({ cmid, database, tabval }) {
     setNavigationLoading(true);
   }, []);
 
-  const downloadRowsAsXlsx = (rows, filename, sheetName = "Sheet1") => {
+  const downloadRowsAsXlsx = async (rows, filename, sheetName = "Sheet1") => {
     if (!Array.isArray(rows) || rows.length === 0) {
       alert("No rows available to download.");
       return;
     }
-    const worksheet = XLSX.utils.json_to_sheet(rows);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
-    const workbookBinaryString = XLSX.write(workbook, {
-      bookType: "xlsx",
-      type: "binary",
+    await downloadJsonAsXlsx(rows, {
+      fileName: filename,
+      sheetName,
     });
-
-    const buffer = new ArrayBuffer(workbookBinaryString.length);
-    const view = new Uint8Array(buffer);
-    for (let i = 0; i < workbookBinaryString.length; i++) {
-      view[i] = workbookBinaryString.charCodeAt(i) & 0xff;
-    }
-    const blob = new Blob([buffer], { type: "application/octet-stream" });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.style.display = "none";
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    window.URL.revokeObjectURL(url);
-    document.body.removeChild(a);
   };
 
   const downloadMergingTemplateTies = (tieType) => {
@@ -750,13 +710,13 @@ export default function Tableclick({ cmid, database, tabval }) {
     const today = new Date();
     const dateTag = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
     if (tieType === "merging") {
-      downloadRowsAsXlsx(
+      void downloadRowsAsXlsx(
         mergeTemplateSummary.mergingTies || [],
         `${cmid}_merging_ties_${dateTag}.xlsx`,
         "MergingTies"
       );
     } else {
-      downloadRowsAsXlsx(
+      void downloadRowsAsXlsx(
         mergeTemplateSummary.equivalenceTies || [],
         `${cmid}_equivalence_ties_${dateTag}.xlsx`,
         "EquivalenceTies"

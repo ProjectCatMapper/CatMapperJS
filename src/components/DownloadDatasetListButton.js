@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Button, CircularProgress } from '@mui/material';
-import * as XLSX from 'xlsx';
-import { saveAs } from 'file-saver';
+import { downloadJsonAsXlsx } from '../utils/excelExport';
 
 const DownloadDatasetButton = ({ databaseName = "sociomap", fileName = "dataset_list.xlsx" }) => {
     const [loading, setLoading] = useState(false);
@@ -20,17 +19,10 @@ const DownloadDatasetButton = ({ databaseName = "sociomap", fileName = "dataset_
             if (!response.ok) throw new Error("Network response was not ok");
 
             const data = await response.json();
-            const worksheet = XLSX.utils.json_to_sheet(data);
-            const workbook = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet1");
-
-            const excelBuffer = XLSX.write(workbook, {
-                bookType: "xlsx",
-                type: "array",
+            await downloadJsonAsXlsx(data, {
+                fileName,
+                sheetName: 'Sheet1',
             });
-
-            const blob = new Blob([excelBuffer], { type: "application/octet-stream" });
-            saveAs(blob, fileName);
         } catch (error) {
             console.error("Download failed:", error);
         } finally {
