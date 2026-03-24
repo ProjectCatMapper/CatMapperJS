@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import { Box, Button, Typography, Divider } from '@mui/material';
 import CircularProgress from '@mui/material/CircularProgress';
 import Backdrop from '@mui/material/Backdrop';
-import * as XLSX from 'xlsx';
 import DomainSelector from './DomainSelector';
 import { parseTabularFile } from '../utils/tabularUpload';
+import { downloadJsonAsXlsx } from '../utils/excelExport';
 
 const JoinDatasets_Merge = ({ database }) => {
 
@@ -85,20 +85,11 @@ const JoinDatasets_Merge = ({ database }) => {
   // ------------------------------------------------------------
   // Download merged file
   // ------------------------------------------------------------
-  const handleJoinDownload = () => {
-    const worksheet = XLSX.utils.json_to_sheet(data);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
-
-    const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
-    const blob = new Blob([excelBuffer], { type: 'application/octet-stream' });
-
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'joined_data.xlsx';
-    a.click();
-    window.URL.revokeObjectURL(url);
+  const handleJoinDownload = async () => {
+    await downloadJsonAsXlsx(data, {
+      fileName: 'joined_data.xlsx',
+      sheetName: 'Sheet1',
+    });
   };
 
   // ------------------------------------------------------------
@@ -135,7 +126,7 @@ const JoinDatasets_Merge = ({ database }) => {
           <h3 style={{ color: 'black', fontWeight: 'bold' }}>Upload first Dataset</h3>
           <input
             type="file"
-            accept=".csv,.tsv,.xls,.xlsx"
+            accept=".csv,.tsv,.xlsx"
             onClick={(e) => {
               e.target.value = null;       // clears previous selection in the browser
               setFileLeft(null);           // resets React state
@@ -149,7 +140,7 @@ const JoinDatasets_Merge = ({ database }) => {
           <h3 style={{ color: 'black', fontWeight: 'bold' }}>Upload second Dataset</h3>
           <input
             type="file"
-            accept=".csv,.tsv,.xls,.xlsx"
+            accept=".csv,.tsv,.xlsx"
             onClick={(e) => {
               e.target.value = null;       // clears previous selection in the browser
               setFileRight(null);           // resets React state

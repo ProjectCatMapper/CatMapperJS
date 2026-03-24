@@ -7,6 +7,7 @@ DEPLOY_USER="rjbischo"
 APP_DIR="/mnt/storage/app/CatMapperJS"
 DEPLOY_USER_LOCAL_BIN="/home/$DEPLOY_USER/.local/bin"
 SYSTEM_PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+ENV_FILE="$APP_DIR/.env"
 
 if [ ! -d "$APP_DIR" ]; then
   echo "❌ Error: App directory not found: $APP_DIR"
@@ -14,6 +15,37 @@ if [ ! -d "$APP_DIR" ]; then
 fi
 
 cd "$APP_DIR"
+
+if [ ! -f "$ENV_FILE" ]; then
+  echo "❌ Error: Missing required environment file: $ENV_FILE"
+  echo "Deployment halted to avoid building with undefined REACT_APP_* values."
+  echo "Restore the server-specific .env file and rerun deploy."
+  exit 1
+fi
+
+REQUIRED_ENV_KEYS=(
+  "REACT_APP_API_URL"
+  "REACT_APP_AUTH0_DOMAIN"
+  "REACT_APP_AUTH0_CLIENT_ID"
+  "REACT_APP_MAPBOX_TOKEN"
+)
+
+MISSING_ENV_KEYS=()
+for key in "${REQUIRED_ENV_KEYS[@]}"; do
+  value=$(grep -E "^${key}=" "$ENV_FILE" | tail -n 1 | cut -d'=' -f2- || true)
+  if [ -z "$value" ]; then
+    MISSING_ENV_KEYS+=("$key")
+  fi
+done
+
+if [ "${#MISSING_ENV_KEYS[@]}" -gt 0 ]; then
+  echo "❌ Error: .env is missing required keys or has empty values:"
+  for key in "${MISSING_ENV_KEYS[@]}"; do
+    echo "   - $key"
+  done
+  echo "Restore/update $ENV_FILE and rerun deploy."
+  exit 1
+fi
 
 # Require sudo/root so deployment behavior is explicit.
 if [ "$EUID" -ne 0 ]; then
