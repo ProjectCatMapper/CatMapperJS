@@ -47,10 +47,10 @@ if [ "${#MISSING_ENV_KEYS[@]}" -gt 0 ]; then
   exit 1
 fi
 
-# Require sudo/root so deployment behavior is explicit.
-if [ "$EUID" -ne 0 ]; then
-  echo "❌ Error: This script must be run with sudo."
-  echo "Run: sudo ./deploy.sh"
+# Require running as deploy user so git identity and permissions stay predictable.
+if [ "$(id -un)" != "$DEPLOY_USER" ]; then
+  echo "❌ Error: This script must be run as '$DEPLOY_USER' (without sudo)."
+  echo "Run as that user and execute: ./deploy.sh"
   exit 1
 fi
 
@@ -61,9 +61,9 @@ fi
 
 run_as_deploy_user() {
   if [ -d "$DEPLOY_USER_LOCAL_BIN" ]; then
-    sudo -u "$DEPLOY_USER" -H env PATH="$DEPLOY_USER_LOCAL_BIN:$SYSTEM_PATH" "$@"
+    env PATH="$DEPLOY_USER_LOCAL_BIN:$SYSTEM_PATH:$PATH" "$@"
   else
-    sudo -u "$DEPLOY_USER" -H "$@"
+    "$@"
   fi
 }
 
@@ -85,24 +85,6 @@ verify_git_write_access() {
   run_as_deploy_user sh -c 'tmp=".git/refs/tags/.cm_write_test_$$"; : > "$tmp" && rm -f "$tmp"' || return 1
 }
 
-fix_git_ownership() {
-  local deploy_group
-  deploy_group=$(id -gn "$DEPLOY_USER")
-  echo "🔧 Repairing .git ownership to $DEPLOY_USER:$deploy_group ..."
-
-  if ! chown -R "$DEPLOY_USER":"$deploy_group" .git; then
-    echo "❌ Error: Failed to chown .git to $DEPLOY_USER:$deploy_group"
-    return 1
-  fi
-
-  if ! chmod -R u+rwX .git; then
-    echo "❌ Error: Failed to apply writable permissions to .git"
-    return 1
-  fi
-
-  return 0
-}
-
 # Initialize variables
 SKIP_VERSION=false
 FAST_BUILD=true
@@ -121,19 +103,11 @@ done
 CURRENT_BRANCH=$(run_as_deploy_user git rev-parse --abbrev-ref HEAD)
 echo "🌿 Current branch: $CURRENT_BRANCH"
 
-# Ensure git internals are writable by deployment user (fix once, then fail if still broken).
+# Ensure git internals are writable by deployment user.
 if ! verify_git_write_access; then
-  echo "⚠️  .git is not writable by $DEPLOY_USER. Attempting ownership repair..."
-  if ! fix_git_ownership; then
-    echo "❌ Error: Unable to repair .git ownership."
-    exit 1
-  fi
-
-  if ! verify_git_write_access; then
-    echo "❌ Error: .git is still not writable by $DEPLOY_USER after repair."
-    echo "Check ACLs/mount permissions for $(pwd)/.git and retry."
-    exit 1
-  fi
+  echo "❌ Error: .git is not writable by $DEPLOY_USER."
+  echo "Check ownership/ACLs for $(pwd)/.git and rerun."
+  exit 1
 fi
 
 # 1. Pre-flight check: Ensure git directory is clean
@@ -158,7 +132,11 @@ echo "📦 Running npm build..."
 
 # Ensure output/cache paths are writable by deploy user before build.
 mkdir -p dist node_modules/.vite
-chown -R "$DEPLOY_USER":catmapper dist node_modules/.vite
+if [ ! -w dist ] || [ ! -w node_modules/.vite ]; then
+  echo "❌ Error: Build output/cache directories are not writable by $DEPLOY_USER."
+  echo "Check permissions for $(pwd)/dist and $(pwd)/node_modules/.vite and rerun."
+  exit 1
+fi
 
 if [ "$FAST_BUILD" = true ]; then
   echo "⚡ Fast build mode enabled (Vite default production build)"
