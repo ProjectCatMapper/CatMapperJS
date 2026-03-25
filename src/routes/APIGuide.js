@@ -1,13 +1,15 @@
 import { Container, Typography, Box, List, ListItem, ListItemText, Divider, Link } from '@mui/material';
 import '@fontsource/source-sans-pro';
 import Navbar from '../components/NavbarHome';
+import FooterLinks from '../components/FooterLinks';
 import '../components/APIGuides.css';
 
 const ApiGuide = () => {
   return (
-    <div style={{ backgroundColor: 'white' }}>
-      <Navbar />
-      <Container sx={{ fontFamily: 'Segou UI' }}>
+    <>
+      <div style={{ backgroundColor: 'white' }}>
+        <Navbar />
+        <Container sx={{ fontFamily: 'Segou UI' }}>
         <Typography variant="h4" gutterBottom sx={{ marginTop: 4 }}>
           CatMapper API User Guide
         </Typography>
@@ -557,9 +559,11 @@ const ApiGuide = () => {
           </Box>
         </Box>
 
-        <Divider sx={{ marginY: 4 }} />
-      </Container>
-    </div>
+          <Divider sx={{ marginY: 4 }} />
+        </Container>
+      </div>
+      <FooterLinks />
+    </>
   );
 };
 

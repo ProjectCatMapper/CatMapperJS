@@ -1,5 +1,6 @@
 import React from 'react';
 import Navbar from '../components/NavbarHome';
+import FooterLinks from '../components/FooterLinks';
 import { Container, Typography, Box } from '@mui/material';
 
 const aboutParagraphs = [
@@ -11,10 +12,11 @@ const aboutParagraphs = [
 
 const About = () => {
   return (
-    <div style={{ backgroundColor: 'white' }}>
-      <Navbar />
-      <Container maxWidth="md">
-        <Box py={6}>
+    <>
+      <div style={{ backgroundColor: 'white' }}>
+        <Navbar />
+        <Container maxWidth="md">
+          <Box py={6}>
           <Typography variant="h4" component="h1" gutterBottom>
             About CatMapper
           </Typography>
@@ -54,9 +56,11 @@ const About = () => {
               </Typography>
             </li>
           </Box>
-        </Box>
-      </Container>
-    </div>
+          </Box>
+        </Container>
+      </div>
+      <FooterLinks />
+    </>
   );
 };
 

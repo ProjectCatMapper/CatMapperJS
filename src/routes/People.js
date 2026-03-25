@@ -1,12 +1,14 @@
 import Navbar from '../components/NavbarHome'
+import FooterLinks from '../components/FooterLinks';
 import '../components/People.css'
 
 
 const People = () => {
   return (
-    <div className='container'>
-      <Navbar />
-      <section className="team-section">
+    <>
+      <div className='container'>
+        <Navbar />
+        <section className="team-section">
         <h1 className="title">Team</h1>
         <div className="team-grid">
           <div className="team-member">
@@ -35,8 +37,8 @@ const People = () => {
             <p className="position">Santa Clara University</p>
           </div>
         </div>
-      </section>
-      <section className="advisory-section">
+        </section>
+        <section className="advisory-section">
         <h1 className="title">Advisory Board</h1>
         <div className="advisory-grid">
           <div className="advisory-member">
@@ -80,8 +82,10 @@ const People = () => {
             <p className="position">Professor, Radboud University</p>
           </div>
         </div>
-      </section>
-    </div>
+        </section>
+      </div>
+      <FooterLinks />
+    </>
   )
 }
 

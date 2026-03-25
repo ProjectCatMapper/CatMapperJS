@@ -1,4 +1,5 @@
 import Navbar from '../components/NavbarHome'
+import FooterLinks from '../components/FooterLinks';
 import { Container, Typography, Paper } from '@mui/material';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import './../components/Funding.css'
@@ -12,11 +13,12 @@ const theme = createTheme({
 
 const Funding = () => {
   return (
-    <div style={{ backgroundColor: "white" }}>
-      <Navbar />
-      <ThemeProvider theme={theme}>
-        <Container maxWidth="md" style={{ minHeight: '80vh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-          <Paper elevation={1} style={{ padding: '2em', textAlign: 'center' }}>
+    <>
+      <div style={{ backgroundColor: "white" }}>
+        <Navbar />
+        <ThemeProvider theme={theme}>
+          <Container maxWidth="md" style={{ minHeight: '80vh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+            <Paper elevation={1} style={{ padding: '2em', textAlign: 'center' }}>
             <Typography variant="h4" component="h1" gutterBottom>
               Funding
             </Typography>
@@ -30,10 +32,12 @@ const Funding = () => {
               <li>National Science Foundation (BCS-2051369 & BCS-2318505) through the Human Networks and Data Science and Cultural Anthropology programs.</li>
               <li>Arizona State University’s Center for Archaeology and Society</li>
             </ul>
-          </Paper>
-        </Container>
-      </ThemeProvider>
-    </div>
+            </Paper>
+          </Container>
+        </ThemeProvider>
+      </div>
+      <FooterLinks />
+    </>
   )
 }
 

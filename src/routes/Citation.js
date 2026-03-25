@@ -1,19 +1,21 @@
 import React from 'react'
 import Navbar from '../components/NavbarHome'
+import FooterLinks from '../components/FooterLinks';
 import { Container, Typography, Link, Box } from '@mui/material';
 
 const Citation = () => {
   return (
-    <div style={{ backgroundColor: "white" }}>
-      <Navbar />
-      <Container maxWidth="md">
-        <Box
-          display="flex"
-          flexDirection="column"
-          justifyContent="center"
-          alignItems="left"
-          minHeight="80vh"
-        >
+    <>
+      <div style={{ backgroundColor: "white" }}>
+        <Navbar />
+        <Container maxWidth="md">
+          <Box
+            display="flex"
+            flexDirection="column"
+            justifyContent="center"
+            alignItems="left"
+            minHeight="80vh"
+          >
           <Typography variant="h4" component="h1" gutterBottom>
             Citation
           </Typography>
@@ -36,9 +38,11 @@ const Citation = () => {
             <br />
             Please view these links and citations for information on how to cite these external datasets if you use them for a specific published analysis.
           </Typography>
-        </Box>
-      </Container>
-    </div>
+          </Box>
+        </Container>
+      </div>
+      <FooterLinks />
+    </>
   )
 }
 

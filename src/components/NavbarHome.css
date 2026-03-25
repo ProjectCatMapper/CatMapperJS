@@ -13,3 +13,25 @@
   width: 100px;
   height: 70px;
 }
+
+.cm-nav--home .cm-nav-link--app {
+  display: flex;
+  align-items: center;
+}
+
+.cm-nav--home .cm-nav-link--app::before {
+  display: none;
+}
+
+.cm-nav--home .cm-nav-app-logo {
+  display: block;
+  height: 24px;
+  width: auto;
+  max-width: 112px;
+}
+
+@media screen and (max-width: 599px) {
+  .cm-nav--home .cm-nav-app-logo {
+    height: 36px;
+  }
+}

@@ -1,4 +1,5 @@
 import Navbar from '../components/NavbarHome'
+import FooterLinks from '../components/FooterLinks';
 import { Container, Typography, Box, Paper, Divider } from '@mui/material';
 
 const updates = [
@@ -183,23 +184,26 @@ const updates = [
 
 const News = () => {
   return (
-    <div style={{ backgroundColor: "white" }}>
-      <Navbar />
-      <Container maxWidth="md" >
-        <Typography variant="h4" component="h1" gutterBottom>
-          News and updates
-        </Typography>
-        <Paper elevation={3} style={{ padding: '16px' }}>
-          {updates.map((update, index) => (
-            <Box key={index} mb={2}>
-              <Typography variant="h6"><b>{update.date}</b></Typography>
-              <Typography variant="body1">{update.content}</Typography>
-              {index < updates.length - 1 && <Divider style={{ margin: '16px 0' }} />}
-            </Box>
-          ))}
-        </Paper>
-      </Container>
-    </div>
+    <>
+      <div style={{ backgroundColor: "white" }}>
+        <Navbar />
+        <Container maxWidth="md" >
+          <Typography variant="h4" component="h1" gutterBottom>
+            News and updates
+          </Typography>
+          <Paper elevation={3} style={{ padding: '16px' }}>
+            {updates.map((update, index) => (
+              <Box key={index} mb={2}>
+                <Typography variant="h6"><b>{update.date}</b></Typography>
+                <Typography variant="body1">{update.content}</Typography>
+                {index < updates.length - 1 && <Divider style={{ margin: '16px 0' }} />}
+              </Box>
+            ))}
+          </Paper>
+        </Container>
+      </div>
+      <FooterLinks />
+    </>
   )
 }
 

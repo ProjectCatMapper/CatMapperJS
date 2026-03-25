@@ -1,5 +1,6 @@
 import React from 'react'
 import Navbar from '../components/NavbarHome'
+import FooterLinks from '../components/FooterLinks';
 import { createTheme, ThemeProvider, styled } from '@mui/material/styles';
 import { Container, Typography, Link, Box, Grid } from '@mui/material';
 import lic from "./../assets/GNUlicense.webp"
@@ -24,10 +25,11 @@ const Icon = styled('img')(({ theme }) => ({
 }));
 const Terms = () => {
   return (
-    <div style={{ backgroundColor: "white", height: "800" }}>
-      <Navbar />
-      <ThemeProvider theme={theme}>
-        <Root>
+    <>
+      <div style={{ backgroundColor: "white", height: "800" }}>
+        <Navbar />
+        <ThemeProvider theme={theme}>
+          <Root>
           <Typography variant="h4" component="h1" gutterBottom>
             Disclaimers & Licenses
           </Typography>
@@ -76,9 +78,11 @@ const Terms = () => {
               </Grid>
             </Grid>
           </Section>
-        </Root>
-      </ThemeProvider>
-    </div>
+          </Root>
+        </ThemeProvider>
+      </div>
+      <FooterLinks />
+    </>
   )
 }
 

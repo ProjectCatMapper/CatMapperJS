@@ -4,6 +4,8 @@ import { FaBars, FaTimes } from 'react-icons/fa'
 import './NavCommon.css';
 import './NavbarHome.css'
 import catmapperWhiteSmall from '../assets/catmapperWhite_small.webp';
+import sociomapLogo from '../assets/sociomapLogo.webp';
+import archamapLogo from '../assets/archamapLogo.webp';
 
 const Navbar = () => {
     const [click, setClick] = useState(false)
@@ -17,6 +19,16 @@ const Navbar = () => {
             <ul className={click ? 'cm-nav-menu active' : 'cm-nav-menu'}>
                 <li >
                     <Link className='cm-nav-link' to='/'>Home</Link>
+                </li>
+                <li>
+                    <Link className='cm-nav-link cm-nav-link--app' to='/sociomap' aria-label='SocioMap'>
+                        <img src={sociomapLogo} alt="SocioMap" className="cm-nav-app-logo" />
+                    </Link>
+                </li>
+                <li>
+                    <Link className='cm-nav-link cm-nav-link--app' to='/archamap' aria-label='ArchaMap'>
+                        <img src={archamapLogo} alt="ArchaMap" className="cm-nav-app-logo" />
+                    </Link>
                 </li>
                 <li >
                     <Link className='cm-nav-link' to='/about'>About</Link>

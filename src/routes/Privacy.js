@@ -1,12 +1,14 @@
 import React from 'react';
 import Navbar from '../components/NavbarHome';
+import FooterLinks from '../components/FooterLinks';
 import { Container, Typography, Link, Box } from '@mui/material';
 
 const Privacy = () => {
   return (
-    <div style={{ backgroundColor: 'white' }}>
-      <Navbar />
-      <Container maxWidth="md" sx={{ py: 4 }}>
+    <>
+      <div style={{ backgroundColor: 'white' }}>
+        <Navbar />
+        <Container maxWidth="md" sx={{ py: 4 }}>
         <Typography variant="h4" component="h1" gutterBottom>
           Privacy Policy
         </Typography>
@@ -76,8 +78,10 @@ const Privacy = () => {
             Questions about this Privacy Policy can be sent to <Link href="mailto:support@catmapper.org">support@catmapper.org</Link>.
           </Typography>
         </Box>
-      </Container>
-    </div>
+        </Container>
+      </div>
+      <FooterLinks />
+    </>
   );
 };
 

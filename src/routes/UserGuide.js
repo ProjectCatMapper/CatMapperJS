@@ -1,13 +1,15 @@
 import React from 'react'
 import '@fontsource/source-sans-pro';
 import Navbar from '../components/NavbarHome'
+import FooterLinks from '../components/FooterLinks';
 import "../components/APIGuides.css"
 
 const Sociomap_UserGuide = () => {
 
   return (
-    <div style={{ backgroundColor: "white" }}>
-      <Navbar />
+    <>
+      <div style={{ backgroundColor: "white" }}>
+        <Navbar />
       <h1 id="chapter-1-welcome-to-catmapper">Chapter 1: Welcome to
         CatMapper</h1>
       <p>SocioMap organizes dynamic and complex category systems commonly used
@@ -487,7 +489,9 @@ const Sociomap_UserGuide = () => {
         Ghana. You can see that there are a total of 166 associated ethnicities
         stored within SocioMap. Clicking the row will allow you get contextual
         information about that Ethnicity.</p>
-    </div>
+      </div>
+      <FooterLinks />
+    </>
   );
 }
 
