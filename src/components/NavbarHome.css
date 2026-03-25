@@ -17,10 +17,23 @@
 .cm-nav--home .cm-nav-link--app {
   display: flex;
   align-items: center;
+  justify-content: center;
+  background-color: #e6e6e6 !important;
+  border: 1px solid #cfcfcf;
+  border-radius: 6px;
+  padding: 4px 8px;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35);
+  transition: background-color 0.2s ease, border-color 0.2s ease;
 }
 
 .cm-nav--home .cm-nav-link--app::before {
   display: none;
+}
+
+.cm-nav--home .cm-nav-link--app:hover,
+.cm-nav--home .cm-nav-link--app:focus {
+  background-color: #f1f1f1 !important;
+  border-color: #d9d9d9;
 }
 
 .cm-nav--home .cm-nav-app-logo {
