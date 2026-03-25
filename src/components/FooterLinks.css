@@ -10,8 +10,10 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-top: 16px;
+  margin-top: 0;
   margin-bottom: 0;
+  padding: 16px;
+  background-color: #111;
   position: relative;
   z-index: 10;
   pointer-events: auto;
@@ -19,7 +21,10 @@
 }
 
 .footer-links-logo {
+  display: block;
   height: 7vh;
+  max-height: 56px;
+  width: auto;
 }
 
 .footer-links-version {
