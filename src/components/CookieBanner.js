@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Snackbar, Button, Typography, Box } from '@mui/material';
+import { getCookieConsent, setCookieConsent } from '../utils/cookieConsent';
 
 // Replace with your actual Measurement ID
 const GA_MEASUREMENT_ID = process.env.REACT_APP_GOOGLE_ANALYTICS_ID;
@@ -8,24 +9,24 @@ const CookieBanner = () => {
     const [open, setOpen] = useState(false);
 
     useEffect(() => {
-        const consent = localStorage.getItem('cookie-consent');
+        const consent = getCookieConsent();
         if (!consent) {
             setOpen(true);
-        } else if (consent === 'false' && GA_MEASUREMENT_ID) {
+        } else if (consent === 'rejected' && GA_MEASUREMENT_ID) {
             // Ensure GA remains disabled if they previously declined
             window[`ga-disable-${GA_MEASUREMENT_ID}`] = true;
         }
     }, []);
 
     const handleAccept = () => {
-        localStorage.setItem('cookie-consent', 'true');
+        setCookieConsent('accepted');
         setOpen(false);
         // Hard refresh to trigger the initAnalytics() in index.js
         window.location.reload();
     };
 
     const handleDecline = () => {
-        localStorage.setItem('cookie-consent', 'false');
+        setCookieConsent('rejected');
         if (GA_MEASUREMENT_ID) {
             window[`ga-disable-${GA_MEASUREMENT_ID}`] = true;
         }

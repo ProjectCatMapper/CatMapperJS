@@ -5,14 +5,13 @@ import App from './App';
 import { BrowserRouter } from 'react-router-dom';
 import { AuthProvider } from './components/AuthContext';
 import ReactGA from 'react-ga4';
+import { isCookieConsentAccepted } from './utils/cookieConsent';
 
 const GA_ID = process.env.REACT_APP_GOOGLE_ANALYTICS_ID;
 
 // 1. Define a function to handle initialization logic
 const initAnalytics = () => {
-  const consent = localStorage.getItem('cookie-consent');
-
-  if (consent === 'true') {
+  if (isCookieConsentAccepted()) {
     if (!GA_ID) {
       console.warn('Google Analytics is enabled by consent, but REACT_APP_GOOGLE_ANALYTICS_ID is not set.');
       return;
