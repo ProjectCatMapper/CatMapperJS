@@ -9,7 +9,7 @@ const CatHome = () => {
     <div className="cat_hero" style={{ backgroundImage: `url(${backgroundImage})`, marginBottom: "2rem" }}>
       <div className="overlay">
         <div className="headertransparent">
-          <Link to="/" className='logo'><img src={logo} width={100} height={70} alt="Logo" /></Link>
+          <Link to="/" className='logo'><img src={logo} width={100} height={70} alt="CatMapper logo" /></Link>
         </div>
 
         <div className="content">

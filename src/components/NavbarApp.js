@@ -19,14 +19,14 @@ const NavbarApp = ({ database }) => {
             {/* LEFT SECTION: Main Catmapper Logo */}
             <div className='cm-nav-image'>
                 <Link to='/'>
-                    <img src={catmapperWhiteSmall} alt="Catmapper" />
+                    <img src={catmapperWhiteSmall} alt="CatMapper logo" />
                 </Link>
             </div>
 
             {/* MIDDLE SECTION: Database Specific Logo */}
             <div className='cm-nav-logo cm-nav-app-logo'>
                 <Link to={`/${database}`}>
-                    <img src={currentLogo} alt="App Logo" />
+                    <img src={currentLogo} alt={`${database} logo`} />
                 </Link>
             </div>
 
