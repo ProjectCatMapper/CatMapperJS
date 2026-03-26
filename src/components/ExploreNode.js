@@ -1146,7 +1146,7 @@ export default function Tableclick({ cmid, database, tabval }) {
   const hasCategoryMapTab = hasPolygonData || (Array.isArray(points) && points.length > 0);
   const hasDatasetCategoriesTab = (Array.isArray(categories) && categories.length > 0) || (Array.isArray(childcategories) && childcategories.length > 0);
   const hasCategoryDatasetsTab = Array.isArray(usert) && usert.length > 0;
-  const hasCategoryTimespanTab = Array.isArray(usert) && usert.length > 0;
+  const hasCategoryTimespanTab = !isDatasetLike;
   const hasCategoryCategoriesTab = Array.isArray(categories) && categories.length > 0;
   const hasMergingTemplateTabData = Boolean(
     mergeTemplateSummary &&
