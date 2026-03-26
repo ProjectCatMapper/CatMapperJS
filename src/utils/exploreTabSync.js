@@ -15,4 +15,4 @@ export const getResolvedExploreTab = (
 };
 
 export const shouldRedirectExploreTab = (currentRouteTab, targetTab) =>
-  Boolean(targetTab && currentRouteTab !== targetTab);
+  Boolean(targetTab && !currentRouteTab);

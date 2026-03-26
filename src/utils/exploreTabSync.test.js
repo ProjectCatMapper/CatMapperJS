@@ -29,10 +29,11 @@ describe("exploreTabSync", () => {
     expect(getResolvedExploreTab("network", [])).toBeNull();
   });
 
-  test("redirects only when current route tab differs from target tab", () => {
+  test("redirects only when route tab is missing", () => {
     expect(shouldRedirectExploreTab("timespan", "timespan")).toBe(false);
-    expect(shouldRedirectExploreTab("timespan", "network")).toBe(true);
+    expect(shouldRedirectExploreTab("timespan", "network")).toBe(false);
     expect(shouldRedirectExploreTab(undefined, "network")).toBe(true);
+    expect(shouldRedirectExploreTab("", "network")).toBe(true);
     expect(shouldRedirectExploreTab("network", null)).toBe(false);
   });
 });
