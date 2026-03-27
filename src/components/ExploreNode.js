@@ -6,6 +6,7 @@ import CircularProgress from "@mui/material/CircularProgress";
 import {
   Box,
   Button,
+  IconButton,
   Checkbox,
   Dialog,
   DialogActions,
@@ -34,6 +35,7 @@ import { styled } from '@mui/material/styles';
 import InputBase from '@mui/material/InputBase';
 import InfoIcon from "@mui/icons-material/Info";
 import BookmarkBorderIcon from "@mui/icons-material/BookmarkBorder";
+import VisibilityIcon from "@mui/icons-material/Visibility";
 
 import PropTypes from "prop-types";
 import { downloadJsonAsXlsx } from "../utils/excelExport";
@@ -124,6 +126,8 @@ const BootstrapInput = styled(InputBase)(({ theme }) => ({
   },
 }));
 
+const CATEGORY_INFO_PREVIEW_LIMIT = 60;
+
 export default function Tableclick({ cmid, database, tabval }) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -199,6 +203,7 @@ export default function Tableclick({ cmid, database, tabval }) {
   const [open, setOpen] = useState(false);
   const [bookmarkNotice, setBookmarkNotice] = useState({ open: false, severity: "success", message: "" });
   const [redirectPrompt, setRedirectPrompt] = useState({ open: false, from: "", to: "", database: "" });
+  const [categoryInfoDialog, setCategoryInfoDialog] = useState({ open: false, key: "", value: "" });
   const historyLoggedRef = useRef("");
   const [mergeTemplateSummary, setMergeTemplateSummary] = useState(null);
   const [loadingMergeTemplateSummary, setLoadingMergeTemplateSummary] = useState(false);
@@ -1187,6 +1192,26 @@ export default function Tableclick({ cmid, database, tabval }) {
     },
     [rev]
   );
+  const getCategoryInfoPlainValue = useCallback((rawValue) => {
+    if (rawValue === null || rawValue === undefined) return "";
+    if (Array.isArray(rawValue)) return rawValue.join(", ");
+    if (typeof rawValue === "object") {
+      try {
+        return JSON.stringify(rawValue);
+      } catch (_error) {
+        return String(rawValue);
+      }
+    }
+    return String(rawValue);
+  }, []);
+  const getCategoryInfoPreview = useCallback((rawValue, limit = CATEGORY_INFO_PREVIEW_LIMIT) => {
+    const plainValue = getCategoryInfoPlainValue(rawValue);
+    if (plainValue.length <= limit) return { text: plainValue, truncated: false };
+    return { text: `${plainValue.slice(0, limit).trimEnd()} . . .`, truncated: true };
+  }, [getCategoryInfoPlainValue]);
+  const closeCategoryInfoDialog = useCallback(() => {
+    setCategoryInfoDialog({ open: false, key: "", value: "" });
+  }, []);
   const isStackNode = domainLabels.includes("STACK");
   const isMergingTemplateNode = domainLabels.includes("MERGING");
   const isDatasetLike = cmid.startsWith("SD") || cmid.startsWith("AD") || isStackNode || isMergingTemplateNode || domainLabels.includes("DATASET");
@@ -1423,33 +1448,57 @@ export default function Tableclick({ cmid, database, tabval }) {
           <Box id="content" className="category-info-grid">
             {categoryInfoEntries.length > 0 ? (
               <Box className="category-info-grid-inner">
-                {categoryInfoEntries.map(([key, value]) => (
-                  <Box key={key} className="category-info-card">
-                    <Box component="span" className="category-info-inline">
-                      <Box component="span" className="category-info-key">
-                        {key}
-                      </Box>
-                      <Box component="span" className="category-info-value">
-                        {key === "Dataset Location" ? (
-                          <a
-                            className="category-info-link"
-                            href={value}
-                            target="_blank"
-                            rel="noopener noreferrer"
+                {categoryInfoEntries.map(([key, value]) => {
+                  const preview = getCategoryInfoPreview(value);
+                  const showViewButton = preview.truncated;
+
+                  return (
+                    <Box key={key} className="category-info-card">
+                      <Box component="span" className="category-info-inline">
+                        <Box component="span" className="category-info-key">
+                          {String(key).replace(/_/g, " ")}
+                        </Box>
+                        <Box
+                          component="span"
+                          className="category-info-value"
+                        >
+                          {key === "Dataset Location" ? (
+                            <a
+                              className="category-info-link"
+                              href={value}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              {preview.text}
+                            </a>
+                          ) : key === "Merged_into_CMID" ? (
+                            <a className="category-info-link" href={`/${database.toLowerCase()}/${value}`}>
+                              {preview.text}
+                            </a>
+                          ) : (
+                            preview.text
+                          )}
+                        </Box>
+                        {showViewButton && (
+                          <IconButton
+                            size="small"
+                            className="category-info-view-more-icon-btn"
+                            onClick={() =>
+                              setCategoryInfoDialog({
+                                open: true,
+                                key: String(key).replace(/_/g, " "),
+                                value: getCategoryInfoPlainValue(value),
+                              })
+                            }
+                            aria-label={`View full ${String(key).replace(/_/g, " ")}`}
                           >
-                            {value}
-                          </a>
-                        ) : key === "Merged_into_CMID" ? (
-                          <a className="category-info-link" href={`/${database.toLowerCase()}/${value}`}>
-                            {value}
-                          </a>
-                        ) : (
-                          value
+                            <VisibilityIcon sx={{ fontSize: 18 }} />
+                          </IconButton>
                         )}
                       </Box>
                     </Box>
-                  </Box>
-                ))}
+                  );
+                })}
               </Box>
             ) : (
               <Typography sx={{ color: "black", fontSize: "1rem", p: 1 }}>No data</Typography>
@@ -1933,6 +1982,17 @@ export default function Tableclick({ cmid, database, tabval }) {
             {bookmarkNotice.message}
           </Alert>
         </Snackbar>
+        <Dialog open={categoryInfoDialog.open} onClose={closeCategoryInfoDialog} maxWidth="sm" fullWidth>
+          <DialogTitle>{categoryInfoDialog.key}</DialogTitle>
+          <DialogContent dividers>
+            <Typography sx={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
+              {categoryInfoDialog.value}
+            </Typography>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={closeCategoryInfoDialog}>Close</Button>
+          </DialogActions>
+        </Dialog>
         <Dialog open={redirectPrompt.open} onClose={handleCloseRedirectPrompt}>
           <DialogTitle>Deleted Node Redirected</DialogTitle>
           <DialogContent>
