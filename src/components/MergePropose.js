@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { Box, Button, FormControlLabel, Radio, RadioGroup, Checkbox, Typography, Divider, Select, NativeSelect, TextField, MenuItem, FormControl, FormGroup, Snackbar, Alert, Paper, Tooltip, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
 import CircularProgress from '@mui/material/CircularProgress';
 import Backdrop from '@mui/material/Backdrop';
@@ -26,6 +26,11 @@ const Propose_Merge = ({ database }) => {
   const { infodata } = useMetadata(database);
   const [selectedCategory, setSelectedCategory] = useState({});
   const [advdomainDrop, setadvdomainDrop] = React.useState('ANY DOMAIN');
+  const [crossSourceDomain, setCrossSourceDomain] = useState('');
+  const [crossTargetDomain, setCrossTargetDomain] = useState('');
+  const [crossReturnDomain, setCrossReturnDomain] = useState('');
+  const [crossPrimaryDataset, setCrossPrimaryDataset] = useState('');
+  const [crossMaxHops, setCrossMaxHops] = useState(3);
   const [mergeInputError, setMergeInputError] = useState('');
   const [validatedDatasets, setValidatedDatasets] = useState([]);
   const [mergeWarning, setMergeWarning] = useState('');
@@ -38,6 +43,14 @@ const Propose_Merge = ({ database }) => {
       .split(',')
       .map((value) => value.trim())
       .filter(Boolean);
+
+  const toDomainLabel = (value) => (value === "DISTRICT" ? "AREA" : value);
+  const fromDomainLabel = (value) => (value === "AREA" ? "DISTRICT" : value);
+
+  const crossDomainOptions = useMemo(() => {
+    const subdomains = Object.values(selectedCategory || {}).flat().filter(Boolean);
+    return [...new Set(subdomains)].filter((value) => value !== "ANY DOMAIN");
+  }, [selectedCategory]);
 
   const validateDatasetInputs = () => {
     const datasetIds = parseDatasetIds();
@@ -146,6 +159,25 @@ const Propose_Merge = ({ database }) => {
     setSelectedOption(event.target.value);
   };
 
+  useEffect(() => {
+    if (crossDomainOptions.length === 0) return;
+    if (!crossSourceDomain) setCrossSourceDomain(crossDomainOptions[0]);
+    if (!crossTargetDomain) setCrossTargetDomain(crossDomainOptions[0]);
+  }, [crossDomainOptions, crossSourceDomain, crossTargetDomain]);
+
+  useEffect(() => {
+    const datasetIds = validatedDatasets
+      .map((row) => row.CMID || row.cmid)
+      .filter(Boolean);
+    if (datasetIds.length === 0) {
+      setCrossPrimaryDataset('');
+      return;
+    }
+    if (!datasetIds.includes(crossPrimaryDataset)) {
+      setCrossPrimaryDataset(datasetIds[0]);
+    }
+  }, [validatedDatasets, crossPrimaryDataset]);
+
   const [returnAllCategories, setReturnAllCategories] = useState(true);
 
   const handleCheckChange = (event) => {
@@ -189,6 +221,13 @@ const Propose_Merge = ({ database }) => {
 
   const getKeys = async () => {
     if (!validateDatasetInputs()) return;
+    const keyDomain = selectedOption === "CrossDomain"
+      ? fromDomainLabel((crossSourceDomain || "").trim())
+      : advdomainDrop;
+    if (!keyDomain) {
+      alert('Select a source domain before loading key variables.');
+      return;
+    }
     try {
       const response = await fetch(`${process.env.REACT_APP_API_URL}/getKeys`, {
         method: 'POST',
@@ -198,7 +237,7 @@ const Propose_Merge = ({ database }) => {
         body: JSON.stringify({
           "names": inputValue,
           "database": database,
-          "subdomain": advdomainDrop
+          "subdomain": keyDomain
         }),
       });
 
@@ -224,29 +263,48 @@ const Propose_Merge = ({ database }) => {
       alert('Please validate successfully before submitting.');
       return;
     }
-    if (firstDropdownValue === "") {
+    const isCrossDomain = selectedOption === "CrossDomain";
+    if (!isCrossDomain && firstDropdownValue === "") {
       alert("Please select a category domain to match")
       return;
+    }
+    if (isCrossDomain) {
+      if (!crossSourceDomain || !crossTargetDomain) {
+        alert("Please select both source and target domains for cross-domain matching.");
+        return;
+      }
+      if (!crossPrimaryDataset) {
+        alert("Please choose a primary dataset for cross-domain matching.");
+        return;
+      }
     }
     setMergeWarning('');
     setMergeError('');
     setLoading(true)
     try {
+      const payload = {
+        "datasetChoices": inputValue,
+        "categoryLabel": advdomainDrop,
+        "intersection": returnAllCategories,
+        "database": database,
+        "mergelevel": mergeLevel,
+        "equivalence": selectedOption,
+        "resultFormat": resultFormat,
+        "selectedKeyvariable": selectedKeyVariables
+      };
+      if (isCrossDomain) {
+        payload.sourceDomain = fromDomainLabel(crossSourceDomain);
+        payload.targetDomain = fromDomainLabel(crossTargetDomain);
+        payload.returnDomain = crossReturnDomain ? fromDomainLabel(crossReturnDomain) : "";
+        payload.primaryDataset = crossPrimaryDataset;
+        payload.maxHops = Number(crossMaxHops) || 3;
+      }
       const response = await fetch(`${process.env.REACT_APP_API_URL}/proposeMergeSubmit`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          "datasetChoices": inputValue,
-          "categoryLabel": advdomainDrop,
-          "intersection": returnAllCategories,
-          "database": database,
-          "mergelevel": mergeLevel,
-          "equivalence": selectedOption,
-          "resultFormat": resultFormat,
-          "selectedKeyvariable": selectedKeyVariables
-        }),
+        body: JSON.stringify(payload),
       });
 
       const result = await response.json();
@@ -267,7 +325,7 @@ const Propose_Merge = ({ database }) => {
         setMergeError(result?.message || result?.error || 'Unexpected response format.');
         return;
       }
-      await downloadMerge(result);
+      await downloadMerge(result, isCrossDomain);
       setOpen(true);
     } catch (error) {
       setMergeError('Error submitting form. Please try again.');
@@ -278,7 +336,7 @@ const Propose_Merge = ({ database }) => {
     }
   };
 
-  const downloadMerge = async (resultData) => {
+  const downloadMerge = async (resultData, isCrossDomain = false) => {
     const isInvalid = !resultData ||
       (Array.isArray(resultData) && resultData.length === 0) ||
       (typeof resultData === "object" && Object.keys(resultData).length === 0);
@@ -289,8 +347,11 @@ const Propose_Merge = ({ database }) => {
       return; // Exit the function early
     }
     const filename = inputValue.split(",").map(s => s.trim()).join("_");
+    const modeLabel = isCrossDomain
+      ? `${toDomainLabel(crossSourceDomain)}_to_${toDomainLabel(crossTargetDomain)}`
+      : advdomainDrop;
     await downloadJsonAsXlsx(resultData, {
-      fileName: `ProposedMerge_${filename}_${advdomainDrop}.xlsx`,
+      fileName: `ProposedMerge_${filename}_${modeLabel}.xlsx`,
       sheetName: 'Sheet1',
     });
   };
@@ -379,112 +440,237 @@ const Propose_Merge = ({ database }) => {
       )}
 
       <Divider sx={{ my: 2 }} />
-      <h4 style={{ color: 'black', padding: "1px" }}>Choose Domain</h4>
-      <Box display="flex" alignItems="center" gap={2}>
-        <Box>
-          <Typography variant="h7" style={{ color: 'black', padding: '1px' }}>
-            Select Category Domain
-          </Typography>
-          <NativeSelect
-            value={firstDropdownValue}
-            label="First Dropdown"
-            sx={{
-              fontSize: 16,
-              letterSpacing: 0.5,
-              borderRadius: 1,
-              backgroundColor: "white",
-              border: "2px solid #1976d2",
-              height: 42,
-              minWidth: "14vw",
-              "& .MuiNativeSelect-select": {
-                padding: "8px 12px",
-              },
-              "&:hover": {
-                borderColor: "#115293",
-              },
-              "&:focus-within": {
-                borderColor: "#0d47a1",
-                boxShadow: "0 0 0 2px rgba(25, 118, 210, 0.2)",
-              },
-            }}
-            onChange={(event) => {
-              const newDomain = event.target.value;
-              const subdomains = selectedCategory[newDomain] || [];
+      {selectedOption !== "CrossDomain" ? (
+        <>
+          <h4 style={{ color: 'black', padding: "1px" }}>Choose Domain</h4>
+          <Box display="flex" alignItems="center" gap={2}>
+            <Box>
+              <Typography variant="h7" style={{ color: 'black', padding: '1px' }}>
+                Select Category Domain
+              </Typography>
+              <NativeSelect
+                value={firstDropdownValue}
+                label="First Dropdown"
+                sx={{
+                  fontSize: 16,
+                  letterSpacing: 0.5,
+                  borderRadius: 1,
+                  backgroundColor: "white",
+                  border: "2px solid #1976d2",
+                  height: 42,
+                  minWidth: "14vw",
+                  "& .MuiNativeSelect-select": {
+                    padding: "8px 12px",
+                  },
+                  "&:hover": {
+                    borderColor: "#115293",
+                  },
+                  "&:focus-within": {
+                    borderColor: "#0d47a1",
+                    boxShadow: "0 0 0 2px rgba(25, 118, 210, 0.2)",
+                  },
+                }}
+                onChange={(event) => {
+                  const newDomain = event.target.value;
+                  const subdomains = selectedCategory[newDomain] || [];
 
-              setFirstDropdownValue(newDomain);
-              setadvoptions(subdomains);
-              setadvdomainDrop(subdomains[0] || '');
-            }}
-          >
-            {Object.keys(selectedCategory).map((category, index) => (
-              <option key={index} value={category}>
-                {category === "DISTRICT" ? "AREA" : category}
-              </option>
-            ))}
-          </NativeSelect>
-          <Tooltip title={tooltipContent} arrow>
-            <Button
-              startIcon={
-                <InfoIcon sx={{ height: "28px", width: "28px" }} />
+                  setFirstDropdownValue(newDomain);
+                  setadvoptions(subdomains);
+                  setadvdomainDrop(subdomains[0] || '');
+                }}
+              >
+                {Object.keys(selectedCategory).map((category, index) => (
+                  <option key={index} value={category}>
+                    {toDomainLabel(category)}
+                  </option>
+                ))}
+              </NativeSelect>
+              <Tooltip title={tooltipContent} arrow>
+                <Button
+                  startIcon={
+                    <InfoIcon sx={{ height: "28px", width: "28px" }} />
+                  }
+                ></Button>
+              </Tooltip>
+            </Box>
+            <Box>
+              <Typography variant="h7" style={{ color: 'black', padding: '1px' }}>
+                Select Category Sub-Domain
+              </Typography>
+              <NativeSelect
+                label="second Dropdown"
+                value={advdomainDrop}
+                sx={{
+                  fontSize: 16,
+                  letterSpacing: 0.5,
+                  borderRadius: 1,
+                  backgroundColor: "white",
+                  border: "2px solid #1976d2",
+                  height: 42,
+                  minWidth: "14vw",
+                  "& .MuiNativeSelect-select": {
+                    padding: "8px 12px",
+                  },
+                  "&:hover": {
+                    borderColor: "#115293",
+                  },
+                  "&:focus-within": {
+                    borderColor: "#0d47a1",
+                    boxShadow: "0 0 0 2px rgba(25, 118, 210, 0.2)",
+                  },
+                }}
+                onChange={(event) => {
+                  setadvdomainDrop(event.target.value);
+                }}
+              >
+                {advoptions.map((value, index) => (
+                  <option key={index} value={value}>
+                    {toDomainLabel(value)}
+                  </option>
+                ))}
+              </NativeSelect>
+              <Tooltip title={tooltipContent2} arrow>
+                <Button
+                  startIcon={
+                    <InfoIcon sx={{ height: "28px", width: "28px" }} />
+                  }
+                ></Button>
+              </Tooltip>
+            </Box>
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={showAdvanced}
+                  onChange={(e) => setShowAdvanced(e.target.checked)}
+                  color="primary"
+                />
               }
-            ></Button>
-          </Tooltip>
-        </Box>
-        <Box>
-          <Typography variant="h7" style={{ color: 'black', padding: '1px' }}>
-            Select Category Sub-Domain
-          </Typography>
-          <NativeSelect
-            label="second Dropdown"
-            value={advdomainDrop}
-            sx={{
-              fontSize: 16,
-              letterSpacing: 0.5,
-              borderRadius: 1,
-              backgroundColor: "white",
-              border: "2px solid #1976d2",
-              height: 42,
-              minWidth: "14vw",
-              "& .MuiNativeSelect-select": {
-                padding: "8px 12px",
-              },
-              "&:hover": {
-                borderColor: "#115293",
-              },
-              "&:focus-within": {
-                borderColor: "#0d47a1",
-                boxShadow: "0 0 0 2px rgba(25, 118, 210, 0.2)",
-              },
-            }}
-            onChange={(event) => {
-              setadvdomainDrop(event.target.value);
-            }}
-          >
-            {advoptions.map((value, index) => (
-              <option key={index} value={value}>
-                {value === "DISTRICT" ? "AREA" : value}
-              </option>
-            ))}
-          </NativeSelect>
-          <Tooltip title={tooltipContent2} arrow>
-            <Button
-              startIcon={
-                <InfoIcon sx={{ height: "28px", width: "28px" }} />
-              }
-            ></Button>
-          </Tooltip>
-        </Box>
-        <FormControlLabel
-          control={
-            <Checkbox
-              checked={showAdvanced}
-              onChange={(e) => setShowAdvanced(e.target.checked)}
-              color="primary"
+              label="Advanced Options"
             />
-          }
-          label="Advanced Options"
-        />
-      </Box>
+          </Box>
+        </>
+      ) : (
+        <>
+          <h4 style={{ color: 'black', padding: "1px" }}>Choose Cross-Domain Settings</h4>
+          <Box display="flex" alignItems="center" gap={2} flexWrap="wrap">
+            <Box>
+              <Typography variant="h7" style={{ color: 'black', padding: '1px' }}>
+                Source Domain
+              </Typography>
+              <NativeSelect
+                value={crossSourceDomain}
+                sx={{
+                  fontSize: 16,
+                  letterSpacing: 0.5,
+                  borderRadius: 1,
+                  backgroundColor: "white",
+                  border: "2px solid #1976d2",
+                  height: 42,
+                  minWidth: "14vw",
+                  "& .MuiNativeSelect-select": {
+                    padding: "8px 12px",
+                  },
+                }}
+                onChange={(event) => setCrossSourceDomain(event.target.value)}
+              >
+                {crossDomainOptions.map((value) => (
+                  <option key={`cross-source-${value}`} value={value}>{toDomainLabel(value)}</option>
+                ))}
+              </NativeSelect>
+            </Box>
+            <Box>
+              <Typography variant="h7" style={{ color: 'black', padding: '1px' }}>
+                Target Domain
+              </Typography>
+              <NativeSelect
+                value={crossTargetDomain}
+                sx={{
+                  fontSize: 16,
+                  letterSpacing: 0.5,
+                  borderRadius: 1,
+                  backgroundColor: "white",
+                  border: "2px solid #1976d2",
+                  height: 42,
+                  minWidth: "14vw",
+                  "& .MuiNativeSelect-select": {
+                    padding: "8px 12px",
+                  },
+                }}
+                onChange={(event) => setCrossTargetDomain(event.target.value)}
+              >
+                {crossDomainOptions.map((value) => (
+                  <option key={`cross-target-${value}`} value={value}>{toDomainLabel(value)}</option>
+                ))}
+              </NativeSelect>
+            </Box>
+            <Box>
+              <Typography variant="h7" style={{ color: 'black', padding: '1px' }}>
+                Return Domain (Optional)
+              </Typography>
+              <NativeSelect
+                value={crossReturnDomain}
+                sx={{
+                  fontSize: 16,
+                  letterSpacing: 0.5,
+                  borderRadius: 1,
+                  backgroundColor: "white",
+                  border: "2px solid #1976d2",
+                  height: 42,
+                  minWidth: "16vw",
+                  "& .MuiNativeSelect-select": {
+                    padding: "8px 12px",
+                  },
+                }}
+                onChange={(event) => setCrossReturnDomain(event.target.value)}
+              >
+                <option value="">(Use target domain)</option>
+                {crossDomainOptions.map((value) => (
+                  <option key={`cross-return-${value}`} value={value}>{toDomainLabel(value)}</option>
+                ))}
+              </NativeSelect>
+            </Box>
+            <Box>
+              <Typography variant="h7" style={{ color: 'black', padding: '1px' }}>
+                Primary Dataset
+              </Typography>
+              <NativeSelect
+                value={crossPrimaryDataset}
+                sx={{
+                  fontSize: 16,
+                  letterSpacing: 0.5,
+                  borderRadius: 1,
+                  backgroundColor: "white",
+                  border: "2px solid #1976d2",
+                  height: 42,
+                  minWidth: "14vw",
+                  "& .MuiNativeSelect-select": {
+                    padding: "8px 12px",
+                  },
+                }}
+                onChange={(event) => setCrossPrimaryDataset(event.target.value)}
+              >
+                {(validatedDatasets || []).map((row) => {
+                  const id = row.CMID || row.cmid;
+                  if (!id) return null;
+                  return (
+                    <option key={`primary-${id}`} value={id}>{id}</option>
+                  );
+                })}
+              </NativeSelect>
+            </Box>
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={showAdvanced}
+                  onChange={(e) => setShowAdvanced(e.target.checked)}
+                  color="primary"
+                />
+              }
+              label="Advanced Options"
+            />
+          </Box>
+        </>
+      )}
       {showAdvanced && (
         <Box>
           <Paper
@@ -603,6 +789,11 @@ const Propose_Merge = ({ database }) => {
             control={<Radio />}
             label="Extended: Categories can be equivalent if they point to nodes that are connected by contains ties"
           />
+          <FormControlLabel
+            value="CrossDomain"
+            control={<Radio />}
+            label="Cross-domain: Match across domains using CONTAINS plus the discovered *_OF relationship"
+          />
         </RadioGroup>
       </FormControl>
       {selectedOption === "Extended" && (
@@ -622,6 +813,27 @@ const Propose_Merge = ({ database }) => {
             ))}
           </Select>
           <Tooltip title={"This specifies how many steps to search through the CONTAINS tie network to find a potential matching category."} arrow>
+            <Button startIcon={<InfoIcon sx={{ height: '28px', width: '28px' }} />} />
+          </Tooltip>
+        </Box>
+      )}
+      {selectedOption === "CrossDomain" && (
+        <Box sx={{ mt: 1 }}>
+          <Typography variant="h7" style={{ color: 'black', padding: '1px' }}>
+            Choose Max Hops for Cross-Domain Search
+          </Typography>
+          <Select
+            label="Cross Domain Max Hops"
+            value={crossMaxHops}
+            style={{ height: 40 }}
+            sx={{ m: 1, width: '12vw' }}
+            onChange={(event) => setCrossMaxHops(event.target.value)}
+          >
+            {[1, 2, 3, 4, 5, 6].map((level) => (
+              <MenuItem key={level} value={level}>{level}</MenuItem>
+            ))}
+          </Select>
+          <Tooltip title={"Cross-domain traversal uses CONTAINS on both sides plus one *_OF relation, capped by this hop limit."} arrow>
             <Button startIcon={<InfoIcon sx={{ height: '28px', width: '28px' }} />} />
           </Tooltip>
         </Box>
