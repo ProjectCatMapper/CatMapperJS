@@ -61,6 +61,14 @@ export default function ClickTable(props) {
       renderCell: (params1) => <a id='viewlink' href={params1.row.link2} target="_blank" rel="noopener noreferrer">{params1.row.source}</a>,
     },
     {
+      field: 'key',
+      headerName: 'Key',
+      flex: isCompactLayout ? 0.85 : 1.0,
+      minWidth: isCompactLayout ? 140 : 180,
+      cellClassName: (params) => params.value && params.value.length > 35 ? 'wrap-text-3-lines_dt' : '',
+      renderCell: (params) => (<div style={{ paddingLeft: '5px' }}>{params.value}</div>),
+    },
+    {
       field: 'version',
       headerName: 'Version',
       flex: isCompactLayout ? 0.58 : 0.7,
@@ -82,11 +90,11 @@ export default function ClickTable(props) {
     },
   ]), [isCompactLayout]);
   const [rows, setRows] = useState([]);
-  const [columnVisibilityModel, setColumnVisibilityModel] = useState({});
+  const [columnVisibilityModel, setColumnVisibilityModel] = useState({ key: false });
 
   useEffect(() => {
     setRows(props.usert.map((value, key) => {
-      const hasLarge = ['Name', 'Location', 'Version'].some(column => {
+      const hasLarge = ['Name', 'Location', 'Version', 'Key'].some(column => {
         const text = value[column];
         return text && text.toString().length > 35;
       });
@@ -106,6 +114,7 @@ export default function ClickTable(props) {
         popest: value['Population est.'],
         samplesize: value['Sample size'],
         source: value.Source,
+        key: value.Key,
         version: value.Version,
         link: value.Link,
         link2: value.link2,
