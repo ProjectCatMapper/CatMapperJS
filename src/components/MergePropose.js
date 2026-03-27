@@ -603,18 +603,6 @@ const Propose_Merge = ({ database }) => {
             control={<Radio />}
             label="Extended: Categories can be equivalent if they point to nodes that are connected by contains ties"
           />
-          <FormControlLabel
-            value="Extended-languages"
-            control={<Radio />}
-            label="TBD - Extended-languages: Categories can be equivalent if they have languages that are connected via contains ties"
-            disabled
-          />
-          <FormControlLabel
-            value="Refined"
-            control={<Radio />}
-            label="TBD - Refined: Categories are only equivalent if they point to the same node and are within a specified window of time and distance"
-            disabled
-          />
         </RadioGroup>
       </FormControl>
       {selectedOption === "Extended" && (
