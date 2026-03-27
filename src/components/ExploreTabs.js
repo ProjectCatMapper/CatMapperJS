@@ -138,9 +138,23 @@ export default function ClickTable(props) {
     }))
   }, [props.usert])
 
-  const nonEmptyColumns = useMemo(() => ccolumns.filter((col) =>
-    col.field === 'datasetKey' || rows.some((row) => (row[col.field] !== null) && row[col.field] !== undefined && row[col.field] !== '' && (row[col.field] !== "null"))
-  ), [ccolumns, rows]);
+  const defaultColumnVisibilityModel = useMemo(() => {
+    const model = { datasetKey: false };
+    for (const col of ccolumns) {
+      if (col.field === 'datasetKey') continue;
+      model[col.field] = rows.some((row) =>
+        (row[col.field] !== null) &&
+        (row[col.field] !== undefined) &&
+        (row[col.field] !== '') &&
+        (row[col.field] !== 'null')
+      );
+    }
+    return model;
+  }, [ccolumns, rows]);
+
+  useEffect(() => {
+    setColumnVisibilityModel(defaultColumnVisibilityModel);
+  }, [defaultColumnVisibilityModel]);
 
 
 
@@ -173,7 +187,7 @@ export default function ClickTable(props) {
           density={isCompactLayout ? "compact" : "standard"}
           rows={rows}
           getRowHeight={getRowHeight}
-          columns={nonEmptyColumns}
+          columns={ccolumns}
           columnVisibilityModel={columnVisibilityModel}
           onColumnVisibilityModelChange={setColumnVisibilityModel}
           slots={{ toolbar: GridToolbar }}
