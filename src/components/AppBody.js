@@ -53,6 +53,7 @@ const AppBody = ({ database }) => {
   const [rows, setrows] = useState([]);
   const [foci, setfoci] = useState([]);
   const progressHeaders = rows.length > 0 ? Object.keys(rows[0]) : [];
+  const coverageHeaders = foci.length > 0 ? Object.keys(foci[0]) : [];
 
   const formatProgressHeader = (header) =>
     String(header || "")
@@ -161,21 +162,31 @@ const AppBody = ({ database }) => {
                   >
                     Dataset Coverage
                   </Typography>
-                  <TableContainer component={Paper}>
+                  <TableContainer component={Paper} className="dataset-coverage-container">
                     <Table
-                      sx={{ minWidth: { xs: 0, sm: 400 } }}
+                      sx={{ width: "100%", minWidth: 0, tableLayout: "fixed" }}
                       size="small"
                       aria-label="dataset coverage table"
                     >
                       <TableHead>
                         <TableRow>
-                          {/* Dynamically generate table headers from first row keys */}
-                          {foci.length > 0 &&
-                            Object.keys(foci[0]).map((key) => (
-                              <TableCell key={key} align="justify">
-                                {key}
-                              </TableCell>
-                            ))}
+                          {coverageHeaders.map((key, index) => (
+                            <TableCell
+                              key={key}
+                              align="left"
+                              sx={{
+                                px: { xs: 0.5, sm: 0.75 },
+                                py: 0.5,
+                                fontSize: { xs: "0.66rem", sm: "0.74rem" },
+                                lineHeight: 1.15,
+                                whiteSpace: "normal",
+                                overflowWrap: "anywhere",
+                                width: index === 0 ? "24%" : `${76 / Math.max(coverageHeaders.length - 1, 1)}%`,
+                              }}
+                            >
+                              {formatProgressHeader(key)}
+                            </TableCell>
+                          ))}
                         </TableRow>
                       </TableHead>
                       <TableBody>
@@ -187,7 +198,18 @@ const AppBody = ({ database }) => {
                             }}
                           >
                             {Object.entries(row).map(([key, value]) => (
-                              <TableCell key={key} align="left">
+                              <TableCell
+                                key={key}
+                                align="left"
+                                sx={{
+                                  px: { xs: 0.5, sm: 0.75 },
+                                  py: 0.5,
+                                  fontSize: { xs: "0.72rem", sm: "0.78rem" },
+                                  lineHeight: 1.2,
+                                  whiteSpace: "normal",
+                                  overflowWrap: "anywhere",
+                                }}
+                              >
                                 {value === 0 ? "" : value &&
                                   typeof value === 'number'
                                   ? value.toLocaleString()

@@ -56,7 +56,17 @@
     table-layout: fixed;
 }
 
+.body .dataset-coverage-container .MuiTable-root {
+    width: 100%;
+    table-layout: fixed;
+}
+
 .body .dataset-progress-container .MuiTableCell-root {
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+
+.body .dataset-coverage-container .MuiTableCell-root {
     white-space: normal;
     overflow-wrap: anywhere;
 }
