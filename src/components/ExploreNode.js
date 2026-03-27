@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 
 import { useLocation, useNavigate } from "react-router-dom";
 import CircularProgress from "@mui/material/CircularProgress";
@@ -1167,6 +1167,26 @@ export default function Tableclick({ cmid, database, tabval }) {
   const isDeletedNode = domainLabels.includes("DELETED");
   const deletedRedirectTarget = typeof rev?.Merged_into_CMID === "string" ? rev.Merged_into_CMID.trim() : "";
   const hasDeletedRedirect = Boolean(deletedRedirectTarget && deletedRedirectTarget !== cmid);
+  const categoryInfoEntries = useMemo(
+    () => {
+      if (!rev || typeof rev !== "object") return [];
+
+      const filteredEntries = Object.entries(rev).filter(
+        ([, value]) => value !== "" && value !== null && value !== undefined && value !== 0
+      );
+      const isCitationKey = (key) => {
+        const normalized = String(key || "")
+          .toLowerCase()
+          .replace(/[\s_]/g, "");
+        return normalized === "citation" || normalized === "datasetcitation";
+      };
+      const nonCitation = filteredEntries.filter(([key]) => !isCitationKey(key));
+      const citation = filteredEntries.filter(([key]) => isCitationKey(key));
+
+      return [...nonCitation, ...citation];
+    },
+    [rev]
+  );
   const isStackNode = domainLabels.includes("STACK");
   const isMergingTemplateNode = domainLabels.includes("MERGING");
   const isDatasetLike = cmid.startsWith("SD") || cmid.startsWith("AD") || isStackNode || isMergingTemplateNode || domainLabels.includes("DATASET");
@@ -1307,38 +1327,61 @@ export default function Tableclick({ cmid, database, tabval }) {
             display: "grid",
             gridTemplateRows: "auto auto auto",
             width: "100%",
+            position: "relative",
             backgroundImage: `linear-gradient(to bottom right,#555555, #cccccc)`,
             backgroundSize: "cover",
           }}
         >
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "8px", // Adds spacing between the heading and the icon
-            }}
-          >
-            <h2 style={{ color: "black", margin: 0 }}>{isDeletedNode ? "DELETED Node Info" : "Category Info"}</h2>
-            <MuiTool
-              title={
-                <Typography sx={{ fontSize: "1rem", fontWeight: "bold" }}>
-                  Here, you can toggle between viewing sample info, maps, and
-                  the network of contextual ties to this category.
-                </Typography>
-              }
-              arrow
-            >
-              <InfoIcon style={{ color: "blue", cursor: "pointer" }} />
-            </MuiTool>
+          <Box className="view-logs-anchor">
             <Button
-              size="small"
-              startIcon={<BookmarkBorderIcon />}
               variant="outlined"
-              onClick={handleBookmarkCurrent}
-              sx={{ ml: 1, backgroundColor: "white" }}
+              onClick={handleOpenLogs}
+              className="view-logs-btn"
+            >
+              View Logs
+            </Button>
+          </Box>
+          <div className="category-info-header-row">
+            <div className="category-info-header-pill">
+              <h2 className="category-info-header-title">
+                {isDeletedNode ? "DELETED Node Info" : "Category Info"}
+              </h2>
+              <MuiTool
+                title={
+                  <Typography sx={{ fontSize: "1rem", fontWeight: "bold" }}>
+                    Here, you can toggle between viewing sample info, maps, and
+                    the network of contextual ties to this category.
+                  </Typography>
+                }
+                arrow
+                componentsProps={{
+                  tooltip: {
+                    sx: {
+                      backgroundColor: "rgba(255, 255, 255, 0.9)",
+                      color: "#000000",
+                      border: "1px solid rgba(0, 0, 0, 0.2)",
+                      boxShadow: "0 2px 8px rgba(0, 0, 0, 0.2)",
+                    },
+                  },
+                  arrow: {
+                    sx: {
+                      color: "rgba(255, 255, 255, 0.9)",
+                    },
+                  },
+                }}
+              >
+                <InfoIcon className="category-info-header-info-icon" />
+              </MuiTool>
+              <Button
+                size="small"
+                startIcon={<BookmarkBorderIcon />}
+                variant="outlined"
+                onClick={handleBookmarkCurrent}
+                className="category-info-bookmark-btn"
               >
                 Bookmark
               </Button>
+            </div>
           </div>
           {isDeletedNode && (
             <Alert
@@ -1377,38 +1420,41 @@ export default function Tableclick({ cmid, database, tabval }) {
               )}
             </Alert>
           )}
-          <ul
-            id="content"
-            style={{
-              color: "black",
-              fontSize: "large",
-            }}
-          >
-            {rev && Object.keys(rev).length > 0 ? (
-              Object.entries(rev).map(([key, value]) =>
-                value !== "" && value !== null && value !== undefined && value !== 0 ? (
-                  <li key={key}>
-                    <strong>{key}:</strong>{" "}
-                    {key === "Dataset Location" ? (
-                      <a href={value} target="_blank" rel="noopener noreferrer">
-                        {value}
-                      </a>
-                    ) : key === "Merged_into_CMID" ? (
-                      <a href={`/${database.toLowerCase()}/${value}`}>
-                        {value}
-                      </a>
-                    ) : (
-                      <Box component="span" sx={{ wordBreak: "break-word" }}>
-                        {value}
+          <Box id="content" className="category-info-grid">
+            {categoryInfoEntries.length > 0 ? (
+              <Box className="category-info-grid-inner">
+                {categoryInfoEntries.map(([key, value]) => (
+                  <Box key={key} className="category-info-card">
+                    <Box component="span" className="category-info-inline">
+                      <Box component="span" className="category-info-key">
+                        {key}
                       </Box>
-                    )}
-                  </li>
-                ) : null
-              )
+                      <Box component="span" className="category-info-value">
+                        {key === "Dataset Location" ? (
+                          <a
+                            className="category-info-link"
+                            href={value}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            {value}
+                          </a>
+                        ) : key === "Merged_into_CMID" ? (
+                          <a className="category-info-link" href={`/${database.toLowerCase()}/${value}`}>
+                            {value}
+                          </a>
+                        ) : (
+                          value
+                        )}
+                      </Box>
+                    </Box>
+                  </Box>
+                ))}
+              </Box>
             ) : (
-              <p>No data</p>
+              <Typography sx={{ color: "black", fontSize: "1rem", p: 1 }}>No data</Typography>
             )}
-          </ul>
+          </Box>
           {(cmid.startsWith("SD") ||
             cmid.startsWith("AD")) && (
               <Box
@@ -1543,36 +1589,6 @@ export default function Tableclick({ cmid, database, tabval }) {
                 />
               </Box>
             )}
-          <Button
-            variant="outlined"
-            onClick={handleOpenLogs}
-            sx={{
-              marginLeft: "auto",
-              marginRight: 2,
-              marginBottom: 2,
-              fontSize: 12,
-              color: "#000",
-              borderColor: "#00BFFF",
-              background:
-                "linear-gradient(135deg, rgba(0,191,255,0.1), rgba(255,255,255,0.05))",
-              backdropFilter: "blur(4px)",
-              boxShadow: "0 0 8px rgba(0,191,255,0.5)",
-              textTransform: "uppercase",
-              fontWeight: 600,
-              letterSpacing: 1,
-              transition: "0.3s ease-in-out",
-              // Ensure button doesn't shrink when text is replaced by spinner
-              minWidth: "140px",
-              "&:hover": {
-                backgroundColor: "#00BFFF",
-                color: "#000",
-                boxShadow: "0 0 12px rgba(0,191,255,0.8)",
-                borderColor: "#00BFFF",
-              },
-            }}
-          >
-            View Logs
-          </Button>
         </Box>
         <Box
           sx={{
