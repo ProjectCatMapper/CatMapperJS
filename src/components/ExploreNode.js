@@ -1218,7 +1218,6 @@ export default function Tableclick({ cmid, database, tabval }) {
           displayKey: String(entry.key).replace(/_/g, " "),
           normalized: entry.normalized,
           row: 1,
-          emphasize: entry.normalized === "cmid" || entry.normalized === "cmname",
         }));
 
       const locationEntries = filteredEntries.filter(
@@ -1249,7 +1248,6 @@ export default function Tableclick({ cmid, database, tabval }) {
           displayKey: "LOCATION",
           normalized: "location",
           row: 2,
-          emphasize: false,
         }]
         : [];
 
@@ -1265,7 +1263,6 @@ export default function Tableclick({ cmid, database, tabval }) {
             displayKey: String(found.key).replace(/_/g, " "),
             normalized: found.normalized,
             row: 4,
-            emphasize: false,
           };
         })
         .filter(Boolean);
@@ -1281,7 +1278,6 @@ export default function Tableclick({ cmid, database, tabval }) {
         displayKey: String(entry.key).replace(/_/g, " "),
         normalized: entry.normalized,
         row: 3,
-        emphasize: false,
       }));
 
       return [...row1, ...row2, ...row3, ...row4];
@@ -1568,7 +1564,7 @@ export default function Tableclick({ cmid, database, tabval }) {
                         return (
                           <Box
                             key={`${key}-${entry.row}`}
-                            className={`category-info-card${entry.emphasize ? " category-info-card-emphasis" : ""}`}
+                            className="category-info-card"
                           >
                             <Box component="span" className="category-info-inline">
                               <Box component="span" className="category-info-key">
