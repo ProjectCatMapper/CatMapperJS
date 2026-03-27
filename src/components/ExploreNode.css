@@ -115,6 +115,15 @@ h1,h4,p,a{
 .category-info-row-2 .category-info-card {
   width: 100%;
   max-width: none;
+  min-height: 72px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  align-items: flex-start;
+}
+
+.category-info-row-2 .category-info-value {
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 .category-info-card {
