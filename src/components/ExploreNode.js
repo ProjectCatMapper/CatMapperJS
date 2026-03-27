@@ -424,11 +424,14 @@ export default function Tableclick({ cmid, database, tabval }) {
         ]);
         if (!isLatestRequest()) return;
         // --- Process Category Data ---
-        setUsert(categoryData.samples);
-        setCategories(categoryData.categories);
+        const safeSamples = Array.isArray(categoryData?.samples) ? categoryData.samples : [];
+        const safeCategories = Array.isArray(categoryData?.categories) ? categoryData.categories : [];
+        const safeChildCategories = Array.isArray(categoryData?.childcategories) ? categoryData.childcategories : [];
+        setUsert(safeSamples);
+        setCategories(safeCategories);
 
         // Safety check for child categories
-        const children = categoryData.childcategories || [];
+        const children = safeChildCategories;
         setChildCategories(children);
 
         setfdrop(categoryData.relnames);
@@ -1135,7 +1138,7 @@ export default function Tableclick({ cmid, database, tabval }) {
     if (value !== requestedTab) {
       setValue(requestedTab);
     }
-  }, [cmid, requestedTab, value]);
+  }, [cmid, requestedTab]);
 
   useEffect(() => {
     let ordered = orderOfProperties.filter((prop) => fdrop.includes(prop));
@@ -1172,7 +1175,16 @@ export default function Tableclick({ cmid, database, tabval }) {
   const hasCategoryMapTab = hasPolygonData || (Array.isArray(points) && points.length > 0);
   const hasDatasetCategoriesTab = (Array.isArray(categories) && categories.length > 0) || (Array.isArray(childcategories) && childcategories.length > 0);
   const hasCategoryDatasetsTab = Array.isArray(usert) && usert.length > 0;
-  const hasCategoryTimespanTab = !isDatasetLike;
+  const hasCategoryTimespanData = Array.isArray(usert) && usert.some((entry) => {
+    if (!entry || typeof entry !== "object") return false;
+    const candidates = [entry.rStart, entry.rEnd, entry.yStart, entry.yEnd];
+    return candidates.some((value) => {
+      if (value === null || value === undefined) return false;
+      const text = String(value).trim().toLowerCase();
+      return text !== "" && text !== "null";
+    });
+  });
+  const hasCategoryTimespanTab = !isDatasetLike && hasCategoryTimespanData;
   const hasCategoryCategoriesTab = Array.isArray(categories) && categories.length > 0;
   const hasMergingTemplateTabData = Boolean(
     mergeTemplateSummary &&
@@ -1856,7 +1868,7 @@ export default function Tableclick({ cmid, database, tabval }) {
               )}
               {hasCategoryTimespanTab && (
                 <CustomTabPanel value={value} index={"timespan"}>
-                  {usert ? (<TimespanTable data={usert} />) : (<p> No Timespan available for this category.</p>)}
+                  <TimespanTable data={usert} />
                 </CustomTabPanel>
               )}
               {hasCategoryDatasetsTab && (
