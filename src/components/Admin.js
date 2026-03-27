@@ -80,6 +80,20 @@ const Admin = ({ database }) => {
   );
   const [users, setUsers] = useState([]);
   const [selectedUserIds, setSelectedUserIds] = useState([]);
+  const [userLookupQuery, setUserLookupQuery] = useState("");
+  const [userLookupResults, setUserLookupResults] = useState([]);
+  const [selectedLookupUserId, setSelectedLookupUserId] = useState("");
+  const [userEditForm, setUserEditForm] = useState({
+    userid: "",
+    first: "",
+    last: "",
+    username: "",
+    email: "",
+    database: "",
+    intendedUse: "",
+    access: "",
+    role: "",
+  });
   const [CMIDText, setCMIDText] = useState('');
   const [grouplabels, setgrouplabels] = useState(["NA"]);
   const [loading, setLoading] = useState(false);
@@ -132,7 +146,7 @@ const Admin = ({ database }) => {
     },
     {
       label: "User Options",
-      keys: ["create new user", "change user password", "approve new users"],
+      keys: ["lookup/edit users", "create new user", "change user password", "approve new users"],
     },
     {
       label: "Database Checks",
@@ -425,6 +439,164 @@ const Admin = ({ database }) => {
       const message = error?.message || "Unable to approve selected users.";
       alert(message);
       console.error("Error:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const userLookupColumns = [
+    { field: "userid", headerName: "User ID", width: 110 },
+    { field: "username", headerName: "Username", width: 150 },
+    { field: "email", headerName: "Email", width: 220 },
+    { field: "name", headerName: "Name", width: 180 },
+    { field: "database", headerName: "Database", width: 160 },
+    { field: "access", headerName: "Access", width: 120 },
+    { field: "role", headerName: "Role", width: 100 },
+    { field: "totalActions", headerName: "Total Updates", width: 130 },
+    { field: "createdNodes", headerName: "Created Nodes", width: 130 },
+    { field: "updatedNodes", headerName: "Updated Nodes", width: 130 },
+    { field: "updatedRelationships", headerName: "Updated Rels", width: 130 },
+    { field: "deletedObjects", headerName: "Deleted", width: 110 },
+  ];
+
+  const hydrateUserEditForm = (row) => {
+    if (!row) return;
+    setSelectedLookupUserId(String(row.userid || ""));
+    setUserEditForm({
+      userid: String(row.userid || ""),
+      first: row.first || "",
+      last: row.last || "",
+      username: row.username || "",
+      email: row.email || "",
+      database: row.database || "",
+      intendedUse: row.intendedUse || "",
+      access: row.access || "",
+      role: row.role || "",
+    });
+  };
+
+  const lookupUsers = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/admin/users/lookup`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(cred ? { Authorization: `Bearer ${cred}` } : {}),
+        },
+        body: JSON.stringify({
+          query: userLookupQuery,
+        }),
+      });
+
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result?.error || "Unable to lookup users.");
+      }
+
+      const rows = (result?.users || []).map((row) => {
+        const stats = row?.updateStats?.total || {};
+        return {
+          ...row,
+          name: `${row.first || ""} ${row.last || ""}`.trim(),
+          totalActions: stats.totalActions || 0,
+          createdNodes: stats.createdNodes || 0,
+          updatedNodes: stats.updatedNodes || 0,
+          updatedRelationships: stats.updatedRelationships || 0,
+          deletedObjects: stats.deletedObjects || 0,
+        };
+      });
+      setUserLookupResults(rows);
+      if (rows.length === 0) {
+        setSelectedLookupUserId("");
+        setUserEditForm({
+          userid: "",
+          first: "",
+          last: "",
+          username: "",
+          email: "",
+          database: "",
+          intendedUse: "",
+          access: "",
+          role: "",
+        });
+      }
+    } catch (error) {
+      alert(error?.message || "Unable to lookup users.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateUserEditField = (event) => {
+    const { name, value } = event.target;
+    setUserEditForm((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const saveUserEdit = async () => {
+    try {
+      if (!userEditForm.userid) {
+        alert("Select a user first.");
+        return;
+      }
+      if (!userEditForm.username.trim() || !userEditForm.email.trim()) {
+        alert("Username and email are required.");
+        return;
+      }
+      setLoading(true);
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/admin/users/update`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(cred ? { Authorization: `Bearer ${cred}` } : {}),
+        },
+        body: JSON.stringify({
+          userid: userEditForm.userid,
+          updates: {
+            first: userEditForm.first,
+            last: userEditForm.last,
+            username: userEditForm.username,
+            email: userEditForm.email,
+            database: userEditForm.database,
+            intendedUse: userEditForm.intendedUse,
+            access: userEditForm.access,
+            role: userEditForm.role,
+          },
+        }),
+      });
+
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result?.error || "Unable to update user.");
+      }
+
+      const updated = result?.user;
+      if (updated) {
+        setUserLookupResults((prev) =>
+          prev.map((row) => {
+            if (String(row.userid) !== String(updated.userid)) return row;
+            const stats = updated?.updateStats?.total || row.updateStats?.total || {};
+            return {
+              ...row,
+              ...updated,
+              name: `${updated.first || ""} ${updated.last || ""}`.trim(),
+              totalActions: stats.totalActions || 0,
+              createdNodes: stats.createdNodes || 0,
+              updatedNodes: stats.updatedNodes || 0,
+              updatedRelationships: stats.updatedRelationships || 0,
+              deletedObjects: stats.deletedObjects || 0,
+            };
+          })
+        );
+        hydrateUserEditForm(updated);
+      }
+
+      alert(result?.message || "User updated.");
+    } catch (error) {
+      alert(error?.message || "Unable to update user.");
     } finally {
       setLoading(false);
     }
@@ -818,6 +990,11 @@ const Admin = ({ database }) => {
       user: user || "",
     }));
   }, [user]);
+
+  const selectedLookupUser = userLookupResults.find(
+    (row) => String(row.userid) === String(selectedLookupUserId)
+  );
+  const selectedLookupStats = selectedLookupUser?.updateStats?.total || {};
 
 
   return (
@@ -1782,6 +1959,118 @@ const Admin = ({ database }) => {
  </Box>
 )
 } */}
+
+        {firstDropdownValue === "lookup/edit users" && (
+          <Box sx={{ ml: 1, maxWidth: 1200 }}>
+            <Typography variant="body1" sx={{ mb: 1 }}>
+              Search by user ID, username, email, first name, or last name.
+            </Typography>
+            <Box sx={{ display: "flex", gap: 1, alignItems: "center", mb: 2, flexWrap: "wrap" }}>
+              <TextField
+                value={userLookupQuery}
+                onChange={(e) => setUserLookupQuery(e.target.value)}
+                label="Lookup"
+                size="small"
+                sx={{ width: 360 }}
+              />
+              <Button
+                variant="contained"
+                sx={{
+                  backgroundColor: "black",
+                  color: "white",
+                  "&:hover": {
+                    backgroundColor: "green",
+                  },
+                }}
+                onClick={lookupUsers}
+              >
+                Search Users
+              </Button>
+            </Box>
+
+            {userLookupResults.length > 0 && (
+              <Box sx={{ width: "100%", mb: 2 }}>
+                <DataGrid
+                  sx={{ height: 320 }}
+                  rows={userLookupResults}
+                  columns={userLookupColumns}
+                  getRowId={(row) => row.userid}
+                  pageSize={5}
+                  rowsPerPageOptions={[5, 10, 20]}
+                  checkboxSelection={false}
+                  disableRowSelectionOnClick={false}
+                  rowSelectionModel={selectedLookupUserId ? [selectedLookupUserId] : []}
+                  onRowSelectionModelChange={(newSelection) => {
+                    const selected = Array.isArray(newSelection) ? newSelection[0] : null;
+                    if (!selected) return;
+                    const row = userLookupResults.find((item) => String(item.userid) === String(selected));
+                    if (row) {
+                      hydrateUserEditForm(row);
+                    }
+                  }}
+                />
+              </Box>
+            )}
+
+            {selectedLookupUser && (
+              <Box sx={{ border: "1px solid #d9d9d9", borderRadius: 1, p: 2, mb: 2, backgroundColor: "#fafafa" }}>
+                <Typography variant="h6" sx={{ mb: 1 }}>
+                  Edit User {selectedLookupUser.userid}
+                </Typography>
+                <Typography variant="body2" sx={{ mb: 1 }}>
+                  Update stats:
+                  {" "}Total {selectedLookupStats.totalActions || 0}
+                  {" | "}Created Nodes {selectedLookupStats.createdNodes || 0}
+                  {" | "}Updated Nodes {selectedLookupStats.updatedNodes || 0}
+                  {" | "}Updated Relationships {selectedLookupStats.updatedRelationships || 0}
+                  {" | "}Deleted {selectedLookupStats.deletedObjects || 0}
+                </Typography>
+                <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: 1.5 }}>
+                  <TextField label="First Name" name="first" value={userEditForm.first} onChange={updateUserEditField} size="small" />
+                  <TextField label="Last Name" name="last" value={userEditForm.last} onChange={updateUserEditField} size="small" />
+                  <TextField label="Username" name="username" value={userEditForm.username} onChange={updateUserEditField} size="small" />
+                  <TextField label="Email" name="email" value={userEditForm.email} onChange={updateUserEditField} size="small" />
+                  <TextField label="Database (e.g., sociomap|archamap)" name="database" value={userEditForm.database} onChange={updateUserEditField} size="small" />
+                  <TextField label="Intended Use" name="intendedUse" value={userEditForm.intendedUse} onChange={updateUserEditField} size="small" />
+                  <Select
+                    name="access"
+                    value={userEditForm.access}
+                    onChange={updateUserEditField}
+                    size="small"
+                  >
+                    <MenuItem value="enabled">enabled</MenuItem>
+                    <MenuItem value="pending">pending</MenuItem>
+                    <MenuItem value="disabled">disabled</MenuItem>
+                  </Select>
+                  <Select
+                    name="role"
+                    value={userEditForm.role}
+                    onChange={updateUserEditField}
+                    size="small"
+                  >
+                    <MenuItem value="user">user</MenuItem>
+                    <MenuItem value="admin">admin</MenuItem>
+                  </Select>
+                </Box>
+                <Box sx={{ mt: 2 }}>
+                  <Button
+                    variant="contained"
+                    sx={{
+                      backgroundColor: "black",
+                      color: "white",
+                      "&:hover": {
+                        backgroundColor: "green",
+                      },
+                    }}
+                    onClick={saveUserEdit}
+                  >
+                    Save User Changes
+                  </Button>
+                </Box>
+              </Box>
+            )}
+          </Box>
+        )}
 
         {firstDropdownValue === "create new user" && (
           <Box sx={{ ml: 1 }}>
