@@ -61,7 +61,7 @@ export default function ClickTable(props) {
       renderCell: (params1) => <a id='viewlink' href={params1.row.link2} target="_blank" rel="noopener noreferrer">{params1.row.source}</a>,
     },
     {
-      field: 'key',
+      field: 'datasetKey',
       headerName: 'Key',
       flex: isCompactLayout ? 0.85 : 1.0,
       minWidth: isCompactLayout ? 140 : 180,
@@ -90,7 +90,7 @@ export default function ClickTable(props) {
     },
   ]), [isCompactLayout]);
   const [rows, setRows] = useState([]);
-  const [columnVisibilityModel, setColumnVisibilityModel] = useState({ key: false });
+  const [columnVisibilityModel, setColumnVisibilityModel] = useState({ datasetKey: false });
 
   useEffect(() => {
     setRows(props.usert.map((value, key) => {
@@ -114,7 +114,7 @@ export default function ClickTable(props) {
         popest: value['Population est.'],
         samplesize: value['Sample size'],
         source: value.Source,
-        key: value.Key,
+        datasetKey: value.Key ?? value.key ?? '',
         version: value.Version,
         link: value.Link,
         link2: value.link2,
@@ -139,7 +139,7 @@ export default function ClickTable(props) {
   }, [props.usert])
 
   const nonEmptyColumns = useMemo(() => ccolumns.filter((col) =>
-    col.field === 'key' || rows.some((row) => (row[col.field] !== null) && row[col.field] !== undefined && row[col.field] !== '' && (row[col.field] !== "null"))
+    col.field === 'datasetKey' || rows.some((row) => (row[col.field] !== null) && row[col.field] !== undefined && row[col.field] !== '' && (row[col.field] !== "null"))
   ), [ccolumns, rows]);
 
 
