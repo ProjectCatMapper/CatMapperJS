@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Circle, Tooltip } from 'react-leaflet';
 import map1 from '../data/m1.csv';
+import { getPointLabel, parseCoord } from './leafletIcons';
 import './MapViews.css';
 
 const parseCsvData = (csvString) => {
@@ -31,21 +32,32 @@ const Sociomap_1 = () => {
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
       />
       {data.map((point, index) => (
-        <Circle
-          key={index}
-          center={[parseFloat(point.lat), parseFloat(point.long)]}
-          radius={point.count * 1000} // Adjust the multiplier as needed
-          fillColor="red"
-          color="red"
-          fillOpacity={0.5}
-        >
-          <Tooltip direction="top" offset={[0, -20]} opacity={1}>
-            <div>
-              <strong>{point.country}</strong><br />
-              Count: {point.count}
-            </div>
-          </Tooltip>
-        </Circle>
+        (() => {
+          const lat = parseCoord(point.lat);
+          const lng = parseCoord(point.long);
+          const count = Number.parseFloat(point.count);
+          if (lat === null || lng === null || !Number.isFinite(count)) {
+            return null;
+          }
+          const label = getPointLabel(point);
+          return (
+            <Circle
+              key={`${label}-${index}`}
+              center={[lat, lng]}
+              radius={count * 1000}
+              fillColor="red"
+              color="red"
+              fillOpacity={0.5}
+            >
+              <Tooltip direction="top" offset={[0, -20]} opacity={1}>
+                <div>
+                  <strong>{label}</strong><br />
+                  Count: {count}
+                </div>
+              </Tooltip>
+            </Circle>
+          );
+        })()
       ))}
     </MapContainer>
   );
