@@ -792,7 +792,7 @@ const Propose_Merge = ({ database }) => {
           <FormControlLabel
             value="CrossDomain"
             control={<Radio />}
-            label="Cross-domain: Match across domains using CONTAINS plus the discovered *_OF relationship"
+            label="Cross-domain (experimental): Match across domains using CONTAINS plus the discovered *_OF relationship"
           />
         </RadioGroup>
       </FormControl>

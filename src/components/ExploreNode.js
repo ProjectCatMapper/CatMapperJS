@@ -1,11 +1,12 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 
 import { useLocation, useNavigate } from "react-router-dom";
 import CircularProgress from "@mui/material/CircularProgress";
 import {
   Box,
   Button,
+  IconButton,
   Checkbox,
   Dialog,
   DialogActions,
@@ -34,6 +35,7 @@ import { styled } from '@mui/material/styles';
 import InputBase from '@mui/material/InputBase';
 import InfoIcon from "@mui/icons-material/Info";
 import BookmarkBorderIcon from "@mui/icons-material/BookmarkBorder";
+import VisibilityIcon from "@mui/icons-material/Visibility";
 
 import PropTypes from "prop-types";
 import { downloadJsonAsXlsx } from "../utils/excelExport";
@@ -124,6 +126,8 @@ const BootstrapInput = styled(InputBase)(({ theme }) => ({
   },
 }));
 
+const CATEGORY_INFO_PREVIEW_LIMIT = 60;
+
 export default function Tableclick({ cmid, database, tabval }) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -199,6 +203,7 @@ export default function Tableclick({ cmid, database, tabval }) {
   const [open, setOpen] = useState(false);
   const [bookmarkNotice, setBookmarkNotice] = useState({ open: false, severity: "success", message: "" });
   const [redirectPrompt, setRedirectPrompt] = useState({ open: false, from: "", to: "", database: "" });
+  const [categoryInfoDialog, setCategoryInfoDialog] = useState({ open: false, key: "", value: "" });
   const historyLoggedRef = useRef("");
   const [mergeTemplateSummary, setMergeTemplateSummary] = useState(null);
   const [loadingMergeTemplateSummary, setLoadingMergeTemplateSummary] = useState(false);
@@ -1167,6 +1172,144 @@ export default function Tableclick({ cmid, database, tabval }) {
   const isDeletedNode = domainLabels.includes("DELETED");
   const deletedRedirectTarget = typeof rev?.Merged_into_CMID === "string" ? rev.Merged_into_CMID.trim() : "";
   const hasDeletedRedirect = Boolean(deletedRedirectTarget && deletedRedirectTarget !== cmid);
+  const categoryInfoEntries = useMemo(
+    () => {
+      if (!rev || typeof rev !== "object") return [];
+
+      const normalizeKey = (key) =>
+        String(key || "")
+          .toLowerCase()
+          .replace(/[\s_]/g, "");
+      const isNonEmpty = (value) => value !== "" && value !== null && value !== undefined && value !== 0;
+      const isCitationKey = (key) => {
+        const normalized = normalizeKey(key);
+        return normalized === "citation" || normalized === "datasetcitation";
+      };
+
+      const filteredEntries = Object.entries(rev)
+        .filter(([, value]) => isNonEmpty(value))
+        .map(([key, value], index) => ({
+          key,
+          value,
+          index,
+          normalized: normalizeKey(key),
+        }));
+
+      const used = new Set();
+      const row1Order = ["cmname", "cmid", "domains"];
+      const row4Order = ["directchildren", "alldescendants", "directparents"];
+      const row4Set = new Set(row4Order);
+
+      const pickByNormalized = (normalizedKey) => {
+        const found = filteredEntries.find(
+          (entry) => entry.normalized === normalizedKey && !used.has(entry.index)
+        );
+        if (!found) return null;
+        used.add(found.index);
+        return found;
+      };
+
+      const row1 = row1Order
+        .map((normalizedKey) => pickByNormalized(normalizedKey))
+        .filter(Boolean)
+        .map((entry) => ({
+          key: entry.key,
+          value: entry.value,
+          displayKey: String(entry.key).replace(/_/g, " "),
+          normalized: entry.normalized,
+          row: 1,
+        }));
+
+      const locationEntries = filteredEntries.filter(
+        (entry) =>
+          !used.has(entry.index) &&
+          entry.normalized.includes("location")
+      );
+      locationEntries.forEach((entry) => used.add(entry.index));
+      const locationValues = locationEntries
+        .map((entry) => entry.value)
+        .filter((value) => isNonEmpty(value))
+        .map((value) => {
+          if (Array.isArray(value)) return value.join(", ");
+          if (typeof value === "object") {
+            try {
+              return JSON.stringify(value);
+            } catch (_error) {
+              return String(value);
+            }
+          }
+          return String(value);
+        })
+        .filter((value) => value.trim() !== "");
+      const row2 = locationValues.length > 0
+        ? [{
+          key: "LOCATION",
+          value: locationValues.join(" | "),
+          displayKey: "LOCATION",
+          normalized: "location",
+          row: 2,
+        }]
+        : [];
+
+      const remainingEntries = filteredEntries.filter((entry) => !used.has(entry.index));
+      const row4 = row4Order
+        .map((normalizedKey) => {
+          const found = remainingEntries.find((entry) => entry.normalized === normalizedKey);
+          if (!found) return null;
+          used.add(found.index);
+          return {
+            key: found.key,
+            value: found.value,
+            displayKey: String(found.key).replace(/_/g, " "),
+            normalized: found.normalized,
+            row: 4,
+          };
+        })
+        .filter(Boolean);
+
+      const row3Source = filteredEntries.filter(
+        (entry) => !used.has(entry.index) && !row4Set.has(entry.normalized)
+      );
+      const nonCitation = row3Source.filter((entry) => !isCitationKey(entry.key));
+      const citation = row3Source.filter((entry) => isCitationKey(entry.key));
+      const row3 = [...nonCitation, ...citation].map((entry) => ({
+        key: entry.key,
+        value: entry.value,
+        displayKey: String(entry.key).replace(/_/g, " "),
+        normalized: entry.normalized,
+        row: 3,
+      }));
+
+      return [...row1, ...row2, ...row3, ...row4];
+    },
+    [rev]
+  );
+  const categoryInfoByRow = useMemo(() => ({
+    1: categoryInfoEntries.filter((entry) => entry.row === 1),
+    2: categoryInfoEntries.filter((entry) => entry.row === 2),
+    3: categoryInfoEntries.filter((entry) => entry.row === 3),
+    4: categoryInfoEntries.filter((entry) => entry.row === 4),
+  }), [categoryInfoEntries]);
+  const getCategoryInfoPlainValue = useCallback((rawValue) => {
+    if (rawValue === null || rawValue === undefined) return "";
+    if (Array.isArray(rawValue)) return rawValue.join(", ");
+    if (typeof rawValue === "object") {
+      try {
+        return JSON.stringify(rawValue);
+      } catch (_error) {
+        return String(rawValue);
+      }
+    }
+    return String(rawValue);
+  }, []);
+  const getCategoryInfoPreview = useCallback((rawValue, limit = CATEGORY_INFO_PREVIEW_LIMIT) => {
+    const plainValue = getCategoryInfoPlainValue(rawValue);
+    if (plainValue.length <= limit) return { text: plainValue, truncated: false };
+    return { text: `${plainValue.slice(0, limit).trimEnd()} . . .`, truncated: true };
+  }, [getCategoryInfoPlainValue]);
+  const closeCategoryInfoDialog = useCallback(() => {
+    setCategoryInfoDialog({ open: false, key: "", value: "" });
+  }, []);
   const isStackNode = domainLabels.includes("STACK");
   const isMergingTemplateNode = domainLabels.includes("MERGING");
   const isDatasetLike = cmid.startsWith("SD") || cmid.startsWith("AD") || isStackNode || isMergingTemplateNode || domainLabels.includes("DATASET");
@@ -1307,38 +1450,61 @@ export default function Tableclick({ cmid, database, tabval }) {
             display: "grid",
             gridTemplateRows: "auto auto auto",
             width: "100%",
+            position: "relative",
             backgroundImage: `linear-gradient(to bottom right,#555555, #cccccc)`,
             backgroundSize: "cover",
           }}
         >
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "8px", // Adds spacing between the heading and the icon
-            }}
-          >
-            <h2 style={{ color: "black", margin: 0 }}>{isDeletedNode ? "DELETED Node Info" : "Category Info"}</h2>
-            <MuiTool
-              title={
-                <Typography sx={{ fontSize: "1rem", fontWeight: "bold" }}>
-                  Here, you can toggle between viewing sample info, maps, and
-                  the network of contextual ties to this category.
-                </Typography>
-              }
-              arrow
-            >
-              <InfoIcon style={{ color: "blue", cursor: "pointer" }} />
-            </MuiTool>
+          <Box className="view-logs-anchor">
             <Button
-              size="small"
-              startIcon={<BookmarkBorderIcon />}
               variant="outlined"
-              onClick={handleBookmarkCurrent}
-              sx={{ ml: 1, backgroundColor: "white" }}
+              onClick={handleOpenLogs}
+              className="view-logs-btn"
+            >
+              View Logs
+            </Button>
+          </Box>
+          <div className="category-info-header-row">
+            <div className="category-info-header-pill">
+              <h2 className="category-info-header-title">
+                {isDeletedNode ? "DELETED Node Info" : "Category Info"}
+              </h2>
+              <MuiTool
+                title={
+                  <Typography sx={{ fontSize: "1rem", fontWeight: "bold" }}>
+                    Here, you can toggle between viewing sample info, maps, and
+                    the network of contextual ties to this category.
+                  </Typography>
+                }
+                arrow
+                componentsProps={{
+                  tooltip: {
+                    sx: {
+                      backgroundColor: "rgba(255, 255, 255, 0.9)",
+                      color: "#000000",
+                      border: "1px solid rgba(0, 0, 0, 0.2)",
+                      boxShadow: "0 2px 8px rgba(0, 0, 0, 0.2)",
+                    },
+                  },
+                  arrow: {
+                    sx: {
+                      color: "rgba(255, 255, 255, 0.9)",
+                    },
+                  },
+                }}
+              >
+                <InfoIcon className="category-info-header-info-icon" />
+              </MuiTool>
+              <Button
+                size="small"
+                startIcon={<BookmarkBorderIcon />}
+                variant="outlined"
+                onClick={handleBookmarkCurrent}
+                className="category-info-bookmark-btn"
               >
                 Bookmark
               </Button>
+            </div>
           </div>
           {isDeletedNode && (
             <Alert
@@ -1377,38 +1543,84 @@ export default function Tableclick({ cmid, database, tabval }) {
               )}
             </Alert>
           )}
-          <ul
-            id="content"
-            style={{
-              color: "black",
-              fontSize: "large",
-            }}
-          >
-            {rev && Object.keys(rev).length > 0 ? (
-              Object.entries(rev).map(([key, value]) =>
-                value !== "" && value !== null && value !== undefined && value !== 0 ? (
-                  <li key={key}>
-                    <strong>{key}:</strong>{" "}
-                    {key === "Dataset Location" ? (
-                      <a href={value} target="_blank" rel="noopener noreferrer">
-                        {value}
-                      </a>
-                    ) : key === "Merged_into_CMID" ? (
-                      <a href={`/${database.toLowerCase()}/${value}`}>
-                        {value}
-                      </a>
-                    ) : (
-                      <Box component="span" sx={{ wordBreak: "break-word" }}>
-                        {value}
-                      </Box>
-                    )}
-                  </li>
-                ) : null
-              )
+          <Box id="content" className="category-info-grid">
+            {categoryInfoEntries.length > 0 ? (
+              <Box className="category-info-grid-inner">
+                {[1, 2, 3, 4].map((rowNum) => {
+                  const rowEntries = categoryInfoByRow[rowNum] || [];
+                  if (rowEntries.length === 0) return null;
+
+                  return (
+                    <Box
+                      key={`category-info-row-${rowNum}`}
+                      className={`category-info-row category-info-row-${rowNum}`}
+                    >
+                      {rowEntries.map((entry) => {
+                        const key = entry.key;
+                        const value = entry.value;
+                        const preview = entry.row === 2
+                          ? { text: getCategoryInfoPlainValue(value), truncated: false }
+                          : getCategoryInfoPreview(value);
+                        const showViewButton = preview.truncated;
+
+                        return (
+                          <Box
+                            key={`${key}-${entry.row}`}
+                            className="category-info-card"
+                          >
+                            <Box component="span" className="category-info-inline">
+                              <Box component="span" className="category-info-key">
+                                {entry.displayKey}
+                              </Box>
+                              <Box
+                                component="span"
+                                className="category-info-value"
+                              >
+                                {key === "Dataset Location" ? (
+                                  <a
+                                    className="category-info-link"
+                                    href={value}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                  >
+                                    {preview.text}
+                                  </a>
+                                ) : key === "Merged_into_CMID" ? (
+                                  <a className="category-info-link" href={`/${database.toLowerCase()}/${value}`}>
+                                    {preview.text}
+                                  </a>
+                                ) : (
+                                  preview.text
+                                )}
+                              </Box>
+                              {showViewButton && (
+                                <IconButton
+                                  size="small"
+                                  className="category-info-view-more-icon-btn"
+                                  onClick={() =>
+                                    setCategoryInfoDialog({
+                                      open: true,
+                                      key: entry.displayKey,
+                                      value: getCategoryInfoPlainValue(value),
+                                    })
+                                  }
+                                  aria-label={`View full ${entry.displayKey}`}
+                                >
+                                  <VisibilityIcon sx={{ fontSize: 18 }} />
+                                </IconButton>
+                              )}
+                            </Box>
+                          </Box>
+                        );
+                      })}
+                    </Box>
+                  );
+                })}
+              </Box>
             ) : (
-              <p>No data</p>
+              <Typography sx={{ color: "black", fontSize: "1rem", p: 1 }}>No data</Typography>
             )}
-          </ul>
+          </Box>
           {(cmid.startsWith("SD") ||
             cmid.startsWith("AD")) && (
               <Box
@@ -1543,36 +1755,6 @@ export default function Tableclick({ cmid, database, tabval }) {
                 />
               </Box>
             )}
-          <Button
-            variant="outlined"
-            onClick={handleOpenLogs}
-            sx={{
-              marginLeft: "auto",
-              marginRight: 2,
-              marginBottom: 2,
-              fontSize: 12,
-              color: "#000",
-              borderColor: "#00BFFF",
-              background:
-                "linear-gradient(135deg, rgba(0,191,255,0.1), rgba(255,255,255,0.05))",
-              backdropFilter: "blur(4px)",
-              boxShadow: "0 0 8px rgba(0,191,255,0.5)",
-              textTransform: "uppercase",
-              fontWeight: 600,
-              letterSpacing: 1,
-              transition: "0.3s ease-in-out",
-              // Ensure button doesn't shrink when text is replaced by spinner
-              minWidth: "140px",
-              "&:hover": {
-                backgroundColor: "#00BFFF",
-                color: "#000",
-                boxShadow: "0 0 12px rgba(0,191,255,0.8)",
-                borderColor: "#00BFFF",
-              },
-            }}
-          >
-            View Logs
-          </Button>
         </Box>
         <Box
           sx={{
@@ -1917,6 +2099,17 @@ export default function Tableclick({ cmid, database, tabval }) {
             {bookmarkNotice.message}
           </Alert>
         </Snackbar>
+        <Dialog open={categoryInfoDialog.open} onClose={closeCategoryInfoDialog} maxWidth="sm" fullWidth>
+          <DialogTitle>{categoryInfoDialog.key}</DialogTitle>
+          <DialogContent dividers>
+            <Typography sx={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
+              {categoryInfoDialog.value}
+            </Typography>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={closeCategoryInfoDialog}>Close</Button>
+          </DialogActions>
+        </Dialog>
         <Dialog open={redirectPrompt.open} onClose={handleCloseRedirectPrompt}>
           <DialogTitle>Deleted Node Redirected</DialogTitle>
           <DialogContent>
