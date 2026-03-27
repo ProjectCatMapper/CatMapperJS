@@ -1558,7 +1558,9 @@ export default function Tableclick({ cmid, database, tabval }) {
                       {rowEntries.map((entry) => {
                         const key = entry.key;
                         const value = entry.value;
-                        const preview = getCategoryInfoPreview(value);
+                        const preview = entry.row === 2
+                          ? { text: getCategoryInfoPlainValue(value), truncated: false }
+                          : getCategoryInfoPreview(value);
                         const showViewButton = preview.truncated;
 
                         return (
