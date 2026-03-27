@@ -88,14 +88,14 @@ h1,h4,p,a{
   overflow-x: auto;
   overflow-y: visible;
   margin: 0;
-  padding: 5px 0 4px;
+  padding: 3px 0 2px;
 }
 
 .category-info-grid-inner {
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  gap: 6px;
+  gap: 3px;
   width: fit-content;
   max-width: 100%;
   min-width: 0;
@@ -105,7 +105,7 @@ h1,h4,p,a{
   display: flex;
   flex-wrap: wrap;
   align-items: flex-start;
-  gap: 6px;
+  gap: 3px;
   width: 100%;
 }
 
@@ -116,10 +116,10 @@ h1,h4,p,a{
 .category-info-row-2 .category-info-card {
   width: 100%;
   max-width: none;
-  min-height: 72px;
+  min-height: 48px;
   max-height: none;
-  padding-top: 10px;
-  padding-bottom: 10px;
+  padding-top: 4px;
+  padding-bottom: 4px;
   align-items: flex-start;
 }
 
@@ -136,16 +136,16 @@ h1,h4,p,a{
 .category-info-card {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 1px;
   width: fit-content;
   max-width: 200px;
   max-height: 100px;
   margin: 0;
   background: rgba(255, 255, 255, 0.3);
-  border-radius: 12px;
+  border-radius: 10px;
   border: 1px solid rgba(0, 0, 0, 0.18);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
-  padding: 6px;
+  padding: 3px;
   overflow: hidden;
 }
 
@@ -153,18 +153,18 @@ h1,h4,p,a{
   display: block;
   width: 100%;
   min-width: 0;
-  line-height: 1.35;
+  line-height: 1.12;
   overflow: hidden;
 }
 
 .category-info-key {
   display: inline-flex;
-  padding: 3px 6px;
-  margin: 0 6px 0 0;
+  padding: 1px 5px;
+  margin: 0 4px 0 0;
   border-radius: 999px;
   border: 1px solid rgba(0, 0, 0, 0.2);
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.16);
-  font-size: 0.74rem;
+  font-size: 0.7rem;
   font-weight: 700;
   line-height: 1;
   text-transform: uppercase;
@@ -175,9 +175,9 @@ h1,h4,p,a{
 .category-info-value {
   display: inline;
   min-width: 0;
-  font-size: 0.88rem;
+  font-size: 0.84rem;
   font-weight: 400;
-  line-height: 1.35;
+  line-height: 1.12;
   white-space: normal;
   overflow-wrap: anywhere;
 }
@@ -195,7 +195,7 @@ h1,h4,p,a{
   vertical-align: middle;
   min-width: unset !important;
   background: rgba(255, 255, 255, 0.55) !important;
-  margin-left: 4px !important;
+  margin-left: 2px !important;
   padding: 0 !important;
   line-height: 1 !important;
   text-transform: none !important;
@@ -209,11 +209,11 @@ h1,h4,p,a{
 
 @media (max-width: 700px) {
   .category-info-grid-inner {
-    gap: 4px;
+    gap: 3px;
   }
 
   .category-info-row {
-    gap: 4px;
+    gap: 3px;
   }
 
   .category-info-card {
