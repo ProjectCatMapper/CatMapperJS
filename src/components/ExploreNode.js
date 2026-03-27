@@ -1131,7 +1131,13 @@ export default function Tableclick({ cmid, database, tabval }) {
   const handleChange = (event, newValue) => {
     setValue(newValue);
     const newPath = `/${database.toLowerCase()}/${cmid}/${newValue}`;
-    navigate(newPath, { replace: true });
+    navigate(
+      {
+        pathname: newPath,
+        search: location.search,
+      },
+      { replace: true }
+    );
   };
 
   useEffect(() => {
@@ -1238,7 +1244,13 @@ export default function Tableclick({ cmid, database, tabval }) {
       setValue(resolvedTab);
     }
     if (shouldRedirectExploreTab(tabval, resolvedTab)) {
-      navigate(`/${database.toLowerCase()}/${cmid}/${resolvedTab}`, { replace: true });
+      navigate(
+        {
+          pathname: `/${database.toLowerCase()}/${cmid}/${resolvedTab}`,
+          search: location.search,
+        },
+        { replace: true }
+      );
     }
   }, [
     isDatasetLike,
@@ -1259,6 +1271,7 @@ export default function Tableclick({ cmid, database, tabval }) {
     loadingInfo,
     loadingBackground,
     navigationLoading,
+    location.search,
   ]);
 
   const handleDatasetCheckbox = () => {
