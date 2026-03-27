@@ -2,10 +2,11 @@ import React, { useMemo } from 'react';
 import { MapContainer, TileLayer, Marker, Tooltip } from 'react-leaflet';
 import MarkerClusterGroup from '@changey/react-leaflet-markercluster';
 import map1 from '../data/all_coords.csv';
-import { ensureLeafletMarkerIcons, getPointLabel, parseCoord } from './leafletIcons';
+import { ensureLeafletMarkerIcons, getLeafletDefaultIcon, getPointLabel, parseCoord } from './leafletIcons';
 import './MapViews.css';
 
 const CanvasMarkers = ({ data }) => {
+  const markerIcon = getLeafletDefaultIcon();
   return (
     <MarkerClusterGroup>
       {data.map((point, index) => {
@@ -19,6 +20,7 @@ const CanvasMarkers = ({ data }) => {
           <Marker
             key={`${point.CMID || 'unknown'}-${index}`}
             position={[lat, lng]}
+            icon={markerIcon}
             title={label}
             eventHandlers={{
               click: () => {

@@ -1,22 +1,42 @@
 import L from "leaflet";
-import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
-import markerIcon from "leaflet/dist/images/marker-icon.png";
-import markerShadow from "leaflet/dist/images/marker-shadow.png";
+
+const markerIcon2x = "/leaflet/marker-icon-2x.png";
+const markerIcon = "/leaflet/marker-icon.png";
+const markerShadow = "/leaflet/marker-shadow.png";
 
 let configured = false;
+let defaultIcon = null;
 
 export function ensureLeafletMarkerIcons() {
+  if (!defaultIcon) {
+    defaultIcon = L.icon({
+      iconRetinaUrl: markerIcon2x,
+      iconUrl: markerIcon,
+      shadowUrl: markerShadow,
+      iconSize: [25, 41],
+      iconAnchor: [12, 41],
+      popupAnchor: [1, -34],
+      tooltipAnchor: [16, -28],
+      shadowSize: [41, 41],
+    });
+  }
+
   if (configured) {
     return;
   }
 
   L.Icon.Default.mergeOptions({
-    iconRetinaUrl: markerIcon2x,
-    iconUrl: markerIcon,
-    shadowUrl: markerShadow,
+    iconRetinaUrl: defaultIcon.options.iconRetinaUrl,
+    iconUrl: defaultIcon.options.iconUrl,
+    shadowUrl: defaultIcon.options.shadowUrl,
   });
 
   configured = true;
+}
+
+export function getLeafletDefaultIcon() {
+  ensureLeafletMarkerIcons();
+  return defaultIcon;
 }
 
 export function getPointLabel(point = {}) {
