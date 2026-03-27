@@ -139,7 +139,7 @@ export default function ClickTable(props) {
   }, [props.usert])
 
   const nonEmptyColumns = useMemo(() => ccolumns.filter((col) =>
-    rows.some((row) => (row[col.field] !== null) && row[col.field] !== undefined && row[col.field] !== '' && (row[col.field] !== "null"))
+    col.field === 'key' || rows.some((row) => (row[col.field] !== null) && row[col.field] !== undefined && row[col.field] !== '' && (row[col.field] !== "null"))
   ), [ccolumns, rows]);
 
 
