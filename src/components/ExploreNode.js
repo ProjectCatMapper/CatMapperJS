@@ -1305,7 +1305,7 @@ export default function Tableclick({ cmid, database, tabval }) {
         <Box
           sx={{
             display: "grid",
-            gridTemplateRows: "40px auto 20px",
+            gridTemplateRows: "auto auto auto",
             width: "100%",
             backgroundImage: `linear-gradient(to bottom right,#555555, #cccccc)`,
             backgroundSize: "cover",
@@ -1341,13 +1341,25 @@ export default function Tableclick({ cmid, database, tabval }) {
               </Button>
           </div>
           {isDeletedNode && (
-            <Alert severity={hasDeletedRedirect ? "info" : "warning"} sx={{ mt: 1, mb: 1 }}>
-              <Typography variant="body2" sx={{ mb: 0.5 }}>
+            <Alert
+              severity={hasDeletedRedirect ? "info" : "warning"}
+              sx={{
+                gridColumn: "1",
+                gridRow: "2",
+                mt: 1,
+                mb: 1,
+                mx: 0.5,
+                py: 1,
+                px: 1.5,
+                "& .MuiAlert-icon": { fontSize: "1.9rem", alignItems: "center" },
+              }}
+            >
+              <Typography variant="body1" sx={{ mb: 0.75, fontWeight: 700 }}>
                 <strong>CMID:</strong> {rev?.CMID || cmid} &nbsp;|&nbsp; <strong>CMName:</strong> {rev?.CMName || "(No CMName)"} &nbsp;|&nbsp; <strong>Domain:</strong> DELETED
               </Typography>
               {hasDeletedRedirect ? (
                 <Box sx={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 1 }}>
-                  <Typography variant="body2">
+                  <Typography variant="body1">
                     This deleted node is linked to active CMID {deletedRedirectTarget}.
                   </Typography>
                   <Button
@@ -1359,7 +1371,7 @@ export default function Tableclick({ cmid, database, tabval }) {
                   </Button>
                 </Box>
               ) : (
-                <Typography variant="body2">
+                <Typography variant="body1">
                   No IS redirect relationship exists for this deleted node.
                 </Typography>
               )}
@@ -1369,8 +1381,6 @@ export default function Tableclick({ cmid, database, tabval }) {
             id="content"
             style={{
               color: "black",
-              gridColumn: "1",
-              gridRow: "2",
               fontSize: "large",
             }}
           >
