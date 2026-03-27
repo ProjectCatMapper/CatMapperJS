@@ -1176,22 +1176,124 @@ export default function Tableclick({ cmid, database, tabval }) {
     () => {
       if (!rev || typeof rev !== "object") return [];
 
-      const filteredEntries = Object.entries(rev).filter(
-        ([, value]) => value !== "" && value !== null && value !== undefined && value !== 0
-      );
-      const isCitationKey = (key) => {
-        const normalized = String(key || "")
+      const normalizeKey = (key) =>
+        String(key || "")
           .toLowerCase()
           .replace(/[\s_]/g, "");
+      const isNonEmpty = (value) => value !== "" && value !== null && value !== undefined && value !== 0;
+      const isCitationKey = (key) => {
+        const normalized = normalizeKey(key);
         return normalized === "citation" || normalized === "datasetcitation";
       };
-      const nonCitation = filteredEntries.filter(([key]) => !isCitationKey(key));
-      const citation = filteredEntries.filter(([key]) => isCitationKey(key));
 
-      return [...nonCitation, ...citation];
+      const filteredEntries = Object.entries(rev)
+        .filter(([, value]) => isNonEmpty(value))
+        .map(([key, value], index) => ({
+          key,
+          value,
+          index,
+          normalized: normalizeKey(key),
+        }));
+
+      const used = new Set();
+      const row1Order = ["cmname", "cmid", "domains"];
+      const row4Order = ["directchildren", "alldescendants", "directparents"];
+      const row4Set = new Set(row4Order);
+
+      const pickByNormalized = (normalizedKey) => {
+        const found = filteredEntries.find(
+          (entry) => entry.normalized === normalizedKey && !used.has(entry.index)
+        );
+        if (!found) return null;
+        used.add(found.index);
+        return found;
+      };
+
+      const row1 = row1Order
+        .map((normalizedKey) => pickByNormalized(normalizedKey))
+        .filter(Boolean)
+        .map((entry) => ({
+          key: entry.key,
+          value: entry.value,
+          displayKey: String(entry.key).replace(/_/g, " "),
+          normalized: entry.normalized,
+          row: 1,
+          emphasize: entry.normalized === "cmid" || entry.normalized === "cmname",
+        }));
+
+      const locationEntries = filteredEntries.filter(
+        (entry) =>
+          !used.has(entry.index) &&
+          entry.normalized.includes("location")
+      );
+      locationEntries.forEach((entry) => used.add(entry.index));
+      const locationValues = locationEntries
+        .map((entry) => entry.value)
+        .filter((value) => isNonEmpty(value))
+        .map((value) => {
+          if (Array.isArray(value)) return value.join(", ");
+          if (typeof value === "object") {
+            try {
+              return JSON.stringify(value);
+            } catch (_error) {
+              return String(value);
+            }
+          }
+          return String(value);
+        })
+        .filter((value) => value.trim() !== "");
+      const row2 = locationValues.length > 0
+        ? [{
+          key: "LOCATION",
+          value: locationValues.join(" | "),
+          displayKey: "LOCATION",
+          normalized: "location",
+          row: 2,
+          emphasize: false,
+        }]
+        : [];
+
+      const remainingEntries = filteredEntries.filter((entry) => !used.has(entry.index));
+      const row4 = row4Order
+        .map((normalizedKey) => {
+          const found = remainingEntries.find((entry) => entry.normalized === normalizedKey);
+          if (!found) return null;
+          used.add(found.index);
+          return {
+            key: found.key,
+            value: found.value,
+            displayKey: String(found.key).replace(/_/g, " "),
+            normalized: found.normalized,
+            row: 4,
+            emphasize: false,
+          };
+        })
+        .filter(Boolean);
+
+      const row3Source = filteredEntries.filter(
+        (entry) => !used.has(entry.index) && !row4Set.has(entry.normalized)
+      );
+      const nonCitation = row3Source.filter((entry) => !isCitationKey(entry.key));
+      const citation = row3Source.filter((entry) => isCitationKey(entry.key));
+      const row3 = [...nonCitation, ...citation].map((entry) => ({
+        key: entry.key,
+        value: entry.value,
+        displayKey: String(entry.key).replace(/_/g, " "),
+        normalized: entry.normalized,
+        row: 3,
+        emphasize: false,
+      }));
+
+      return [...row1, ...row2, ...row3, ...row4];
     },
     [rev]
   );
+  const categoryInfoByRow = useMemo(() => ({
+    1: categoryInfoEntries.filter((entry) => entry.row === 1),
+    2: categoryInfoEntries.filter((entry) => entry.row === 2),
+    3: categoryInfoEntries.filter((entry) => entry.row === 3),
+    4: categoryInfoEntries.filter((entry) => entry.row === 4),
+  }), [categoryInfoEntries]);
   const getCategoryInfoPlainValue = useCallback((rawValue) => {
     if (rawValue === null || rawValue === undefined) return "";
     if (Array.isArray(rawValue)) return rawValue.join(", ");
@@ -1448,54 +1550,71 @@ export default function Tableclick({ cmid, database, tabval }) {
           <Box id="content" className="category-info-grid">
             {categoryInfoEntries.length > 0 ? (
               <Box className="category-info-grid-inner">
-                {categoryInfoEntries.map(([key, value]) => {
-                  const preview = getCategoryInfoPreview(value);
-                  const showViewButton = preview.truncated;
+                {[1, 2, 3, 4].map((rowNum) => {
+                  const rowEntries = categoryInfoByRow[rowNum] || [];
+                  if (rowEntries.length === 0) return null;
 
                   return (
-                    <Box key={key} className="category-info-card">
-                      <Box component="span" className="category-info-inline">
-                        <Box component="span" className="category-info-key">
-                          {String(key).replace(/_/g, " ")}
-                        </Box>
-                        <Box
-                          component="span"
-                          className="category-info-value"
-                        >
-                          {key === "Dataset Location" ? (
-                            <a
-                              className="category-info-link"
-                              href={value}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            >
-                              {preview.text}
-                            </a>
-                          ) : key === "Merged_into_CMID" ? (
-                            <a className="category-info-link" href={`/${database.toLowerCase()}/${value}`}>
-                              {preview.text}
-                            </a>
-                          ) : (
-                            preview.text
-                          )}
-                        </Box>
-                        {showViewButton && (
-                          <IconButton
-                            size="small"
-                            className="category-info-view-more-icon-btn"
-                            onClick={() =>
-                              setCategoryInfoDialog({
-                                open: true,
-                                key: String(key).replace(/_/g, " "),
-                                value: getCategoryInfoPlainValue(value),
-                              })
-                            }
-                            aria-label={`View full ${String(key).replace(/_/g, " ")}`}
+                    <Box
+                      key={`category-info-row-${rowNum}`}
+                      className={`category-info-row category-info-row-${rowNum}`}
+                    >
+                      {rowEntries.map((entry) => {
+                        const key = entry.key;
+                        const value = entry.value;
+                        const preview = getCategoryInfoPreview(value);
+                        const showViewButton = preview.truncated;
+
+                        return (
+                          <Box
+                            key={`${key}-${entry.row}`}
+                            className={`category-info-card${entry.emphasize ? " category-info-card-emphasis" : ""}`}
                           >
-                            <VisibilityIcon sx={{ fontSize: 18 }} />
-                          </IconButton>
-                        )}
-                      </Box>
+                            <Box component="span" className="category-info-inline">
+                              <Box component="span" className="category-info-key">
+                                {entry.displayKey}
+                              </Box>
+                              <Box
+                                component="span"
+                                className="category-info-value"
+                              >
+                                {key === "Dataset Location" ? (
+                                  <a
+                                    className="category-info-link"
+                                    href={value}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                  >
+                                    {preview.text}
+                                  </a>
+                                ) : key === "Merged_into_CMID" ? (
+                                  <a className="category-info-link" href={`/${database.toLowerCase()}/${value}`}>
+                                    {preview.text}
+                                  </a>
+                                ) : (
+                                  preview.text
+                                )}
+                              </Box>
+                              {showViewButton && (
+                                <IconButton
+                                  size="small"
+                                  className="category-info-view-more-icon-btn"
+                                  onClick={() =>
+                                    setCategoryInfoDialog({
+                                      open: true,
+                                      key: entry.displayKey,
+                                      value: getCategoryInfoPlainValue(value),
+                                    })
+                                  }
+                                  aria-label={`View full ${entry.displayKey}`}
+                                >
+                                  <VisibilityIcon sx={{ fontSize: 18 }} />
+                                </IconButton>
+                              )}
+                            </Box>
+                          </Box>
+                        );
+                      })}
                     </Box>
                   );
                 })}
