@@ -47,6 +47,16 @@ const DownloadAll = () => {
       return dateB - dateA;
     });
   };
+
+  const formatDisplayFilename = (dbLabel, fileUrl) => {
+    const filename = fileUrl.split('/').pop();
+    if (!filename) return '';
+    if (filename.startsWith('ArchaMap_') || filename.startsWith('SocioMap_')) {
+      return filename;
+    }
+    return `${dbLabel}_${filename}`;
+  };
+
   useEffect(() => {
     const loadData = async () => {
       const [archamap, sociomap] = await Promise.all([
@@ -59,13 +69,13 @@ const DownloadAll = () => {
     loadData();
   }, []);
 
-  const renderList = (items) =>
+  const renderList = (items, dbLabel) =>
     items.length === 0 ? (
       <Typography variant="body2">No files available.</Typography>
     ) : (
       <List>
         {items.map(({ url, size }) => {
-          const filename = url.split('/').pop();
+          const filename = formatDisplayFilename(dbLabel, url);
           return (
             <ListItem key={url}>
               <ListItemText
@@ -110,19 +120,19 @@ const DownloadAll = () => {
               <Typography variant="body1" component="div">
                 <ol style={{ paddingLeft: '1.25rem' }}>
                   <li>
-                    Metadata for each dataset which has categories linked to CatMapper (datasetNodes_{"{date}"}.csv)
+                    Metadata for each dataset which has categories linked to CatMapper ({'{Database}_datasetNodes_{date}.csv'})
                   </li>
                   <li>
-                    Metadata for each category stored in CatMapper (categoryNodes_{"{date}"}.csv)
+                    Metadata for each category stored in CatMapper ({'{Database}_categoryNodes_{date}.csv'})
                   </li>
                   <li>
-                    USES ties containing metadata about how datasets refer to each category (USESties_{"{date}"}.csv)
+                    USES ties containing metadata about how datasets refer to each category ({'{Database}_USESties_{date}.csv'})
                   </li>
                   <li>
-                    Metadata for deleted nodes (deletedNodes_{"{date}"}.csv)
+                    Metadata for deleted nodes ({'{Database}_deletedNodes_{date}.csv'})
                   </li>
                   <li>
-                    Metadata for domains and properties which includes database schema (metadata_{"{date}"}.csv)
+                    Metadata for domains and properties which includes database schema ({'{Database}_metadata_{date}.csv'})
                   </li>
                 </ol>
               </Typography>
@@ -151,7 +161,7 @@ const DownloadAll = () => {
                       <Typography variant="h5" component="h2" gutterBottom>
                         ArchaMap
                       </Typography>
-                      {loading ? <CircularProgress /> : renderList(urls.ArchaMap)}
+                      {loading ? <CircularProgress /> : renderList(urls.ArchaMap, 'ArchaMap')}
                     </>
                   )}
                   {tabIndex === 1 && (
@@ -159,7 +169,7 @@ const DownloadAll = () => {
                       <Typography variant="h5" component="h2" gutterBottom>
                         SocioMap
                       </Typography>
-                      {loading ? <CircularProgress /> : renderList(urls.SocioMap)}
+                      {loading ? <CircularProgress /> : renderList(urls.SocioMap, 'SocioMap')}
                     </>
                   )}
                 </Box>
