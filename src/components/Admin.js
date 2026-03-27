@@ -117,12 +117,15 @@ const Admin = ({ database }) => {
       label: "Edit Options",
       keys: [
         "add/edit/delete USES property",
+        "add/edit/delete EQUIVALENT property",
         "add/edit/delete node property",
         "merge nodes",
         "move USES tie",
+        "move EQUIVALENT tie",
         "add credible comment",
         "delete node",
         "delete USES relation",
+        "delete EQUIVALENT relation",
         "create new domain",
         //"add foci",
       ],
@@ -172,6 +175,15 @@ const Admin = ({ database }) => {
       if (firstDropdownValue === "delete USES relation") {
         const confirmed = window.confirm(
           `Are you sure you want to ${firstDropdownValue} of ${JSON.parse(formData.s1_7)[0].CMName} <- ${JSON.parse(formData.s1_7)[1].Key} - ${JSON.parse(formData.s1_7)[2].CMName}? This action cannot be undone.`
+        );
+        if (!confirmed) {
+          return;
+        }
+      }
+
+      if (firstDropdownValue === "delete EQUIVALENT relation") {
+        const confirmed = window.confirm(
+          `Are you sure you want to ${firstDropdownValue} of ${JSON.parse(formData.s1_7)[0].CMName} -> ${JSON.parse(formData.s1_7)[2].CMName} (Key: ${JSON.parse(formData.s1_7)[1].Key || "NA"})? This action cannot be undone.`
         );
         if (!confirmed) {
           return;
@@ -720,7 +732,16 @@ const Admin = ({ database }) => {
   }, [database, formData.s1_1, formData.s1_2, firstDropdownValue]);
 
   useEffect(() => {
-    if (firstDropdownValue !== "add/edit/delete USES property" && firstDropdownValue !== "delete USES relation" && firstDropdownValue !== "move USES tie") {
+    const isUsesMode =
+      firstDropdownValue === "add/edit/delete USES property" ||
+      firstDropdownValue === "delete USES relation" ||
+      firstDropdownValue === "move USES tie";
+    const isEquivalentMode =
+      firstDropdownValue === "add/edit/delete EQUIVALENT property" ||
+      firstDropdownValue === "delete EQUIVALENT relation" ||
+      firstDropdownValue === "move EQUIVALENT tie";
+
+    if (!isUsesMode && !isEquivalentMode) {
       setDropdown1Options([]); // reset dropdown if not in this mode
       return;
     }
@@ -737,7 +758,10 @@ const Admin = ({ database }) => {
     if (pattern.test(cmid)) {
       const fetchData = async () => {
         try {
-          const res = await fetch(`${process.env.REACT_APP_API_URL}/admin_add_edit_delete_usesproperties?CMID=` + cmid + "&database=" + database, {
+          const endpoint = isEquivalentMode
+            ? "/admin_add_edit_delete_equivalentproperties"
+            : "/admin_add_edit_delete_usesproperties";
+          const res = await fetch(`${process.env.REACT_APP_API_URL}${endpoint}?CMID=` + cmid + "&database=" + database, {
             //const res = await fetch("http://127.0.0.1:5001/admin_add_edit_delete_usesproperties?CMID="+cmid+"&database="+database, {
             method: "GET",
           });
@@ -1045,6 +1069,149 @@ const Admin = ({ database }) => {
           </Box>
         )}
 
+        {firstDropdownValue === "add/edit/delete EQUIVALENT property" && (
+          <Box sx={{ ml: 1 }}>
+            <h4 style={{ color: "black", padding: "2px" }}>
+              choose to add a new property or edit <br /> or delete an existing
+              property :
+            </h4>
+            <RadioGroup
+              row
+              defaultValue="edit"
+              name="uploadOption"
+              sx={{ mb: 2 }}
+              value={formData.s1_1}
+              onChange={updateActionType}
+            >
+              <FormControlLabel value="add" control={<Radio />} label="add" />
+              <FormControlLabel value="edit" control={<Radio />} label="edit" />
+              <FormControlLabel
+                value="delete"
+                control={<Radio />}
+                label="delete"
+              />
+            </RadioGroup>
+            {renderCmidInput({
+              label: "CMID of Category",
+              name: "s1_2",
+              textFieldSx: { height: 22, fontSize: 12 },
+            })}
+            {add_edit_delete_usesprops_Options !== "" &&
+              <>
+                <InputLabel id="api-results-label" style={{ color: "black" }}>
+                  Choose EQUIVALENT tie to change
+                </InputLabel>
+                <Select
+                  name="s1_7"
+                  sx={{ width: 300, height: 40, mb: 3 }}
+                  value={formData.s1_7 || ""}
+                  onChange={updateFormFieldValue}
+                >
+                  {add_edit_delete_usesprops_Options.map(([n, r, d], index) => (
+                    <MenuItem key={index} value={index + 1}>
+                      {`${n.CMName} ---- EQUIVALENT Key: ${r.Key || "NA"} --- ${d.CMName}`}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </>
+            }
+
+            {formData.s1_7 !== "" && add_edit_delete_usesprops_Options.length !== 0 && (
+              <>
+                {(() => {
+                  const [, r] = add_edit_delete_usesprops_Options[formData.s1_7 - 1];
+                  const editableProps = ["stack", "dataset", "Key"];
+                  let dropdown2Options = [];
+
+                  if (formData.s1_1 === "edit" || formData.s1_1 === "delete") {
+                    dropdown2Options = Object.keys(r).filter((key) => editableProps.includes(key));
+                  } else {
+                    const rKeys = Object.keys(r);
+                    dropdown2Options = editableProps.filter(
+                      (prop) => !rKeys.includes(prop)
+                    );
+                  }
+
+                  return (
+                    dropdown2Options.length !== 0 && (
+                      <>
+                        <InputLabel id="dropdown2-label" style={{ color: "black" }}>
+                          Choose property to {formData.s1_1}
+                        </InputLabel>
+                        <Select
+                          name="s1_8"
+                          sx={{ width: 300, height: 40, mb: 3 }}
+                          value={formData.s1_8 || ""}
+                          onChange={updateFormFieldValue}
+                        >
+                          {dropdown2Options.sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
+                            .map((option, index) => (
+                              <MenuItem key={index} value={option}>
+                                {option}
+                              </MenuItem>
+                            ))}
+                        </Select>
+
+                        <Typography variant="body1" sx={{ mb: 1 }}>
+                          Selected:
+                          {(() => {
+                            const value = add_edit_delete_usesprops_Options?.[formData.s1_7 - 1]?.[1]?.[formData.s1_8];
+                            if (typeof value === "string") {
+                              return ` ${value}`;
+                            }
+                            if (value === undefined || value === null || value === "") {
+                              return " N/A";
+                            }
+                            return ` ${String(value)}`;
+                          })()}
+                        </Typography>
+                      </>
+                    )
+                  );
+                })()}
+              </>
+            )}
+            {(formData.s1_1 === "add" || formData.s1_1 === "edit") && (
+              <>
+                <InputLabel id="domain-label" style={{ color: "black " }}>
+                  Property value
+                </InputLabel>
+                <TextField
+                  name="s1_3"
+                  value={formData.s1_3}
+                  onChange={updateFormFieldValue}
+                  sx={{ width: 300, height: 25, mb: 4, mt: 0 }}
+                  variant="outlined"
+                  margin="normal"
+                  size="small"
+                />
+              </>
+            )}
+
+            <Box
+              sx={{
+                display: 'flex',
+                justifyContent: 'flex-start',
+                padding: 2
+              }}
+            >
+              <Button
+                variant="contained"
+                sx={{
+                  backgroundColor: "black",
+                  color: "white",
+                  "&:hover": {
+                    backgroundColor: "green",
+                  },
+                }}
+                onClick={submitAdminAction}
+              >
+                Submit{" "}
+              </Button>
+            </Box>
+          </Box>
+        )}
+
         {firstDropdownValue === "add/edit/delete node property" && (
           <Box sx={{ ml: 1 }}>
             <h4 style={{ color: "black", padding: "2px" }}>
@@ -1256,6 +1423,62 @@ const Admin = ({ database }) => {
         )
         }
 
+        {firstDropdownValue === "move EQUIVALENT tie" && (
+          <Box sx={{ ml: 1 }}>
+            {renderCmidInput({
+              label: "CMID moving from",
+              name: "s1_2",
+              textFieldSx: { height: 40 },
+            })}
+            {add_edit_delete_usesprops_Options !== "" &&
+              <>
+                <InputLabel id="api-results-label" style={{ color: "black" }}>
+                  Choose EQUIVALENT tie to change
+                </InputLabel>
+                <Select
+                  name="s1_7"
+                  sx={{ width: 300, height: 40, mb: 3 }}
+                  value={formData.s1_7 || ""}
+                  onChange={updateFormFieldValue}
+                >
+                  {add_edit_delete_usesprops_Options.map(([n, r, d], index) => (
+                    <MenuItem key={index} value={JSON.stringify([n, r, d])}>
+                      {`${n.CMName} ---- EQUIVALENT Key: ${r.Key || "NA"} --- ${d.CMName}`}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </>
+            }
+            {renderCmidInput({
+              label: "CMID moving to",
+              name: "s1_3",
+              textFieldSx: { height: 40 },
+            })}
+            <Box
+              sx={{
+                display: 'flex',
+                justifyContent: 'flex-start',
+                padding: 2
+              }}
+            >
+              <Button
+                variant="contained"
+                sx={{
+                  backgroundColor: "black",
+                  color: "white",
+                  "&:hover": {
+                    backgroundColor: "green",
+                  },
+                }}
+                onClick={submitAdminAction}
+              >
+                Submit{" "}
+              </Button>
+            </Box>
+          </Box>
+        )
+        }
+
         {firstDropdownValue === "add credible comment" && (
           <Box sx={{ ml: 1 }}>
             <h4 style={{ color: "black", padding: "2px" }}>
@@ -1345,6 +1568,57 @@ const Admin = ({ database }) => {
                   {add_edit_delete_usesprops_Options.map(([n, r, d], index) => (
                     <MenuItem key={index} value={JSON.stringify([n, r, d])}>
                       {`${n.CMName} ---- USES Key: ${r.Key} --- ${d.CMName}`}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </>
+            }
+            <Box
+              sx={{
+                display: 'flex',
+                justifyContent: 'flex-start',
+                padding: 2
+              }}
+            >
+              <Button
+                variant="contained"
+                sx={{
+                  backgroundColor: "black",
+                  color: "white",
+                  "&:hover": {
+                    backgroundColor: "green",
+                  },
+                }}
+                onClick={submitAdminAction}
+              >
+                Submit{" "}
+              </Button>
+            </Box>
+          </Box>
+        )
+        }
+
+        {firstDropdownValue === "delete EQUIVALENT relation" && (
+          <Box sx={{ ml: 1 }}>
+            {renderCmidInput({
+              label: "CMID of category",
+              name: "s1_2",
+              textFieldSx: { height: 40 },
+            })}
+            {add_edit_delete_usesprops_Options !== "" &&
+              <>
+                <InputLabel id="api-results-label" style={{ color: "black" }}>
+                  Choose EQUIVALENT tie to change
+                </InputLabel>
+                <Select
+                  name="s1_7"
+                  sx={{ width: 300, height: 40, mb: 3 }}
+                  value={formData.s1_7 || ""}
+                  onChange={updateFormFieldValue}
+                >
+                  {add_edit_delete_usesprops_Options.map(([n, r, d], index) => (
+                    <MenuItem key={index} value={JSON.stringify([n, r, d])}>
+                      {`${n.CMName} ---- EQUIVALENT Key: ${r.Key || "NA"} --- ${d.CMName}`}
                     </MenuItem>
                   ))}
                 </Select>
