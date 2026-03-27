@@ -51,7 +51,13 @@
     overflow-x: auto;
 }
 
-.body .MuiTableCell-root {
-    white-space: nowrap;
+.body .dataset-progress-container .MuiTable-root {
+    width: 100%;
+    table-layout: fixed;
+}
+
+.body .dataset-progress-container .MuiTableCell-root {
+    white-space: normal;
+    overflow-wrap: anywhere;
 }
 

@@ -52,6 +52,15 @@ const AppBody = ({ database }) => {
   const paragraphs = descriptions[database] || ["Description not available."];
   const [rows, setrows] = useState([]);
   const [foci, setfoci] = useState([]);
+  const progressHeaders = rows.length > 0 ? Object.keys(rows[0]) : [];
+
+  const formatProgressHeader = (header) =>
+    String(header || "")
+      .replace(/_/g, " ")
+      .replace(/([a-z])([A-Z])/g, "$1 $2")
+      .replace(/\s+/g, " ")
+      .trim()
+      .replace(/\b\w/g, (char) => char.toUpperCase());
 
   useEffect(() => {
 
@@ -216,19 +225,30 @@ const AppBody = ({ database }) => {
                   &nbsp; DATASETS: {datasetCount ?? "Loading..."}
                 </Typography>
 
-                <TableContainer component={Paper}>
+                <TableContainer component={Paper} className="dataset-progress-container">
                   <Table
-                    sx={{ minWidth: { xs: 0, sm: 400 }, backgroundColor: "#f5f5f5" }}
+                    sx={{ width: "100%", minWidth: 0, tableLayout: "fixed", backgroundColor: "#f5f5f5" }}
                     size="small"
                     aria-label="dataset progress table"
                   >
                     <TableHead>
                       <TableRow>
-                        {rows.length > 0 &&
-                          Object.keys(rows[0]).map((header) => (
-                            <TableCell key={header} sx={{ color: 'black', fontWeight: 'bold' }}>
-                              {/* Optional: Capitalize the first letter for display */}
-                              {header.charAt(0).toUpperCase() + header.slice(1)}
+                        {progressHeaders.map((header, index) => (
+                            <TableCell
+                              key={header}
+                              sx={{
+                                color: "black",
+                                fontWeight: "bold",
+                                px: { xs: 0.5, sm: 0.75 },
+                                py: 0.5,
+                                fontSize: { xs: "0.66rem", sm: "0.74rem" },
+                                lineHeight: 1.15,
+                                whiteSpace: "normal",
+                                overflowWrap: "anywhere",
+                                width: index === 0 ? "28%" : `${72 / Math.max(progressHeaders.length - 1, 1)}%`,
+                              }}
+                            >
+                              {formatProgressHeader(header)}
                             </TableCell>
                           ))}
                       </TableRow>
@@ -240,7 +260,18 @@ const AppBody = ({ database }) => {
                         return (
                           <TableRow key={index}>
                             {headers.map((header) => (
-                              <TableCell key={`${index}-${header}`} sx={{ color: 'black' }}>
+                              <TableCell
+                                key={`${index}-${header}`}
+                                sx={{
+                                  color: "black",
+                                  px: { xs: 0.5, sm: 0.75 },
+                                  py: 0.5,
+                                  fontSize: { xs: "0.72rem", sm: "0.78rem" },
+                                  lineHeight: 1.2,
+                                  whiteSpace: "normal",
+                                  overflowWrap: "anywhere",
+                                }}
+                              >
                                 {/* Check if value is a number to apply formatting, else return as is */}
                                 {row[header] === 0 ? "" : row[header] &&
                                   typeof row[header] === 'number'
