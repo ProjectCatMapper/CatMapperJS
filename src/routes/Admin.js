@@ -5,7 +5,7 @@ import { useParams } from 'react-router-dom';
 const AdminPage = () => {
   return (
     <div style={{
-      backgroundColor: "white", height: "100vh", display: 'flex',
+      backgroundColor: "white", minHeight: "100vh", display: 'flex',
       flexDirection: 'column'
     }}>
       <Navbar {...useParams()} />

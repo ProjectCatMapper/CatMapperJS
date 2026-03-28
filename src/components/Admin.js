@@ -998,8 +998,17 @@ const Admin = ({ database }) => {
 
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
-      <Box sx={{ p: { xs: 2, md: 3 }, flex: 1, display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 2, bgcolor: "white", minHeight: 0 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
+      <Box
+        sx={{
+          p: { xs: 2, md: 3 },
+          display: 'flex',
+          flexDirection: { xs: 'column', md: 'row' },
+          alignItems: 'stretch',
+          gap: 2,
+          bgcolor: "white",
+        }}
+      >
         <Box
           sx={{
             width: { xs: isSidebarOpen ? "100%" : 44, md: isSidebarOpen ? 320 : 44 },
@@ -1033,7 +1042,7 @@ const Admin = ({ database }) => {
               <Typography sx={{ px: 1.5, py: 1.25, fontSize: "0.85rem", color: "text.secondary", borderBottom: "1px solid #ececec" }}>
                 Admin panel: these functions are intended for admin users to identify and fix problems in the database, add and modify users, and to initiate database integrity checks
               </Typography>
-              <Box sx={{ flex: 1, overflowY: "auto" }}>
+              <Box sx={{ flex: 1 }}>
                 <List disablePadding>
                   {sections.map((section) => (
                     <Box key={section.label}>
@@ -1078,7 +1087,7 @@ const Admin = ({ database }) => {
           )}
         </Box>
 
-        <Box sx={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0, overflowY: "auto", pr: { md: 1 } }}>
+        <Box sx={{ flex: 1, display: "flex", flexDirection: "column", pr: { md: 1 } }}>
           <Box sx={{ mb: 2 }}>
             <Typography sx={{ mt: 1, fontWeight: 600 }}>
               Selected option: {routineOptionByKey[firstDropdownValue]?.label || firstDropdownValue}
