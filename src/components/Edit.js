@@ -363,6 +363,15 @@ const Edit = ({ database }) => {
     if (fileInput) fileInput.value = '';
   };
 
+  const closeUploadStatusModal = () => {
+    clearUploadPoll();
+    setCancelUploadPending(false);
+    setUploadTaskState(null);
+    setUploadTaskId('');
+    setUploadLogLines([]);
+    setUploadCursor(0);
+  };
+
 
   const handleFileChange = async (e) => {
     setError("")
@@ -1240,7 +1249,8 @@ const Edit = ({ database }) => {
 
   const uploadTaskStatus = String(uploadTaskState?.status || '').toLowerCase();
   const uploadStatusModalOpen =
-    loading && (uploadTaskStatus === '' || uploadTaskStatus === 'queued' || uploadTaskStatus === 'running');
+    Boolean(uploadTaskState) &&
+    (uploadTaskStatus === '' || uploadTaskStatus === 'queued' || uploadTaskStatus === 'running' || uploadTaskStatus === 'failed');
   const uploadPercent = Math.max(0, Math.min(100, Number(uploadTaskState?.progress?.percent ?? 0)));
 
   return (
@@ -1870,8 +1880,15 @@ const Edit = ({ database }) => {
         fullWidth
         aria-labelledby="upload-progress-dialog-title"
       >
-        <DialogTitle id="upload-progress-dialog-title">Upload In Progress</DialogTitle>
+        <DialogTitle id="upload-progress-dialog-title">
+          {uploadTaskStatus === 'failed' ? 'Upload Failed' : 'Upload In Progress'}
+        </DialogTitle>
         <DialogContent>
+          {uploadTaskStatus === 'failed' && (
+            <Typography variant="body2" sx={{ mb: 1.5, color: 'error.main', fontWeight: 600 }}>
+              {uploadTaskState?.error || 'Upload failed.'}
+            </Typography>
+          )}
           <Typography variant="body2" sx={{ mb: 1 }}>
             Batch {uploadTaskState?.progress?.completedBatches ?? 0} of {uploadTaskState?.progress?.totalBatches ?? 0}
           </Typography>
@@ -1887,7 +1904,11 @@ const Edit = ({ database }) => {
             variant="outlined"
             color="error"
             onClick={handleCancelUpload}
-            disabled={cancelUploadPending || !uploadTaskId}
+            disabled={
+              cancelUploadPending ||
+              !uploadTaskId ||
+              (uploadTaskStatus !== 'queued' && uploadTaskStatus !== 'running')
+            }
             sx={{ mb: 1.5 }}
           >
             {cancelUploadPending ? 'Canceling...' : 'Cancel Upload'}
@@ -1908,6 +1929,11 @@ const Edit = ({ database }) => {
             {uploadLogLines.length > 0 ? uploadLogLines.join('\n') : 'Waiting for upload logs...'}
           </Box>
         </DialogContent>
+        {uploadTaskStatus === 'failed' && (
+          <DialogActions>
+            <Button onClick={closeUploadStatusModal} variant="contained">Close</Button>
+          </DialogActions>
+        )}
       </Dialog>
       <Dialog
         open={propertiesModalOpen}
