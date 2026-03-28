@@ -450,6 +450,27 @@ const Edit = ({ database }) => {
     }));
   };
 
+  const buildSimpleSubdomainLabels = (rows) => {
+    const normalizedRows = Array.isArray(rows) ? rows : [];
+    const frequency = normalizedRows.reduce((acc, item) => {
+      const label = String(item?.subdisplay || '').trim();
+      if (label) acc[label] = (acc[label] || 0) + 1;
+      return acc;
+    }, {});
+
+    return normalizedRows.map((item) => {
+      const display = String(item?.display || '').trim();
+      const subdisplay = String(item?.subdisplay || '').trim();
+      const subdomain = String(item?.subdomain || '').trim();
+      const subdisplayGeneric = subdisplay === '' || subdisplay.toUpperCase() === display.toUpperCase();
+      const duplicatedSubdisplay = subdisplay && (frequency[subdisplay] || 0) > 1;
+      const simpleLabel = (subdisplayGeneric || duplicatedSubdisplay)
+        ? (subdomain || subdisplay || display)
+        : (subdisplay || subdomain || display);
+      return { ...item, simpleLabel };
+    });
+  };
+
   const handleSimpleAltNamesColumnsChange = (event) => {
     const value = event.target.value;
     setFormData((prev) => ({
@@ -615,7 +636,7 @@ const Edit = ({ database }) => {
         const response = await fetch(`${process.env.REACT_APP_API_URL}/getDomains/${database}`);
         const data = await response.json();
 
-        const normalized = (Array.isArray(data) ? data : [])
+        const normalizedRaw = (Array.isArray(data) ? data : [])
           .map((item) => ({
             display: String(item?.display || '').trim(),
             subdisplay: String(item?.subdisplay || '').trim(),
@@ -630,6 +651,7 @@ const Edit = ({ database }) => {
             if (a.suborder !== b.suborder) return a.suborder - b.suborder;
             return a.subdisplay.localeCompare(b.subdisplay);
           });
+        const normalized = buildSimpleSubdomainLabels(normalizedRaw);
 
         const domains = [...new Set(normalized.map((item) => item.display))];
         setSimpleDomainsData(normalized);
@@ -646,13 +668,14 @@ const Edit = ({ database }) => {
         });
       } catch (err) {
         const staticDomains = Object.keys(domainFieldOptions).filter((value) => !excluded.has(String(value).toUpperCase()));
-        const staticDomainRows = staticDomains.map((value) => ({
+        const staticDomainRowsRaw = staticDomains.map((value) => ({
           display: value,
           subdisplay: value,
           subdomain: value,
           order: 9999,
           suborder: 9999,
         }));
+        const staticDomainRows = buildSimpleSubdomainLabels(staticDomainRowsRaw);
         setSimpleDomainsData(staticDomainRows);
         setSimpleDomainOptions(staticDomains);
 
@@ -1423,7 +1446,7 @@ const Edit = ({ database }) => {
             >
               {simpleSubdomainOptions.map((item) => (
                 <MenuItem key={`${item.subdomain}-${item.subdisplay}`} value={item.subdomain}>
-                  {item.subdisplay || item.subdomain}
+                  {item.simpleLabel || item.subdomain || item.subdisplay}
                 </MenuItem>
               ))}
             </Select>
