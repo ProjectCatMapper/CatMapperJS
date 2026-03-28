@@ -22,7 +22,9 @@ const SavedCmidInsertPopover = ({
   onTargetFieldChange,
   targetFieldOptions = [],
   title = 'Insert from Bookmarks/History',
-  datasetOnly = false
+  datasetOnly = false,
+  compact = false,
+  buttonLabel = ''
 }) => {
   const [entries, setEntries] = useState([]);
   const [anchorEl, setAnchorEl] = useState(null);
@@ -89,10 +91,12 @@ const SavedCmidInsertPopover = ({
     <>
       <Button
         variant="outlined"
-        startIcon={<BookmarkBorderIcon />}
+        size={compact ? 'small' : 'medium'}
+        startIcon={<BookmarkBorderIcon fontSize={compact ? 'small' : 'medium'} />}
+        sx={compact ? { minWidth: 'auto', px: 1, py: 0.5 } : undefined}
         onClick={(event) => setAnchorEl(event.currentTarget)}
       >
-        {title}
+        {buttonLabel || (compact ? 'Insert' : title)}
       </Button>
       <Popover
         open={open}

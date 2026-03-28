@@ -1,15 +1,21 @@
 import React, { useState } from 'react';
-import { Box, Button, Typography, Divider } from '@mui/material';
+import { Box, Button, Typography, Divider, IconButton, TextField, Tooltip } from '@mui/material';
 import CircularProgress from '@mui/material/CircularProgress';
 import Backdrop from '@mui/material/Backdrop';
+import InfoIcon from '@mui/icons-material/Info';
 import DomainSelector from './DomainSelector';
+import SavedCmidInsertPopover from './SavedCmidInsertPopover';
+import { useAuth } from './AuthContext';
 import { parseTabularFile } from '../utils/tabularUpload';
 import { downloadJsonAsXlsx } from '../utils/excelExport';
 
 const JoinDatasets_Merge = ({ database }) => {
+  const { user, cred } = useAuth();
 
   const [fileLeft, setFileLeft] = useState(null);
   const [fileRight, setFileRight] = useState(null);
+  const [leftDatasetID, setLeftDatasetID] = useState('');
+  const [rightDatasetID, setRightDatasetID] = useState('');
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState();
   const [domain, setdomain] = useState('');
@@ -43,16 +49,50 @@ const JoinDatasets_Merge = ({ database }) => {
   // ------------------------------------------------------------
   // Submit merge request
   // ------------------------------------------------------------
-  const handleMergeSubmit = async () => {
-    setLoading(true);
+  const normalizeJoinRowsWithDatasetID = (rows, datasetIDOverride, sideLabel) => {
+    const safeRows = Array.isArray(rows) ? rows : [];
+    const normalizedOverride = String(datasetIDOverride || '').trim();
 
+    if (normalizedOverride) {
+      if (!/^(SD|AD)\d+$/i.test(normalizedOverride)) {
+        throw new Error(`${sideLabel}: datasetID textbox must be a valid dataset CMID (for example SD123 or AD456).`);
+      }
+      return safeRows.map((row) => ({ ...row, datasetID: normalizedOverride }));
+    }
+
+    const missingRows = [];
+    const normalizedRows = safeRows.map((row, index) => {
+      const value = String(row?.datasetID || '').trim();
+      if (!value) {
+        missingRows.push(index + 1);
+      }
+      return { ...row, datasetID: value };
+    });
+
+    if (missingRows.length > 0) {
+      const preview = missingRows.slice(0, 8).join(', ');
+      const suffix = missingRows.length > 8 ? '...' : '';
+      throw new Error(
+        `${sideLabel}: leave the textbox blank only when every row in the uploaded dataset has a datasetID value. Missing row(s): ${preview}${suffix}`
+      );
+    }
+
+    return normalizedRows;
+  };
+
+  const handleMergeSubmit = async () => {
     try {
+      setLoading(true);
+
+      const normalizedLeft = normalizeJoinRowsWithDatasetID(fileLeft, leftDatasetID, 'First dataset');
+      const normalizedRight = normalizeJoinRowsWithDatasetID(fileRight, rightDatasetID, 'Second dataset');
+
       const response = await fetch(`${process.env.REACT_APP_API_URL}/joinDatasets`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          joinLeft: fileLeft,
-          joinRight: fileRight,
+          joinLeft: normalizedLeft,
+          joinRight: normalizedRight,
           database: database,
           domain: domain
         }),
@@ -106,10 +146,78 @@ const JoinDatasets_Merge = ({ database }) => {
       <Divider sx={{ my: 1 }} />
 
       <Typography>
-        Upload two datasets to merge. Both datasets must have a `datasetID` column with a valid ID for each row. Both datasets must have the original `Key` columns specified in the database translation that was previously uploaded to the dataset with the matching CMID. If you have not yet translated and uploaded your dataset, please do so now.
+        Upload two datasets to merge. You can set one dataset CMID per file using the datasetID textboxes below, or leave textboxes blank and use a `datasetID` column in the upload files. Both datasets must have the original `Key` columns specified in the database translation that was previously uploaded to the dataset with the matching CMID. If you have not yet translated and uploaded your dataset, please do so now.
       </Typography>
 
       <br />
+      <Box
+        sx={{
+          mb: 2,
+          display: 'flex',
+          alignItems: 'flex-end',
+          gap: 2,
+          flexWrap: 'wrap'
+        }}
+      >
+        <Box sx={{ minWidth: 280 }}>
+          <Typography variant="subtitle2" sx={{ color: 'black', mb: 0.5 }}>
+            First datasetID
+          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <TextField
+              size="small"
+              placeholder="e.g., SD123 or AD456"
+              value={leftDatasetID}
+              onChange={(event) => setLeftDatasetID(event.target.value)}
+              sx={{ width: 230 }}
+            />
+            <SavedCmidInsertPopover
+              user={user}
+              cred={cred}
+              database={database}
+              datasetOnly
+              compact
+              buttonLabel="Insert"
+              title="Insert Dataset CMID"
+              onInsert={(cmid) => setLeftDatasetID(cmid)}
+            />
+          </Box>
+        </Box>
+
+        <Box sx={{ minWidth: 280 }}>
+          <Typography variant="subtitle2" sx={{ color: 'black', mb: 0.5 }}>
+            Second datasetID
+          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <TextField
+              size="small"
+              placeholder="e.g., SD123 or AD456"
+              value={rightDatasetID}
+              onChange={(event) => setRightDatasetID(event.target.value)}
+              sx={{ width: 230 }}
+            />
+            <SavedCmidInsertPopover
+              user={user}
+              cred={cred}
+              database={database}
+              datasetOnly
+              compact
+              buttonLabel="Insert"
+              title="Insert Dataset CMID"
+              onInsert={(cmid) => setRightDatasetID(cmid)}
+            />
+          </Box>
+        </Box>
+
+        <Tooltip
+          arrow
+          title="You can either enter the dataset CMID in the textbox or leave it blank and enter the CMID in a column called datasetID. If you use the datasetID column, every row must include the dataset CMID. This allows joining datasets from multiple different sources."
+        >
+          <IconButton size="small" sx={{ mb: 0.4 }}>
+            <InfoIcon />
+          </IconButton>
+        </Tooltip>
+      </Box>
 
       <Box sx={{
         mb: 2,
