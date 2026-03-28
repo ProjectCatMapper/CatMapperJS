@@ -1450,62 +1450,60 @@ export default function Tableclick({ cmid, database, tabval }) {
             display: "grid",
             gridTemplateRows: "auto auto auto",
             width: "100%",
+            position: "relative",
             backgroundImage: `linear-gradient(to bottom right,#555555, #cccccc)`,
             backgroundSize: "cover",
           }}
         >
+          <Box className="view-logs-anchor">
+            <Button
+              variant="outlined"
+              onClick={handleOpenLogs}
+              className="view-logs-btn"
+            >
+              View Logs
+            </Button>
+          </Box>
           <div className="category-info-header-row">
             <div className="category-info-header-pill">
-              <div className="category-info-header-main">
-                <h2 className="category-info-header-title">
-                  {isDeletedNode ? "DELETED Node Info" : "Category Info"}
-                </h2>
-                <MuiTool
-                  title={
-                    <Typography sx={{ fontSize: "1rem", fontWeight: "bold" }}>
-                      Here, you can toggle between viewing sample info, maps, and
-                      the network of contextual ties to this category.
-                    </Typography>
-                  }
-                  arrow
-                  componentsProps={{
-                    tooltip: {
-                      sx: {
-                        backgroundColor: "rgba(255, 255, 255, 0.9)",
-                        color: "#000000",
-                        border: "1px solid rgba(0, 0, 0, 0.2)",
-                        boxShadow: "0 2px 8px rgba(0, 0, 0, 0.2)",
-                      },
+              <h2 className="category-info-header-title">
+                {isDeletedNode ? "DELETED Node Info" : "Category Info"}
+              </h2>
+              <MuiTool
+                title={
+                  <Typography sx={{ fontSize: "1rem", fontWeight: "bold" }}>
+                    Here, you can toggle between viewing sample info, maps, and
+                    the network of contextual ties to this category.
+                  </Typography>
+                }
+                arrow
+                componentsProps={{
+                  tooltip: {
+                    sx: {
+                      backgroundColor: "rgba(255, 255, 255, 0.9)",
+                      color: "#000000",
+                      border: "1px solid rgba(0, 0, 0, 0.2)",
+                      boxShadow: "0 2px 8px rgba(0, 0, 0, 0.2)",
                     },
-                    arrow: {
-                      sx: {
-                        color: "rgba(255, 255, 255, 0.9)",
-                      },
+                  },
+                  arrow: {
+                    sx: {
+                      color: "rgba(255, 255, 255, 0.9)",
                     },
-                  }}
-                >
-                  <InfoIcon className="category-info-header-info-icon" />
-                </MuiTool>
-              </div>
-              <div className="category-info-header-actions">
-                <Button
-                  size="small"
-                  variant="outlined"
-                  onClick={handleOpenLogs}
-                  className="view-logs-btn"
-                >
-                  Change Logs
-                </Button>
-                <Button
-                  size="small"
-                  startIcon={<BookmarkBorderIcon />}
-                  variant="outlined"
-                  onClick={handleBookmarkCurrent}
-                  className="category-info-bookmark-btn"
-                >
-                  Bookmark
-                </Button>
-              </div>
+                  },
+                }}
+              >
+                <InfoIcon className="category-info-header-info-icon" />
+              </MuiTool>
+              <Button
+                size="small"
+                startIcon={<BookmarkBorderIcon />}
+                variant="outlined"
+                onClick={handleBookmarkCurrent}
+                className="category-info-bookmark-btn"
+              >
+                Bookmark
+              </Button>
             </div>
           </div>
           {isDeletedNode && (
@@ -1568,32 +1566,15 @@ export default function Tableclick({ cmid, database, tabval }) {
                         return (
                           <Box
                             key={`${key}-${entry.row}`}
-                            className={[
-                              "category-info-card",
-                              entry.row === 1 ? "category-info-card--primary" : "",
-                              entry.normalized.includes("language") || entry.normalized.includes("religion")
-                                ? "category-info-card--wide"
-                                : "",
-                              entry.normalized === "cmname" ? "category-info-card--cmname" : "",
-                            ].filter(Boolean).join(" ")}
+                            className="category-info-card"
                           >
                             <Box component="span" className="category-info-inline">
-                              <Box
-                                component="span"
-                                className={[
-                                  "category-info-key",
-                                  entry.row === 1 ? "category-info-key--primary" : "",
-                                ].filter(Boolean).join(" ")}
-                              >
+                              <Box component="span" className="category-info-key">
                                 {entry.displayKey}
                               </Box>
                               <Box
                                 component="span"
-                                className={[
-                                  "category-info-value",
-                                  entry.row === 1 ? "category-info-value--primary" : "",
-                                  entry.normalized === "cmname" ? "category-info-value--cmname" : "",
-                                ].filter(Boolean).join(" ")}
+                                className="category-info-value"
                               >
                                 {key === "Dataset Location" ? (
                                   <a
