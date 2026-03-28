@@ -6,7 +6,6 @@ import Tooltip from '@mui/material/Tooltip';
 import InfoIcon from '@mui/icons-material/Info';
 import { useAuth } from './AuthContext';
 import { Dialog, DialogContent, DialogActions, DialogContentText, DialogTitle } from '@mui/material';
-import domainFieldOptions from "./dropdown.json";
 import { parseTabularFile } from '../utils/tabularUpload';
 import SavedCmidInsertPopover from './SavedCmidInsertPopover';
 import { downloadJsonAsXlsx, downloadSheetsAsXlsx } from '../utils/excelExport';
@@ -634,6 +633,9 @@ const Edit = ({ database }) => {
     const loadSimpleDomains = async () => {
       try {
         const response = await fetch(`${process.env.REACT_APP_API_URL}/getDomains/${database}`);
+        if (!response.ok) {
+          throw new Error(`Failed to load simple upload domains (${response.status}).`);
+        }
         const data = await response.json();
 
         const normalizedRaw = (Array.isArray(data) ? data : [])
@@ -667,27 +669,15 @@ const Edit = ({ database }) => {
           return { ...prev, domain: nextDomain, subdomain: nextSubdomain };
         });
       } catch (err) {
-        const staticDomains = Object.keys(domainFieldOptions).filter((value) => !excluded.has(String(value).toUpperCase()));
-        const staticDomainRowsRaw = staticDomains.map((value) => ({
-          display: value,
-          subdisplay: value,
-          subdomain: value,
-          order: 9999,
-          suborder: 9999,
+        setSimpleDomainsData([]);
+        setSimpleDomainOptions([]);
+        setSimpleSubdomainOptions([]);
+        setFormData((prev) => ({
+          ...prev,
+          domain: '',
+          subdomain: '',
         }));
-        const staticDomainRows = buildSimpleSubdomainLabels(staticDomainRowsRaw);
-        setSimpleDomainsData(staticDomainRows);
-        setSimpleDomainOptions(staticDomains);
-
-        setFormData((prev) => {
-          const nextDomain = prev.domain && staticDomains.includes(prev.domain) ? prev.domain : (staticDomains[0] || '');
-          const subdomains = getSimpleSubdomainsForDomain(nextDomain, staticDomainRows);
-          const nextSubdomain = subdomains.some((item) => item.subdomain === prev.subdomain)
-            ? prev.subdomain
-            : (subdomains[0]?.subdomain || '');
-          setSimpleSubdomainOptions(subdomains);
-          return { ...prev, domain: nextDomain, subdomain: nextSubdomain };
-        });
+        setError('Unable to load domain/subdomain metadata from the API. Please try again later.');
       }
     };
 
