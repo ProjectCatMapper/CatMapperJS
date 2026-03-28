@@ -34,6 +34,7 @@ const getInitialFormData = () => ({
   categoryNamesColumn: '',
   alternateCategoryNamesColumns: [],
   cmidColumn: '',
+  keyColumns: [],
   keyColumn: '',
 });
 
@@ -457,6 +458,16 @@ const Edit = ({ database }) => {
     }));
   };
 
+  const handleSimpleKeyColumnsChange = (event) => {
+    const value = event.target.value;
+    const keyColumns = typeof value === 'string' ? value.split(',') : value;
+    setFormData((prev) => ({
+      ...prev,
+      keyColumns,
+      keyColumn: keyColumns.length > 0 ? keyColumns[0] : '',
+    }));
+  };
+
   // Checks for:
   // - Duplicate column name values
   // - Missing values for datasetID,Key,label,CMID(except for function 1),mergingID,variableID,varName,categoryID
@@ -747,12 +758,16 @@ const Edit = ({ database }) => {
       setError("Please select a CMName column.");
       return false;
     }
-    if (!formData.keyColumn) {
-      setError("Please select a Key column.");
+    const selectedKeyColumns = Array.isArray(formData.keyColumns) && formData.keyColumns.length > 0
+      ? formData.keyColumns
+      : (formData.keyColumn ? [formData.keyColumn] : []);
+
+    if (selectedKeyColumns.length === 0) {
+      setError("Please select at least one Key column.");
       return false;
     }
 
-    const requiredColumns = [formData.cmNameColumn, formData.keyColumn];
+    const requiredColumns = [formData.cmNameColumn, ...selectedKeyColumns];
     if (formData.categoryNamesColumn) requiredColumns.push(formData.categoryNamesColumn);
     if (Array.isArray(formData.alternateCategoryNamesColumns) && formData.alternateCategoryNamesColumns.length > 0) {
       requiredColumns.push(...formData.alternateCategoryNamesColumns);
@@ -1551,17 +1566,23 @@ const Edit = ({ database }) => {
           <Box sx={{ mb: 2 }}>
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
               <InputLabel id="domain-label" style={{ color: "black " }}>
-                Select the column for <strong>Key</strong>:
+                Select column(s) for <strong>Key</strong>:
               </InputLabel>
-              <SimpleFieldInfoButton helpText="This selected column is mapped to Key and then formatted by the backend createKey function into CatMapper key format before validation and upload." />
+              <SimpleFieldInfoButton helpText="Selected key columns are converted into Key expressions. Non-empty values are joined with && (for example var1 == x && var2 == y). If one selected key column is blank for a row, only the non-empty key part is used." />
             </Box>
             <br />
             <Select
               labelId="domain-label"
               id="domain"
               name="keyColumn"
-              value={formData.keyColumn}
-              onChange={handleChange}
+              multiple
+              value={
+                (Array.isArray(formData.keyColumns) && formData.keyColumns.length > 0)
+                  ? formData.keyColumns
+                  : (formData.keyColumn ? [formData.keyColumn] : [])
+              }
+              onChange={handleSimpleKeyColumnsChange}
+              renderValue={(selected) => selected.join(', ')}
               sx={{ width: 300, height: 40 }}
               margin="normal"
             >
