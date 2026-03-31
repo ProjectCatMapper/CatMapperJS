@@ -56,6 +56,10 @@ const DownloadDialogButton = ({ users, database, domain, count,cmid_download }) 
   const [availableProps, setAvailableProps] = useState([]);
   const [loading,setLoading] = useState(false);
 
+  const resolvedCMIDs = Array.isArray(cmid_download) && cmid_download.length > 0
+    ? cmid_download.filter(Boolean)
+    : (users || []).map((u) => u?.CMID).filter(Boolean);
+
   useEffect(() => {
     const fetchProps = async () => {
       if (!users || users.length === 0 || !open) return;
@@ -94,12 +98,15 @@ const DownloadDialogButton = ({ users, database, domain, count,cmid_download }) 
       return;
     }
 
+    if (!resolvedCMIDs.length) {
+      alert('No CatMapper IDs were available for these visible results. Please rerun the search and try again.');
+      return;
+    }
+
     const dateStr = new Date().toISOString().split('T')[0];
-    console.log(domain)
 
     try {
       setLoading(true);
-      console.log(cmid_download)
       // Download with selected node properties from API
       const res = await fetch(`${process.env.REACT_APP_API_URL}/download/advanced/${database}`, {
       //const res = await fetch(`http://127.0.0.1:5001/download/advanced/${database}`, {
@@ -109,7 +116,7 @@ const DownloadDialogButton = ({ users, database, domain, count,cmid_download }) 
     'Content-Type': 'application/json',
     'Accept': 'application/json' // ensure JSON so we can control columns
   },
-  body: JSON.stringify({properties: selectedProps,domain:domain,CMIDs:cmid_download })
+  body: JSON.stringify({properties: selectedProps,domain:domain,CMIDs: resolvedCMIDs })
 });
 
 if (!res.ok) throw new Error(`Download failed: ${res.status}`);

@@ -226,7 +226,9 @@ export default function Searchbar({ database }) {
         contextMode,
         datasetID,
         optionsForSelectedCategory,
-        useNlpSearch
+        useNlpSearch,
+        qcount,
+        cmid_download
       } = JSON.parse(storedState);
 
       setdomainDrop(domainDrop);
@@ -242,6 +244,10 @@ export default function Searchbar({ database }) {
       setContextMode(contextMode === "any" ? "any" : "all");
       setdatasetID(datasetID);
       setUseNlpSearch(Boolean(useNlpSearch));
+      setqcount(Number.isFinite(Number(qcount)) ? Number(qcount) : null);
+      if (Array.isArray(cmid_download)) {
+        setCMIDDownload(cmid_download.filter(Boolean));
+      }
       //setqlimit(qlimit);
       setoptionsForSelectedCategory(optionsForSelectedCategory);
     }
@@ -263,17 +269,26 @@ export default function Searchbar({ database }) {
       contextMode,
       datasetID,
       optionsForSelectedCategory,
-      useNlpSearch
+      useNlpSearch,
+      qcount,
+      cmid_download
     }));
-  }, [searchStateKey, domainDrop, advdomainDrop, advoptions, selectedOption, selectedcountry, tvalue, yearStart, yearEnd, isChecked, contextID, contextMode, datasetID, optionsForSelectedCategory, useNlpSearch]);
+  }, [searchStateKey, domainDrop, advdomainDrop, advoptions, selectedOption, selectedcountry, tvalue, yearStart, yearEnd, isChecked, contextID, contextMode, datasetID, optionsForSelectedCategory, useNlpSearch, qcount, cmid_download]);
 
   // Fetch and save users data to sessionStorage
   useEffect(() => {
     const storedUsers = sessionStorage.getItem(usersKey);
     if (storedUsers) {
-      setUsers(JSON.parse(storedUsers));
+      const parsedUsers = JSON.parse(storedUsers);
+      setUsers(parsedUsers);
+      if ((!Array.isArray(cmid_download) || cmid_download.length === 0) && Array.isArray(parsedUsers)) {
+        setCMIDDownload(parsedUsers.map((user) => user?.CMID).filter(Boolean));
+      }
+      if ((qcount === null || qcount === undefined) && Array.isArray(parsedUsers)) {
+        setqcount(parsedUsers.length);
+      }
     }
-  }, [usersKey]);
+  }, [usersKey, cmid_download, qcount]);
 
   useEffect(() => {
     sessionStorage.setItem(usersKey, JSON.stringify(users));
@@ -295,6 +310,9 @@ export default function Searchbar({ database }) {
     setcontextID("")
     setContextMode("all")
     setdatasetID("")
+    setqcount(null)
+    setCMIDDownload(null)
+    setUsers([])
     setNlpSummary("")
   }
 

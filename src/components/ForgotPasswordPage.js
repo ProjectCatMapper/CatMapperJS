@@ -1,14 +1,16 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import Box from '@mui/material/Box';
 import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
 import Alert from '@mui/material/Alert';
 import { ensureDatabase } from '../utils/database';
+import { parseResetLinkParams } from '../utils/forgotPasswordLink';
 import { confirmForgotPassword, requestForgotPassword } from '../api/profileApi';
 
 const ForgotPasswordPage = ({ database }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const safeDatabase = ensureDatabase(database);
 
   const [username, setUsername] = useState('');
@@ -19,6 +21,39 @@ const ForgotPasswordPage = ({ database }) => {
   const [verificationCode, setVerificationCode] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+
+  useEffect(() => {
+    const linkParams = parseResetLinkParams(location.search);
+    if (!linkParams.email && !linkParams.username && !linkParams.requestId && !linkParams.verificationCode) {
+      return;
+    }
+
+    if (linkParams.email) {
+      setEmail((current) => current || linkParams.email);
+    }
+    if (linkParams.username) {
+      setUsername((current) => current || linkParams.username);
+    }
+    if (linkParams.requestId) {
+      setResetRequest((current) => {
+        if (current?.requestId === linkParams.requestId) {
+          return current;
+        }
+        return {
+          ...(current || {}),
+          requestId: linkParams.requestId,
+        };
+      });
+    }
+    if (linkParams.verificationCode) {
+      setVerificationCode((current) => current || linkParams.verificationCode);
+    }
+
+    if (linkParams.requestId || linkParams.verificationCode) {
+      setErrorMessage('');
+      setSuccessMessage('Password reset link recognized. Review the details below and confirm the reset.');
+    }
+  }, [location.search]);
 
   const handleRequestPasswordReset = async () => {
     setErrorMessage('');

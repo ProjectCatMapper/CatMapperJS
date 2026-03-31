@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { Routes, Route, useLocation } from "react-router-dom";
+import { Navigate, Routes, Route, useLocation } from "react-router-dom";
 
 import ProtectedRoute from './components/ProtectedRoute';
 import DatabaseRoute from './components/DatabaseRoute';
@@ -38,6 +38,7 @@ import Profile from './routes/Profile';
 import ReactGA from 'react-ga4';
 import CookieBanner from './components/CookieBanner';
 import { isCookieConsentAccepted } from './utils/cookieConsent';
+import { DEFAULT_DATABASE } from './utils/database';
 
 const GA_ID = process.env.REACT_APP_GOOGLE_ANALYTICS_ID;
 
@@ -73,9 +74,12 @@ const App = () => {
       <CookieBanner />
       <Routes>
         <Route path='/' element={<Catmapper />} />
+        <Route path='/forgot-password' element={<Navigate to={`/${DEFAULT_DATABASE}/forgot-password`} replace />} />
+        <Route path='/reset-password' element={<Navigate to={`/${DEFAULT_DATABASE}/forgot-password`} replace />} />
         <Route path='/:database' element={<DatabaseRoute><AppHome /></DatabaseRoute>} />
         <Route path='/:database/login' element={<DatabaseRoute><Logins /></DatabaseRoute>} />
         <Route path='/:database/forgot-password' element={<DatabaseRoute><ForgotPassword /></DatabaseRoute>} />
+        <Route path='/:database/reset-password' element={<DatabaseRoute><ForgotPassword /></DatabaseRoute>} />
         <Route path="/:database/register" element={<DatabaseRoute><RegisterPage /></DatabaseRoute>} />
         <Route path='/:database/explore' element={<DatabaseRoute><Explore /></DatabaseRoute>} />
         <Route path='/:database/translate' element={<DatabaseRoute><Translate /></DatabaseRoute>} />
