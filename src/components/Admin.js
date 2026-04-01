@@ -88,6 +88,7 @@ const Admin = ({ database }) => {
     updatedRelationships: false,
     deletedObjects: false,
   });
+  const [userStatusSummary, setUserStatusSummary] = useState({});
   const [userEditForm, setUserEditForm] = useState({
     userid: "",
     first: "",
@@ -532,6 +533,27 @@ const Admin = ({ database }) => {
       alert(error?.message || "Unable to lookup users.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadUserStatusSummary = async () => {
+    try {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/admin/users/status-summary`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          ...(cred ? { Authorization: `Bearer ${cred}` } : {}),
+        },
+      });
+
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result?.error || "Unable to load user summary.");
+      }
+
+      setUserStatusSummary(result?.summary || {});
+    } catch (error) {
+      console.error("Error loading user status summary:", error);
     }
   };
 
@@ -1109,10 +1131,18 @@ const Admin = ({ database }) => {
     }));
   }, [user]);
 
+  useEffect(() => {
+    if (firstDropdownValue === "lookup/edit users") {
+      loadUserStatusSummary();
+    }
+  }, [firstDropdownValue]);
+
   const selectedLookupUser = userLookupResults.find(
     (row) => String(row.userid) === String(selectedLookupUserId)
   );
   const selectedLookupStats = selectedLookupUser?.updateStats?.total || {};
+  const statusSummaryEntries = Object.entries(userStatusSummary).sort(([a], [b]) => a.localeCompare(b));
+  const statusSummaryTotal = statusSummaryEntries.reduce((sum, [, count]) => sum + Number(count || 0), 0);
 
 
   return (
@@ -2091,6 +2121,32 @@ const Admin = ({ database }) => {
 
         {firstDropdownValue === "lookup/edit users" && (
           <Box sx={{ ml: 1, width: "100%", minWidth: 0, pb: 3 }}>
+            <Box
+              sx={{
+                display: "flex",
+                flexWrap: "wrap",
+                gap: 1,
+                alignItems: "center",
+                mb: 2,
+                px: 1.25,
+                py: 1,
+                border: "1px solid #d9d9d9",
+                borderRadius: 1,
+                backgroundColor: "#f7f7f7",
+              }}
+            >
+              <Typography variant="body2" sx={{ fontWeight: 700 }}>
+                User totals:
+              </Typography>
+              <Typography variant="body2">
+                Total {statusSummaryTotal}
+              </Typography>
+              {statusSummaryEntries.map(([status, count]) => (
+                <Typography key={status} variant="body2">
+                  {status} {count}
+                </Typography>
+              ))}
+            </Box>
             <Typography variant="body1" sx={{ mb: 1 }}>
               Search by user ID, username, email, first name, or last name.
             </Typography>
