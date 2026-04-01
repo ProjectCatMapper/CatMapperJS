@@ -28,7 +28,7 @@ import {
   Paper
 } from "@mui/material";
 import { useAuth } from './AuthContext';
-import { DataGrid } from '@mui/x-data-grid';
+import { DataGrid, GridToolbar } from '@mui/x-data-grid';
 import CircularProgress from "@mui/material/CircularProgress";
 import FooterLinks from "./FooterLinks";
 import CardContent from '@mui/material/CardContent';
@@ -83,6 +83,11 @@ const Admin = ({ database }) => {
   const [userLookupQuery, setUserLookupQuery] = useState("");
   const [userLookupResults, setUserLookupResults] = useState([]);
   const [selectedLookupUserId, setSelectedLookupUserId] = useState("");
+  const [userLookupFilterModel, setUserLookupFilterModel] = useState({ items: [] });
+  const [userLookupColumnVisibilityModel, setUserLookupColumnVisibilityModel] = useState({
+    updatedRelationships: false,
+    deletedObjects: false,
+  });
   const [userEditForm, setUserEditForm] = useState({
     userid: "",
     first: "",
@@ -447,18 +452,18 @@ const Admin = ({ database }) => {
   };
 
   const userLookupColumns = [
-    { field: "userid", headerName: "User ID", width: 110 },
-    { field: "username", headerName: "Username", width: 150 },
-    { field: "email", headerName: "Email", width: 220 },
-    { field: "name", headerName: "Name", width: 180 },
-    { field: "database", headerName: "Database", width: 160 },
-    { field: "access", headerName: "Access", width: 120 },
-    { field: "role", headerName: "Role", width: 100 },
-    { field: "totalActions", headerName: "Total Updates", width: 130 },
-    { field: "createdNodes", headerName: "Created Nodes", width: 130 },
-    { field: "updatedNodes", headerName: "Updated Nodes", width: 130 },
-    { field: "updatedRelationships", headerName: "Updated Rels", width: 130 },
-    { field: "deletedObjects", headerName: "Deleted", width: 110 },
+    { field: "userid", headerName: "User ID", minWidth: 92, flex: 0.65 },
+    { field: "username", headerName: "Username", minWidth: 130, flex: 0.95 },
+    { field: "email", headerName: "Email", minWidth: 190, flex: 1.35 },
+    { field: "name", headerName: "Name", minWidth: 160, flex: 1.05 },
+    { field: "database", headerName: "Database", minWidth: 140, flex: 0.95 },
+    { field: "access", headerName: "Access", minWidth: 95, flex: 0.65 },
+    { field: "role", headerName: "Role", minWidth: 85, flex: 0.55 },
+    { field: "totalActions", headerName: "Total Updates", minWidth: 120, flex: 0.8, type: "number" },
+    { field: "createdNodes", headerName: "Created Nodes", minWidth: 118, flex: 0.78, type: "number" },
+    { field: "updatedNodes", headerName: "Updated Nodes", minWidth: 118, flex: 0.78, type: "number" },
+    { field: "updatedRelationships", headerName: "Updated Rels", minWidth: 118, flex: 0.78, type: "number" },
+    { field: "deletedObjects", headerName: "Deleted", minWidth: 92, flex: 0.6, type: "number" },
   ];
 
   const hydrateUserEditForm = (row) => {
@@ -1120,6 +1125,8 @@ const Admin = ({ database }) => {
           alignItems: 'stretch',
           gap: 2,
           bgcolor: "white",
+          width: "100%",
+          overflow: "visible",
         }}
       >
         <Box
@@ -1200,7 +1207,7 @@ const Admin = ({ database }) => {
           )}
         </Box>
 
-        <Box sx={{ flex: 1, display: "flex", flexDirection: "column", pr: { md: 1 } }}>
+        <Box sx={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", pr: { md: 1 } }}>
           <Box sx={{ mb: 2 }}>
             <Typography sx={{ mt: 1, fontWeight: 600 }}>
               Selected option: {routineOptionByKey[firstDropdownValue]?.label || firstDropdownValue}
@@ -2083,7 +2090,7 @@ const Admin = ({ database }) => {
 } */}
 
         {firstDropdownValue === "lookup/edit users" && (
-          <Box sx={{ ml: 1, maxWidth: 1200 }}>
+          <Box sx={{ ml: 1, width: "100%", minWidth: 0, pb: 3 }}>
             <Typography variant="body1" sx={{ mb: 1 }}>
               Search by user ID, username, email, first name, or last name.
             </Typography>
@@ -2111,17 +2118,45 @@ const Admin = ({ database }) => {
             </Box>
 
             {userLookupResults.length > 0 && (
-              <Box sx={{ width: "100%", mb: 2 }}>
+              <Box
+                sx={{
+                  width: "100%",
+                  minWidth: 0,
+                  mb: 2,
+                  border: "1px solid #d9d9d9",
+                  borderRadius: 1,
+                  backgroundColor: "#fff",
+                  overflow: "hidden",
+                }}
+              >
                 <DataGrid
-                  sx={{ height: 320 }}
+                  autoHeight
+                  density="compact"
                   rows={userLookupResults}
                   columns={userLookupColumns}
                   getRowId={(row) => row.userid}
-                  pageSize={5}
-                  rowsPerPageOptions={[5, 10, 20]}
+                  filterModel={userLookupFilterModel}
+                  onFilterModelChange={setUserLookupFilterModel}
+                  columnVisibilityModel={userLookupColumnVisibilityModel}
+                  onColumnVisibilityModelChange={setUserLookupColumnVisibilityModel}
+                  pageSizeOptions={[5, 10, 20, 50]}
                   checkboxSelection={false}
                   disableRowSelectionOnClick={false}
+                  disableColumnResize={false}
                   rowSelectionModel={selectedLookupUserId ? [selectedLookupUserId] : []}
+                  slots={{ toolbar: GridToolbar }}
+                  slotProps={{
+                    toolbar: {
+                      showQuickFilter: true,
+                      csvOptions: { disableToolbarButton: true },
+                      printOptions: { disableToolbarButton: true },
+                    },
+                  }}
+                  initialState={{
+                    pagination: {
+                      paginationModel: { page: 0, pageSize: 10 },
+                    },
+                  }}
                   onRowSelectionModelChange={(newSelection) => {
                     const selected = Array.isArray(newSelection) ? newSelection[0] : null;
                     if (!selected) return;
@@ -2129,6 +2164,26 @@ const Admin = ({ database }) => {
                     if (row) {
                       hydrateUserEditForm(row);
                     }
+                  }}
+                  sx={{
+                    border: 0,
+                    '& .MuiDataGrid-columnHeaders': {
+                      fontSize: '0.82rem',
+                    },
+                    '& .MuiDataGrid-cell': {
+                      fontSize: '0.8rem',
+                      py: 0.25,
+                    },
+                    '& .MuiDataGrid-toolbarContainer': {
+                      justifyContent: 'space-between',
+                      gap: 1,
+                      px: 1,
+                      py: 0.75,
+                      borderBottom: '1px solid #ececec',
+                    },
+                    '& .MuiDataGrid-footerContainer': {
+                      minHeight: 44,
+                    },
                   }}
                 />
               </Box>
@@ -2540,14 +2595,26 @@ const Admin = ({ database }) => {
             }}>
               {users.length > 0 && <DataGrid
                 sx={{
-                  flexGrow: 1,
-                  maxHeight: '100%',
-                  overflow: 'auto'
+                  border: "1px solid #d9d9d9",
+                  backgroundColor: "#fff",
+                  '& .MuiDataGrid-columnHeaders': {
+                    fontSize: '0.82rem',
+                  },
+                  '& .MuiDataGrid-cell': {
+                    fontSize: '0.8rem',
+                    py: 0.25,
+                  },
                 }}
+                autoHeight
+                density="compact"
                 rows={users}
                 columns={columns}
-                pageSize={5}
-                rowsPerPageOptions={[5, 10, 20]}
+                pageSizeOptions={[5, 10, 20]}
+                initialState={{
+                  pagination: {
+                    paginationModel: { page: 0, pageSize: 10 },
+                  },
+                }}
                 checkboxSelection
                 onRowSelectionModelChange={(newSelectionModel) => {
                   updateSelectedUserIds(newSelectionModel);
