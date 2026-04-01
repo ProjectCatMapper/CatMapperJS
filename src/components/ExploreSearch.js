@@ -275,7 +275,8 @@ export default function Searchbar({ database }) {
     }));
   }, [searchStateKey, domainDrop, advdomainDrop, advoptions, selectedOption, selectedcountry, tvalue, yearStart, yearEnd, isChecked, contextID, contextMode, datasetID, optionsForSelectedCategory, useNlpSearch, qcount, cmid_download]);
 
-  // Fetch and save users data to sessionStorage
+  // Restore cached result rows only when the database-specific storage key changes.
+  // Rehydrating on live search state updates can overwrite fresh API results with stale session data.
   useEffect(() => {
     const storedUsers = sessionStorage.getItem(usersKey);
     if (storedUsers) {
@@ -288,7 +289,7 @@ export default function Searchbar({ database }) {
         setqcount(parsedUsers.length);
       }
     }
-  }, [usersKey, cmid_download, qcount]);
+  }, [usersKey]);
 
   useEffect(() => {
     sessionStorage.setItem(usersKey, JSON.stringify(users));
