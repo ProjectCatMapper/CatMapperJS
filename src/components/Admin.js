@@ -104,6 +104,8 @@ const Admin = ({ database }) => {
   const [datasetID, setDatasetID] = useState('')
   const [mergeConfirmOpen, setMergeConfirmOpen] = useState(false);
   const [mergePreview, setMergePreview] = useState({ keep: null, discard: null });
+  const [passwordConfirmOpen, setPasswordConfirmOpen] = useState(false);
+  const [passwordConfirmTarget, setPasswordConfirmTarget] = useState(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [collapsedSections, setCollapsedSections] = useState({
     "Edit Options": true,
@@ -597,6 +599,117 @@ const Admin = ({ database }) => {
       alert(result?.message || "User updated.");
     } catch (error) {
       alert(error?.message || "Unable to update user.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const closePasswordConfirmDialog = () => {
+    setPasswordConfirmOpen(false);
+    setPasswordConfirmTarget(null);
+  };
+
+  const resolvePasswordTargetUser = async (identifier) => {
+    const lookupValue = String(identifier || "").trim();
+    if (!lookupValue) {
+      throw new Error("Enter a username, email, or user ID.");
+    }
+
+    const normalizedLookup = lookupValue.toLowerCase();
+    const matchesLookup = (row) =>
+      String(row?.userid || "") === lookupValue ||
+      String(row?.username || "").toLowerCase() === normalizedLookup ||
+      String(row?.email || "").toLowerCase() === normalizedLookup;
+
+    const localMatch = userLookupResults.find(matchesLookup);
+    if (localMatch) {
+      return localMatch;
+    }
+
+    const response = await fetch(`${process.env.REACT_APP_API_URL}/admin/users/lookup`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(cred ? { Authorization: `Bearer ${cred}` } : {}),
+      },
+      body: JSON.stringify({
+        query: lookupValue,
+      }),
+    });
+
+    const result = await response.json();
+    if (!response.ok) {
+      throw new Error(result?.error || "Unable to lookup users.");
+    }
+
+    const exactMatch = (result?.users || []).find(matchesLookup);
+    if (!exactMatch) {
+      throw new Error(`No user found for "${lookupValue}".`);
+    }
+    return exactMatch;
+  };
+
+  const requestPasswordChangeConfirmation = async () => {
+    const lookupValue = (formData.s1_2 || "").trim();
+    const nextPassword = String(formData.s1_3 || "");
+
+    if (!lookupValue) {
+      alert("Enter a username, email, or user ID.");
+      return;
+    }
+    if (nextPassword.length < 6) {
+      alert("New password must be at least 6 characters.");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const matchedUser = await resolvePasswordTargetUser(lookupValue);
+      setPasswordConfirmTarget(matchedUser);
+      setPasswordConfirmOpen(true);
+    } catch (error) {
+      alert(error?.message || "Unable to prepare password change.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const submitAdminPasswordChange = async () => {
+    try {
+      if (!passwordConfirmTarget?.userid) {
+        alert("Select a valid user first.");
+        return;
+      }
+
+      setLoading(true);
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/admin/users/update`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(cred ? { Authorization: `Bearer ${cred}` } : {}),
+        },
+        body: JSON.stringify({
+          userid: passwordConfirmTarget.userid,
+          updates: {
+            password: formData.s1_3,
+          },
+        }),
+      });
+
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result?.error || "Unable to update password.");
+      }
+
+      closePasswordConfirmDialog();
+      setFormData((prev) => ({
+        ...prev,
+        s1_2: "",
+        s1_3: "",
+      }));
+      alert(result?.message || "Password updated.");
+    } catch (error) {
+      alert(error?.message || "Unable to update password.");
     } finally {
       setLoading(false);
     }
@@ -2173,6 +2286,7 @@ const Admin = ({ database }) => {
             </InputLabel>
             <TextField
               name="s1_3"
+              type="password"
               value={formData.s1_3}
               onChange={updateFormFieldValue}
               sx={{ width: 300, height: 40, mb: 4 }}
@@ -2180,6 +2294,21 @@ const Admin = ({ database }) => {
               margin="normal"
               size="small"
             />
+            <Box sx={{ mt: 1 }}>
+              <Button
+                variant="contained"
+                sx={{
+                  backgroundColor: "black",
+                  color: "white",
+                  "&:hover": {
+                    backgroundColor: "green",
+                  },
+                }}
+                onClick={requestPasswordChangeConfirmation}
+              >
+                Submit Password Change
+              </Button>
+            </Box>
           </Box>
         )
         }
@@ -2493,6 +2622,31 @@ const Admin = ({ database }) => {
             }}
           >
             Confirm Merge
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={passwordConfirmOpen} onClose={closePasswordConfirmDialog}>
+        <DialogTitle>Confirm Password Change</DialogTitle>
+        <DialogContent>
+          <Typography sx={{ mb: 2 }}>
+            Are you sure you want to change this user&apos;s password?
+          </Typography>
+          <Typography>
+            <strong>User:</strong> {passwordConfirmTarget?.username || passwordConfirmTarget?.userid}
+          </Typography>
+          <Typography>
+            <strong>Email:</strong> {passwordConfirmTarget?.email || "NA"}
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={closePasswordConfirmDialog}>Cancel</Button>
+          <Button
+            color="success"
+            variant="contained"
+            onClick={submitAdminPasswordChange}
+          >
+            Confirm Password Change
           </Button>
         </DialogActions>
       </Dialog>
