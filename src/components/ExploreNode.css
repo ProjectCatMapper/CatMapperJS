@@ -90,8 +90,8 @@ h1,h4,p,a{
 .category-info-grid-inner {
   display: flex;
   flex-direction: column;
-  align-items: stretch;
-  gap: 8px;
+  align-items: flex-start;
+  gap: 6px;
   width: 100%;
   min-width: 0;
 }
@@ -99,7 +99,8 @@ h1,h4,p,a{
 .category-info-section {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  align-items: flex-start;
+  gap: 6px;
   width: 100%;
   min-width: 0;
 }
@@ -115,32 +116,36 @@ h1,h4,p,a{
 .category-info-item {
   display: flex;
   min-width: 0;
+  width: fit-content;
+  max-width: 100%;
   border: 1px solid rgba(0, 0, 0, 0.16);
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.78);
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
-  padding: 7px 9px;
+  padding: 6px 8px;
 }
 
 .category-info-primary-item {
-  flex: 1 1 240px;
+  flex: 0 1 auto;
   background: rgba(255, 255, 255, 0.92);
+  max-width: min(100%, 42rem);
 }
 
 .category-info-compact-item {
-  flex: 1 1 240px;
-  max-width: 100%;
+  flex: 0 1 auto;
+  max-width: min(100%, 36rem);
 }
 
 .category-info-compact-item.category-info-item-location,
 .category-info-compact-item.category-info-item-language,
 .category-info-compact-item.category-info-item-religion,
 .category-info-compact-item.category-info-item-datasetlocation {
-  flex-basis: 320px;
+  max-width: min(100%, 48rem);
 }
 
 .category-info-detail-item {
   width: 100%;
+  max-width: min(100%, 72rem);
   padding: 9px 10px;
 }
 
@@ -155,23 +160,29 @@ h1,h4,p,a{
   align-items: baseline;
   flex-wrap: wrap;
   gap: 6px;
-  width: 100%;
+  width: auto;
+  max-width: 100%;
   min-width: 0;
   line-height: 1.28;
+}
+
+.category-info-detail-item .category-info-inline {
+  width: 100%;
 }
 
 .category-info-key {
   display: inline-flex;
   padding: 2px 6px;
   border-radius: 999px;
-  border: 1px solid rgba(0, 0, 0, 0.2);
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.16);
+  border: 1px solid rgba(15, 86, 207, 0.28);
+  box-shadow: none;
   font-size: 0.72rem;
   font-weight: 700;
   line-height: 1.1;
   text-transform: uppercase;
   letter-spacing: 0.03em;
-  background: rgba(255, 255, 255, 0.9);
+  color: #123d84;
+  background: rgba(15, 86, 207, 0.12);
 }
 
 .category-info-value {
@@ -246,6 +257,10 @@ h1,h4,p,a{
   .category-info-detail-item {
     max-width: 100%;
     flex-basis: 100%;
+  }
+
+  .category-info-inline {
+    width: 100%;
   }
 }
 
