@@ -1334,12 +1334,15 @@ export default function Tableclick({ cmid, database, tabval }) {
     };
 
     const renderCategoryInfoEntry = (entry, sectionName) => {
+      const disablePreviewForFullWrap = entry.normalized.includes("location");
       const previewLimit =
         sectionName === "detail"
           ? CATEGORY_INFO_PREVIEW_LIMITS.detail
           : CATEGORY_INFO_PREVIEW_LIMITS.compact;
-      const preview = getCategoryInfoPreview(entry.value, previewLimit);
-      const showViewButton = preview.truncated;
+      const preview = disablePreviewForFullWrap
+        ? { text: getCategoryInfoPlainValue(entry.value), truncated: false }
+        : getCategoryInfoPreview(entry.value, previewLimit);
+      const showViewButton = !disablePreviewForFullWrap && preview.truncated;
 
       return (
         <Box
