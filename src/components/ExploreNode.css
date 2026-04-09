@@ -47,7 +47,7 @@ h1,h4,p,a{
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 18px;
+  gap: 14px;
   width: 100%;
 }
 
@@ -63,17 +63,17 @@ h1,h4,p,a{
   flex: 0 0 auto;
   flex-direction: column;
   align-items: flex-end;
-  gap: 10px;
-  min-width: 280px;
-  max-width: min(100%, 720px);
+  gap: 8px;
+  min-width: 250px;
+  max-width: min(100%, 420px);
 }
 
 .category-info-dataset-tools {
   display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  justify-content: flex-end;
-  gap: 10px 12px;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  gap: 8px;
   width: 100%;
 }
 
@@ -81,10 +81,11 @@ h1,h4,p,a{
   display: flex;
   align-items: flex-end;
   gap: 4px;
+  width: 100%;
 }
 
 .category-info-dataset-select {
-  width: 250px;
+  width: 100%;
 }
 
 .category-info-dataset-label {
@@ -100,14 +101,15 @@ h1,h4,p,a{
 }
 
 .category-info-dataset-download-btn {
-  width: 290px;
+  width: 100%;
   min-height: 36px !important;
   font-size: 12px !important;
 }
 
 .category-info-dataset-checkbox {
-  margin-left: 2px !important;
+  margin-left: 0 !important;
   margin-right: 0 !important;
+  margin-top: -2px !important;
 }
 
 .category-info-action-btn {
