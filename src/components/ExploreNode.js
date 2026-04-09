@@ -1378,7 +1378,7 @@ export default function Tableclick({ cmid, database, tabval }) {
       <Box className="category-info-dataset-tools">
         <Box className="category-info-dataset-tool-group">
           <FormControl className="category-info-dataset-select" variant="standard" size="small">
-            <Typography variant="subtitle2" gutterBottom>Select Category Domains for downloading</Typography>
+            <Typography className="category-info-dataset-label" variant="subtitle2" gutterBottom>Select Category Domains for downloading</Typography>
             <NativeSelect
               value={domainDrop}
               label=""
@@ -1414,7 +1414,7 @@ export default function Tableclick({ cmid, database, tabval }) {
 
         <Box className="category-info-dataset-tool-group">
           <FormControl className="category-info-dataset-select" variant="standard">
-            <Typography variant="subtitle2" gutterBottom>Category Subdomain</Typography>
+            <Typography className="category-info-dataset-label" variant="subtitle2" gutterBottom>Category Subdomain</Typography>
             <NativeSelect
               id="demo-customized-select-native"
               value={advdomainDrop}

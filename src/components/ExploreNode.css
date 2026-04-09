@@ -87,6 +87,12 @@ h1,h4,p,a{
   width: 250px;
 }
 
+.category-info-dataset-label {
+  font-size: 1rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.01em;
+}
+
 .category-info-dataset-info-btn {
   min-width: unset !important;
   padding: 0 !important;
