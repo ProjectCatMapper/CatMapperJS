@@ -1184,6 +1184,7 @@ export default function Tableclick({ cmid, database, tabval }) {
   const isMergingTemplateNode = domainLabels.includes("MERGING");
   const isDatasetLike = cmid.startsWith("SD") || cmid.startsWith("AD") || isStackNode || isMergingTemplateNode || domainLabels.includes("DATASET");
   const showMergingTemplateTab = isStackNode || isMergingTemplateNode;
+  const showDatasetHeaderTools = cmid.startsWith("SD") || cmid.startsWith("AD");
   const hasNetworkTab = orderOfProperties.some((prop) => fdrop.includes(prop));
   const hasPolygonData = Array.isArray(mapt)
     ? mapt.length > 0
@@ -1373,6 +1374,106 @@ export default function Tableclick({ cmid, database, tabval }) {
       );
     };
 
+    const renderDatasetHeaderTools = () => (
+      <Box className="category-info-dataset-tools">
+        <Box className="category-info-dataset-tool-group">
+          <FormControl className="category-info-dataset-select" variant="standard" size="small">
+            <Typography variant="subtitle2" gutterBottom>Select Category Domains for downloading</Typography>
+            <NativeSelect
+              value={domainDrop}
+              label=""
+              sx={{
+                fontSize: 14, letterSpacing: 0.5, borderRadius: 1, backgroundColor: "white", "& .MuiNativeSelect-select": {
+                  padding: "4px 8px",
+                },
+              }}
+              onChange={(event) => {
+                const newDomain = event.target.value;
+                const subdomains = selectedCategory[newDomain] || [];
+
+                setdomainDrop(newDomain);
+                setadvoptions(subdomains);
+                setadvdomainDrop(subdomains[0] || "");
+              }}
+              input={<BootstrapInput />}
+            >
+              {Object.keys(selectedCategory).map((category, index) => (
+                <option key={index} value={category}>
+                  {category === "DISTRICT" ? "AREA" : category}
+                </option>
+              ))}
+            </NativeSelect>
+          </FormControl>
+          <Tooltip title={tooltipContent} arrow>
+            <Button
+              className="category-info-dataset-info-btn"
+              startIcon={<InfoIcon sx={{ height: "28px", width: "28px" }} />}
+            ></Button>
+          </Tooltip>
+        </Box>
+
+        <Box className="category-info-dataset-tool-group">
+          <FormControl className="category-info-dataset-select" variant="standard">
+            <Typography variant="subtitle2" gutterBottom>Category Subdomain</Typography>
+            <NativeSelect
+              id="demo-customized-select-native"
+              value={advdomainDrop}
+              label=""
+              sx={{
+                fontSize: 14, letterSpacing: 0.5, borderRadius: 1, backgroundColor: "white", "& .MuiNativeSelect-select": {
+                  padding: "4px 8px",
+                },
+              }}
+              onChange={(event) => {
+                setadvdomainDrop(event.target.value);
+              }}
+              input={<BootstrapInput />}
+            >
+              {advoptions.map((value, index) => (
+                <option key={index} value={value}>
+                  {value === "DISTRICT" ? "AREA" : value}
+                </option>
+              ))}
+            </NativeSelect>
+          </FormControl>
+          <Tooltip title={tooltipContent2} arrow>
+            <Button
+              className="category-info-dataset-info-btn"
+              startIcon={<InfoIcon sx={{ height: "28px", width: "28px" }} />}
+            ></Button>
+          </Tooltip>
+        </Box>
+
+        <Button
+          variant="contained"
+          onClick={datasetButtonClick}
+          className="category-info-dataset-download-btn"
+          sx={{
+            backgroundColor: "black",
+            color: "white",
+            "&:hover": {
+              backgroundColor: loadingDownload ? "#d32f2f" : "green",
+            },
+          }}
+        >
+          {loadingDownload ? (
+            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              <CircularProgress size={14} color="inherit" />
+              <span>Cancel Download</span>
+            </div>
+          ) : (
+            "Download Dataset Categories and Metadata"
+          )}
+        </Button>
+        <FormControlLabel
+          className="category-info-dataset-checkbox"
+          control={<Checkbox checked={rememberChoice} />}
+          onChange={handleDatasetCheckbox}
+          label="Include connected datasets?"
+        />
+      </Box>
+    );
+
     return (
       <div
         style={{
@@ -1383,268 +1484,139 @@ export default function Tableclick({ cmid, database, tabval }) {
       >
         <Box
           sx={{
-            display: "grid",
-            gridTemplateRows: "auto auto auto",
+            display: "block",
             width: "100%",
             position: "relative",
             backgroundImage: `linear-gradient(to bottom right,#555555, #cccccc)`,
             backgroundSize: "cover",
           }}
         >
-          <div className="category-info-header-row">
-            <div className="category-info-header-pill">
-              <h2 className="category-info-header-title">
-                {isDeletedNode ? "DELETED Node Info" : "Category Info"}
-              </h2>
-              <MuiTool
-                title={
-                  <Typography sx={{ fontSize: "1rem", fontWeight: "bold" }}>
-                    Here, you can toggle between viewing sample info, maps, and
-                    the network of contextual ties to this category.
-                  </Typography>
-                }
-                arrow
-                componentsProps={{
-                  tooltip: {
-                    sx: {
-                      backgroundColor: "rgba(255, 255, 255, 0.9)",
-                      color: "#000000",
-                      border: "1px solid rgba(0, 0, 0, 0.2)",
-                      boxShadow: "0 2px 8px rgba(0, 0, 0, 0.2)",
-                    },
-                  },
-                  arrow: {
-                    sx: {
-                      color: "rgba(255, 255, 255, 0.9)",
-                    },
-                  },
-                }}
-              >
-                <InfoIcon className="category-info-header-info-icon" />
-              </MuiTool>
-            </div>
-            <div className="category-info-header-actions">
-              <Button
-                size="small"
-                variant="outlined"
-                onClick={handleOpenLogs}
-                className="category-info-action-btn category-info-logs-btn"
-              >
-                Change Logs
-              </Button>
-              <Button
-                size="small"
-                startIcon={<BookmarkBorderIcon />}
-                variant="outlined"
-                onClick={handleBookmarkCurrent}
-                className="category-info-action-btn category-info-bookmark-btn"
-              >
-                Bookmark
-              </Button>
-            </div>
-          </div>
-          {isDeletedNode && (
-            <Alert
-              severity={hasDeletedRedirect ? "info" : "warning"}
-              sx={{
-                gridColumn: "1",
-                gridRow: "2",
-                mt: 1,
-                mb: 1,
-                mx: 0.5,
-                py: 1,
-                px: 1.5,
-                "& .MuiAlert-icon": { fontSize: "1.9rem", alignItems: "center" },
-              }}
-            >
-              <Typography variant="body1" sx={{ mb: 0.75, fontWeight: 700 }}>
-                <strong>CatMapper ID:</strong> {rev?.CMID || cmid} &nbsp;|&nbsp; <strong>CatMapper Name:</strong> {rev?.CMName || "(No CatMapper Name)"} &nbsp;|&nbsp; <strong>Domain:</strong> DELETED
-              </Typography>
-              {hasDeletedRedirect ? (
-                <Box sx={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 1 }}>
-                  <Typography variant="body1">
-                    This deleted node is linked to active CMID {deletedRedirectTarget}.
-                  </Typography>
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    onClick={() => navigate(`/${String(database || "").toLowerCase()}/${deletedRedirectTarget}`)}
+          <Box className={`category-info-layout${showDatasetHeaderTools ? " category-info-layout-with-tools" : ""}`}>
+            <Box className="category-info-main-column">
+              <div className="category-info-header-row">
+                <div className="category-info-header-pill">
+                  <h2 className="category-info-header-title">
+                    {isDeletedNode ? "DELETED Node Info" : "Category Info"}
+                  </h2>
+                  <MuiTool
+                    title={
+                      <Typography sx={{ fontSize: "1rem", fontWeight: "bold" }}>
+                        Here, you can toggle between viewing sample info, maps, and
+                        the network of contextual ties to this category.
+                      </Typography>
+                    }
+                    arrow
+                    componentsProps={{
+                      tooltip: {
+                        sx: {
+                          backgroundColor: "rgba(255, 255, 255, 0.9)",
+                          color: "#000000",
+                          border: "1px solid rgba(0, 0, 0, 0.2)",
+                          boxShadow: "0 2px 8px rgba(0, 0, 0, 0.2)",
+                        },
+                      },
+                      arrow: {
+                        sx: {
+                          color: "rgba(255, 255, 255, 0.9)",
+                        },
+                      },
+                    }}
                   >
-                    Go to Active CMID
-                  </Button>
-                </Box>
-              ) : (
-                <Typography variant="body1">
-                  No IS redirect relationship exists for this deleted node.
-                </Typography>
-              )}
-            </Alert>
-          )}
-          <Box id="content" className="category-info-grid">
-            {categoryInfoSections.primary.length > 0 ||
-            categoryInfoSections.compact.length > 0 ||
-            categoryInfoSections.detail.length > 0 ||
-            categoryInfoSections.stats.length > 0 ? (
-              <Box className="category-info-grid-inner">
-                {categoryInfoSections.primary.length > 0 && (
-                  <Box className="category-info-section category-info-section-primary">
-                    {categoryInfoSections.primary.map((entry) => renderCategoryInfoEntry(entry, "primary"))}
-                  </Box>
-                )}
-                {categoryInfoSections.compact.length > 0 && (
-                  <Box className="category-info-section category-info-section-compact">
-                    {categoryInfoSections.compact.map((entry) => renderCategoryInfoEntry(entry, "compact"))}
-                  </Box>
-                )}
-                {categoryInfoSections.detail.length > 0 && (
-                  <Box className="category-info-section category-info-section-detail">
-                    {categoryInfoSections.detail.map((entry) => renderCategoryInfoEntry(entry, "detail"))}
-                  </Box>
-                )}
-                {categoryInfoSections.stats.length > 0 && (
-                  <Box className="category-info-section category-info-section-stats">
-                    {categoryInfoSections.stats.map((entry) => renderCategoryInfoEntry(entry, "stats"))}
-                  </Box>
-                )}
-              </Box>
-            ) : (
-              <Typography sx={{ color: "black", fontSize: "1rem", p: 1 }}>No data</Typography>
-            )}
-          </Box>
-          {(cmid.startsWith("SD") ||
-            cmid.startsWith("AD")) && (
-              <Box
-                sx={{
-                  gridColumn: "1",
-                  gridRow: "4",
-                  display: "flex",
-                  justifyContent: "left",
-                  alignItems: "center",
-                  flexDirection: "row",
-                  margin: "2 2",
-                }}
-              >
-                <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                  <FormControl sx={{ width: 320 }} variant="standard" size="small">
-                    <Typography variant="subtitle2" gutterBottom>Select Category Domains for downloading</Typography>
-                    <NativeSelect
-                      value={domainDrop}
-                      label=""
-                      sx={{
-                        fontSize: 14, letterSpacing: 0.5, borderRadius: 1, backgroundColor: "white", "& .MuiNativeSelect-select": {
-                          padding: "4px 8px",
-                        },
-                      }}
-                      onChange={(event) => {
-                        const newDomain = event.target.value;
-                        const subdomains = selectedCategory[newDomain] || [];
-
-                        setdomainDrop(newDomain);
-                        setadvoptions(subdomains);
-                        setadvdomainDrop(subdomains[0] || '');
-                      }}
-                      input={<BootstrapInput />}
-                    >
-                      {Object.keys(selectedCategory).map((category, index) => (
-                        <option key={index} value={category}>
-                          {category === "DISTRICT" ? "AREA" : category}
-                        </option>
-                      ))}
-                    </NativeSelect>
-                  </FormControl>
-                  <Tooltip title={tooltipContent} arrow>
-                    <Button
-                      startIcon={
-                        <InfoIcon sx={{ height: "28px", width: "28px" }} />
-                      }
-                    ></Button>
-                  </Tooltip>
-                </Box>
-
-                <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                  <FormControl sx={{ width: 300 }} variant="standard">
-                    <Typography variant="subtitle2" gutterBottom>Category Subdomain</Typography>
-                    <NativeSelect
-                      id="demo-customized-select-native"
-                      value={advdomainDrop}
-                      label=""
-                      sx={{
-                        fontSize: 14, letterSpacing: 0.5, borderRadius: 1, backgroundColor: "white", "& .MuiNativeSelect-select": {
-                          padding: "4px 8px",
-                        },
-                      }}
-                      onChange={(event) => {
-                        setadvdomainDrop(event.target.value);
-                      }}
-                      input={<BootstrapInput />}
-                    >
-                      {advoptions.map((value, index) => (
-                        <option key={index} value={value}>
-                          {value === "DISTRICT" ? "AREA" : value}
-                        </option>
-                      ))}
-                    </NativeSelect>
-                  </FormControl>
-                  <Tooltip title={tooltipContent2} arrow>
-                    <Button
-                      startIcon={
-                        <InfoIcon sx={{ height: "28px", width: "28px" }} />
-                      }
-                    ></Button>
-                  </Tooltip>
-                </Box>
-
-                {/* <Select
-                multiple
-                value={datasetdomainValue}
-                onChange={datasetDropdownChange}
-                displayEmpty
-                sx={{ minWidth: 120, marginBottom: 2, marginLeft: 2 }}
-              >
-                <MenuItem value="" disabled>
-                  Select an option
-                </MenuItem>
-                {datasetdropdown.map((option, index) => (
-                  <MenuItem key={index} value={option}>
-                    {option}
-                  </MenuItem>
-                ))}
-              </Select> */}
-                <Button
-                  variant="contained"
-                  onClick={datasetButtonClick}
+                    <InfoIcon className="category-info-header-info-icon" />
+                  </MuiTool>
+                </div>
+              </div>
+              {isDeletedNode && (
+                <Alert
+                  severity={hasDeletedRedirect ? "info" : "warning"}
                   sx={{
-                    backgroundColor: "black",
-                    color: "white",
-                    // Change hover color based on loading state (Green for normal, Red for cancel)
-                    "&:hover": {
-                      backgroundColor: loadingDownload ? "#d32f2f" : "green",
-                    },
-                    marginLeft: 2,
-                    width: 250,
-                    fontSize: 12,
-                    marginBottom: 2,
-                    // Prevents the button from changing size when the spinner appears
-                    minHeight: "36px",
+                    mt: 1,
+                    mb: 1,
+                    mx: 0.5,
+                    py: 1,
+                    px: 1.5,
+                    "& .MuiAlert-icon": { fontSize: "1.9rem", alignItems: "center" },
                   }}
                 >
-                  {loadingDownload ? (
-                    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                      <CircularProgress size={14} color="inherit" />
-                      <span>Cancel Download</span>
-                    </div>
+                  <Typography variant="body1" sx={{ mb: 0.75, fontWeight: 700 }}>
+                    <strong>CatMapper ID:</strong> {rev?.CMID || cmid} &nbsp;|&nbsp; <strong>CatMapper Name:</strong> {rev?.CMName || "(No CatMapper Name)"} &nbsp;|&nbsp; <strong>Domain:</strong> DELETED
+                  </Typography>
+                  {hasDeletedRedirect ? (
+                    <Box sx={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 1 }}>
+                      <Typography variant="body1">
+                        This deleted node is linked to active CMID {deletedRedirectTarget}.
+                      </Typography>
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        onClick={() => navigate(`/${String(database || "").toLowerCase()}/${deletedRedirectTarget}`)}
+                      >
+                        Go to Active CMID
+                      </Button>
+                    </Box>
                   ) : (
-                    "Download Dataset Categories and Metadata"
+                    <Typography variant="body1">
+                      No IS redirect relationship exists for this deleted node.
+                    </Typography>
                   )}
-                </Button>
-                <FormControlLabel
-                  sx={{ marginLeft: 2, marginBottom: 2 }}
-                  control={<Checkbox />}
-                  onChange={handleDatasetCheckbox}
-                  label="Include connected datasets?"
-                />
+                </Alert>
+              )}
+              <Box id="content" className="category-info-grid">
+                {categoryInfoSections.primary.length > 0 ||
+                categoryInfoSections.compact.length > 0 ||
+                categoryInfoSections.detail.length > 0 ||
+                categoryInfoSections.stats.length > 0 ? (
+                  <Box className="category-info-grid-inner">
+                    {categoryInfoSections.primary.length > 0 && (
+                      <Box className="category-info-section category-info-section-primary">
+                        {categoryInfoSections.primary.map((entry) => renderCategoryInfoEntry(entry, "primary"))}
+                      </Box>
+                    )}
+                    {categoryInfoSections.compact.length > 0 && (
+                      <Box className="category-info-section category-info-section-compact">
+                        {categoryInfoSections.compact.map((entry) => renderCategoryInfoEntry(entry, "compact"))}
+                      </Box>
+                    )}
+                    {categoryInfoSections.detail.length > 0 && (
+                      <Box className="category-info-section category-info-section-detail">
+                        {categoryInfoSections.detail.map((entry) => renderCategoryInfoEntry(entry, "detail"))}
+                      </Box>
+                    )}
+                    {categoryInfoSections.stats.length > 0 && (
+                      <Box className="category-info-section category-info-section-stats">
+                        {categoryInfoSections.stats.map((entry) => renderCategoryInfoEntry(entry, "stats"))}
+                      </Box>
+                    )}
+                  </Box>
+                ) : (
+                  <Typography sx={{ color: "black", fontSize: "1rem", p: 1 }}>No data</Typography>
+                )}
               </Box>
-            )}
+            </Box>
+
+            <Box className="category-info-side-column">
+              <div className="category-info-header-actions">
+                <Button
+                  size="small"
+                  variant="outlined"
+                  onClick={handleOpenLogs}
+                  className="category-info-action-btn category-info-logs-btn"
+                >
+                  Change Logs
+                </Button>
+                <Button
+                  size="small"
+                  startIcon={<BookmarkBorderIcon />}
+                  variant="outlined"
+                  onClick={handleBookmarkCurrent}
+                  className="category-info-action-btn category-info-bookmark-btn"
+                >
+                  Bookmark
+                </Button>
+              </div>
+              {showDatasetHeaderTools && renderDatasetHeaderTools()}
+            </Box>
+          </Box>
         </Box>
         <Box
           sx={{

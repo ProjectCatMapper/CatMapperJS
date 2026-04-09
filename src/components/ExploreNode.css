@@ -5,9 +5,7 @@ h1,h4,p,a{
 .category-info-header-row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 10px;
+  justify-content: flex-start;
   padding-top: 10px;
   margin-top: 4px;
 }
@@ -43,7 +41,67 @@ h1,h4,p,a{
   justify-content: flex-end;
   gap: 8px;
   flex-wrap: wrap;
-  margin-left: auto;
+}
+
+.category-info-layout {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  width: 100%;
+}
+
+.category-info-main-column {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.category-info-side-column {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+  min-width: 280px;
+  max-width: min(100%, 720px);
+}
+
+.category-info-dataset-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: flex-end;
+  gap: 10px 12px;
+  width: 100%;
+}
+
+.category-info-dataset-tool-group {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.category-info-dataset-select {
+  width: 250px;
+}
+
+.category-info-dataset-info-btn {
+  min-width: unset !important;
+  padding: 0 !important;
+  margin-bottom: 2px !important;
+}
+
+.category-info-dataset-download-btn {
+  width: 290px;
+  min-height: 36px !important;
+  font-size: 12px !important;
+}
+
+.category-info-dataset-checkbox {
+  margin-left: 2px !important;
+  margin-right: 0 !important;
 }
 
 .category-info-action-btn {
@@ -149,6 +207,12 @@ h1,h4,p,a{
   padding: 9px 10px;
 }
 
+.category-info-detail-item.category-info-item-citation,
+.category-info-detail-item.category-info-item-datasetcitation {
+  width: fit-content;
+  max-width: min(100%, 60rem);
+}
+
 .category-info-stats-item {
   flex: 0 0 auto;
   border-radius: 999px;
@@ -168,6 +232,11 @@ h1,h4,p,a{
 
 .category-info-detail-item .category-info-inline {
   width: 100%;
+}
+
+.category-info-detail-item.category-info-item-citation .category-info-inline,
+.category-info-detail-item.category-info-item-datasetcitation .category-info-inline {
+  width: auto;
 }
 
 .category-info-key {
@@ -240,8 +309,36 @@ h1,h4,p,a{
   }
 
   .category-info-header-actions {
-    margin-left: 0;
     justify-content: flex-start;
+  }
+
+  .category-info-layout {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .category-info-main-column,
+  .category-info-side-column {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .category-info-side-column {
+    align-items: stretch;
+  }
+
+  .category-info-dataset-tools {
+    justify-content: flex-start;
+  }
+
+  .category-info-dataset-select,
+  .category-info-dataset-download-btn {
+    width: min(100%, 320px);
+  }
+
+  .category-info-dataset-checkbox {
+    margin-left: 0 !important;
   }
 
   .category-info-grid-inner {
