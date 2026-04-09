@@ -56,6 +56,12 @@ import {
   getResolvedExploreTab,
   shouldRedirectExploreTab,
 } from "../utils/exploreTabSync";
+import {
+  buildCategoryInfoSections,
+  CATEGORY_INFO_PREVIEW_LIMITS,
+  getCategoryInfoPlainValue,
+  getCategoryInfoPreview,
+} from "./categoryInfoLayout";
 
 import "./ExploreNode.css";
 
@@ -125,8 +131,6 @@ const BootstrapInput = styled(InputBase)(({ theme }) => ({
     },
   },
 }));
-
-const CATEGORY_INFO_PREVIEW_LIMIT = 60;
 
 export default function Tableclick({ cmid, database, tabval }) {
   const navigate = useNavigate();
@@ -1172,141 +1176,7 @@ export default function Tableclick({ cmid, database, tabval }) {
   const isDeletedNode = domainLabels.includes("DELETED");
   const deletedRedirectTarget = typeof rev?.Merged_into_CMID === "string" ? rev.Merged_into_CMID.trim() : "";
   const hasDeletedRedirect = Boolean(deletedRedirectTarget && deletedRedirectTarget !== cmid);
-  const categoryInfoEntries = useMemo(
-    () => {
-      if (!rev || typeof rev !== "object") return [];
-
-      const normalizeKey = (key) =>
-        String(key || "")
-          .toLowerCase()
-          .replace(/[\s_]/g, "");
-      const isNonEmpty = (value) => value !== "" && value !== null && value !== undefined && value !== 0;
-      const isCitationKey = (key) => {
-        const normalized = normalizeKey(key);
-        return normalized === "citation" || normalized === "datasetcitation";
-      };
-
-      const filteredEntries = Object.entries(rev)
-        .filter(([, value]) => isNonEmpty(value))
-        .map(([key, value], index) => ({
-          key,
-          value,
-          index,
-          normalized: normalizeKey(key),
-        }));
-
-      const used = new Set();
-      const row1Order = ["cmname", "cmid", "domains"];
-      const row4Order = ["directchildren", "alldescendants", "directparents"];
-      const row4Set = new Set(row4Order);
-
-      const pickByNormalized = (normalizedKey) => {
-        const found = filteredEntries.find(
-          (entry) => entry.normalized === normalizedKey && !used.has(entry.index)
-        );
-        if (!found) return null;
-        used.add(found.index);
-        return found;
-      };
-
-      const row1 = row1Order
-        .map((normalizedKey) => pickByNormalized(normalizedKey))
-        .filter(Boolean)
-        .map((entry) => ({
-          key: entry.key,
-          value: entry.value,
-          displayKey: String(entry.key).replace(/_/g, " "),
-          normalized: entry.normalized,
-          row: 1,
-        }));
-
-      const locationEntries = filteredEntries.filter(
-        (entry) =>
-          !used.has(entry.index) &&
-          entry.normalized.includes("location")
-      );
-      locationEntries.forEach((entry) => used.add(entry.index));
-      const locationValues = locationEntries
-        .map((entry) => entry.value)
-        .filter((value) => isNonEmpty(value))
-        .map((value) => {
-          if (Array.isArray(value)) return value.join(", ");
-          if (typeof value === "object") {
-            try {
-              return JSON.stringify(value);
-            } catch (_error) {
-              return String(value);
-            }
-          }
-          return String(value);
-        })
-        .filter((value) => value.trim() !== "");
-      const row2 = locationValues.length > 0
-        ? [{
-          key: "LOCATION",
-          value: locationValues.join(" | "),
-          displayKey: "LOCATION",
-          normalized: "location",
-          row: 2,
-        }]
-        : [];
-
-      const remainingEntries = filteredEntries.filter((entry) => !used.has(entry.index));
-      const row4 = row4Order
-        .map((normalizedKey) => {
-          const found = remainingEntries.find((entry) => entry.normalized === normalizedKey);
-          if (!found) return null;
-          used.add(found.index);
-          return {
-            key: found.key,
-            value: found.value,
-            displayKey: String(found.key).replace(/_/g, " "),
-            normalized: found.normalized,
-            row: 4,
-          };
-        })
-        .filter(Boolean);
-
-      const row3Source = filteredEntries.filter(
-        (entry) => !used.has(entry.index) && !row4Set.has(entry.normalized)
-      );
-      const nonCitation = row3Source.filter((entry) => !isCitationKey(entry.key));
-      const citation = row3Source.filter((entry) => isCitationKey(entry.key));
-      const row3 = [...nonCitation, ...citation].map((entry) => ({
-        key: entry.key,
-        value: entry.value,
-        displayKey: String(entry.key).replace(/_/g, " "),
-        normalized: entry.normalized,
-        row: 3,
-      }));
-
-      return [...row1, ...row2, ...row3, ...row4];
-    },
-    [rev]
-  );
-  const categoryInfoByRow = useMemo(() => ({
-    1: categoryInfoEntries.filter((entry) => entry.row === 1),
-    2: categoryInfoEntries.filter((entry) => entry.row === 2),
-    3: categoryInfoEntries.filter((entry) => entry.row === 3),
-    4: categoryInfoEntries.filter((entry) => entry.row === 4),
-  }), [categoryInfoEntries]);
-  const getCategoryInfoPlainValue = useCallback((rawValue) => {
-    if (rawValue === null || rawValue === undefined) return "";
-    if (Array.isArray(rawValue)) return rawValue.join(", ");
-    if (typeof rawValue === "object") {
-      try {
-        return JSON.stringify(rawValue);
-      } catch (_error) {
-        return String(rawValue);
-      }
-    }
-    return String(rawValue);
-  }, []);
-  const getCategoryInfoPreview = useCallback((rawValue, limit = CATEGORY_INFO_PREVIEW_LIMIT) => {
-    const plainValue = getCategoryInfoPlainValue(rawValue);
-    if (plainValue.length <= limit) return { text: plainValue, truncated: false };
-    return { text: `${plainValue.slice(0, limit).trimEnd()} . . .`, truncated: true };
-  }, [getCategoryInfoPlainValue]);
+  const categoryInfoSections = useMemo(() => buildCategoryInfoSections(rev), [rev]);
   const closeCategoryInfoDialog = useCallback(() => {
     setCategoryInfoDialog({ open: false, key: "", value: "" });
   }, []);
@@ -1437,6 +1307,72 @@ export default function Tableclick({ cmid, database, tabval }) {
     );
   };
   try {
+    const renderCategoryInfoValue = (entry, previewText) => {
+      if (entry.normalized === "datasetlocation") {
+        return (
+          <a
+            className="category-info-link"
+            href={entry.plainValue}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {previewText}
+          </a>
+        );
+      }
+
+      if (entry.normalized === "mergedintocmid") {
+        return (
+          <a className="category-info-link" href={`/${database.toLowerCase()}/${entry.plainValue}`}>
+            {previewText}
+          </a>
+        );
+      }
+
+      return previewText;
+    };
+
+    const renderCategoryInfoEntry = (entry, sectionName) => {
+      const previewLimit =
+        sectionName === "detail"
+          ? CATEGORY_INFO_PREVIEW_LIMITS.detail
+          : CATEGORY_INFO_PREVIEW_LIMITS.compact;
+      const preview = getCategoryInfoPreview(entry.value, previewLimit);
+      const showViewButton = preview.truncated;
+
+      return (
+        <Box
+          key={`${entry.key}-${sectionName}`}
+          className={`category-info-item category-info-${sectionName}-item category-info-item-${entry.normalized}`}
+        >
+          <Box component="span" className="category-info-inline">
+            <Box component="span" className="category-info-key">
+              {entry.displayKey}
+            </Box>
+            <Box component="span" className="category-info-value">
+              {renderCategoryInfoValue(entry, preview.text)}
+            </Box>
+            {showViewButton && (
+              <IconButton
+                size="small"
+                className="category-info-view-more-icon-btn"
+                onClick={() =>
+                  setCategoryInfoDialog({
+                    open: true,
+                    key: entry.displayKey,
+                    value: getCategoryInfoPlainValue(entry.value),
+                  })
+                }
+                aria-label={`View full ${entry.displayKey}`}
+              >
+                <VisibilityIcon sx={{ fontSize: 18 }} />
+              </IconButton>
+            )}
+          </Box>
+        </Box>
+      );
+    };
+
     return (
       <div
         style={{
@@ -1455,15 +1391,6 @@ export default function Tableclick({ cmid, database, tabval }) {
             backgroundSize: "cover",
           }}
         >
-          <Box className="view-logs-anchor">
-            <Button
-              variant="outlined"
-              onClick={handleOpenLogs}
-              className="view-logs-btn"
-            >
-              View Logs
-            </Button>
-          </Box>
           <div className="category-info-header-row">
             <div className="category-info-header-pill">
               <h2 className="category-info-header-title">
@@ -1495,12 +1422,22 @@ export default function Tableclick({ cmid, database, tabval }) {
               >
                 <InfoIcon className="category-info-header-info-icon" />
               </MuiTool>
+            </div>
+            <div className="category-info-header-actions">
+              <Button
+                size="small"
+                variant="outlined"
+                onClick={handleOpenLogs}
+                className="category-info-action-btn category-info-logs-btn"
+              >
+                Change Logs
+              </Button>
               <Button
                 size="small"
                 startIcon={<BookmarkBorderIcon />}
                 variant="outlined"
                 onClick={handleBookmarkCurrent}
-                className="category-info-bookmark-btn"
+                className="category-info-action-btn category-info-bookmark-btn"
               >
                 Bookmark
               </Button>
@@ -1521,7 +1458,7 @@ export default function Tableclick({ cmid, database, tabval }) {
               }}
             >
               <Typography variant="body1" sx={{ mb: 0.75, fontWeight: 700 }}>
-                <strong>CMID:</strong> {rev?.CMID || cmid} &nbsp;|&nbsp; <strong>CMName:</strong> {rev?.CMName || "(No CMName)"} &nbsp;|&nbsp; <strong>Domain:</strong> DELETED
+                <strong>CatMapper ID:</strong> {rev?.CMID || cmid} &nbsp;|&nbsp; <strong>CatMapper Name:</strong> {rev?.CMName || "(No CatMapper Name)"} &nbsp;|&nbsp; <strong>Domain:</strong> DELETED
               </Typography>
               {hasDeletedRedirect ? (
                 <Box sx={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 1 }}>
@@ -1544,78 +1481,31 @@ export default function Tableclick({ cmid, database, tabval }) {
             </Alert>
           )}
           <Box id="content" className="category-info-grid">
-            {categoryInfoEntries.length > 0 ? (
+            {categoryInfoSections.primary.length > 0 ||
+            categoryInfoSections.compact.length > 0 ||
+            categoryInfoSections.detail.length > 0 ||
+            categoryInfoSections.stats.length > 0 ? (
               <Box className="category-info-grid-inner">
-                {[1, 2, 3, 4].map((rowNum) => {
-                  const rowEntries = categoryInfoByRow[rowNum] || [];
-                  if (rowEntries.length === 0) return null;
-
-                  return (
-                    <Box
-                      key={`category-info-row-${rowNum}`}
-                      className={`category-info-row category-info-row-${rowNum}`}
-                    >
-                      {rowEntries.map((entry) => {
-                        const key = entry.key;
-                        const value = entry.value;
-                        const preview = entry.row === 2
-                          ? { text: getCategoryInfoPlainValue(value), truncated: false }
-                          : getCategoryInfoPreview(value);
-                        const showViewButton = preview.truncated;
-
-                        return (
-                          <Box
-                            key={`${key}-${entry.row}`}
-                            className="category-info-card"
-                          >
-                            <Box component="span" className="category-info-inline">
-                              <Box component="span" className="category-info-key">
-                                {entry.displayKey}
-                              </Box>
-                              <Box
-                                component="span"
-                                className="category-info-value"
-                              >
-                                {key === "Dataset Location" ? (
-                                  <a
-                                    className="category-info-link"
-                                    href={value}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                  >
-                                    {preview.text}
-                                  </a>
-                                ) : key === "Merged_into_CMID" ? (
-                                  <a className="category-info-link" href={`/${database.toLowerCase()}/${value}`}>
-                                    {preview.text}
-                                  </a>
-                                ) : (
-                                  preview.text
-                                )}
-                              </Box>
-                              {showViewButton && (
-                                <IconButton
-                                  size="small"
-                                  className="category-info-view-more-icon-btn"
-                                  onClick={() =>
-                                    setCategoryInfoDialog({
-                                      open: true,
-                                      key: entry.displayKey,
-                                      value: getCategoryInfoPlainValue(value),
-                                    })
-                                  }
-                                  aria-label={`View full ${entry.displayKey}`}
-                                >
-                                  <VisibilityIcon sx={{ fontSize: 18 }} />
-                                </IconButton>
-                              )}
-                            </Box>
-                          </Box>
-                        );
-                      })}
-                    </Box>
-                  );
-                })}
+                {categoryInfoSections.primary.length > 0 && (
+                  <Box className="category-info-section category-info-section-primary">
+                    {categoryInfoSections.primary.map((entry) => renderCategoryInfoEntry(entry, "primary"))}
+                  </Box>
+                )}
+                {categoryInfoSections.compact.length > 0 && (
+                  <Box className="category-info-section category-info-section-compact">
+                    {categoryInfoSections.compact.map((entry) => renderCategoryInfoEntry(entry, "compact"))}
+                  </Box>
+                )}
+                {categoryInfoSections.detail.length > 0 && (
+                  <Box className="category-info-section category-info-section-detail">
+                    {categoryInfoSections.detail.map((entry) => renderCategoryInfoEntry(entry, "detail"))}
+                  </Box>
+                )}
+                {categoryInfoSections.stats.length > 0 && (
+                  <Box className="category-info-section category-info-section-stats">
+                    {categoryInfoSections.stats.map((entry) => renderCategoryInfoEntry(entry, "stats"))}
+                  </Box>
+                )}
               </Box>
             ) : (
               <Typography sx={{ color: "black", fontSize: "1rem", p: 1 }}>No data</Typography>
