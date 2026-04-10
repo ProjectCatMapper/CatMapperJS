@@ -1334,7 +1334,10 @@ export default function Tableclick({ cmid, database, tabval }) {
     };
 
     const renderCategoryInfoEntry = (entry, sectionName) => {
-      const disablePreviewForFullWrap = entry.normalized.includes("location");
+      const disablePreviewForFullWrap =
+        entry.normalized.includes("location") ||
+        entry.normalized === "citation" ||
+        entry.normalized === "datasetcitation";
       const previewLimit =
         sectionName === "detail"
           ? CATEGORY_INFO_PREVIEW_LIMITS.detail
