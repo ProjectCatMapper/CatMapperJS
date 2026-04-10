@@ -32,6 +32,8 @@ import { DataGrid, GridToolbar } from '@mui/x-data-grid';
 import CircularProgress from "@mui/material/CircularProgress";
 import FooterLinks from "./FooterLinks";
 import CardContent from '@mui/material/CardContent';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import SavedCmidInsertPopover from './SavedCmidInsertPopover';
 import { Link } from "react-router-dom";
 
@@ -1159,7 +1161,7 @@ const Admin = ({ database }) => {
               onClick={() => setIsSidebarOpen((prev) => !prev)}
               sx={{ minWidth: 28, px: 0.5 }}
             >
-              {isSidebarOpen ? ">" : "<"}
+              {isSidebarOpen ? <ChevronLeftIcon fontSize="small" /> : <ChevronRightIcon fontSize="small" />}
             </Button>
           </Box>
 
