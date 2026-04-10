@@ -101,7 +101,6 @@ const Admin = ({ database }) => {
     role: "",
   });
   const [CMIDText, setCMIDText] = useState('');
-  const [grouplabels, setgrouplabels] = useState(["NA"]);
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
   const [tableData, setTableData] = useState([]);
@@ -1102,29 +1101,6 @@ const Admin = ({ database }) => {
   }, [database, formData.s1_1, formData.s1_2, firstDropdownValue]);
 
   useEffect(() => {
-    const createLabel = async () => {
-      try {
-        const res = await fetch(`${process.env.REACT_APP_API_URL}/create_label_helper?database=` + database, {
-          //const res = await fetch("http://127.0.0.1:5001/create_label_helper?&database="+database, {
-          method: 'GET',
-
-        });
-
-        const data = await res.json();
-
-        setgrouplabels(data.res)
-
-      } catch (error) {
-        console.error('Error creating label:', error);
-      }
-    };
-
-    if (firstDropdownValue === 'create new domain') {
-      createLabel();
-    }
-  }, [database, firstDropdownValue]);
-
-  useEffect(() => {
     setRoutineParams((prev) => ({
       ...prev,
       user: user || "",
@@ -1987,106 +1963,12 @@ const Admin = ({ database }) => {
 
         {firstDropdownValue === "create new domain" && (
           <Box sx={{ ml: 1 }}>
-            <InputLabel id="domain-label" style={{ color: "black " }}>
-              Enter label name
-            </InputLabel>
-            <TextField
-              name="s1_2"
-              value={formData.s1_2}
-              onChange={updateFormFieldValue}
-              sx={{ width: 300, height: 40, mb: 3, mt: 0 }}
-              variant="outlined"
-              margin="normal"
-              size="small"
-            />
-            <InputLabel id="domain-label" style={{ color: "black " }}>Choose Group label (select 'NA' if it is a group label)</InputLabel>
-            <br />
-            <Select
-              labelId="domain-label"
-              id="domain"
-              name="s1_7"
-              value={formData.s1_7}
-              onChange={updateFormFieldValue}
-              sx={{ width: 300, height: 40, mb: 3 }}
-              margin="normal"
-            >
-              <MenuItem value="NA">NA</MenuItem>
-              {grouplabels.map((value) => (
-                <MenuItem key={value} value={value}>
-                  {value}
-                </MenuItem>
-              ))}
-            </Select>
-            <InputLabel id="domain-label" style={{ color: "black " }}>
-              Enter contextual Relationship Name (usually 'LABEL_OF')
-            </InputLabel>
-            <TextField
-              name="s1_3"
-              value={formData.s1_3}
-              onChange={updateFormFieldValue}
-              sx={{ width: 300, height: 40, mb: 3, mt: 0 }}
-              variant="outlined"
-              margin="normal"
-              size="small"
-            />
-            <InputLabel id="domain-label" style={{ color: "black " }}>
-              Enter label description
-            </InputLabel>
-            <TextField
-              name="s1_4"
-              value={formData.s1_4}
-              onChange={updateFormFieldValue}
-              sx={{ width: 300, height: 40, mb: 12, mt: 0 }}
-              multiline
-              rows={4}
-              variant="outlined"
-              margin="normal"
-            />
-            <InputLabel id="domain-label" style={{ color: "black " }}>
-              Enter display name
-            </InputLabel>
-            <TextField
-              name="s1_5"
-              value={formData.s1_5}
-              onChange={updateFormFieldValue}
-              sx={{ width: 300, height: 40, mb: 3, mt: 0 }}
-              variant="outlined"
-              margin="normal"
-              size="small"
-            />
-            <InputLabel id="domain-label" style={{ color: "black " }}>
-              Enter hex color for network display (leave blank for default color)
-            </InputLabel>
-            <TextField
-              name="s1_6"
-              value={formData.s1_6}
-              onChange={updateFormFieldValue}
-              sx={{ width: 300, height: 40, mb: 3, mt: 0 }}
-              variant="outlined"
-              margin="normal"
-              size="small"
-            />
-            <Box
-              sx={{
-                display: 'flex',
-                justifyContent: 'flex-start',
-                padding: 2
-              }}
-            >
-              <Button
-                variant="contained"
-                sx={{
-                  backgroundColor: "black",
-                  color: "white",
-                  "&:hover": {
-                    backgroundColor: "green",
-                  },
-                }}
-                onClick={submitAdminAction}
-              >
-                Submit{" "}
-              </Button>
-            </Box>
+            <Typography sx={{ maxWidth: 720, mb: 2 }}>
+              Domain creation now lives in the Metadata Manager. That workflow supports the full LABEL metadata schema and now creates the matching Neo4j full-text index on <code>normNames</code>.
+            </Typography>
+            <Button component={Link} to="/admin/metadata" variant="contained">
+              Open Metadata Manager
+            </Button>
           </Box>
         )
         }
