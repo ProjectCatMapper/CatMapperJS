@@ -94,8 +94,12 @@ const ProfilePage = ({ database, tab }) => {
     lastUpdated: null,
     refreshing: false
   });
+  const [activityLoading, setActivityLoading] = useState(true);
+  const [activityError, setActivityError] = useState('');
   const [bookmarks, setBookmarks] = useState([]);
   const [history, setHistory] = useState([]);
+  const [libraryLoading, setLibraryLoading] = useState(true);
+  const [libraryError, setLibraryError] = useState('');
   const [selectedBookmarks, setSelectedBookmarks] = useState({});
 
   const [formData, setFormData] = useState({
@@ -145,53 +149,79 @@ const ProfilePage = ({ database, tab }) => {
   };
 
   const loadActivity = useCallback(async ({ forceRefresh = false } = {}) => {
-    if (!user || !cred || !database) return;
+    if (!user || !cred || !database) {
+      setActivityLoading(false);
+      return;
+    }
 
+    setActivityLoading(true);
+    setActivityError('');
     setActivityMeta((prev) => ({ ...prev, refreshing: true }));
     const cacheKey = `catmapper_activity_${user || 'anon'}_${(database || '').toLowerCase()}`;
     const now = Date.now();
 
-    if (!forceRefresh) {
-      try {
-        const raw = localStorage.getItem(cacheKey);
-        if (raw) {
-          const parsed = JSON.parse(raw);
-          if (parsed?.cachedAt && parsed?.data && now - parsed.cachedAt < ACTIVITY_CACHE_TTL_MS) {
-            setActivity(parsed.data);
-            setActivityMeta({
-              fromCache: true,
-              lastUpdated: parsed.cachedAt,
-              refreshing: false
-            });
-            return;
-          }
-        }
-      } catch (_cacheReadError) {
-        // ignore cache read/parsing errors and fall through to API request
-      }
-    }
-
-    const freshData = await getUserActivity({ userId: user, database, cred });
-    setActivity(freshData || {});
-    setActivityMeta({
-      fromCache: false,
-      lastUpdated: now,
-      refreshing: false
-    });
     try {
-      localStorage.setItem(cacheKey, JSON.stringify({ cachedAt: now, data: freshData || {} }));
-    } catch (_cacheWriteError) {
-      // ignore localStorage write failures
+      if (!forceRefresh) {
+        try {
+          const raw = localStorage.getItem(cacheKey);
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            if (parsed?.cachedAt && parsed?.data && now - parsed.cachedAt < ACTIVITY_CACHE_TTL_MS) {
+              setActivity(parsed.data);
+              setActivityMeta({
+                fromCache: true,
+                lastUpdated: parsed.cachedAt,
+                refreshing: false
+              });
+              return;
+            }
+          }
+        } catch (_cacheReadError) {
+          // ignore cache read/parsing errors and fall through to API request
+        }
+      }
+
+      const freshData = await getUserActivity({ userId: user, database, cred });
+      setActivity(freshData || {});
+      setActivityMeta({
+        fromCache: false,
+        lastUpdated: now,
+        refreshing: false
+      });
+      try {
+        localStorage.setItem(cacheKey, JSON.stringify({ cachedAt: now, data: freshData || {} }));
+      } catch (_cacheWriteError) {
+        // ignore localStorage write failures
+      }
+    } catch (loadError) {
+      setActivityError(loadError.message || 'Unable to load activity.');
+    } finally {
+      setActivityLoading(false);
+      setActivityMeta((prev) => ({ ...prev, refreshing: false }));
     }
   }, [cred, database, user]);
 
   const loadLibrary = useCallback(async () => {
-    const [bookmarkData, historyData] = await Promise.all([
-      getBookmarks({ userId: user, cred }),
-      getHistory({ userId: user, cred })
-    ]);
-    setBookmarks(bookmarkData.bookmarks || []);
-    setHistory(historyData.history || []);
+    if (!user || !cred) {
+      setLibraryLoading(false);
+      return;
+    }
+
+    setLibraryLoading(true);
+    setLibraryError('');
+
+    try {
+      const [bookmarkData, historyData] = await Promise.all([
+        getBookmarks({ userId: user, cred }),
+        getHistory({ userId: user, cred })
+      ]);
+      setBookmarks(bookmarkData.bookmarks || []);
+      setHistory(historyData.history || []);
+    } catch (loadError) {
+      setLibraryError(loadError.message || 'Unable to load bookmarks and history.');
+    } finally {
+      setLibraryLoading(false);
+    }
   }, [cred, user]);
 
   useEffect(() => {
@@ -215,9 +245,8 @@ const ProfilePage = ({ database, tab }) => {
           database: profileData.database,
           intendedUse: profileData.intendedUse
         });
-
-        await loadActivity();
-        await loadLibrary();
+        loadActivity();
+        loadLibrary();
       } catch (loadError) {
         if (mounted) {
           setError(loadError.message || 'Unable to load profile.');
@@ -560,28 +589,43 @@ const ProfilePage = ({ database, tab }) => {
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
                   Summary of logged database actions for your account.
                 </Typography>
-                <Typography variant="caption" color="text.secondary" sx={{ mb: 2, display: 'block' }}>
-                  {activityMeta.lastUpdated
-                    ? `Last updated: ${new Date(activityMeta.lastUpdated).toLocaleString()}${activityMeta.fromCache ? ' (cached)' : ''}`
-                    : 'No activity cache yet.'}
-                </Typography>
-                <Grid container spacing={2}>
-                  <Grid item xs={12} sm={6}>
-                    <Card variant="outlined"><CardContent><Typography variant="subtitle2">Nodes Created</Typography><Typography variant="h5">{activity.createdNodes || 0}</Typography></CardContent></Card>
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <Card variant="outlined"><CardContent><Typography variant="subtitle2">Relationships Created</Typography><Typography variant="h5">{activity.createdRelationships || 0}</Typography></CardContent></Card>
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <Card variant="outlined"><CardContent><Typography variant="subtitle2">Nodes Updated</Typography><Typography variant="h5">{activity.updatedNodes || 0}</Typography></CardContent></Card>
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <Card variant="outlined"><CardContent><Typography variant="subtitle2">Relationships Updated</Typography><Typography variant="h5">{activity.updatedRelationships || 0}</Typography></CardContent></Card>
-                  </Grid>
-                  <Grid item xs={12}>
-                    <Card variant="outlined"><CardContent><Typography variant="subtitle2">Total Logged Actions</Typography><Typography variant="h5">{activity.totalActions || 0}</Typography></CardContent></Card>
-                  </Grid>
-                </Grid>
+                {activityLoading ? (
+                  <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
+                    <CircularProgress size={32} />
+                  </Box>
+                ) : (
+                  <>
+                    <Typography variant="caption" color="text.secondary" sx={{ mb: 2, display: 'block' }}>
+                      {activityMeta.lastUpdated
+                        ? `Last updated: ${new Date(activityMeta.lastUpdated).toLocaleString()}${activityMeta.fromCache ? ' (cached)' : ''}`
+                        : 'No activity cache yet.'}
+                    </Typography>
+                    {activityError && (
+                      <Alert severity="error" sx={{ mb: 2 }}>
+                        {activityError}
+                      </Alert>
+                    )}
+                    {!activityError && (
+                      <Grid container spacing={2}>
+                        <Grid item xs={12} sm={6}>
+                          <Card variant="outlined"><CardContent><Typography variant="subtitle2">Nodes Created</Typography><Typography variant="h5">{activity.createdNodes || 0}</Typography></CardContent></Card>
+                        </Grid>
+                        <Grid item xs={12} sm={6}>
+                          <Card variant="outlined"><CardContent><Typography variant="subtitle2">Relationships Created</Typography><Typography variant="h5">{activity.createdRelationships || 0}</Typography></CardContent></Card>
+                        </Grid>
+                        <Grid item xs={12} sm={6}>
+                          <Card variant="outlined"><CardContent><Typography variant="subtitle2">Nodes Updated</Typography><Typography variant="h5">{activity.updatedNodes || 0}</Typography></CardContent></Card>
+                        </Grid>
+                        <Grid item xs={12} sm={6}>
+                          <Card variant="outlined"><CardContent><Typography variant="subtitle2">Relationships Updated</Typography><Typography variant="h5">{activity.updatedRelationships || 0}</Typography></CardContent></Card>
+                        </Grid>
+                        <Grid item xs={12}>
+                          <Card variant="outlined"><CardContent><Typography variant="subtitle2">Total Logged Actions</Typography><Typography variant="h5">{activity.totalActions || 0}</Typography></CardContent></Card>
+                        </Grid>
+                      </Grid>
+                    )}
+                  </>
+                )}
               </CardContent>
             </Card>
           )}
@@ -762,22 +806,56 @@ const ProfilePage = ({ database, tab }) => {
             <Card>
               <CardContent>
                 <Typography variant="h6" sx={{ mb: 2 }}>Bookmarks & History</Typography>
-                <Grid container spacing={2}>
-                  <Grid item xs={12} md={6}>
-                    <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 600 }}>Bookmarks</Typography>
-                    <Box sx={{ border: '1px solid #e0e0e0', borderRadius: 1, maxHeight: 320, overflowY: 'auto', p: 1 }}>
-                      {bookmarks.length === 0 && <Typography variant="body2" color="text.secondary">No bookmarks yet.</Typography>}
-                      {bookmarks.map((item) => {
-                        const key = `${item.cmid}||${item.database}`;
-                        return (
-                          <Box key={key} sx={{ display: 'flex', alignItems: 'center', py: 0.5 }}>
-                            <Checkbox
-                              size="small"
-                              checked={Boolean(selectedBookmarks[key])}
-                              onChange={(event) => {
-                                setSelectedBookmarks((prev) => ({ ...prev, [key]: event.target.checked }));
-                              }}
-                            />
+                {libraryLoading ? (
+                  <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
+                    <CircularProgress size={32} />
+                  </Box>
+                ) : libraryError ? (
+                  <Alert severity="error">{libraryError}</Alert>
+                ) : (
+                  <Grid container spacing={2}>
+                    <Grid item xs={12} md={6}>
+                      <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 600 }}>Bookmarks</Typography>
+                      <Box sx={{ border: '1px solid #e0e0e0', borderRadius: 1, maxHeight: 320, overflowY: 'auto', p: 1 }}>
+                        {bookmarks.length === 0 && <Typography variant="body2" color="text.secondary">No bookmarks yet.</Typography>}
+                        {bookmarks.map((item) => {
+                          const key = `${item.cmid}||${item.database}`;
+                          return (
+                            <Box key={key} sx={{ display: 'flex', alignItems: 'center', py: 0.5 }}>
+                              <Checkbox
+                                size="small"
+                                checked={Boolean(selectedBookmarks[key])}
+                                onChange={(event) => {
+                                  setSelectedBookmarks((prev) => ({ ...prev, [key]: event.target.checked }));
+                                }}
+                              />
+                              <Button
+                                size="small"
+                                onClick={() => navigate(`/${item.database}/${item.cmid}`)}
+                                sx={{ ...cmidStyle(item.cmid), mr: 1, textTransform: 'none', minWidth: 86 }}
+                              >
+                                {item.cmid}
+                              </Button>
+                              <Typography variant="body2" sx={{ flex: 1, mr: 1 }}>{item.cmname || '(No CMName)'}</Typography>
+                            </Box>
+                          );
+                        })}
+                      </Box>
+                      <Button
+                        variant="outlined"
+                        sx={{ mt: 1 }}
+                        onClick={handleRemoveSelectedBookmarks}
+                      >
+                        Remove Selected
+                      </Button>
+                    </Grid>
+
+                    <Grid item xs={12} md={6}>
+                      <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 600 }}>History (last 50)</Typography>
+                      <Box sx={{ border: '1px solid #e0e0e0', borderRadius: 1, maxHeight: 320, overflowY: 'auto', p: 1 }}>
+                        {history.length === 0 && <Typography variant="body2" color="text.secondary">No history yet.</Typography>}
+                        {history.map((item, idx) => (
+                          <Box key={`${item.cmid}-${item.database}-${idx}`} sx={{ display: 'flex', alignItems: 'center', py: 0.5 }}>
                             <Button
                               size="small"
                               onClick={() => navigate(`/${item.database}/${item.cmid}`)}
@@ -786,39 +864,13 @@ const ProfilePage = ({ database, tab }) => {
                               {item.cmid}
                             </Button>
                             <Typography variant="body2" sx={{ flex: 1, mr: 1 }}>{item.cmname || '(No CMName)'}</Typography>
+                            <Button size="small" onClick={() => handleBookmarkFromHistory(item)}>Bookmark</Button>
                           </Box>
-                        );
-                      })}
-                    </Box>
-                    <Button
-                      variant="outlined"
-                      sx={{ mt: 1 }}
-                      onClick={handleRemoveSelectedBookmarks}
-                    >
-                      Remove Selected
-                    </Button>
+                        ))}
+                      </Box>
+                    </Grid>
                   </Grid>
-
-                  <Grid item xs={12} md={6}>
-                    <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 600 }}>History (last 50)</Typography>
-                    <Box sx={{ border: '1px solid #e0e0e0', borderRadius: 1, maxHeight: 320, overflowY: 'auto', p: 1 }}>
-                      {history.length === 0 && <Typography variant="body2" color="text.secondary">No history yet.</Typography>}
-                      {history.map((item, idx) => (
-                        <Box key={`${item.cmid}-${item.database}-${idx}`} sx={{ display: 'flex', alignItems: 'center', py: 0.5 }}>
-                          <Button
-                            size="small"
-                            onClick={() => navigate(`/${item.database}/${item.cmid}`)}
-                            sx={{ ...cmidStyle(item.cmid), mr: 1, textTransform: 'none', minWidth: 86 }}
-                          >
-                            {item.cmid}
-                          </Button>
-                          <Typography variant="body2" sx={{ flex: 1, mr: 1 }}>{item.cmname || '(No CMName)'}</Typography>
-                          <Button size="small" onClick={() => handleBookmarkFromHistory(item)}>Bookmark</Button>
-                        </Box>
-                      ))}
-                    </Box>
-                  </Grid>
-                </Grid>
+                )}
               </CardContent>
             </Card>
           )}
