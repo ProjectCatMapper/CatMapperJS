@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { styled } from '@mui/material/styles';
 import InputBase from '@mui/material/InputBase';
-import { Box, Button, FormControl, FormControlLabel, Grid, NativeSelect, Switch, Tooltip, Typography } from "@mui/material";
+import { Box, Button, FormControl, FormControlLabel, IconButton, NativeSelect, Switch, Tooltip, Typography } from "@mui/material";
 import DataTable from './ExploreSearchTable';
 import domainOptions from "./../assets/dropdown.json"
 import InfoIcon from '@mui/icons-material/Info';
@@ -451,6 +451,45 @@ export default function Searchbar({ database }) {
         </tbody>
       </table>
     </div>
+  );
+
+  const advancedSelectSx = {
+    fontSize: 14,
+    letterSpacing: 0.5,
+    borderRadius: 1,
+    backgroundColor: "white",
+    "& .MuiNativeSelect-select": {
+      padding: "4px 8px",
+    },
+  };
+
+  const advancedInfoButtonSx = {
+    color: "#1976d2",
+    p: 0.5,
+    alignSelf: "flex-end",
+    "&:hover": {
+      backgroundColor: "rgba(25, 118, 210, 0.08)",
+    },
+  };
+
+  const compactFieldSx = {
+    flex: { xs: "1 1 100%", md: "1 1 0" },
+    minWidth: 0,
+  };
+
+  const baseTextInputStyle = {
+    height: 30,
+    padding: "0 8px",
+    borderRadius: 4,
+    border: "1px solid #ccc",
+  };
+
+  const renderAdvancedInfoButton = (title, ariaLabel) => (
+    <Tooltip title={title} arrow>
+      <IconButton aria-label={ariaLabel} size="small" sx={advancedInfoButtonSx}>
+        <InfoIcon sx={{ fontSize: 22 }} />
+      </IconButton>
+    </Tooltip>
   );
 
   const runSearchRequest = (paramsToUse) => {
@@ -953,8 +992,16 @@ export default function Searchbar({ database }) {
               mt: 2,
             }}
           >
-            <Grid container spacing={1}>
-              <Grid item xs={12}>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: { xs: "stretch", md: "center" },
+                justifyContent: "space-between",
+                flexWrap: "wrap",
+                gap: 1.5,
+              }}
+            >
+              <Box sx={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 0.5, flex: "1 1 320px" }}>
                 <Box sx={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 0.5 }}>
                   <FormControlLabel
                     sx={{
@@ -974,47 +1021,42 @@ export default function Searchbar({ database }) {
                     }
                     label="NLP Search (Experimental)"
                   />
-                  <Tooltip
-                    title={
-                      <div className="tooltip-width">
-                        NLP stands for <strong>Natural Language Processing</strong>.
-                        Experimental feature: turn this on to type a normal question, such as <em>look up Yoruba in Ghana</em>,
-                        and CatMapper will convert it into search filters for you.
-                        When multiple place levels exist, it prefers country-level (<strong>ADM0</strong>) matches.
-                      </div>
-                    }
-                    arrow
-                  >
-                    <Button
-                      startIcon={<InfoIcon sx={{ height: "28px", width: "28px" }} />}
-                      sx={{ minWidth: 36, color: "white" }}
-                    ></Button>
-                  </Tooltip>
+                  {renderAdvancedInfoButton(
+                    <div className="tooltip-width">
+                      NLP stands for <strong>Natural Language Processing</strong>.
+                      Experimental feature: turn this on to type a normal question, such as <em>look up Yoruba in Ghana</em>,
+                      and CatMapper will convert it into search filters for you.
+                      When multiple place levels exist, it prefers country-level (<strong>ADM0</strong>) matches.
+                    </div>,
+                    "Explain NLP search"
+                  )}
                 </Box>
                 {useNlpSearch && (
-                  <Typography variant="caption" sx={{ color: "white", display: "block", mb: 0.5 }}>
-                    {nlpSummary || "NLP search is enabled. Enter a natural language request."}
-                  </Typography>
+                  <Box sx={{ flexBasis: "100%" }}>
+                    <Typography variant="caption" sx={{ color: "white", display: "block", mb: 0.5 }}>
+                      {nlpSummary || "NLP search is enabled. Enter a natural language request."}
+                    </Typography>
+                    <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.75)", display: "block" }}>
+                      Temporary testing mode: NLP query JSON is saved automatically in this browser and on the server.
+                    </Typography>
+                  </Box>
                 )}
-                {useNlpSearch && (
-                  <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.75)", display: "block", mb: 1 }}>
-                    Temporary testing mode: NLP query JSON is saved automatically in this browser and on the server.
-                  </Typography>
-                )}
-              </Grid>
+              </Box>
 
-              <Grid item xs={12} sm={4}>
-                <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                  <FormControl sx={{ width: 320 }} variant="standard" size="small">
+              <Box sx={{ flex: { xs: "1 1 100%", md: "0 0 auto" }, display: "flex", justifyContent: { xs: "flex-start", md: "flex-end" } }}>
+                <NeonButton label="Reset" onClick={handleReset} />
+              </Box>
+            </Box>
+
+            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1.5, mt: 1.5, alignItems: "flex-end" }}>
+              <Box sx={{ ...compactFieldSx, maxWidth: { xs: "100%", md: 220 } }}>
+                <Box sx={{ display: 'flex', alignItems: 'flex-end', gap: 0.5 }}>
+                  <FormControl sx={{ width: "100%" }} variant="standard" size="small">
                     <Typography variant="subtitle2" gutterBottom>Category Domain</Typography>
                     <NativeSelect
                       value={domainDrop}
                       label=""
-                      sx={{
-                        fontSize: 14, letterSpacing: 0.5, borderRadius: 1, backgroundColor: "white", "& .MuiNativeSelect-select": {
-                          padding: "4px 8px",
-                        },
-                      }}
+                      sx={advancedSelectSx}
                       onChange={(event) => {
                         const newDomain = event.target.value;
                         const subdomains = selectedCategory[newDomain] || [];
@@ -1043,29 +1085,19 @@ export default function Searchbar({ database }) {
                       ))}
                     </NativeSelect>
                   </FormControl>
-                  <Tooltip title={tooltipContent} arrow>
-                    <Button
-                      startIcon={
-                        <InfoIcon sx={{ height: "28px", width: "28px" }} />
-                      }
-                    ></Button>
-                  </Tooltip>
+                  {renderAdvancedInfoButton(tooltipContent, "Explain category domain")}
                 </Box>
-              </Grid>
+              </Box>
 
-              <Grid item xs={12} sm={4}>
-                <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                  <FormControl sx={{ width: 300 }} variant="standard">
+              <Box sx={{ ...compactFieldSx, maxWidth: { xs: "100%", md: 220 } }}>
+                <Box sx={{ display: 'flex', alignItems: 'flex-end', gap: 0.5 }}>
+                  <FormControl sx={{ width: "100%" }} variant="standard">
                     <Typography variant="subtitle2" gutterBottom>Category Subdomain</Typography>
                     <NativeSelect
                       id="demo-customized-select-native"
                       value={advdomainDrop}
                       label=""
-                      sx={{
-                        fontSize: 14, letterSpacing: 0.5, borderRadius: 1, backgroundColor: "white", "& .MuiNativeSelect-select": {
-                          padding: "4px 8px",
-                        },
-                      }}
+                      sx={advancedSelectSx}
                       onChange={(event) => {
                         setadvdomainDrop(event.target.value);
                         setoptionsForSelectedCategory(
@@ -1081,44 +1113,13 @@ export default function Searchbar({ database }) {
                       ))}
                     </NativeSelect>
                   </FormControl>
-                  <Tooltip title={tooltipContent2} arrow>
-                    <Button
-                      startIcon={
-                        <InfoIcon sx={{ height: "28px", width: "28px" }} />
-                      }
-                    ></Button>
-                  </Tooltip>
+                  {renderAdvancedInfoButton(tooltipContent2, "Explain category subdomain")}
                 </Box>
-              </Grid>
+              </Box>
 
-              <Grid item xs={12} sm={4}>
-                <FormControl sx={{ width: 250 }} variant="standard">
-                  <Typography variant="subtitle2" gutterBottom>Country</Typography>
-                  <NativeSelect
-                    id="dropdown"
-                    value={selectedcountry}
-                    onChange={(event) => {
-                      setSelectedCountry(event.target.value);
-                    }}
-                    sx={{
-                      fontSize: 14, letterSpacing: 0.5, borderRadius: 1, backgroundColor: "white", "& .MuiNativeSelect-select": {
-                        padding: "4px 8px",
-                      },
-                    }}
-                    input={<BootstrapInput />}
-                  >
-                    {countries.map((country, index) => (
-                      <option key={index} value={country.code}>
-                        {country.name}
-                      </option>
-                    ))}
-                  </NativeSelect>
-                </FormControl>
-              </Grid>
-
-              <Grid item xs={12} sm={3}>
-                <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                  <FormControl sx={{ width: 250 }} variant="standard">
+              <Box sx={{ ...compactFieldSx, maxWidth: { xs: "100%", md: 220 } }}>
+                <Box sx={{ display: 'flex', alignItems: 'flex-end', gap: 0.5 }}>
+                  <FormControl sx={{ width: "100%" }} variant="standard">
                     <Typography variant="subtitle2" gutterBottom>Property to Search</Typography>
                     <NativeSelect
                       id="dropdown"
@@ -1126,11 +1127,7 @@ export default function Searchbar({ database }) {
                       onChange={(event) => {
                         setSelectedOption(event.target.value);
                       }}
-                      sx={{
-                        fontSize: 14, letterSpacing: 0.5, borderRadius: 1, backgroundColor: "white", "& .MuiNativeSelect-select": {
-                          padding: "4px 8px",
-                        },
-                      }}
+                      sx={advancedSelectSx}
                       input={<BootstrapInput />}
                     >
                       {optionsForSelectedCategory.map((option, index) => (
@@ -1140,16 +1137,35 @@ export default function Searchbar({ database }) {
                       ))}
                     </NativeSelect>
                   </FormControl>
-                  <Tooltip title={tooltipContent3} arrow>
-                    <Button
-                      startIcon={<InfoIcon sx={{ height: "28px", width: "28px" }} />}
-                    ></Button>
-                  </Tooltip>
+                  {renderAdvancedInfoButton(tooltipContent3, "Explain property to search")}
                 </Box>
-              </Grid>
+              </Box>
 
-              <Grid item xs={12} sm={6} md={3}>
-                <FormControl variant="standard">
+              <Box sx={{ ...compactFieldSx, maxWidth: { xs: "100%", md: 200 } }}>
+                <FormControl sx={{ width: "100%" }} variant="standard">
+                  <Typography variant="subtitle2" gutterBottom>Country</Typography>
+                  <NativeSelect
+                    id="dropdown"
+                    value={selectedcountry}
+                    onChange={(event) => {
+                      setSelectedCountry(event.target.value);
+                    }}
+                    sx={advancedSelectSx}
+                    input={<BootstrapInput />}
+                  >
+                    {countries.map((country, index) => (
+                      <option key={index} value={country.code}>
+                        {country.name}
+                      </option>
+                    ))}
+                  </NativeSelect>
+                </FormControl>
+              </Box>
+            </Box>
+
+            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1.5, mt: 1.5, alignItems: "flex-start" }}>
+              <Box sx={{ flex: { xs: "1 1 100%", md: "0 1 190px" }, minWidth: 0 }}>
+                <FormControl variant="standard" sx={{ width: "100%" }}>
                   <Typography variant="subtitle2" gutterBottom>Time Range</Typography>
                   <Box sx={{ display: 'flex', width: "100%", gap: 1, overflow: 'hidden' }}>
                     <input
@@ -1176,17 +1192,17 @@ export default function Searchbar({ database }) {
                     />
                   </Box>
                 </FormControl>
-              </Grid>
+              </Box>
 
-              <Grid item xs={12} sm={6} md={3}>
-                <FormControl variant="standard">
+              <Box sx={{ flex: { xs: "1 1 100%", md: "1 1 360px" }, minWidth: 0 }}>
+                <FormControl variant="standard" sx={{ width: "100%" }}>
                   <Typography variant="subtitle2" gutterBottom>Context ID(s)</Typography>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
                     <input
                       type="text"
                       id="myInput"
                       value={contextID}
-                      style={{ width: 160, height: 30, padding: "0 8px", borderRadius: 4, border: "1px solid #ccc" }}
+                      style={{ ...baseTextInputStyle, flex: "1 1 180px", minWidth: 0 }}
                       onChange={(event) => {
                         setcontextID(event.target.value);
                       }}
@@ -1200,44 +1216,34 @@ export default function Searchbar({ database }) {
                       compact
                       buttonLabel="Insert"
                     />
+                    <NativeSelect
+                      value={contextMode}
+                      sx={{ ...advancedSelectSx, width: 130 }}
+                      onChange={(event) => {
+                        setContextMode(event.target.value === "any" ? "any" : "all");
+                      }}
+                      input={<BootstrapInput />}
+                    >
+                      <option value="all">all contexts</option>
+                      <option value="any">any context</option>
+                    </NativeSelect>
                   </Box>
-                  <Typography variant="caption" sx={{ mt: 0.5 }}>
+                  <Typography variant="caption" sx={{ mt: 0.5, display: "block" }}>
                     Multiple IDs: separate with comma
                   </Typography>
-                  <NativeSelect
-                    value={contextMode}
-                    sx={{
-                      mt: 0.5,
-                      width: 120,
-                      fontSize: 14,
-                      letterSpacing: 0.5,
-                      borderRadius: 1,
-                      backgroundColor: "white",
-                      "& .MuiNativeSelect-select": {
-                        padding: "4px 8px",
-                      },
-                    }}
-                    onChange={(event) => {
-                      setContextMode(event.target.value === "any" ? "any" : "all");
-                    }}
-                    input={<BootstrapInput />}
-                  >
-                    <option value="all">all contexts</option>
-                    <option value="any">any context</option>
-                  </NativeSelect>
                 </FormControl>
-              </Grid>
+              </Box>
 
 
-              <Grid >
-                <FormControl variant="standard">
+              <Box sx={{ flex: { xs: "1 1 100%", md: "0 1 220px" }, minWidth: 0 }}>
+                <FormControl variant="standard" sx={{ width: "100%" }}>
                   <Typography variant="subtitle2" gutterBottom>Dataset ID</Typography>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
                     <input
                       type="text"
                       id="myInput"
                       value={datasetID}
-                      style={{ width: 100, height: 30, padding: "0 8px", borderRadius: 4, border: "1px solid #ccc" }}
+                      style={{ ...baseTextInputStyle, width: 130 }}
                       onChange={(event) => {
                         setdatasetID(event.target.value);
                       }}
@@ -1254,13 +1260,8 @@ export default function Searchbar({ database }) {
                     />
                   </Box>
                 </FormControl>
-              </Grid>
-
-              <Grid item xs={12} sm={6} md={3}>
-                <NeonButton label="Reset" onClick={handleReset} />
-              </Grid>
-
-            </Grid>
+              </Box>
+            </Box>
           </Box>
         )}
       </Box>
