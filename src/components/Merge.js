@@ -1,11 +1,19 @@
-import { React, useState } from 'react';
-import { Box, Tabs, Tab, Typography } from '@mui/material';
+import React, { useEffect, useState } from 'react';
+import { Box, Tabs, Tab } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
+import { useLocation, useNavigate } from 'react-router-dom';
 import ProposeMerge from "./MergePropose"
 import JoinDatasetsMerge from "./MergeJoinDatasets"
 import MergeTemplate from "./MergeTemplate"
 import FooterLinks from './FooterLinks';
+import {
+  DEFAULT_MERGE_TAB,
+  getMergeTabIndex,
+  getResolvedMergeTab,
+  MERGE_TABS,
+  shouldRedirectMergeTab,
+} from '../utils/mergeTabSync';
 
 function TabPanel(props) {
   const { children, value, index, ...other } = props;
@@ -19,9 +27,7 @@ function TabPanel(props) {
       {...other}
     >
       {value === index && (
-        <Box sx={{ p: 3 }}>
-          <Typography>{children}</Typography>
-        </Box>
+        <Box sx={{ p: 3 }}>{children}</Box>
       )}
     </div>
   );
@@ -34,13 +40,40 @@ function a11yProps(index) {
   };
 }
 
-export default function Mergelayout({ database }) {
-  const [value, setValue] = useState(0);
+export default function Mergelayout({ database, tab }) {
+  const [value, setValue] = useState(getMergeTabIndex(tab));
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    if (!database) return;
+
+    const resolvedTab = getResolvedMergeTab(tab);
+    const nextValue = getMergeTabIndex(resolvedTab);
+
+    if (value !== nextValue) {
+      setValue(nextValue);
+    }
+
+    if (shouldRedirectMergeTab(tab)) {
+      navigate(
+        {
+          pathname: `/${database}/merge/${resolvedTab}`,
+          search: location.search,
+          hash: location.hash,
+        },
+        { replace: true }
+      );
+    }
+  }, [database, tab, value, navigate, location.search, location.hash]);
 
   const handleChange = (event, newValue) => {
     setValue(newValue);
+    if (database) {
+      navigate(`/${database}/merge/${MERGE_TABS[newValue]?.key || DEFAULT_MERGE_TAB}`);
+    }
   };
 
   return (

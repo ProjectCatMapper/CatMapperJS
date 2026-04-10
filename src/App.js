@@ -107,6 +107,7 @@ const App = () => {
           <Route path='/:database/:cmid/logs' element={<DatabaseRoute><LogsViewer /></DatabaseRoute>} />
           <Route path='/:database/:cmid/:tabval' element={<DatabaseRoute><ExploreNode /></DatabaseRoute>} />
           <Route path='/:database/merge' element={<DatabaseRoute><MergePage /></DatabaseRoute>} />
+          <Route path='/:database/merge/:tab' element={<DatabaseRoute><MergePage /></DatabaseRoute>} />
           <Route path='/help/api-guide' element={<ApiGuide />} />
           <Route path='/help/user-guide' element={<UserGuide />} />
           <Route path='/about' element={<About />} />
