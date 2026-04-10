@@ -8,7 +8,6 @@ import { useAuth } from './AuthContext';
 import { Dialog, DialogContent, DialogActions, DialogContentText, DialogTitle } from '@mui/material';
 import { parseTabularFile } from '../utils/tabularUpload';
 import SavedCmidInsertPopover from './SavedCmidInsertPopover';
-import { downloadJsonAsXlsx, downloadSheetsAsXlsx } from '../utils/excelExport';
 import {
   uploadInputNodes,
   getWaitingUSESStatus,
@@ -979,6 +978,7 @@ const Edit = ({ database }) => {
     }));
 
     const dbName = String(database || 'database').toLowerCase();
+    const { downloadSheetsAsXlsx } = await import('../utils/excelExport');
     await downloadSheetsAsXlsx(
       [
         {
@@ -1269,6 +1269,7 @@ const Edit = ({ database }) => {
       setError('No file data available for download.');
       return;
     }
+    const { downloadJsonAsXlsx } = await import('../utils/excelExport');
     await downloadJsonAsXlsx(download, {
       fileName: 'uploaded_Dataset.xlsx',
       sheetName: 'Dataset',

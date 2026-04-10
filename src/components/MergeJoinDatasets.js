@@ -7,7 +7,6 @@ import DomainSelector from './DomainSelector';
 import SavedCmidInsertPopover from './SavedCmidInsertPopover';
 import { useAuth } from './AuthContext';
 import { parseTabularFile } from '../utils/tabularUpload';
-import { downloadJsonAsXlsx } from '../utils/excelExport';
 
 const JoinDatasets_Merge = ({ database }) => {
   const { user, cred } = useAuth();
@@ -126,6 +125,7 @@ const JoinDatasets_Merge = ({ database }) => {
   // Download merged file
   // ------------------------------------------------------------
   const handleJoinDownload = async () => {
+    const { downloadJsonAsXlsx } = await import('../utils/excelExport');
     await downloadJsonAsXlsx(data, {
       fileName: 'joined_data.xlsx',
       sheetName: 'Sheet1',

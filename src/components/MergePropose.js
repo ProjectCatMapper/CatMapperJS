@@ -7,7 +7,6 @@ import { useMetadata } from './UseMetadata';
 import DownloadDatasetButton from './DownloadDatasetListButton';
 import { useAuth } from './AuthContext';
 import SavedCmidInsertPopover from './SavedCmidInsertPopover';
-import { downloadJsonAsXlsx } from '../utils/excelExport';
 // import infodata from './infodata.json';
 
 const Propose_Merge = ({ database }) => {
@@ -350,6 +349,7 @@ const Propose_Merge = ({ database }) => {
     const modeLabel = isCrossDomain
       ? `${toDomainLabel(crossSourceDomain)}_to_${toDomainLabel(crossTargetDomain)}`
       : advdomainDrop;
+    const { downloadJsonAsXlsx } = await import('../utils/excelExport');
     await downloadJsonAsXlsx(resultData, {
       fileName: `ProposedMerge_${filename}_${modeLabel}.xlsx`,
       sheetName: 'Sheet1',

@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Button, CircularProgress } from '@mui/material';
-import { downloadJsonAsXlsx } from '../utils/excelExport';
 
 const DownloadDatasetButton = ({ databaseName = "sociomap", fileName = "dataset_list.xlsx" }) => {
     const [loading, setLoading] = useState(false);
@@ -19,6 +18,7 @@ const DownloadDatasetButton = ({ databaseName = "sociomap", fileName = "dataset_
             if (!response.ok) throw new Error("Network response was not ok");
 
             const data = await response.json();
+            const { downloadJsonAsXlsx } = await import('../utils/excelExport');
             await downloadJsonAsXlsx(data, {
                 fileName,
                 sheetName: 'Sheet1',

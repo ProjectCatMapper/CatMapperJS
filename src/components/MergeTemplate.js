@@ -3,7 +3,6 @@ import { Box, Button, Divider, TextField, Table, TableBody, TableCell, TableCont
 import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
 import { parseTabularFile } from '../utils/tabularUpload';
-import { downloadJsonAsXlsx } from '../utils/excelExport';
 import { useAuth } from './AuthContext';
 import SavedCmidInsertPopover from './SavedCmidInsertPopover';
 
@@ -146,6 +145,7 @@ const MergeTemplate = ({ database }) => {
       return;
     }
 
+    const { downloadJsonAsXlsx } = await import('../utils/excelExport');
     await downloadJsonAsXlsx(templateData, {
       fileName: `merging_template_${inputValue}.xlsx`,
       sheetName: 'MergingTemplate',

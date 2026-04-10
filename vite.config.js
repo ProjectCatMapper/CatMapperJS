@@ -42,6 +42,9 @@ export default defineConfig(({ mode }) => {
       port: 3000,
     },
     build: {
+      // Route-level lazy loading keeps the initial app shell small. The
+      // remaining large chunks are lazy, route-local data/export modules.
+      chunkSizeWarningLimit: 4000,
       rollupOptions: {
         onwarn(warning, warn) {
           const warningText = String(warning?.message || '');

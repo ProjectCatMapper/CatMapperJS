@@ -38,7 +38,6 @@ import BookmarkBorderIcon from "@mui/icons-material/BookmarkBorder";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 
 import PropTypes from "prop-types";
-import { downloadJsonAsXlsx } from "../utils/excelExport";
 
 import CategoriesTable from "./TableCategories";
 import ClickTable from "./ExploreTabs";
@@ -698,6 +697,7 @@ export default function Tableclick({ cmid, database, tabval }) {
       const formattedDate = `${today.getFullYear()}-${String(
         today.getMonth() + 1
       ).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+      const { downloadJsonAsXlsx } = await import("../utils/excelExport");
       await downloadJsonAsXlsx(result, {
         fileName: `${rev.CMName} ${formattedDate}.xlsx`,
         sheetName: "Sheet1",
@@ -736,6 +736,7 @@ export default function Tableclick({ cmid, database, tabval }) {
       alert("No rows available to download.");
       return;
     }
+    const { downloadJsonAsXlsx } = await import("../utils/excelExport");
     await downloadJsonAsXlsx(rows, {
       fileName: filename,
       sheetName,

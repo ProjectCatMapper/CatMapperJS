@@ -19,7 +19,6 @@ import TranslateMatchReview from './TranslateMatchReview';
 import { useAuth } from './AuthContext';
 import { addReviewIds, getMatchTypePercentages, stripReviewFields } from '../utils/translateReview';
 import { DataGrid } from '@mui/x-data-grid';
-import { downloadJsonAsXlsx } from '../utils/excelExport';
 
 const getTooltipContent = (nm) => {
   const tooltipTexts = {
@@ -366,6 +365,7 @@ function TranslateComponent({ database }) {
       const date = new Date().toISOString().split('T')[0];
       const customFileName = `${filename}_Matched_${date}.xlsx`;
 
+      const { downloadJsonAsXlsx } = await import('../utils/excelExport');
       await downloadJsonAsXlsx(sanitizedRows, {
         fileName: customFileName,
         sheetName: 'Sheet1',
