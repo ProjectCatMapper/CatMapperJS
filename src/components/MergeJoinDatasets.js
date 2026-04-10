@@ -136,20 +136,23 @@ const JoinDatasets_Merge = ({ database }) => {
   // Render
   // ------------------------------------------------------------
   return (
-    <Box sx={{
-      height: '100%',
-      maxHeight: 'calc(100vh - 100px)',
-      overflow: 'auto',
-      padding: '16px'
-    }}>
-      <h2 style={{ color: 'black', padding: '2px' }}>Join Datasets</h2>
-      <Divider sx={{ my: 1 }} />
-
-      <Typography>
-        Upload two datasets to merge. You can set one dataset CMID per file using the datasetID textboxes below, or leave textboxes blank and use a `datasetID` column in the upload files. Both datasets must have the original `Key` columns specified in the database translation that was previously uploaded to the dataset with the matching CMID. If you have not yet translated and uploaded your dataset, please do so now.
+    <Box
+      sx={{
+        height: '100%',
+        maxHeight: 'calc(100vh - 100px)',
+        overflow: 'auto',
+        p: 2,
+        pt: 1,
+      }}
+    >
+      <Typography variant="h4" sx={{ color: 'black', mb: 0.5 }}>
+        Join Datasets
       </Typography>
-
-      <br />
+      <Divider sx={{ mb: 1.5 }} />
+      <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1.5, maxWidth: 960 }}>
+        Upload two datasets to merge. Use the dataset ID fields below or leave them blank and provide a
+        `datasetID` column in each file.
+      </Typography>
       <Box
         sx={{
           mb: 2,
@@ -229,9 +232,10 @@ const JoinDatasets_Merge = ({ database }) => {
         padding: 2,
         boxShadow: 1,
       }}>
-        {/* LEFT FILE */}
         <Box>
-          <h3 style={{ color: 'black', fontWeight: 'bold' }}>Upload first Dataset</h3>
+          <Typography variant="h6" sx={{ color: 'black', fontWeight: 'bold', mb: 0.5 }}>
+            Upload first Dataset
+          </Typography>
           <input
             type="file"
             accept=".csv,.tsv,.xlsx"
@@ -243,9 +247,10 @@ const JoinDatasets_Merge = ({ database }) => {
           />
         </Box>
 
-        {/* RIGHT FILE */}
         <Box>
-          <h3 style={{ color: 'black', fontWeight: 'bold' }}>Upload second Dataset</h3>
+          <Typography variant="h6" sx={{ color: 'black', fontWeight: 'bold', mb: 0.5 }}>
+            Upload second Dataset
+          </Typography>
           <input
             type="file"
             accept=".csv,.tsv,.xlsx"
