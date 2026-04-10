@@ -1,11 +1,23 @@
-import React, { useState } from 'react'
-import { Box, Button, Divider, TextField, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from '@mui/material';
+import React, { useState } from 'react';
+import {
+  Box,
+  Button,
+  Divider,
+  TextField,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+} from '@mui/material';
 import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
 import { parseTabularFile } from '../utils/tabularUpload';
 import { useAuth } from './AuthContext';
 import SavedCmidInsertPopover from './SavedCmidInsertPopover';
-
+import { buildLinkFileSheets, summarizeMergeTemplate } from '../utils/mergeTemplateHelpers';
 
 const MergeTemplate = ({ database }) => {
   const { user, cred } = useAuth() || {};
@@ -19,10 +31,19 @@ const MergeTemplate = ({ database }) => {
   const [message, setMessage] = useState('');
   const [, setDownloadHash] = useState('');
   const [templateData, setTemplateData] = useState([]);
+  const [templateSummary, setTemplateSummary] = useState(null);
   const [templateFound, setTemplateFound] = useState(false);
   const [uploadTemplateValid, setUploadTemplateValid] = useState(false);
 
-  const validTemplateRows = (templateData || []).filter((row) => row?.mergingID && String(row.mergingID).trim() !== "");
+  const validTemplateRows = (templateData || []).filter(
+    (row) => row?.mergingID && String(row.mergingID).trim() !== ''
+  );
+  const mergeTemplateStatus = summarizeMergeTemplate(templateSummary);
+  const syntaxDownloadsEnabled = templateFound && mergeTemplateStatus.hasVariableMappings;
+  const linkFileDownloadEnabled =
+    templateFound &&
+    !mergeTemplateStatus.hasVariableMappings &&
+    mergeTemplateStatus.canDownloadLinkFile;
 
   const mergingMetadataRows = Array.from(
     new Map(
@@ -31,19 +52,27 @@ const MergeTemplate = ({ database }) => {
           row.mergingID,
           {
             mergingID: row.mergingID,
-            mergingCMName: row.mergingCMName || "",
-            mergingShortName: row.mergingShortName || "",
-            mergingCitation: row.mergingCitation || ""
-          }
-      ])
+            mergingCMName: row.mergingCMName || '',
+            mergingShortName: row.mergingShortName || '',
+            mergingCitation: row.mergingCitation || '',
+          },
+        ])
     ).values()
   );
 
   const handleChange = (event) => {
     setInputValue(event.target.value);
-  }
+  };
 
   const handleSubmit = async () => {
+    if (templateFound && !mergeTemplateStatus.hasVariableMappings) {
+      const errorMessage =
+        'Error submitting form: This merging template has no variable mappings. Download the link file instead.';
+      setMessage(errorMessage);
+      setSnackbarOpen(true);
+      return errorMessage;
+    }
+
     try {
       const response = await fetch(`${process.env.REACT_APP_API_URL}/merge/syntax/${database}`, {
         method: 'POST',
@@ -62,10 +91,7 @@ const MergeTemplate = ({ database }) => {
       }
 
       if (!response.ok) {
-        const serverMessage =
-          (result && (result.msg || result.error)) ||
-          raw ||
-          `HTTP ${response.status}`;
+        const serverMessage = (result && (result.msg || result.error)) || raw || `HTTP ${response.status}`;
         throw new Error(serverMessage);
       }
 
@@ -73,9 +99,9 @@ const MergeTemplate = ({ database }) => {
 
       if (result && 'msg' in result) {
         msgToDisplay = result.msg;
-        setMessage("✅" + msgToDisplay);
+        setMessage(`Success: ${msgToDisplay}`);
       } else {
-        msgToDisplay = "⚠️ Merge files generated, but response did not include a status message.";
+        msgToDisplay = 'Merge files generated, but response did not include a status message.';
         setMessage(msgToDisplay);
       }
 
@@ -86,24 +112,52 @@ const MergeTemplate = ({ database }) => {
         window.open(`${process.env.REACT_APP_API_URL}/download/zip/${result.download.hash}`, '_blank');
       }
 
-      return msgToDisplay; // ✅ return message
-
+      return msgToDisplay;
     } catch (error) {
-      const errorMessage = `❌ Error submitting form: ${error.message}`;
+      const errorMessage = `Error submitting form: ${error.message}`;
       console.error(errorMessage);
       setMessage(errorMessage);
       setSnackbarOpen(true);
-      return errorMessage; // ✅ return error message
+      return errorMessage;
     }
   };
 
   const handleFindMergingTemplate = async () => {
     if (!inputValue) {
-      alert("Please enter a Dataset ID.");
+      alert('Please enter a Dataset ID.');
       return;
     }
 
     try {
+      setTemplateFound(false);
+      setTemplateData([]);
+      setTemplateSummary(null);
+      setUploadTemplateValid(false);
+      setJsondata(null);
+
+      const summaryResponse = await fetch(
+        `${process.env.REACT_APP_API_URL}/merge/template/summary/${database}/${inputValue}`,
+        {
+          method: 'GET',
+        }
+      );
+
+      if (!summaryResponse.ok) {
+        const errorText = await summaryResponse.text();
+        throw new Error(`Server error: ${errorText}`);
+      }
+
+      const summaryResult = await summaryResponse.json();
+      const summaryStatus = summarizeMergeTemplate(summaryResult);
+      setTemplateSummary(summaryResult);
+
+      if (!summaryStatus.isMergingTemplate) {
+        setMessage(`"${inputValue}" is not a merging template.`);
+        setTemplateFound(false);
+        setSnackbarOpen(true);
+        return;
+      }
+
       const response = await fetch(`${process.env.REACT_APP_API_URL}/merge/template/${database}/${inputValue}`, {
         method: 'GET',
       });
@@ -114,26 +168,30 @@ const MergeTemplate = ({ database }) => {
       }
 
       const result = await response.json();
-      setTemplateData(result); // store valid template JSON
+      setTemplateData(result);
 
       const foundRows = Array.isArray(result)
-        ? result.filter((row) => row?.mergingID && String(row.mergingID).trim() !== "")
+        ? result.filter((row) => row?.mergingID && String(row.mergingID).trim() !== '')
         : [];
 
-      if (
-        foundRows.length > 0
-      ) {
-        setMessage(`✅ Template found for "${inputValue}"`);
+      if (foundRows.length > 0) {
+        if (summaryStatus.hasVariableMappings) {
+          setMessage(`Template found for "${inputValue}"`);
+        } else if (summaryStatus.canDownloadLinkFile) {
+          setMessage(`Template found for "${inputValue}" with no variable mappings. Download the link file instead.`);
+        } else {
+          setMessage(`Template found for "${inputValue}", but it has no variable mappings or equivalence ties.`);
+        }
         setTemplateFound(true);
       } else {
-        setMessage(`⚠️ No valid template found for "${inputValue}"`);
+        setMessage(`No valid template found for "${inputValue}"`);
         setTemplateFound(false);
       }
 
       setSnackbarOpen(true);
     } catch (error) {
       console.error('Error fetching merging template:', error);
-      setMessage(`❌ Error: ${error.message}`);
+      setMessage(`Error: ${error.message}`);
       setTemplateFound(false);
       setSnackbarOpen(true);
     }
@@ -141,7 +199,7 @@ const MergeTemplate = ({ database }) => {
 
   const handleDownloadDatasetsXLSX = async () => {
     if (!Array.isArray(templateData) || templateData.length === 0) {
-      alert("No template data to download. Please find a merging template first.");
+      alert('No template data to download. Please find a merging template first.');
       return;
     }
 
@@ -152,6 +210,18 @@ const MergeTemplate = ({ database }) => {
     });
   };
 
+  const handleDownloadLinkFile = async () => {
+    if (!linkFileDownloadEnabled) {
+      alert('A link file is only available for merging templates without variable mappings.');
+      return;
+    }
+
+    const { downloadSheetsAsXlsx } = await import('../utils/excelExport');
+    const sheets = buildLinkFileSheets(templateData, templateSummary?.equivalenceTies || []);
+    await downloadSheetsAsXlsx(sheets, {
+      fileName: `link_file_${inputValue}.xlsx`,
+    });
+  };
 
   const handleFileChange = async (e) => {
     const file = e.target.files[0];
@@ -164,18 +234,18 @@ const MergeTemplate = ({ database }) => {
 
       const parsed = await parseTabularFile(file, { checkMergedCells: false });
       const normalizedHeader = parsed.headers;
-      const requiredCols = ["mergingID", "datasetID", "filePath"];
+      const requiredCols = ['mergingID', 'datasetID', 'filePath'];
       const hasAllRequiredCols = requiredCols.every((col) => normalizedHeader.includes(col));
 
       if (!hasAllRequiredCols) {
-        setMessage(`❌ Invalid merge template. Required columns: ${requiredCols.join(', ')}`);
+        setMessage(`Invalid merge template. Required columns: ${requiredCols.join(', ')}`);
         setSnackbarOpen(true);
         setUploadTemplateValid(false);
         return;
       }
 
       if (parsed.records.length === 0) {
-        setMessage('❌ Uploaded template has no data rows.');
+        setMessage('Uploaded template has no data rows.');
         setSnackbarOpen(true);
         setUploadTemplateValid(false);
         return;
@@ -185,14 +255,14 @@ const MergeTemplate = ({ database }) => {
       setRows(parsed.rows2d);
       setJsondata(parsed.records);
       setUploadTemplateValid(true);
-      setMessage(`✅ Valid merge template uploaded (${parsed.records.length} rows).`);
+      setMessage(`Valid merge template uploaded (${parsed.records.length} rows).`);
       setSnackbarOpen(true);
     } catch (err) {
       const text = err?.message || 'Error parsing upload file. Please verify the file format and contents.';
       if (text.toLowerCase().includes('please upload a valid file')) {
         alert(text);
       } else {
-        setMessage(`❌ ${text}`);
+        setMessage(text);
         setSnackbarOpen(true);
       }
       e.target.value = null;
@@ -202,16 +272,12 @@ const MergeTemplate = ({ database }) => {
   };
 
   return (
-    <Box >
-      <Box sx={{ mb: 3 }} style={{ marginBottom: "50px" }}>
-        <h2 style={{ color: 'black', padding: "2px" }}>Merging code</h2>
-        <h4 style={{ color: 'black', padding: "2px" }}>choose merging template ID</h4>
+    <Box>
+      <Box sx={{ mb: 3 }} style={{ marginBottom: '50px' }}>
+        <h2 style={{ color: 'black', padding: '2px' }}>Merging code</h2>
+        <h4 style={{ color: 'black', padding: '2px' }}>choose merging template ID</h4>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2, flexWrap: 'wrap' }}>
-          <TextField
-            variant="outlined"
-            value={inputValue}
-            onChange={handleChange}
-          />
+          <TextField variant="outlined" value={inputValue} onChange={handleChange} />
           <SavedCmidInsertPopover
             user={user}
             cred={cred}
@@ -223,27 +289,54 @@ const MergeTemplate = ({ database }) => {
             buttonLabel="Insert"
           />
         </Box>
-        <Button variant="contained" sx={{
-          backgroundColor: 'black',
-          color: 'white',
-          '&:hover': {
-            backgroundColor: 'green',
-          },
-          mr: 4, ml: 4, my: 1
-        }} onClick={handleFindMergingTemplate}>
+        <Button
+          variant="contained"
+          sx={{
+            backgroundColor: 'black',
+            color: 'white',
+            '&:hover': {
+              backgroundColor: 'green',
+            },
+            mr: 4,
+            ml: 4,
+            my: 1,
+          }}
+          onClick={handleFindMergingTemplate}
+        >
           Find Merging Template
         </Button>
-        <Button variant="contained" sx={{
-          backgroundColor: 'black',
-          color: 'white',
-          '&:hover': {
-            backgroundColor: 'green',
-          },
-        }} onClick={handleDownloadDatasetsXLSX} disabled={!templateFound}>
+        <Button
+          variant="contained"
+          sx={{
+            backgroundColor: 'black',
+            color: 'white',
+            '&:hover': {
+              backgroundColor: 'green',
+            },
+          }}
+          onClick={handleDownloadDatasetsXLSX}
+          disabled={!syntaxDownloadsEnabled}
+        >
           Download list of Datasets
         </Button>
+        {linkFileDownloadEnabled && (
+          <Button
+            variant="contained"
+            sx={{
+              backgroundColor: 'black',
+              color: 'white',
+              '&:hover': {
+                backgroundColor: 'green',
+              },
+              ml: 2,
+            }}
+            onClick={handleDownloadLinkFile}
+          >
+            DOWNLOAD LINK FILE
+          </Button>
+        )}
         {mergingMetadataRows.length > 0 && (
-          <TableContainer component={Paper} variant="outlined" sx={{ mt: 2, mb: 2, maxWidth: "100%" }}>
+          <TableContainer component={Paper} variant="outlined" sx={{ mt: 2, mb: 2, maxWidth: '100%' }}>
             <Table size="small" aria-label="merging template metadata">
               <TableHead>
                 <TableRow>
@@ -276,15 +369,16 @@ const MergeTemplate = ({ database }) => {
           </TableContainer>
         )}
         <Divider sx={{ my: 1 }} />
-        <h4 style={{ color: 'black', padding: "2px" }}>Upload merging template with included file paths</h4>
+        <h4 style={{ color: 'black', padding: '2px' }}>Upload merging template with included file paths</h4>
         <Box>
-          <h3 style={{ color: 'black', fontWeight: "bold", padding: "2px" }}>Upload Template</h3>
+          <h3 style={{ color: 'black', fontWeight: 'bold', padding: '2px' }}>Upload Template</h3>
           <input
             id="fileInput"
-            style={{ color: 'black', fontWeight: "bold", marginLeft: 7, padding: "2px" }}
+            style={{ color: 'black', fontWeight: 'bold', marginLeft: 7, padding: '2px' }}
             type="file"
             accept=".csv,.tsv,.xlsx"
             onChange={handleFileChange}
+            disabled={templateFound && !mergeTemplateStatus.hasVariableMappings}
           />
           <Snackbar
             open={snackbarOpen}
@@ -298,23 +392,31 @@ const MergeTemplate = ({ database }) => {
           </Snackbar>
         </Box>
 
-
-        <Button variant="contained" sx={{
-          backgroundColor: 'black',
-          color: 'white',
-          '&:hover': {
-            backgroundColor: 'green',
-          },
-          mr: 4, my: 1
-        }} onClick={handleSubmit} disabled={!uploadTemplateValid}>
+        <Button
+          variant="contained"
+          sx={{
+            backgroundColor: 'black',
+            color: 'white',
+            '&:hover': {
+              backgroundColor: 'green',
+            },
+            mr: 4,
+            my: 1,
+          }}
+          onClick={handleSubmit}
+          disabled={!uploadTemplateValid || (templateFound && !mergeTemplateStatus.hasVariableMappings)}
+        >
           Generate Merge Files
         </Button>
 
-
+        {templateFound && !mergeTemplateStatus.hasVariableMappings && (
+          <Box sx={{ mt: 1, color: 'black' }}>
+            This template has no variable mappings, so merge-file generation remains disabled. Use DOWNLOAD LINK FILE instead.
+          </Box>
+        )}
       </Box>
     </Box>
-
-  )
-}
+  );
+};
 
 export default MergeTemplate;
