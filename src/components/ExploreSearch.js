@@ -1,5 +1,4 @@
-import React from 'react';
-import { useState, useEffect } from 'react'
+import React, { useEffect, useState } from 'react';
 import { styled } from '@mui/material/styles';
 import InputBase from '@mui/material/InputBase';
 import { Box, Button, FormControl, FormControlLabel, Grid, NativeSelect, Switch, Tooltip, Typography } from "@mui/material";
@@ -21,6 +20,8 @@ import {
   toUiProperty,
   validateApiSearchParams
 } from '../utils/nlpSearch';
+import { useAuth } from './AuthContext';
+import SavedCmidInsertPopover from './SavedCmidInsertPopover';
 
 const BootstrapInput = styled(InputBase)(({ theme }) => ({
   'label + &': {
@@ -57,7 +58,26 @@ const BootstrapInput = styled(InputBase)(({ theme }) => ({
 const MAX_NLP_LOG_ENTRIES = 1200;
 const CONTEXT_SPLIT_REGEX = /[,\s;]+/;
 
+const appendDelimitedValue = (currentValue, nextValue) => {
+  const normalizedNextValue = String(nextValue || '').trim();
+  if (!normalizedNextValue) return currentValue || '';
+
+  const existingValues = String(currentValue || '')
+    .split(CONTEXT_SPLIT_REGEX)
+    .map((value) => value.trim())
+    .filter(Boolean);
+
+  if (existingValues.some((value) => value.toLowerCase() === normalizedNextValue.toLowerCase())) {
+    return existingValues.join(', ');
+  }
+
+  return existingValues.length > 0
+    ? `${existingValues.join(', ')}, ${normalizedNextValue}`
+    : normalizedNextValue;
+};
+
 export default function Searchbar({ database }) {
+  const { user, cred } = useAuth() || {};
 
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -1161,15 +1181,26 @@ export default function Searchbar({ database }) {
               <Grid item xs={12} sm={6} md={3}>
                 <FormControl variant="standard">
                   <Typography variant="subtitle2" gutterBottom>Context ID(s)</Typography>
-                  <input
-                    type="text"
-                    id="myInput"
-                    value={contextID}
-                    style={{ width: 160, height: 30, padding: "0 8px", borderRadius: 4, border: "1px solid #ccc" }}
-                    onChange={(event) => {
-                      setcontextID(event.target.value);
-                    }}
-                  />
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+                    <input
+                      type="text"
+                      id="myInput"
+                      value={contextID}
+                      style={{ width: 160, height: 30, padding: "0 8px", borderRadius: 4, border: "1px solid #ccc" }}
+                      onChange={(event) => {
+                        setcontextID(event.target.value);
+                      }}
+                    />
+                    <SavedCmidInsertPopover
+                      user={user}
+                      cred={cred}
+                      database={database}
+                      onInsert={(cmid) => setcontextID((currentValue) => appendDelimitedValue(currentValue, cmid))}
+                      title="Insert bookmarked context ID"
+                      compact
+                      buttonLabel="Insert"
+                    />
+                  </Box>
                   <Typography variant="caption" sx={{ mt: 0.5 }}>
                     Multiple IDs: separate with comma
                   </Typography>
@@ -1201,15 +1232,27 @@ export default function Searchbar({ database }) {
               <Grid >
                 <FormControl variant="standard">
                   <Typography variant="subtitle2" gutterBottom>Dataset ID</Typography>
-                  <input
-                    type="text"
-                    id="myInput"
-                    value={datasetID}
-                    style={{ width: 100, height: 30, padding: "0 8px", borderRadius: 4, border: "1px solid #ccc" }}
-                    onChange={(event) => {
-                      setdatasetID(event.target.value);
-                    }}
-                  />
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+                    <input
+                      type="text"
+                      id="myInput"
+                      value={datasetID}
+                      style={{ width: 100, height: 30, padding: "0 8px", borderRadius: 4, border: "1px solid #ccc" }}
+                      onChange={(event) => {
+                        setdatasetID(event.target.value);
+                      }}
+                    />
+                    <SavedCmidInsertPopover
+                      user={user}
+                      cred={cred}
+                      database={database}
+                      onInsert={setdatasetID}
+                      title="Insert bookmarked dataset ID"
+                      datasetOnly
+                      compact
+                      buttonLabel="Insert"
+                    />
+                  </Box>
                 </FormControl>
               </Grid>
 

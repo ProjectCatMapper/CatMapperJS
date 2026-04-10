@@ -4,9 +4,12 @@ import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
 import { parseTabularFile } from '../utils/tabularUpload';
 import { downloadJsonAsXlsx } from '../utils/excelExport';
+import { useAuth } from './AuthContext';
+import SavedCmidInsertPopover from './SavedCmidInsertPopover';
 
 
 const MergeTemplate = ({ database }) => {
+  const { user, cred } = useAuth() || {};
 
   const [inputValue, setInputValue] = useState('');
   const [, setFile] = useState(null);
@@ -203,14 +206,23 @@ const MergeTemplate = ({ database }) => {
       <Box sx={{ mb: 3 }} style={{ marginBottom: "50px" }}>
         <h2 style={{ color: 'black', padding: "2px" }}>Merging code</h2>
         <h4 style={{ color: 'black', padding: "2px" }}>choose merging template ID</h4>
-        <TextField
-          variant="outlined"
-          value={inputValue}
-          onChange={handleChange}
-          sx={{
-            mb: 2,
-          }}
-        />
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2, flexWrap: 'wrap' }}>
+          <TextField
+            variant="outlined"
+            value={inputValue}
+            onChange={handleChange}
+          />
+          <SavedCmidInsertPopover
+            user={user}
+            cred={cred}
+            database={database}
+            onInsert={setInputValue}
+            title="Insert bookmarked merging template ID"
+            datasetOnly
+            compact
+            buttonLabel="Insert"
+          />
+        </Box>
         <Button variant="contained" sx={{
           backgroundColor: 'black',
           color: 'white',
