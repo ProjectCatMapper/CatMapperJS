@@ -972,7 +972,7 @@ const Edit = ({ database }) => {
     const normalizedNodeRows = (availableNodeProperties || []).map((item) => ({
       property: item?.property || '',
       description: item?.description || '',
-      nodeType: item?.nodeType || 'BOTH',
+      nodeType: item?.nodeType || 'CATEGORY',
     }));
     const normalizedUsesRows = (availableUsesProperties || []).map((item) => ({
       property: item?.property || '',
@@ -2017,7 +2017,7 @@ const Edit = ({ database }) => {
                         <TableRow key={`node-prop-${index}`}>
                           <TableCell>{item?.property || ''}</TableCell>
                           <TableCell>{item?.description || ''}</TableCell>
-                          <TableCell>{item?.nodeType || 'BOTH'}</TableCell>
+                          <TableCell>{item?.nodeType || 'CATEGORY'}</TableCell>
                         </TableRow>
                       ))
                     ) : (
