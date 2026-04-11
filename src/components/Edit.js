@@ -387,6 +387,7 @@ const Edit = ({ database }) => {
         checkMergedCells: true,
         stripWrappingQuotes: true,
         dropDuplicateHeaders: true,
+        dropFullyEmptyColumns: true,
       });
       if (Array.isArray(parsed.warnings) && parsed.warnings.length > 0) {
         alert(`Warning: ${parsed.warnings.join(' ')}`);

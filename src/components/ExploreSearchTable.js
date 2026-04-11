@@ -64,7 +64,7 @@ export default function DataTable({ users, snackbarOpen, setSnackbarOpen, databa
     },
     { field: 'id', headerName: 'Index', flex: 0.3 },
     { field: 'cmid', headerName: 'CatMapper ID', flex: 0.9 },
-    { field: 'name', headerName: 'CMName', flex: 2 },
+    { field: 'name', headerName: 'CatMapper Name', flex: 2 },
     { field: 'label', headerName: 'Domain', flex: 1 },
     { field: 'country', headerName: 'Country', flex: 2, cellClassName: (params) => (params.row.hasLargeText ? 'wrap-text-3-lines_ex' : '') },
     { field: 'match', headerName: 'Matching', flex: 1 },

@@ -106,6 +106,10 @@ function normalizeHeader(headers, trimHeaders) {
   });
 }
 
+function isEmptyCellValue(value) {
+  return String(value ?? '').trim() === '';
+}
+
 function getDuplicateHeaderInfo(headers = []) {
   const seen = new Set();
   const keepIndices = [];
@@ -144,10 +148,30 @@ function toRecords(headers, rows, options) {
   });
 }
 
+function getFullyEmptyColumnInfo(headers = [], rows = []) {
+  const keepIndices = [];
+  const droppedHeaders = [];
+
+  headers.forEach((header, index) => {
+    const hasNonEmptyValue = rows.some((row) => !isEmptyCellValue(row[index]));
+    if (hasNonEmptyValue) {
+      keepIndices.push(index);
+      return;
+    }
+    droppedHeaders.push(header);
+  });
+
+  return {
+    keepIndices,
+    droppedHeaders,
+  };
+}
+
 export async function parseTabularFile(file, options = {}) {
   const opts = {
     trimHeaders: true,
     dropEmptyRows: true,
+    dropFullyEmptyColumns: false,
     stripWrappingQuotes: false,
     normalizeEmptyToNull: false,
     checkMergedCells: false,
@@ -194,9 +218,24 @@ export async function parseTabularFile(file, options = {}) {
     );
   }
 
+  if (opts.dropFullyEmptyColumns) {
+    const {
+      keepIndices: nonEmptyColumnIndices,
+      droppedHeaders,
+    } = getFullyEmptyColumnInfo(finalHeaders, rows2d);
+
+    if (droppedHeaders.length > 0) {
+      finalHeaders = nonEmptyColumnIndices.map((index) => finalHeaders[index]);
+      rows2d = rows2d.map((row) => nonEmptyColumnIndices.map((index) => row[index]));
+      warnings.push(
+        `Empty column(s) removed: ${droppedHeaders.join(', ')}`
+      );
+    }
+  }
+
   if (opts.dropEmptyRows) {
     rows2d = rows2d.filter((row) =>
-      row.some((cell) => String(cell ?? '').trim() !== '')
+      row.some((cell) => !isEmptyCellValue(cell))
     );
   }
 
