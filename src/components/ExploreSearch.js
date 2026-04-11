@@ -1203,18 +1203,18 @@ export default function Searchbar({ database }) {
                 </FormControl>
               </Box>
 
-              <Box sx={{ flex: { xs: "1 1 100%", md: "0 0 320px" }, minWidth: 0 }}>
+              <Box sx={{ flex: { xs: "1 1 100%", md: "0 0 390px" }, minWidth: 0 }}>
                 <FormControl variant="standard" sx={{ width: "100%" }}>
                   <Box sx={{ display: "flex", alignItems: "flex-end", gap: 0.5, mb: 0.5 }}>
                     <Typography variant="subtitle2">Context ID(s)</Typography>
                     {renderAdvancedInfoButton(tooltipContent4, "Explain context IDs")}
                   </Box>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: { xs: 'wrap', md: 'nowrap' } }}>
                     <input
                       type="text"
                       id="myInput"
                       value={contextID}
-                      style={{ ...baseTextInputStyle, width: 130 }}
+                      style={{ ...baseTextInputStyle, width: 115 }}
                       onChange={(event) => {
                         setcontextID(event.target.value);
                       }}
@@ -1230,7 +1230,7 @@ export default function Searchbar({ database }) {
                     />
                     <NativeSelect
                       value={contextMode}
-                      sx={{ ...advancedSelectSx, width: 130 }}
+                      sx={{ ...advancedSelectSx, width: 120 }}
                       onChange={(event) => {
                         setContextMode(event.target.value === "any" ? "any" : "all");
                       }}
