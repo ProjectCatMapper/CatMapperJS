@@ -1653,7 +1653,7 @@ export default function Tableclick({ cmid, database, tabval }) {
                   variant="outlined"
                   onClick={handleDownloadNodeJson}
                   disabled={loadingJsonDownload}
-                  className="category-info-action-btn category-info-json-btn"
+                  className="category-info-action-btn category-info-logs-btn"
                 >
                   {loadingJsonDownload ? "Downloading JSON..." : "Download JSON"}
                 </Button>

@@ -144,18 +144,6 @@ h1,h4,p,a{
   border-color: #0b46a8 !important;
 }
 
-.category-info-json-btn {
-  color: #0f7a34 !important;
-  border-color: #0f7a34 !important;
-  background: rgba(255, 255, 255, 0.9) !important;
-}
-
-.category-info-json-btn:hover {
-  background: #edf9f0 !important;
-  color: #0b6229 !important;
-  border-color: #0b6229 !important;
-}
-
 #content.category-info-grid {
   color: black;
   width: 100%;

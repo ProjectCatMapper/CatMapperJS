@@ -334,6 +334,118 @@ const ApiGuide = () => {
         <Divider sx={{ marginY: 4 }} />
 
         <Typography variant="h5" gutterBottom>
+          <strong>API User Guide: Retrieve Canonical Node Page JSON</strong>
+        </Typography>
+
+        <Box marginBottom={2}>
+          <Typography variant="h6">
+            <strong>Endpoint Description</strong>
+          </Typography>
+          <Typography variant="body1" gutterBottom>
+            This endpoint returns the aggregated machine-readable JSON payload for a node Explore page.
+            It bundles the main node info, category/sample data, geometry, available network payloads,
+            and merge-template summary when applicable.
+          </Typography>
+        </Box>
+
+        <Box marginBottom={2}>
+          <Typography variant="h6">
+            <strong>HTTP Request Method</strong>
+          </Typography>
+          <Typography variant="body1" gutterBottom>
+            <ul>
+              <li className="outer">GET</li>
+            </ul>
+          </Typography>
+        </Box>
+
+        <Box marginBottom={2}>
+          <Typography variant="h6">
+            <strong>Resource URL</strong>
+          </Typography>
+          <Typography variant="body1" gutterBottom>
+            <code className="codetext">/entity/&lt;database&gt;/&lt;cmid&gt;.json</code>
+          </Typography>
+        </Box>
+
+        <Box marginBottom={2}>
+          <Typography variant="h6">
+            <strong>Path Parameters</strong>
+          </Typography>
+          <List sx={{ listStyleType: 'disc', pl: 4 }}>
+            <ListItem sx={{ display: 'list-item' }}>
+              <ListItemText
+                primary="database"
+                primaryTypographyProps={{ fontWeight: 'bold' }}
+                secondary="Database name (for example SocioMap or ArchaMap)."
+              />
+            </ListItem>
+            <ListItem sx={{ display: 'list-item' }}>
+              <ListItemText
+                primary="cmid"
+                primaryTypographyProps={{ fontWeight: 'bold' }}
+                secondary="CatMapper ID for the node Explore page."
+              />
+            </ListItem>
+          </List>
+        </Box>
+
+        <Box marginBottom={2}>
+          <Typography variant="h6">
+            <strong>Request Examples</strong>
+          </Typography>
+          <Typography variant="body1" gutterBottom>
+            <code className="codetext">GET /entity/SocioMap/SM1.json</code>
+            <br />
+            <code className="codetext">GET /entity/ArchaMap/AM1.json</code>
+          </Typography>
+        </Box>
+
+        <Box marginBottom={2}>
+          <Typography variant="h6">
+            <strong>Responses</strong>
+          </Typography>
+          <Box marginBottom={2}>
+            <Typography variant="subtitle1">Successful Response</Typography>
+            <Typography variant="body1" gutterBottom>
+              <ul>
+                <li className="outer">
+                  <strong>Status Code:</strong> 200 OK
+                </li>
+                <li className="outer">
+                  <strong>Content:</strong> JSON object with fields such as <code>version</code>,{' '}
+                  <code>resourceType</code>, <code>database</code>, <code>cmid</code>, <code>info</code>,{' '}
+                  <code>categoryPage</code>, <code>geometry</code>, <code>networks</code>, and optional{' '}
+                  <code>mergeTemplateSummary</code>.
+                </li>
+              </ul>
+            </Typography>
+          </Box>
+          <Box marginBottom={2}>
+            <Typography variant="subtitle1">Error Response</Typography>
+            <Typography variant="body1" gutterBottom>
+              <ul>
+                <li className="outer">
+                  <strong>Status Code:</strong> 404 Not Found
+                </li>
+                <li className="outer">
+                  <strong>Content:</strong> JSON error payload when the requested node does not exist.
+                </li>
+              </ul>
+            </Typography>
+          </Box>
+        </Box>
+
+        <Box marginBottom={2}>
+          <Typography variant="body1" gutterBottom>
+            On node Explore pages in the web app, this is the endpoint used by the <strong>Download JSON</strong>{' '}
+            button in the page header.
+          </Typography>
+        </Box>
+
+        <Divider sx={{ marginY: 4 }} />
+
+        <Typography variant="h5" gutterBottom>
           <strong>API User Guide: Retrieve Dataset Details</strong>
         </Typography>
 
