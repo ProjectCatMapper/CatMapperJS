@@ -972,6 +972,7 @@ const Edit = ({ database }) => {
     const normalizedNodeRows = (availableNodeProperties || []).map((item) => ({
       property: item?.property || '',
       description: item?.description || '',
+      nodeType: item?.nodeType || 'BOTH',
     }));
     const normalizedUsesRows = (availableUsesProperties || []).map((item) => ({
       property: item?.property || '',
@@ -984,7 +985,7 @@ const Edit = ({ database }) => {
       [
         {
           sheetName: 'Node Properties',
-          headers: ['property', 'description'],
+          headers: ['property', 'description', 'nodeType'],
           rows: normalizedNodeRows.length > 0 ? normalizedNodeRows : [],
         },
         {
@@ -2007,6 +2008,7 @@ const Edit = ({ database }) => {
                     <TableRow>
                       <TableCell sx={{ fontWeight: 'bold' }}>property</TableCell>
                       <TableCell sx={{ fontWeight: 'bold' }}>description</TableCell>
+                      <TableCell sx={{ fontWeight: 'bold' }}>nodeType</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
@@ -2015,11 +2017,12 @@ const Edit = ({ database }) => {
                         <TableRow key={`node-prop-${index}`}>
                           <TableCell>{item?.property || ''}</TableCell>
                           <TableCell>{item?.description || ''}</TableCell>
+                          <TableCell>{item?.nodeType || 'BOTH'}</TableCell>
                         </TableRow>
                       ))
                     ) : (
                       <TableRow>
-                        <TableCell colSpan={2}>No node properties available.</TableCell>
+                        <TableCell colSpan={3}>No node properties available.</TableCell>
                       </TableRow>
                     )}
                   </TableBody>
