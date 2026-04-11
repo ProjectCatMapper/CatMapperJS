@@ -42,7 +42,6 @@ const MergeTemplate = ({ database }) => {
   const syntaxDownloadsEnabled = templateFound && mergeTemplateStatus.hasVariableMappings;
   const linkFileDownloadEnabled =
     templateFound &&
-    !mergeTemplateStatus.hasVariableMappings &&
     mergeTemplateStatus.canDownloadLinkFile;
 
   const mergingMetadataRows = Array.from(
@@ -212,7 +211,7 @@ const MergeTemplate = ({ database }) => {
 
   const handleDownloadLinkFile = async () => {
     if (!linkFileDownloadEnabled) {
-      alert('A link file is only available for merging templates without variable mappings.');
+      alert('A link file is only available when the merging template has equivalence ties.');
       return;
     }
 

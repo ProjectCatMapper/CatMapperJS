@@ -132,7 +132,7 @@ describe('MergeTemplate branching', () => {
     expect(container.textContent).toContain('no variable mappings');
   });
 
-  it('keeps the dataset-template download enabled for variable-aware merging templates', async () => {
+  it('keeps the dataset-template download enabled and still shows the link-file button for variable-aware merging templates', async () => {
     global.fetch = vi.fn((url) => {
       const requestUrl = String(url);
 
@@ -199,6 +199,6 @@ describe('MergeTemplate branching', () => {
     );
 
     expect(downloadTemplateButton?.disabled).toBe(false);
-    expect(downloadLinkFileButton).toBeFalsy();
+    expect(downloadLinkFileButton).toBeTruthy();
   });
 });
