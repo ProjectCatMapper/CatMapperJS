@@ -453,19 +453,27 @@ export default function Searchbar({ database }) {
     </div>
   );
 
+  const tooltipContent4 = (
+    <div className="tooltip-width">
+      A context ID is a CatMapper CMID used to limit results to a specific contextual category, such as a country,
+      language, religion, or other related context node. Enter multiple context IDs separated with commas to require
+      more than one context in the search.
+    </div>
+  );
+
   const advancedSelectSx = {
-    fontSize: 14,
+    fontSize: 13,
     letterSpacing: 0.5,
     borderRadius: 1,
     backgroundColor: "white",
     "& .MuiNativeSelect-select": {
-      padding: "4px 8px",
+      padding: "3px 7px",
     },
   };
 
   const advancedInfoButtonSx = {
     color: "#1976d2",
-    p: 0.5,
+    p: 0.25,
     alignSelf: "flex-end",
     "&:hover": {
       backgroundColor: "rgba(25, 118, 210, 0.08)",
@@ -478,16 +486,17 @@ export default function Searchbar({ database }) {
   };
 
   const baseTextInputStyle = {
-    height: 30,
-    padding: "0 8px",
+    height: 28,
+    padding: "0 7px",
     borderRadius: 4,
     border: "1px solid #ccc",
+    fontSize: 13,
   };
 
   const renderAdvancedInfoButton = (title, ariaLabel) => (
     <Tooltip title={title} arrow>
       <IconButton aria-label={ariaLabel} size="small" sx={advancedInfoButtonSx}>
-        <InfoIcon sx={{ fontSize: 22 }} />
+        <InfoIcon sx={{ fontSize: 20 }} />
       </IconButton>
     </Tooltip>
   );
@@ -988,8 +997,8 @@ export default function Searchbar({ database }) {
               backgroundColor: "#000000",
               color: "white",
               borderRadius: 2,
-              padding: 2,
-              mt: 2,
+              padding: 1.5,
+              mt: 1.5,
             }}
           >
             <Box
@@ -998,7 +1007,7 @@ export default function Searchbar({ database }) {
                 alignItems: { xs: "stretch", md: "center" },
                 justifyContent: "space-between",
                 flexWrap: "wrap",
-                gap: 1.5,
+                gap: 1,
               }}
             >
               <Box sx={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 0.5, flex: "1 1 320px" }}>
@@ -1048,7 +1057,7 @@ export default function Searchbar({ database }) {
               </Box>
             </Box>
 
-            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1.5, mt: 1.5, alignItems: "flex-end" }}>
+            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mt: 1, alignItems: "flex-end" }}>
               <Box sx={{ ...compactFieldSx, maxWidth: { xs: "100%", md: 220 } }}>
                 <Box sx={{ display: 'flex', alignItems: 'flex-end', gap: 0.5 }}>
                   <FormControl sx={{ width: "100%" }} variant="standard" size="small">
@@ -1163,7 +1172,7 @@ export default function Searchbar({ database }) {
               </Box>
             </Box>
 
-            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1.5, mt: 1.5, alignItems: "flex-start" }}>
+            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mt: 1, alignItems: "flex-start" }}>
               <Box sx={{ flex: { xs: "1 1 100%", md: "0 1 190px" }, minWidth: 0 }}>
                 <FormControl variant="standard" sx={{ width: "100%" }}>
                   <Typography variant="subtitle2" gutterBottom>Time Range</Typography>
@@ -1196,13 +1205,16 @@ export default function Searchbar({ database }) {
 
               <Box sx={{ flex: { xs: "1 1 100%", md: "1 1 360px" }, minWidth: 0 }}>
                 <FormControl variant="standard" sx={{ width: "100%" }}>
-                  <Typography variant="subtitle2" gutterBottom>Context ID(s)</Typography>
+                  <Box sx={{ display: "flex", alignItems: "flex-end", gap: 0.5, mb: 0.5 }}>
+                    <Typography variant="subtitle2">Context ID(s)</Typography>
+                    {renderAdvancedInfoButton(tooltipContent4, "Explain context IDs")}
+                  </Box>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
                     <input
                       type="text"
                       id="myInput"
                       value={contextID}
-                      style={{ ...baseTextInputStyle, flex: "1 1 180px", minWidth: 0 }}
+                      style={{ ...baseTextInputStyle, width: 130 }}
                       onChange={(event) => {
                         setcontextID(event.target.value);
                       }}
@@ -1228,9 +1240,6 @@ export default function Searchbar({ database }) {
                       <option value="any">any context</option>
                     </NativeSelect>
                   </Box>
-                  <Typography variant="caption" sx={{ mt: 0.5, display: "block" }}>
-                    Multiple IDs: separate with comma
-                  </Typography>
                 </FormControl>
               </Box>
 
