@@ -61,6 +61,7 @@ import {
   getCategoryInfoPlainValue,
   getCategoryInfoPreview,
 } from "./categoryInfoLayout";
+import { downloadJsonObject, fetchNodePageJson } from "../utils/nodePageJson";
 
 import "./ExploreNode.css";
 
@@ -194,7 +195,9 @@ export default function Tableclick({ cmid, database, tabval }) {
   const [loadingInfo, setLoadingInfo] = useState(false);
   const [navigationLoading, setNavigationLoading] = useState(false);
   const [loadingDownload, setLoadingDownload] = useState(false);
+  const [loadingJsonDownload, setLoadingJsonDownload] = useState(false);
   const abortControllerRef = useRef(null);
+  const jsonAbortControllerRef = useRef(null);
   const [badsources, setbadsources] = useState([]);
   const [domainDrop, setdomainDrop] = React.useState('ALL NODES');
   const [advdomainDrop, setadvdomainDrop] = React.useState('ALL NODES');
@@ -719,6 +722,40 @@ export default function Tableclick({ cmid, database, tabval }) {
     const url = `/${database.toLowerCase()}/${cmid}/logs`;
 
     window.open(url, '_blank');
+  };
+
+  const handleDownloadNodeJson = async () => {
+    if (loadingJsonDownload) {
+      if (jsonAbortControllerRef.current) {
+        jsonAbortControllerRef.current.abort();
+      }
+      return;
+    }
+
+    setLoadingJsonDownload(true);
+    const controller = new AbortController();
+    jsonAbortControllerRef.current = controller;
+
+    try {
+      const payload = await fetchNodePageJson({
+        apiBase: process.env.REACT_APP_API_URL,
+        database,
+        cmid,
+        signal: controller.signal,
+      });
+      const today = new Date();
+      const formattedDate = `${today.getFullYear()}-${String(
+        today.getMonth() + 1
+      ).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+      downloadJsonObject(payload, `${database}_${cmid}_${formattedDate}.json`);
+    } catch (error) {
+      if (error?.name !== "AbortError") {
+        console.error("Error downloading node JSON:", error);
+      }
+    } finally {
+      jsonAbortControllerRef.current = null;
+      setLoadingJsonDownload(false);
+    }
   };
 
   const goToCmidInfo = (targetCmid) => {
@@ -1610,6 +1647,15 @@ export default function Tableclick({ cmid, database, tabval }) {
                   className="category-info-action-btn category-info-logs-btn"
                 >
                   Change Logs
+                </Button>
+                <Button
+                  size="small"
+                  variant="outlined"
+                  onClick={handleDownloadNodeJson}
+                  disabled={loadingJsonDownload}
+                  className="category-info-action-btn category-info-json-btn"
+                >
+                  {loadingJsonDownload ? "Downloading JSON..." : "Download JSON"}
                 </Button>
                 <Button
                   size="small"
