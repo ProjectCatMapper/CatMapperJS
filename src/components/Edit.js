@@ -1333,6 +1333,18 @@ const Edit = ({ database }) => {
         Use translated file or import file to upload
       </Typography>
       <Divider sx={{ my: 3 }} />
+      <Box sx={{ mb: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 1 }}>
+        <Typography component="h4" sx={{ color: 'black', fontWeight: 'bold', p: '2px' }}>
+          Available properties for dataset and category uploads
+        </Typography>
+        <Button
+          variant="outlined"
+          size="small"
+          onClick={openPropertiesModal}
+        >
+          View Available Properties
+        </Button>
+      </Box>
       <Box sx={{ mb: 2 }}>
         <h3 style={{ color: 'black', fontWeight: "bold", padding: "2px" }}> Choose file to import</h3>
 
@@ -1618,14 +1630,6 @@ const Edit = ({ database }) => {
             </Typography>
             <SimpleFieldInfoButton helpText="Choose the upload behavior first. This controls required columns and whether values are added or replaced." />
           </Box>
-          <Button
-            variant="outlined"
-            size="small"
-            sx={{ mt: 0.5, mb: 1.5 }}
-            onClick={openPropertiesModal}
-          >
-            View Available Properties
-          </Button>
           <RadioGroup defaultValue="add_node" name="advuploadOption" sx={{ mb: 2 }} onChange={handleadvOptionChange}>
             <Typography variant="subtitle2" sx={{ mt: 2, color: "black", fontWeight: "bold" }}>Nodes</Typography>
             <FormControlLabel
