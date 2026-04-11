@@ -1172,8 +1172,8 @@ export default function Searchbar({ database }) {
               </Box>
             </Box>
 
-            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mt: 1, alignItems: "flex-start" }}>
-              <Box sx={{ flex: { xs: "1 1 100%", md: "0 1 190px" }, minWidth: 0 }}>
+            <Box sx={{ display: "flex", flexWrap: { xs: "wrap", md: "nowrap" }, gap: 1, mt: 1, alignItems: "flex-start" }}>
+              <Box sx={{ flex: { xs: "1 1 100%", md: "0 0 190px" }, minWidth: 0 }}>
                 <FormControl variant="standard" sx={{ width: "100%" }}>
                   <Typography variant="subtitle2" gutterBottom>Time Range</Typography>
                   <Box sx={{ display: 'flex', width: "100%", gap: 1, overflow: 'hidden' }}>
@@ -1203,7 +1203,7 @@ export default function Searchbar({ database }) {
                 </FormControl>
               </Box>
 
-              <Box sx={{ flex: { xs: "1 1 100%", md: "1 1 360px" }, minWidth: 0 }}>
+              <Box sx={{ flex: { xs: "1 1 100%", md: "1 1 0" }, minWidth: 0 }}>
                 <FormControl variant="standard" sx={{ width: "100%" }}>
                   <Box sx={{ display: "flex", alignItems: "flex-end", gap: 0.5, mb: 0.5 }}>
                     <Typography variant="subtitle2">Context ID(s)</Typography>
@@ -1244,10 +1244,10 @@ export default function Searchbar({ database }) {
               </Box>
 
 
-              <Box sx={{ flex: { xs: "1 1 100%", md: "0 1 220px" }, minWidth: 0 }}>
+              <Box sx={{ flex: { xs: "1 1 100%", md: "0 0 220px" }, minWidth: 0, alignSelf: "flex-start" }}>
                 <FormControl variant="standard" sx={{ width: "100%" }}>
                   <Typography variant="subtitle2" gutterBottom>Dataset ID</Typography>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'nowrap', justifyContent: 'flex-start' }}>
                     <input
                       type="text"
                       id="myInput"
