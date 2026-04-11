@@ -1730,7 +1730,7 @@ const Admin = ({ database }) => {
                 }}
                 onClick={checkForAmbiguousUsesTies}
               >
-                Check for Ambiguous Ties{" "}
+                Move Ties{" "}
               </Button>
             </Box>
           </Box>
