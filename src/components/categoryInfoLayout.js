@@ -15,6 +15,39 @@ const LONG_TEXT_KEYS = new Set(["citation", "datasetcitation", "note", "descript
 const STATS_SET = new Set(STATS_ORDER);
 const DETAIL_AUTO_THRESHOLD = 140;
 
+const dedupeStringList = (values) => {
+  const seen = new Set();
+  const unique = [];
+
+  values.forEach((value) => {
+    const normalized = String(value ?? "").trim();
+    if (!normalized) return;
+
+    const dedupeKey = normalized.toLowerCase();
+    if (seen.has(dedupeKey)) return;
+
+    seen.add(dedupeKey);
+    unique.push(normalized);
+  });
+
+  return unique;
+};
+
+const normalizeEntryValue = (normalizedKey, value) => {
+  if (normalizedKey !== "location") return value;
+
+  if (Array.isArray(value)) {
+    return dedupeStringList(value);
+  }
+
+  if (typeof value === "string" && value.includes(",")) {
+    const deduped = dedupeStringList(value.split(","));
+    return deduped.length > 0 ? deduped.join(", ") : value;
+  }
+
+  return value;
+};
+
 export const CATEGORY_INFO_PREVIEW_LIMITS = {
   compact: 90,
   detail: 240,
@@ -117,10 +150,11 @@ export function buildCategoryInfoSections(rev) {
   const filteredEntries = Object.entries(rev)
     .map(([key, value], sortIndex) => {
       const normalized = normalizeKey(key);
+      const normalizedValue = normalizeEntryValue(normalized, value);
       return {
         key,
-        value,
-        plainValue: getCategoryInfoPlainValue(value),
+        value: normalizedValue,
+        plainValue: getCategoryInfoPlainValue(normalizedValue),
         normalized,
         sortIndex,
       };

@@ -68,6 +68,19 @@ describe("categoryInfoLayout", () => {
     expect(sections.compact[1].plainValue).toBe("Islam, Christianity");
   });
 
+  test("deduplicates repeated values in geographic location", () => {
+    const sections = buildCategoryInfoSections({
+      CMID: "AM451788",
+      CMName: "Arizona Example",
+      Domains: "CATEGORY",
+      Location: ["Arizona", "Arizona", "New Mexico"],
+    });
+
+    expect(
+      sections.compact.find((entry) => entry.normalized === "location")?.plainValue
+    ).toBe("Arizona, New Mexico");
+  });
+
   test("moves note and citation into detail rows and keeps count fields in stats", () => {
     const sections = buildCategoryInfoSections({
       CMID: "SM7",
