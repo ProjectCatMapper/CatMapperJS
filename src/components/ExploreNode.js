@@ -693,7 +693,19 @@ export default function Tableclick({ cmid, database, tabval }) {
         }
       );
 
-      const result = await response.json();
+      const contentType = response.headers.get("content-type") || "";
+      const responsePayload = contentType.includes("application/json")
+        ? await response.json()
+        : await response.text();
+
+      if (!response.ok) {
+        const message = typeof responsePayload === "string"
+          ? responsePayload
+          : responsePayload?.error || `Request failed with status ${response.status}`;
+        throw new Error(message);
+      }
+
+      const result = responsePayload;
 
       if (!Array.isArray(result)) {
         console.error("CRITICAL ERROR: Data is still not an array. It is:", typeof result);
