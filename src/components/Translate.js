@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import domainOptions from "./SearchSelectDropdown";
 import { Select, MenuItem } from '@mui/material';
+import { loadTranslateState, saveTranslateState } from '../utils/translateSessionStore';
 import Button from '@mui/material/Button';
 import { Typography, Box, FormControlLabel, Checkbox, IconButton } from '@mui/material';
 import TranslateTable from './TranslateResults';
@@ -62,27 +63,33 @@ const sanitizeRowsForExcelExport = (rows, limit = EXCEL_CELL_CHAR_LIMIT) => {
 function TranslateComponent({ database }) {
   const { user, cred } = useAuth();
 
+  // Load any previously-saved state for this database once on mount.  The
+  // ref captures the snapshot so that lazy useState initialisers and the
+  // first-render effects can reference it without adding it to dep-arrays.
+  const storedState = useRef(loadTranslateState(database));
+  const s = storedState.current || {};
+
   const [selectedFile, setSelectedFile] = useState(null);
   const [error, setError] = useState(null);
-  const [zeroDropdownValue, setZeroDropdownValue] = useState([]);
-  const [firstDropdownValue, setFirstDropdownValue] = useState("ANY DOMAIN");
+  const [zeroDropdownValue, setZeroDropdownValue] = useState(() => s.zeroDropdownValue ?? []);
+  const [firstDropdownValue, setFirstDropdownValue] = useState(() => s.firstDropdownValue ?? "ANY DOMAIN");
   const [dropdownData, setDropdownData] = useState([]);
-  const [subDomain, setsubDomain] = useState([]);
-  const [secondDropdownValue, setsecondDropdownValue] = useState(["Name"]);
-  const [thirdDropdownValue, setthirdDropdownValue] = useState([""]);
-  const [fourthDropdownValue, setfourthDropdownValue] = useState([""]);
-  const [fifthDropdownValue, setfifthDropdownValue] = useState([""]);
+  const [subDomain, setsubDomain] = useState(() => s.subDomain ?? []);
+  const [secondDropdownValue, setsecondDropdownValue] = useState(() => s.secondDropdownValue ?? ["Name"]);
+  const [thirdDropdownValue, setthirdDropdownValue] = useState(() => s.thirdDropdownValue ?? [""]);
+  const [fourthDropdownValue, setfourthDropdownValue] = useState(() => s.fourthDropdownValue ?? [""]);
+  const [fifthDropdownValue, setfifthDropdownValue] = useState(() => s.fifthDropdownValue ?? [""]);
   const [svalues, setsvalues] = useState(["Name", "SocioMapID"]);
-  const [columns, setColumns] = useState([]);
-  const [reviewRows, setReviewRows] = useState([]);
-  const [previewRows, setPreviewRows] = useState([]);
+  const [columns, setColumns] = useState(() => s.columns ?? []);
+  const [reviewRows, setReviewRows] = useState(() => s.reviewRows ?? []);
+  const [previewRows, setPreviewRows] = useState(() => s.previewRows ?? []);
   const [tcategories, setTcategories] = useState([]);
-  const [isChecked, setIsChecked] = useState(false);
-  const [isCheckedtwo, setIsCheckedtwo] = useState(false);
-  const [isCheckedthree, setIsCheckedthree] = useState(false);
-  const [isCheckedfour, setIsCheckedfour] = useState(false);
-  const [showAdvanced, setShowAdvanced] = useState(false);
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isChecked, setIsChecked] = useState(() => s.isChecked ?? false);
+  const [isCheckedtwo, setIsCheckedtwo] = useState(() => s.isCheckedtwo ?? false);
+  const [isCheckedthree, setIsCheckedthree] = useState(() => s.isCheckedthree ?? false);
+  const [isCheckedfour, setIsCheckedfour] = useState(() => s.isCheckedfour ?? false);
+  const [showAdvanced, setShowAdvanced] = useState(() => s.showAdvanced ?? false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => s.isSidebarCollapsed ?? false);
   const [loading, setLoading] = useState(false);
   const [loadingStage, setLoadingStage] = useState('');
   const [loadingPercent, setLoadingPercent] = useState(0);
@@ -90,17 +97,17 @@ function TranslateComponent({ database }) {
   const [translateTaskId, setTranslateTaskId] = useState('');
   const translatePollTimeoutRef = useRef(null);
   const translateAbortRef = useRef(null);
-  const [filename, setFilename] = useState("");
-  const [jsonData, setJsondata] = useState();
+  const [filename, setFilename] = useState(() => s.filename ?? "");
+  const [jsonData, setJsondata] = useState(() => s.jsonData);
   let query = "false"
 
-  const [isUniqueRows, setUniqueRows] = useState(false);
+  const [isUniqueRows, setUniqueRows] = useState(() => s.isUniqueRows ?? false);
 
   const handleUniqueRows = (event) => {
     setUniqueRows(event.target.checked);
   };
 
-  const [isCountSameName, setCountSameName] = useState(false);
+  const [isCountSameName, setCountSameName] = useState(() => s.isCountSameName ?? false);
 
   const handleCountSameName = (event) => {
     setCountSameName(event.target.checked);
@@ -383,9 +390,9 @@ function TranslateComponent({ database }) {
     }
   };
 
-  const [inputValue, setinputValue] = useState(-4000);
-  const [inputValuetwo, setinputValuetwo] = useState(2024);
-  const [inputValueSep, setinputValueSep] = useState(';');
+  const [inputValue, setinputValue] = useState(() => s.inputValue ?? -4000);
+  const [inputValuetwo, setinputValuetwo] = useState(() => s.inputValuetwo ?? 2024);
+  const [inputValueSep, setinputValueSep] = useState(() => s.inputValueSep ?? ';');
 
   const handleClickSeparator = () => {
     if (!jsonData || !zeroDropdownValue || !inputValueSep) return;
@@ -460,6 +467,63 @@ function TranslateComponent({ database }) {
     setTcategories(getMatchTypePercentages(reviewRows, zeroDropdownValue));
   }, [reviewRows, zeroDropdownValue]);
 
+  // Persist form and data state across client-side navigation.  The in-memory
+  // store (plus sessionStorage as backup) is updated whenever any of the
+  // serialisable state values change.  File objects are not serialisable so
+  // selectedFile is intentionally excluded.
+  useEffect(() => {
+    saveTranslateState(database, {
+      zeroDropdownValue,
+      firstDropdownValue,
+      secondDropdownValue,
+      thirdDropdownValue,
+      fourthDropdownValue,
+      fifthDropdownValue,
+      subDomain,
+      isChecked,
+      isCheckedtwo,
+      isCheckedthree,
+      isCheckedfour,
+      showAdvanced,
+      isSidebarCollapsed,
+      inputValue,
+      inputValuetwo,
+      inputValueSep,
+      isUniqueRows,
+      isCountSameName,
+      filename,
+      jsonData,
+      columns,
+      previewRows,
+      reviewRows,
+    });
+  }, [
+    database,
+    zeroDropdownValue,
+    firstDropdownValue,
+    secondDropdownValue,
+    thirdDropdownValue,
+    fourthDropdownValue,
+    fifthDropdownValue,
+    subDomain,
+    isChecked,
+    isCheckedtwo,
+    isCheckedthree,
+    isCheckedfour,
+    showAdvanced,
+    isSidebarCollapsed,
+    inputValue,
+    inputValuetwo,
+    inputValueSep,
+    isUniqueRows,
+    isCountSameName,
+    filename,
+    jsonData,
+    columns,
+    previewRows,
+    reviewRows,
+  ]);
+
   const LoadingBar = ({ stage, percent, elapsedSeconds }) => (
     <Box
       sx={{
@@ -517,7 +581,11 @@ function TranslateComponent({ database }) {
           : [];
         setDropdownData(updatedData);
 
-        if (updatedData.length > 0) setFirstDropdownValue(updatedData[0].group);
+        // Only reset firstDropdownValue to the API default when no value was
+        // restored from the session store (i.e., this is a fresh visit).
+        if (updatedData.length > 0 && !storedState.current?.firstDropdownValue) {
+          setFirstDropdownValue(updatedData[0].group);
+        }
 
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -542,9 +610,22 @@ function TranslateComponent({ database }) {
     ];
   }, [dropdownData, firstDropdownValue]);
 
+  // When restoring from the session store, preserve the stored subDomain on
+  // the first time secondDropdownOptions becomes non-empty (i.e., when the
+  // domain list loads from the API).  After that, any user-triggered change
+  // to firstDropdownValue should reset subDomain to the first available option
+  // as normal.
+  const subDomainRestoredRef = useRef(false);
+
   useEffect(() => {
     if (secondDropdownOptions.length > 0) {
-      setsubDomain(secondDropdownOptions[0]);
+      const stored = storedState.current?.subDomain;
+      if (!subDomainRestoredRef.current && stored && secondDropdownOptions.includes(stored)) {
+        setsubDomain(stored);
+        subDomainRestoredRef.current = true;
+      } else {
+        setsubDomain(secondDropdownOptions[0]);
+      }
     } else {
       setsubDomain("");
     }
@@ -699,7 +780,7 @@ function TranslateComponent({ database }) {
           </Box>
           <input id="fileInput" style={{ color: 'black', fontWeight: "bold", marginLeft: 7, padding: "2px" }} type="file" accept=".csv,.tsv,.xlsx" onChange={handleFileChange} />
           <br />
-          {selectedFile !== null && (
+          {(selectedFile !== null || columns.length > 0) && (
             <div>
               <Box sx={{ display: 'flex', alignItems: 'center' }}>
                 <p class="dropdown-labels">Choose spreadsheet column to match</p>
@@ -808,7 +889,7 @@ function TranslateComponent({ database }) {
                   <Button startIcon={<InfoIcon sx={{ height: '28px', width: '28px' }} />} />
                 </Tooltip>
               </Box>
-              {selectedFile !== null && isChecked && (
+              {(selectedFile !== null || columns.length > 0) && isChecked && (
                 <div>
                   <p class="dropdown-labels">Select column with Country IDs</p>
                   <Select
@@ -834,7 +915,7 @@ function TranslateComponent({ database }) {
                   <Button startIcon={<InfoIcon sx={{ height: '28px', width: '28px' }} />} />
                 </Tooltip>
               </Box>
-              {selectedFile !== null && isCheckedtwo && (
+              {(selectedFile !== null || columns.length > 0) && isCheckedtwo && (
                 <div>
                   <p class="dropdown-labels">Select Column with context IDs</p>
                   <Select
@@ -860,7 +941,7 @@ function TranslateComponent({ database }) {
                   <Button startIcon={<InfoIcon sx={{ height: '28px', width: '28px' }} />} />
                 </Tooltip>
               </Box>
-              {selectedFile !== null && isCheckedthree && (
+              {(selectedFile !== null || columns.length > 0) && isCheckedthree && (
                 <div>
                   <p class="dropdown-labels">Select column with Dataset IDs</p>
                   <Select
