@@ -6,16 +6,6 @@ import {
 } from './translateSessionStore';
 
 // ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-/** Reset the module-level in-memory cache between tests by re-importing the
- *  module with a fresh module registry. */
-const resetModule = async () => {
-  // vitest re-import trick: use vi.resetModules() + dynamic import
-};
-
-// ---------------------------------------------------------------------------
 // Session-storage mock
 // ---------------------------------------------------------------------------
 

@@ -168,7 +168,7 @@ test.describe('Translate page state persistence across navigation', () => {
           percent: 100,
           message: 'Completed.',
           elapsedSeconds: 1.0,
-          order: ['species', 'matching_species', 'matchType_species', 'CMID_species', 'CMuniqueRowID', 'note'],
+          order: ['species', 'matching_species', 'matchingDistance_species', 'matchType_species', 'CMName_species', 'CMID_species', 'label_species', 'CMcountry_species', 'CMuniqueRowID', 'note'],
           file: [
             {
               species: 'Alpha Wolf',
@@ -181,6 +181,18 @@ test.describe('Translate page state persistence across navigation', () => {
               CMcountry_species: '',
               CMuniqueRowID: 'u-1',
               note: 'a',
+            },
+            {
+              species: 'Beta Bear',
+              matching_species: 'Beta Bear',
+              matchingDistance_species: 0,
+              matchType_species: 'exact match',
+              CMName_species: 'Beta Bear',
+              CMID_species: 'AM2',
+              label_species: 'CERAMIC',
+              CMcountry_species: '',
+              CMuniqueRowID: 'u-2',
+              note: 'b',
             },
           ],
           warnings: [],
@@ -211,8 +223,9 @@ test.describe('Translate page state persistence across navigation', () => {
       timeout: 15_000,
     });
 
-    // Verify result row is visible
+    // Verify both result rows are visible
     await expect(page.getByText('AM1')).toBeVisible();
+    await expect(page.getByText('AM2')).toBeVisible();
 
     // 6. Navigate away
     await page.goto(`${BASE_URL}/archamap`, { waitUntil: 'domcontentloaded' });
@@ -222,6 +235,8 @@ test.describe('Translate page state persistence across navigation', () => {
 
     // 8. The Review & Clean Matches section should still be shown with the same results
     await expect(page.getByRole('heading', { name: /Review & Clean Matches/i })).toBeVisible();
+    // Both rows from the original search must still be present
     await expect(page.getByText('AM1')).toBeVisible();
+    await expect(page.getByText('AM2')).toBeVisible();
   });
 });
