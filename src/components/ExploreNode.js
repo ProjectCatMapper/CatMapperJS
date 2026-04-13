@@ -203,6 +203,7 @@ export default function Tableclick({ cmid, database, tabval }) {
   const [advdomainDrop, setadvdomainDrop] = React.useState('ALL NODES');
   const [advoptions, setadvoptions] = React.useState(['ALL NODES']);
   const [selectedCategory, setSelectedCategory] = useState({});
+  const [subdomainCatalog, setSubdomainCatalog] = useState({});
   const normalizedRef = useRef({});
   const nodeRequestIdRef = useRef(0);
 
@@ -327,7 +328,7 @@ export default function Tableclick({ cmid, database, tabval }) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (advoptions.length > 0) {
-      setadvdomainDrop([advoptions[0]]);
+      setadvdomainDrop(advoptions[0]);
     }
   }, [advoptions]);
 
@@ -569,6 +570,7 @@ export default function Tableclick({ cmid, database, tabval }) {
         });
 
         normalizedRef.current = normalized;
+        setSubdomainCatalog(normalized);
 
         setSelectedCategory(normalized);
       })
@@ -582,6 +584,10 @@ export default function Tableclick({ cmid, database, tabval }) {
   }, [database]);
 
   useEffect(() => {
+    if (!cmid || !database || Object.keys(subdomainCatalog).length === 0) {
+      return;
+    }
+
     const fetchData = async () => {
       try {
         const response = await fetch(
@@ -613,7 +619,7 @@ export default function Tableclick({ cmid, database, tabval }) {
 
         const matchingDomains = Object.fromEntries([
           ["ANY DOMAIN", ["ANY DOMAIN"]],
-          ...Object.entries(normalizedRef.current)
+          ...Object.entries(subdomainCatalog)
             .map(([domain, values]) => {
               const found = values.filter(v => allowedKeys.has(v));
               return [domain, found];
@@ -623,9 +629,16 @@ export default function Tableclick({ cmid, database, tabval }) {
 
         // console.log(matchingDomains)
 
-        setSelectedCategory(matchingDomains)
+        setSelectedCategory(matchingDomains);
 
-        setadvoptions(["ANY DOMAIN"]);
+        const nextDomain = matchingDomains[domainDrop]
+          ? domainDrop
+          : Object.keys(matchingDomains)[0] || "ANY DOMAIN";
+        const nextSubdomains = matchingDomains[nextDomain] || ["ANY DOMAIN"];
+
+        setdomainDrop(nextDomain);
+        setadvoptions(nextSubdomains);
+        setadvdomainDrop(nextSubdomains[0] || "ANY DOMAIN");
 
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -633,7 +646,7 @@ export default function Tableclick({ cmid, database, tabval }) {
     };
 
     fetchData();
-  }, [rememberChoice]);
+  }, [rememberChoice, cmid, database, subdomainCatalog, domainDrop]);
 
   const datasetButtonClick = async (event) => {
     if (loadingDownload) {
@@ -652,41 +665,33 @@ export default function Tableclick({ cmid, database, tabval }) {
     abortControllerRef.current = controller;
     const signal = controller.signal;
 
-    const adjustedDomain = advdomainDrop.includes("ANY DOMAIN")
-      ? ["CATEGORY"]
+    const selectedSubdomain = Array.isArray(advdomainDrop)
+      ? advdomainDrop[0]
       : advdomainDrop;
+    const adjustedDomain = selectedSubdomain === "ANY DOMAIN"
+      ? "CATEGORY"
+      : selectedSubdomain;
+
+    if (!adjustedDomain) {
+      setLoadingDownload(false);
+      alert("Please select a category sub-domain before downloading.");
+      return;
+    }
     try {
-      let response;
-      if (Array.isArray(advdomainDrop) && advdomainDrop.length > 1) {
-        response = await fetch(
-          `${process.env.REACT_APP_API_URL}/dataset?cmid=` +
-          cmid +
-          "&database=" +
-          database +
-          "&domain=" +
-          adjustedDomain +
-          "&children=" +
-          rememberChoice,
-          {
-            method: "GET",
-            signal: signal, // <--- Connects the abort controller
-          }
-        );
-      } else {
-        response = await fetch(
-          `${process.env.REACT_APP_API_URL}/dataset?cmid=` +
-          cmid +
-          "&database=" +
-          database +
-          "&domain=" +
-          adjustedDomain +
-          "&children=" +
-          rememberChoice,
-          {
-            signal: signal // <--- Connects the abort controller
-          }
-        );
-      }
+      const response = await fetch(
+        `${process.env.REACT_APP_API_URL}/dataset?cmid=` +
+        cmid +
+        "&database=" +
+        database +
+        "&domain=" +
+        adjustedDomain +
+        "&children=" +
+        rememberChoice,
+        {
+          method: "GET",
+          signal: signal, // <--- Connects the abort controller
+        }
+      );
 
       const result = await response.json();
 
@@ -1607,9 +1612,9 @@ export default function Tableclick({ cmid, database, tabval }) {
               )}
               <Box id="content" className="category-info-grid">
                 {categoryInfoSections.primary.length > 0 ||
-                categoryInfoSections.compact.length > 0 ||
-                categoryInfoSections.detail.length > 0 ||
-                categoryInfoSections.stats.length > 0 ? (
+                  categoryInfoSections.compact.length > 0 ||
+                  categoryInfoSections.detail.length > 0 ||
+                  categoryInfoSections.stats.length > 0 ? (
                   <Box className="category-info-grid-inner">
                     {categoryInfoSections.primary.length > 0 && (
                       <Box className="category-info-section category-info-section-primary">
