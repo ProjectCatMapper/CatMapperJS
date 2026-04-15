@@ -55,7 +55,7 @@ const NavbarApp = ({ database }) => {
                     <li className='cm-nav-dropdown'>
                         <a
                             className='cm-nav-link'
-                            href="https://catmapper.org/help/"
+                            href="https://help.catmapper.org/"
                             target="_blank"
                             rel="noopener noreferrer"
                         >
