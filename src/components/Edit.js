@@ -922,7 +922,7 @@ const Edit = ({ database }) => {
     add_uses: 'Create USES ties for rows and include new or existing nodes. Rows can be aggregated by datasetID, CMID, and Key.',
     update_add: 'Update existing USES ties by adding values without removing current values.',
     update_replace: 'Replace one property on existing USES ties. Replace mode supports one property column.',
-    add_merging: 'Create merging ties for rows in the upload file.',
+    add_merging: 'Create merging ties for rows in the upload file. Requires mergingID and datasetID. If a stackID column is also provided, no new STACK node is created — the existing STACK node is used and MERGING ties are created from the MERGING node to that STACK and from that STACK to the DATASET. If stackID is omitted, a new STACK node is auto-created for each row.',
     merging_add: 'Update existing merging tie properties by adding values without replacing current values.',
     merging_replace: 'Replace one property on an existing merging tie. Replace mode supports one property column.',
   };
