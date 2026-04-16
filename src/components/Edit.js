@@ -1097,8 +1097,8 @@ const Edit = ({ database }) => {
         break;
       case 'add_merging':
         {
-
           const cols = columns.map(c => c.trim());
+          let mergeConfigError = '';
 
           // if variableID is present, then uploading merging ties to variables
           if (cols.includes("variableID")) {
@@ -1119,8 +1119,9 @@ const Edit = ({ database }) => {
               required = ["mergingID", "categoryID", "Key", "datasetID"];
             }
             else {
-              setError("Not all required columns are present.");
-              return false;
+              mergeConfigError = "Not all required columns are present.";
+              setMergingType("0");
+              required = [];
             }
           }
 
@@ -1129,13 +1130,17 @@ const Edit = ({ database }) => {
             setMergingType("merging_ties_to_datasets")
             required = ["mergingID", "datasetID"];
           }
+
+          if (mergeConfigError) {
+            setError(mergeConfigError);
+          }
           break;
         }
       case 'merging_add':
       case 'merging_replace':
         {
-
           const cols = columns.map(c => c.trim());
+          let mergeConfigError = '';
 
           if (cols.includes("variableID")) {
 
@@ -1148,14 +1153,20 @@ const Edit = ({ database }) => {
           }
 
           else if (cols.includes("categoryID1") && cols.includes("categoryID2")) {
-            setError("Adding or replacing proeprties for existing equivalence ties is not permitted for now.");
-            return false;
+            mergeConfigError = "Adding or replacing proeprties for existing equivalence ties is not permitted for now.";
+            setMergingType("0");
+            required = [];
           }
           else {
             if (advselectedOption !== 'add_merging') {
-              setError("Nothing to update for this type of merging tie.");
-              return false;
+              mergeConfigError = "Nothing to update for this type of merging tie.";
+              setMergingType("0");
+              required = [];
             }
+          }
+
+          if (mergeConfigError) {
+            setError(mergeConfigError);
           }
           break;
         }
