@@ -189,7 +189,6 @@ const Edit = ({ database }) => {
             setDownload(orderedData);
           }
           setCMIDText(payload?.message || 'Upload completed.');
-          setPopen(true);
           if (payload?.waitingUsesTask) {
             showWaitingUsesNotice('Upload completed. Processing USES updates in the background.', 'info');
             pollWaitingUsesStatus(payload.waitingUsesTask);
@@ -199,7 +198,6 @@ const Edit = ({ database }) => {
 
         if (status === 'canceled') {
           setCMIDText(payload?.message || 'Upload canceled.');
-          setPopen(true);
           return;
         }
 
@@ -400,6 +398,10 @@ const Edit = ({ database }) => {
         ...rowData,
         key: index + 1,
       }));
+
+      setMissingCount(0);
+      setMissingCol(0);
+      setSelectedExtraColumn('');
 
       setNodeCount(table.length);
 
@@ -905,12 +907,6 @@ const Edit = ({ database }) => {
     }
   };
 
-  const [popen, setPopen] = useState(false);
-
-  const handlePclose = () => {
-    setPopen(false);
-  };
-
   const handleOptionChange = (event) => {
     setSelectedOption(event.target.value);
   };
@@ -1054,6 +1050,8 @@ const Edit = ({ database }) => {
     setExtraColumns([]);
     setAllRequiredColumnsFound(false);
 
+    let derivedError = '';
+
     switch (advselectedOption) {
       case 'add_node':
         required = ['CMName', 'Name', 'Key', 'label', 'datasetID'];
@@ -1132,7 +1130,7 @@ const Edit = ({ database }) => {
           }
 
           if (mergeConfigError) {
-            setError(mergeConfigError);
+            derivedError = mergeConfigError;
           }
           break;
         }
@@ -1166,7 +1164,7 @@ const Edit = ({ database }) => {
           }
 
           if (mergeConfigError) {
-            setError(mergeConfigError);
+            derivedError = mergeConfigError;
           }
           break;
         }
@@ -1174,6 +1172,24 @@ const Edit = ({ database }) => {
       default:
         required = [];
     }
+
+    setError((previous) => {
+      const transientMergeErrors = new Set([
+        'Not all required columns are present.',
+        'Adding or replacing proeprties for existing equivalence ties is not permitted for now.',
+        'Nothing to update for this type of merging tie.',
+      ]);
+
+      if (derivedError) {
+        return derivedError;
+      }
+
+      if (transientMergeErrors.has(previous)) {
+        return '';
+      }
+
+      return previous;
+    });
 
     //  Checks that all required columns are present
     required.forEach((column) => {
@@ -1292,7 +1308,14 @@ const Edit = ({ database }) => {
   const uploadTaskStatus = String(uploadTaskState?.status || '').toLowerCase();
   const uploadStatusModalOpen =
     Boolean(uploadTaskState) &&
-    (uploadTaskStatus === '' || uploadTaskStatus === 'queued' || uploadTaskStatus === 'running' || uploadTaskStatus === 'failed');
+    (
+      uploadTaskStatus === '' ||
+      uploadTaskStatus === 'queued' ||
+      uploadTaskStatus === 'running' ||
+      uploadTaskStatus === 'failed' ||
+      uploadTaskStatus === 'completed' ||
+      uploadTaskStatus === 'canceled'
+    );
   const uploadPercent = Math.max(0, Math.min(100, Number(uploadTaskState?.progress?.percent ?? 0)));
 
   return (
@@ -1411,7 +1434,7 @@ const Edit = ({ database }) => {
       )}
       <br />
       <h4 style={{ color: 'black', padding: "2px" }}>Choose :</h4>
-      <RadioGroup defaultValue="standard" name="uploadOption" sx={{ mb: 2 }} onChange={handleOptionChange}>
+      <RadioGroup value={selectedOption} name="uploadOption" sx={{ mb: 2 }} onChange={handleOptionChange}>
         <FormControlLabel value="standard" control={<Radio />} label="Standard" />
         <FormControlLabel value="simple" control={<Radio />} label="Simple" />
       </RadioGroup>
@@ -1642,7 +1665,7 @@ const Edit = ({ database }) => {
             </Typography>
             <SimpleFieldInfoButton helpText="Choose the upload behavior first. This controls required columns and whether values are added or replaced." />
           </Box>
-          <RadioGroup defaultValue="add_node" name="advuploadOption" sx={{ mb: 2 }} onChange={handleadvOptionChange}>
+          <RadioGroup value={advselectedOption} name="advuploadOption" sx={{ mb: 2 }} onChange={handleadvOptionChange}>
             <Typography variant="subtitle2" sx={{ mt: 2, color: "black", fontWeight: "bold" }}>Nodes</Typography>
             <FormControlLabel
               value="add_node"
@@ -1736,8 +1759,6 @@ const Edit = ({ database }) => {
               You cannot add property data for Category Nodes.
             </Alert>
           </Snackbar>
-
-          {error && <p style={{ color: 'red' }}>{error}</p>}
 
           <Dialog open={openDialog} onClose={() => handleConfirm(false)}>
             <DialogTitle>Missing {missingCol} Values</DialogTitle>
@@ -1933,9 +1954,27 @@ const Edit = ({ database }) => {
         aria-labelledby="upload-progress-dialog-title"
       >
         <DialogTitle id="upload-progress-dialog-title">
-          {uploadTaskStatus === 'failed' ? 'Upload Failed' : 'Upload In Progress'}
+          {uploadTaskStatus === 'failed'
+            ? 'Upload Failed'
+            : uploadTaskStatus === 'completed'
+              ? 'Upload Completed'
+              : uploadTaskStatus === 'canceled'
+                ? 'Upload Canceled'
+                : 'Upload In Progress'}
         </DialogTitle>
         <DialogContent>
+          {(uploadTaskStatus === 'completed' || uploadTaskStatus === 'canceled') && (
+            <Typography
+              variant="body2"
+              sx={{
+                mb: 1.5,
+                color: uploadTaskStatus === 'completed' ? 'success.main' : 'text.primary',
+                fontWeight: 600,
+              }}
+            >
+              {uploadTaskState?.message || CMIDText || (uploadTaskStatus === 'completed' ? 'Upload completed.' : 'Upload canceled.')}
+            </Typography>
+          )}
           {uploadTaskStatus === 'failed' && (
             <Typography variant="body2" sx={{ mb: 1.5, color: 'error.main', fontWeight: 600 }}>
               {uploadTaskState?.error || 'Upload failed.'}
@@ -1981,7 +2020,7 @@ const Edit = ({ database }) => {
             {uploadLogLines.length > 0 ? uploadLogLines.join('\n') : 'Waiting for upload logs...'}
           </Box>
         </DialogContent>
-        {uploadTaskStatus === 'failed' && (
+        {(uploadTaskStatus === 'failed' || uploadTaskStatus === 'completed' || uploadTaskStatus === 'canceled') && (
           <DialogActions>
             <Button onClick={closeUploadStatusModal} variant="contained">Close</Button>
           </DialogActions>
@@ -2096,11 +2135,6 @@ const Edit = ({ database }) => {
       </Button>
 
       <DatasetForm open={open} handleClose={handleClose} />
-      <Dialog open={popen} onClose={handlePclose}>
-        <DialogContent>
-          <p>{CMIDText}</p>
-        </DialogContent>
-      </Dialog>
       <Snackbar
         open={waitingUsesOpen}
         autoHideDuration={6000}
