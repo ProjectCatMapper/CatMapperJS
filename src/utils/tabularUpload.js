@@ -184,7 +184,7 @@ export async function parseTabularFile(file, options = {}) {
   }
 
   const extension = getFileExtension(file.name);
-  const { rows2dRaw, sheetName } =
+  let { rows2dRaw, sheetName } =
     extension === 'xlsx'
       ? await parseSpreadsheetRows(file, { checkMergedCells: opts.checkMergedCells })
       : await parseDelimitedRows(file, extension);
