@@ -193,22 +193,21 @@ export async function parseTabularFile(file, options = {}) {
     throw new Error('No data found in the file.');
   }
 
-  const headers = normalizeHeader(rows2dRaw[0], opts.trimHeaders);
-  if (headers.some((h) => h === '')) {
-    throw new Error('Missing column name in header row.');
-  }
 
+  let headers = normalizeHeader(rows2dRaw[0], opts.trimHeaders);
+  // Drop columns with empty or whitespace-only header names
+  const nonEmptyHeaderIndices = headers
+    .map((h, idx) => ({ h, idx }))
+    .filter(({ h }) => h !== '')
+    .map(({ idx }) => idx);
+  const droppedHeaderCount = headers.length - nonEmptyHeaderIndices.length;
+  if (droppedHeaderCount > 0) {
+    headers = nonEmptyHeaderIndices.map((idx) => headers[idx]);
+    rows2dRaw = rows2dRaw.map(row => nonEmptyHeaderIndices.map(idx => row[idx]));
+  }
   const { keepIndices, duplicateHeaders } = getDuplicateHeaderInfo(headers);
   const warnings = [];
-
-  let rows2d = rows2dRaw.slice(1).map((row) => {
-    const padded = Array(headers.length).fill('');
-    row.forEach((cell, idx) => {
-      if (idx < headers.length) padded[idx] = cell;
-    });
-    return padded;
-  });
-
+  let rows2d = rows2dRaw.slice(1);
   let finalHeaders = headers;
   if (opts.dropDuplicateHeaders && duplicateHeaders.length > 0) {
     finalHeaders = keepIndices.map((index) => headers[index]);

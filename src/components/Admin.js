@@ -1222,365 +1222,345 @@ const Admin = ({ database }) => {
             </Typography>
           </Box>
 
-        {firstDropdownValue === "add/edit/delete USES property" && (
-          <Box sx={{ ml: 1 }}>
-            <h4 style={{ color: "black", padding: "2px" }}>
-              choose to add a new property or edit <br /> or delete an existing
-              property :
-            </h4>
-            <RadioGroup
-              row
-              defaultValue="edit"
-              name="uploadOption"
-              sx={{ mb: 2 }}
-              value={formData.s1_1}
-              onChange={updateActionType}
-            >
-              <FormControlLabel value="add" control={<Radio />} label="add" />
-              <FormControlLabel value="edit" control={<Radio />} label="edit" />
-              <FormControlLabel
-                value="delete"
-                control={<Radio />}
-                label="delete"
-              />
-            </RadioGroup>
-            {renderCmidInput({
-              label: "CMID of Category",
-              name: "s1_2",
-              textFieldSx: { height: 22, fontSize: 12 },
-            })}
-            {add_edit_delete_usesprops_Options !== "" &&
-              <>
-                <InputLabel id="api-results-label" style={{ color: "black" }}>
-                  Choose USES tie to change
-                </InputLabel>
-                <Select
-                  name="s1_7"
-                  sx={{ width: 300, height: 40, mb: 3 }}
-                  value={formData.s1_7 || ""}
-                  onChange={updateFormFieldValue}
-                >
-                  {add_edit_delete_usesprops_Options.map(([n, r, d], index) => (
-                    <MenuItem key={index} value={index + 1}>
-                      {`${n.CMName} ---- USES Key: ${r.Key} --- ${d.CMName}`}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </>
-            }
-
-            {formData.s1_7 !== "" && add_edit_delete_usesprops_Options.length !== 0 && (
-              <>
-                {(() => {
-                  const [, r] = add_edit_delete_usesprops_Options[formData.s1_7 - 1];
-                  let dropdown2Options = [];
-
-                  if (formData.s1_1 === "edit" || formData.s1_1 === "delete") {
-                    dropdown2Options = Object.keys(r);
-                    if (formData.s1_1 === "edit") {
-                      dropdown2Options = dropdown2Options.filter(key => key !== "logID" && key !== "log");
-                    }
-
-                    if (formData.s1_1 === "delete") {
-                      dropdown2Options = dropdown2Options.filter(key => key !== "logID" && key !== "Key" && key !== "Name" && key !== "label" && key !== "log");
-                    }
-                  } else {
-                    const rKeys = Object.keys(r);
-                    dropdown2Options = add_edit_delete_usesprops_properties.filter(
-                      (prop) => !rKeys.includes(prop)
-                    );
-                  }
-
-                  return (
-                    dropdown2Options.length !== 0 && (
-                      <>
-                        <InputLabel id="dropdown2-label" style={{ color: "black" }}>
-                          Choose property to {formData.s1_1}
-                        </InputLabel>
-                        <Select
-                          name="s1_8"
-                          sx={{ width: 300, height: 40, mb: 3 }}
-                          value={formData.s1_8 || ""}
-                          onChange={updateFormFieldValue}
-                        >
-                          {[...dropdown2Options].filter(option => option.toLowerCase() !== "id").sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
-                            .map((option, index) => (
-                              <MenuItem key={index} value={option}>
-                                {option}
-                              </MenuItem>
-                            ))}
-                        </Select>
-
-                        <Typography variant="body1" sx={{ mb: 1 }}>
-                          Selected:
-                          {(() => {
-                            const value = add_edit_delete_usesprops_Options?.[formData.s1_7 - 1]?.[1]?.[formData.s1_8];
-
-                            if (Array.isArray(value)) {
-                              return ' ' + value
-                                .map(item => {
-                                  if (typeof item === 'string') return item;
-                                  else if (typeof item === 'object' && item !== null) {
-                                    return item.label ?? JSON.stringify(item);
-                                  }
-                                  return String(item);
-                                })
-                                .join(' || ');
-                            }
-
-                            else if (typeof value === 'string') {
-                              //return ' ' + value.replace(/,/g, '||');
-                              return value;
-                            }
-
-                            return ' N/A';
-                          })()}
-                        </Typography>
-                      </>
-                    )
-                  );
-                })()}
-              </>
-            )}
-            {(formData.s1_1 === "add" || formData.s1_1 === "edit") && (
-              <>
-                <InputLabel id="domain-label" style={{ color: "black " }}>
-                  Property value ( use ' || ' to split values)
-                </InputLabel>
-                <TextField
-                  name="s1_3"
-                  value={formData.s1_3}
-                  onChange={updateFormFieldValue}
-                  sx={{ width: 300, height: 25, mb: 4, mt: 0 }}
-                  variant="outlined"
-                  margin="normal"
-                  size="small"
-                />
-              </>
-            )}
-
-            <Box
-              sx={{
-                display: 'flex',
-                justifyContent: 'flex-start',
-                padding: 2
-              }}
-            >
-              <Button
-                variant="contained"
-                sx={{
-                  backgroundColor: "black",
-                  color: "white",
-                  "&:hover": {
-                    backgroundColor: "green",
-                  },
-                }}
-                onClick={submitAdminAction}
+          {firstDropdownValue === "add/edit/delete USES property" && (
+            <Box sx={{ ml: 1 }}>
+              <h4 style={{ color: "black", padding: "2px" }}>
+                choose to add a new property or edit <br /> or delete an existing
+                property :
+              </h4>
+              <RadioGroup
+                row
+                defaultValue="edit"
+                name="uploadOption"
+                sx={{ mb: 2 }}
+                value={formData.s1_1}
+                onChange={updateActionType}
               >
-                Submit{" "}
-              </Button>
-            </Box>
-          </Box>
-        )}
-
-        {firstDropdownValue === "add/edit/delete EQUIVALENT property" && (
-          <Box sx={{ ml: 1 }}>
-            <h4 style={{ color: "black", padding: "2px" }}>
-              choose to add a new property or edit <br /> or delete an existing
-              property :
-            </h4>
-            <RadioGroup
-              row
-              defaultValue="edit"
-              name="uploadOption"
-              sx={{ mb: 2 }}
-              value={formData.s1_1}
-              onChange={updateActionType}
-            >
-              <FormControlLabel value="add" control={<Radio />} label="add" />
-              <FormControlLabel value="edit" control={<Radio />} label="edit" />
-              <FormControlLabel
-                value="delete"
-                control={<Radio />}
-                label="delete"
-              />
-            </RadioGroup>
-            {renderCmidInput({
-              label: "CMID of Category",
-              name: "s1_2",
-              textFieldSx: { height: 22, fontSize: 12 },
-            })}
-            {add_edit_delete_usesprops_Options !== "" &&
-              <>
-                <InputLabel id="api-results-label" style={{ color: "black" }}>
-                  Choose EQUIVALENT tie to change
-                </InputLabel>
-                <Select
-                  name="s1_7"
-                  sx={{ width: 300, height: 40, mb: 3 }}
-                  value={formData.s1_7 || ""}
-                  onChange={updateFormFieldValue}
-                >
-                  {add_edit_delete_usesprops_Options.map(([n, r, d], index) => (
-                    <MenuItem key={index} value={index + 1}>
-                      {`${n.CMName} ---- EQUIVALENT Key: ${r.Key || "NA"} --- ${d.CMName}`}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </>
-            }
-
-            {formData.s1_7 !== "" && add_edit_delete_usesprops_Options.length !== 0 && (
-              <>
-                {(() => {
-                  const [, r] = add_edit_delete_usesprops_Options[formData.s1_7 - 1];
-                  const editableProps = ["stack", "dataset", "Key"];
-                  let dropdown2Options = [];
-
-                  if (formData.s1_1 === "edit" || formData.s1_1 === "delete") {
-                    dropdown2Options = Object.keys(r).filter((key) => editableProps.includes(key));
-                  } else {
-                    const rKeys = Object.keys(r);
-                    dropdown2Options = editableProps.filter(
-                      (prop) => !rKeys.includes(prop)
-                    );
-                  }
-
-                  return (
-                    dropdown2Options.length !== 0 && (
-                      <>
-                        <InputLabel id="dropdown2-label" style={{ color: "black" }}>
-                          Choose property to {formData.s1_1}
-                        </InputLabel>
-                        <Select
-                          name="s1_8"
-                          sx={{ width: 300, height: 40, mb: 3 }}
-                          value={formData.s1_8 || ""}
-                          onChange={updateFormFieldValue}
-                        >
-                          {dropdown2Options.sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
-                            .map((option, index) => (
-                              <MenuItem key={index} value={option}>
-                                {option}
-                              </MenuItem>
-                            ))}
-                        </Select>
-
-                        <Typography variant="body1" sx={{ mb: 1 }}>
-                          Selected:
-                          {(() => {
-                            const value = add_edit_delete_usesprops_Options?.[formData.s1_7 - 1]?.[1]?.[formData.s1_8];
-                            if (typeof value === "string") {
-                              return ` ${value}`;
-                            }
-                            if (value === undefined || value === null || value === "") {
-                              return " N/A";
-                            }
-                            return ` ${String(value)}`;
-                          })()}
-                        </Typography>
-                      </>
-                    )
-                  );
-                })()}
-              </>
-            )}
-            {(formData.s1_1 === "add" || formData.s1_1 === "edit") && (
-              <>
-                <InputLabel id="domain-label" style={{ color: "black " }}>
-                  Property value
-                </InputLabel>
-                <TextField
-                  name="s1_3"
-                  value={formData.s1_3}
-                  onChange={updateFormFieldValue}
-                  sx={{ width: 300, height: 25, mb: 4, mt: 0 }}
-                  variant="outlined"
-                  margin="normal"
-                  size="small"
+                <FormControlLabel value="add" control={<Radio />} label="add" />
+                <FormControlLabel value="edit" control={<Radio />} label="edit" />
+                <FormControlLabel
+                  value="delete"
+                  control={<Radio />}
+                  label="delete"
                 />
-              </>
-            )}
-
-            <Box
-              sx={{
-                display: 'flex',
-                justifyContent: 'flex-start',
-                padding: 2
-              }}
-            >
-              <Button
-                variant="contained"
-                sx={{
-                  backgroundColor: "black",
-                  color: "white",
-                  "&:hover": {
-                    backgroundColor: "green",
-                  },
-                }}
-                onClick={submitAdminAction}
-              >
-                Submit{" "}
-              </Button>
-            </Box>
-          </Box>
-        )}
-
-        {firstDropdownValue === "add/edit/delete node property" && (
-          <Box sx={{ ml: 1 }}>
-            <h4 style={{ color: "black", padding: "2px" }}>
-              choose to add a new property or edit <br /> or delete an existing
-              property :
-            </h4>
-            <RadioGroup
-              row
-              defaultValue="edit"
-              name="uploadOption"
-              sx={{ mb: 2 }}
-              value={formData.s1_1}
-              onChange={updateActionType}
-            >
-              <FormControlLabel value="add" control={<Radio />} label="add" disabled={formData.s1_2.startsWith("CP") || formData.s1_2.startsWith("CL")} />
-              <FormControlLabel value="edit" control={<Radio />} label="edit" />
-              <FormControlLabel
-                value="delete"
-                control={<Radio />}
-                label="delete"
-                disabled={formData.s1_2.startsWith("CP") || formData.s1_2.startsWith("CL")}
-              />
-            </RadioGroup>
-            {renderCmidInput({
-              label: "CMID of Node",
-              name: "s1_2",
-              textFieldSx: { height: 25, padding: "0 0" },
-            })}
-
-            {add_edit_delete_Nodeprops_Options.length !== 0 &&
-              (Array.isArray(add_edit_delete_Nodeprops_Options) ? (
-                // If it's an array
+              </RadioGroup>
+              {renderCmidInput({
+                label: "CMID of Category",
+                name: "s1_2",
+                textFieldSx: { height: 22, fontSize: 12 },
+              })}
+              {add_edit_delete_usesprops_Options !== "" &&
                 <>
                   <InputLabel id="api-results-label" style={{ color: "black" }}>
-                    Choose property to add
+                    Choose USES tie to change
                   </InputLabel>
                   <Select
                     name="s1_7"
-                    sx={{ width: 300, height: 25, mb: 3 }}
+                    sx={{ width: 300, height: 40, mb: 3 }}
                     value={formData.s1_7 || ""}
                     onChange={updateFormFieldValue}
                   >
-                    {add_edit_delete_Nodeprops_Options.map((value, index) => (
-                      <MenuItem key={index} value={value}>
-                        {value}
+                    {add_edit_delete_usesprops_Options.map(([n, r, d], index) => (
+                      <MenuItem key={index} value={index + 1}>
+                        {`${n.CMName} ---- USES Key: ${r.Key} --- ${d.CMName}`}
                       </MenuItem>
                     ))}
                   </Select>
                 </>
-              ) : (
-                // If it's an object
-                Object.keys(add_edit_delete_Nodeprops_Options).length !== 0 && (
+              }
+
+              {formData.s1_7 !== "" && add_edit_delete_usesprops_Options.length !== 0 && (
+                <>
+                  {(() => {
+                    const [, r] = add_edit_delete_usesprops_Options[formData.s1_7 - 1];
+                    let dropdown2Options = [];
+
+                    if (formData.s1_1 === "edit" || formData.s1_1 === "delete") {
+                      dropdown2Options = Object.keys(r);
+                      if (formData.s1_1 === "edit") {
+                        dropdown2Options = dropdown2Options.filter(key => key !== "logID" && key !== "log");
+                      }
+
+                      if (formData.s1_1 === "delete") {
+                        dropdown2Options = dropdown2Options.filter(key => key !== "logID" && key !== "Key" && key !== "Name" && key !== "label" && key !== "log");
+                      }
+                    } else {
+                      const rKeys = Object.keys(r);
+                      dropdown2Options = add_edit_delete_usesprops_properties.filter(
+                        (prop) => !rKeys.includes(prop)
+                      );
+                    }
+
+                    return (
+                      dropdown2Options.length !== 0 && (
+                        <>
+                          <InputLabel id="dropdown2-label" style={{ color: "black" }}>
+                            Choose property to {formData.s1_1}
+                          </InputLabel>
+                          <Select
+                            name="s1_8"
+                            sx={{ width: 300, height: 40, mb: 3 }}
+                            value={formData.s1_8 || ""}
+                            onChange={updateFormFieldValue}
+                          >
+                            {[...dropdown2Options].filter(option => option.toLowerCase() !== "id").sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
+                              .map((option, index) => (
+                                <MenuItem key={index} value={option}>
+                                  {option}
+                                </MenuItem>
+                              ))}
+                          </Select>
+
+                          <Typography variant="body1" sx={{ mb: 1 }}>
+                            Selected:
+                            {(() => {
+                              const value = add_edit_delete_usesprops_Options?.[formData.s1_7 - 1]?.[1]?.[formData.s1_8];
+
+                              if (Array.isArray(value)) {
+                                return ' ' + value
+                                  .map(item => {
+                                    if (typeof item === 'string') return item;
+                                    else if (typeof item === 'object' && item !== null) {
+                                      return item.label ?? JSON.stringify(item);
+                                    }
+                                    return String(item);
+                                  })
+                                  .join(' || ');
+                              }
+
+                              else if (typeof value === 'string') {
+                                //return ' ' + value.replace(/,/g, '||');
+                                return value;
+                              }
+
+                              return ' N/A';
+                            })()}
+                          </Typography>
+                        </>
+                      )
+                    );
+                  })()}
+                </>
+              )}
+              {(formData.s1_1 === "add" || formData.s1_1 === "edit") && (
+                <>
+                  <InputLabel id="domain-label" style={{ color: "black " }}>
+                    Property value ( use ' || ' to split values)
+                  </InputLabel>
+                  <TextField
+                    name="s1_3"
+                    value={formData.s1_3}
+                    onChange={updateFormFieldValue}
+                    sx={{ width: 300, height: 25, mb: 4, mt: 0 }}
+                    variant="outlined"
+                    margin="normal"
+                    size="small"
+                  />
+                </>
+              )}
+
+              <Box
+                sx={{
+                  display: 'flex',
+                  justifyContent: 'flex-start',
+                  padding: 2
+                }}
+              >
+                <Button
+                  variant="contained"
+                  sx={{
+                    backgroundColor: "black",
+                    color: "white",
+                    "&:hover": {
+                      backgroundColor: "green",
+                    },
+                  }}
+                  onClick={submitAdminAction}
+                >
+                  Submit{" "}
+                </Button>
+              </Box>
+            </Box>
+          )}
+
+          {firstDropdownValue === "add/edit/delete EQUIVALENT property" && (
+            <Box sx={{ ml: 1 }}>
+              <h4 style={{ color: "black", padding: "2px" }}>
+                choose to add a new property or edit <br /> or delete an existing
+                property :
+              </h4>
+              <RadioGroup
+                row
+                defaultValue="edit"
+                name="uploadOption"
+                sx={{ mb: 2 }}
+                value={formData.s1_1}
+                onChange={updateActionType}
+              >
+                <FormControlLabel value="add" control={<Radio />} label="add" />
+                <FormControlLabel value="edit" control={<Radio />} label="edit" />
+                <FormControlLabel
+                  value="delete"
+                  control={<Radio />}
+                  label="delete"
+                />
+              </RadioGroup>
+              {renderCmidInput({
+                label: "CMID of Category",
+                name: "s1_2",
+                textFieldSx: { height: 22, fontSize: 12 },
+              })}
+              {add_edit_delete_usesprops_Options !== "" &&
+                <>
+                  <InputLabel id="api-results-label" style={{ color: "black" }}>
+                    Choose EQUIVALENT tie to change
+                  </InputLabel>
+                  <Select
+                    name="s1_7"
+                    sx={{ width: 300, height: 40, mb: 3 }}
+                    value={formData.s1_7 || ""}
+                    onChange={updateFormFieldValue}
+                  >
+                    {add_edit_delete_usesprops_Options.map(([n, r, d], index) => (
+                      <MenuItem key={index} value={index + 1}>
+                        {`${n.CMName} ---- EQUIVALENT Key: ${r.Key || "NA"} --- ${d.CMName}`}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </>
+              }
+
+              {formData.s1_7 !== "" && add_edit_delete_usesprops_Options.length !== 0 && (
+                <>
+                  {(() => {
+                    const [, r] = add_edit_delete_usesprops_Options[formData.s1_7 - 1];
+                    const editableProps = ["stack", "dataset", "Key"];
+                    let dropdown2Options = [];
+
+                    if (formData.s1_1 === "edit" || formData.s1_1 === "delete") {
+                      dropdown2Options = Object.keys(r).filter((key) => editableProps.includes(key));
+                    } else {
+                      const rKeys = Object.keys(r);
+                      dropdown2Options = editableProps.filter(
+                        (prop) => !rKeys.includes(prop)
+                      );
+                    }
+
+                    return (
+                      dropdown2Options.length !== 0 && (
+                        <>
+                          <InputLabel id="dropdown2-label" style={{ color: "black" }}>
+                            Choose property to {formData.s1_1}
+                          </InputLabel>
+                          <Select
+                            name="s1_8"
+                            sx={{ width: 300, height: 40, mb: 3 }}
+                            value={formData.s1_8 || ""}
+                            onChange={updateFormFieldValue}
+                          >
+                            {dropdown2Options.sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
+                              .map((option, index) => (
+                                <MenuItem key={index} value={option}>
+                                  {option}
+                                </MenuItem>
+                              ))}
+                          </Select>
+
+                          <Typography variant="body1" sx={{ mb: 1 }}>
+                            Selected:
+                            {(() => {
+                              const value = add_edit_delete_usesprops_Options?.[formData.s1_7 - 1]?.[1]?.[formData.s1_8];
+                              if (typeof value === "string") {
+                                return ` ${value}`;
+                              }
+                              if (value === undefined || value === null || value === "") {
+                                return " N/A";
+                              }
+                              return ` ${String(value)}`;
+                            })()}
+                          </Typography>
+                        </>
+                      )
+                    );
+                  })()}
+                </>
+              )}
+              {(formData.s1_1 === "add" || formData.s1_1 === "edit") && (
+                <>
+                  <InputLabel id="domain-label" style={{ color: "black " }}>
+                    Property value
+                  </InputLabel>
+                  <TextField
+                    name="s1_3"
+                    value={formData.s1_3}
+                    onChange={updateFormFieldValue}
+                    sx={{ width: 300, height: 25, mb: 4, mt: 0 }}
+                    variant="outlined"
+                    margin="normal"
+                    size="small"
+                  />
+                </>
+              )}
+
+              <Box
+                sx={{
+                  display: 'flex',
+                  justifyContent: 'flex-start',
+                  padding: 2
+                }}
+              >
+                <Button
+                  variant="contained"
+                  sx={{
+                    backgroundColor: "black",
+                    color: "white",
+                    "&:hover": {
+                      backgroundColor: "green",
+                    },
+                  }}
+                  onClick={submitAdminAction}
+                >
+                  Submit{" "}
+                </Button>
+              </Box>
+            </Box>
+          )}
+
+          {firstDropdownValue === "add/edit/delete node property" && (
+            <Box sx={{ ml: 1 }}>
+              <h4 style={{ color: "black", padding: "2px" }}>
+                choose to add a new property or edit <br /> or delete an existing
+                property :
+              </h4>
+              <RadioGroup
+                row
+                defaultValue="edit"
+                name="uploadOption"
+                sx={{ mb: 2 }}
+                value={formData.s1_1}
+                onChange={updateActionType}
+              >
+                <FormControlLabel value="add" control={<Radio />} label="add" disabled={formData.s1_2.startsWith("CP") || formData.s1_2.startsWith("CL")} />
+                <FormControlLabel value="edit" control={<Radio />} label="edit" />
+                <FormControlLabel
+                  value="delete"
+                  control={<Radio />}
+                  label="delete"
+                  disabled={formData.s1_2.startsWith("CP") || formData.s1_2.startsWith("CL")}
+                />
+              </RadioGroup>
+              {renderCmidInput({
+                label: "CMID of Node",
+                name: "s1_2",
+                textFieldSx: { height: 25, padding: "0 0" },
+              })}
+
+              {add_edit_delete_Nodeprops_Options.length !== 0 &&
+                (Array.isArray(add_edit_delete_Nodeprops_Options) ? (
+                  // If it's an array
                   <>
                     <InputLabel id="api-results-label" style={{ color: "black" }}>
-                      Choose property to change
+                      Choose property to add
                     </InputLabel>
                     <Select
                       name="s1_7"
@@ -1588,394 +1568,414 @@ const Admin = ({ database }) => {
                       value={formData.s1_7 || ""}
                       onChange={updateFormFieldValue}
                     >
-                      {Object.keys(add_edit_delete_Nodeprops_Options).map((key, index) => (
-                        <MenuItem key={index} value={key}>
-                          {key}
+                      {add_edit_delete_Nodeprops_Options.map((value, index) => (
+                        <MenuItem key={index} value={value}>
+                          {value}
                         </MenuItem>
                       ))}
                     </Select>
-                    {formData.s1_7 && (
-                      <Typography variant="body1" sx={{ mb: 1 }}>
-                        Current value is : {add_edit_delete_Nodeprops_Options[formData.s1_7]}
-                      </Typography>
-                    )}
                   </>
-                )
-              ))}
+                ) : (
+                  // If it's an object
+                  Object.keys(add_edit_delete_Nodeprops_Options).length !== 0 && (
+                    <>
+                      <InputLabel id="api-results-label" style={{ color: "black" }}>
+                        Choose property to change
+                      </InputLabel>
+                      <Select
+                        name="s1_7"
+                        sx={{ width: 300, height: 25, mb: 3 }}
+                        value={formData.s1_7 || ""}
+                        onChange={updateFormFieldValue}
+                      >
+                        {Object.keys(add_edit_delete_Nodeprops_Options).map((key, index) => (
+                          <MenuItem key={index} value={key}>
+                            {key}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                      {formData.s1_7 && (
+                        <Typography variant="body1" sx={{ mb: 1 }}>
+                          Current value is : {add_edit_delete_Nodeprops_Options[formData.s1_7]}
+                        </Typography>
+                      )}
+                    </>
+                  )
+                ))}
 
-            {(formData.s1_1 === "add" || formData.s1_1 === "edit") && (
-              <>
-                <InputLabel id="domain-label" style={{ color: "black " }}>
-                  Property value
-                </InputLabel>
-                <TextField
-                  name="s1_3"
-                  value={formData.s1_3}
-                  onChange={updateFormFieldValue}
-                  sx={{ width: 300, height: 25, mb: 4, mt: 0 }}
-                  variant="outlined"
-                  size="small"
-                  margin="normal"
-                />
-              </>
-            )}
-            <Box
-              sx={{
-                display: 'flex',
-                justifyContent: 'flex-start',
-                padding: 2
-              }}
-            >
-              <Button
-                variant="contained"
+              {(formData.s1_1 === "add" || formData.s1_1 === "edit") && (
+                <>
+                  <InputLabel id="domain-label" style={{ color: "black " }}>
+                    Property value
+                  </InputLabel>
+                  <TextField
+                    name="s1_3"
+                    value={formData.s1_3}
+                    onChange={updateFormFieldValue}
+                    sx={{ width: 300, height: 25, mb: 4, mt: 0 }}
+                    variant="outlined"
+                    size="small"
+                    margin="normal"
+                  />
+                </>
+              )}
+              <Box
                 sx={{
-                  backgroundColor: "black",
-                  color: "white",
-                  "&:hover": {
-                    backgroundColor: "green",
-                  },
+                  display: 'flex',
+                  justifyContent: 'flex-start',
+                  padding: 2
                 }}
-                onClick={submitAdminAction}
               >
-                Submit{" "}
-              </Button>
-            </Box>
-          </Box>
-        )
-        }
-
-        {firstDropdownValue === "merge nodes" && (
-          <Box sx={{ ml: 1 }}>
-            {renderCmidInput({
-              label: "ID to keep",
-              name: "s1_2",
-              textFieldSx: { height: 40 },
-            })}
-            {renderCmidInput({
-              label: "ID to discard",
-              name: "s1_3",
-              textFieldSx: { height: 40 },
-            })}
-            <Box
-              sx={{
-                display: 'flex',
-                justifyContent: 'flex-start',
-                padding: 2
-              }}
-            >
-              <Button
-                variant="contained"
-                sx={{
-                  backgroundColor: "black",
-                  color: "white",
-                  "&:hover": {
-                    backgroundColor: "green",
-                  },
-                }}
-                onClick={previewMergeNodes}
-              >
-                Submit{" "}
-              </Button>
-            </Box>
-          </Box>
-        )
-        }
-
-        {firstDropdownValue === "move USES tie" && (
-          <Box sx={{ ml: 1 }}>
-            {renderCmidInput({
-              label: "CMID moving from",
-              name: "s1_2",
-              textFieldSx: { height: 40 },
-            })}
-            {add_edit_delete_usesprops_Options !== "" &&
-              <>
-                <InputLabel id="api-results-label" style={{ color: "black" }}>
-                  Choose USES tie to change
-                </InputLabel>
-                <Select
-                  name="s1_7"
-                  sx={{ width: 300, height: 40, mb: 3 }}
-                  value={formData.s1_7 || ""}
-                  onChange={updateFormFieldValue}
+                <Button
+                  variant="contained"
+                  sx={{
+                    backgroundColor: "black",
+                    color: "white",
+                    "&:hover": {
+                      backgroundColor: "green",
+                    },
+                  }}
+                  onClick={submitAdminAction}
                 >
-                  {add_edit_delete_usesprops_Options.map(([n, r, d], index) => (
-                    <MenuItem key={index} value={JSON.stringify([n, r, d])}>
-                      {`${n.CMName} ---- USES Key: ${r.Key} --- ${d.CMName}`}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </>
-            }
-            {renderCmidInput({
-              label: "CMID moving to",
-              name: "s1_3",
-              textFieldSx: { height: 40 },
-            })}
-            <Box
-              sx={{
-                display: 'flex',
-                justifyContent: 'flex-start',
-                padding: 2
-              }}
-            >
-              <Button
-                variant="contained"
-                sx={{
-                  backgroundColor: "black",
-                  color: "white",
-                  "&:hover": {
-                    backgroundColor: "green",
-                  },
-                }}
-                onClick={checkForAmbiguousUsesTies}
-              >
-                Move Ties{" "}
-              </Button>
+                  Submit{" "}
+                </Button>
+              </Box>
             </Box>
-          </Box>
-        )
-        }
+          )
+          }
 
-        {firstDropdownValue === "move EQUIVALENT tie" && (
-          <Box sx={{ ml: 1 }}>
-            {renderCmidInput({
-              label: "CMID moving from",
-              name: "s1_2",
-              textFieldSx: { height: 40 },
-            })}
-            {add_edit_delete_usesprops_Options !== "" &&
-              <>
-                <InputLabel id="api-results-label" style={{ color: "black" }}>
-                  Choose EQUIVALENT tie to change
-                </InputLabel>
-                <Select
-                  name="s1_7"
-                  sx={{ width: 300, height: 40, mb: 3 }}
-                  value={formData.s1_7 || ""}
-                  onChange={updateFormFieldValue}
+          {firstDropdownValue === "merge nodes" && (
+            <Box sx={{ ml: 1 }}>
+              {renderCmidInput({
+                label: "ID to keep",
+                name: "s1_2",
+                textFieldSx: { height: 40 },
+              })}
+              {renderCmidInput({
+                label: "ID to discard",
+                name: "s1_3",
+                textFieldSx: { height: 40 },
+              })}
+              <Box
+                sx={{
+                  display: 'flex',
+                  justifyContent: 'flex-start',
+                  padding: 2
+                }}
+              >
+                <Button
+                  variant="contained"
+                  sx={{
+                    backgroundColor: "black",
+                    color: "white",
+                    "&:hover": {
+                      backgroundColor: "green",
+                    },
+                  }}
+                  onClick={previewMergeNodes}
                 >
-                  {add_edit_delete_usesprops_Options.map(([n, r, d], index) => (
-                    <MenuItem key={index} value={JSON.stringify([n, r, d])}>
-                      {`${n.CMName} ---- EQUIVALENT Key: ${r.Key || "NA"} --- ${d.CMName}`}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </>
-            }
-            {renderCmidInput({
-              label: "CMID moving to",
-              name: "s1_3",
-              textFieldSx: { height: 40 },
-            })}
-            <Box
-              sx={{
-                display: 'flex',
-                justifyContent: 'flex-start',
-                padding: 2
-              }}
-            >
-              <Button
-                variant="contained"
-                sx={{
-                  backgroundColor: "black",
-                  color: "white",
-                  "&:hover": {
-                    backgroundColor: "green",
-                  },
-                }}
-                onClick={submitAdminAction}
-              >
-                Submit{" "}
-              </Button>
+                  Submit{" "}
+                </Button>
+              </Box>
             </Box>
-          </Box>
-        )
-        }
+          )
+          }
 
-        {firstDropdownValue === "add credible comment" && (
-          <Box sx={{ ml: 1 }}>
-            <h4 style={{ color: "black", padding: "2px" }}>
-              Is the value credible?
-            </h4>
-            <RadioGroup
-              defaultValue="TRUE"
-              name="uploadOption"
-              sx={{ mb: 2 }}
-              value={formData.s1_1}
-              onChange={updateActionType}
-            >
-              <FormControlLabel value="TRUE" control={<Radio />} label="TRUE" />
-              <FormControlLabel value="FALSE" control={<Radio />} label="FALSE" />
-            </RadioGroup>
-            {renderCmidInput({
-              label: "ID of node connected to relationship",
-              name: "s1_2",
-              textFieldSx: { height: 40 },
-            })}
-            <InputLabel id="domain-label" style={{ color: "black " }}>
-              Reason why this comment is necessary
-            </InputLabel>
-            <TextField
-              name="s1_3"
-              value={formData.s1_3}
-              onChange={updateFormFieldValue}
-              sx={{ width: 300, height: 40, mb: 4, mt: 0 }}
-              variant="outlined"
-              margin="normal"
-              size="small"
-            />
-          </Box>
-        )
-        }
-
-        {firstDropdownValue === "delete node" && (
-          <Box sx={{ ml: 1 }}>
-            {renderCmidInput({
-              label: "CMID of node to delete",
-              name: "s1_2",
-              textFieldSx: { height: 40 },
-            })}
-            <Box
-              sx={{
-                display: 'flex',
-                justifyContent: 'flex-start',
-                padding: 2
-              }}
-            >
-              <Button
-                variant="contained"
+          {firstDropdownValue === "move USES tie" && (
+            <Box sx={{ ml: 1 }}>
+              {renderCmidInput({
+                label: "CMID moving from",
+                name: "s1_2",
+                textFieldSx: { height: 40 },
+              })}
+              {add_edit_delete_usesprops_Options !== "" &&
+                <>
+                  <InputLabel id="api-results-label" style={{ color: "black" }}>
+                    Choose USES tie to change
+                  </InputLabel>
+                  <Select
+                    name="s1_7"
+                    sx={{ width: 300, height: 40, mb: 3 }}
+                    value={formData.s1_7 || ""}
+                    onChange={updateFormFieldValue}
+                  >
+                    {add_edit_delete_usesprops_Options.map(([n, r, d], index) => (
+                      <MenuItem key={index} value={JSON.stringify([n, r, d])}>
+                        {`${n.CMName} ---- USES Key: ${r.Key} --- ${d.CMName}`}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </>
+              }
+              {renderCmidInput({
+                label: "CMID moving to",
+                name: "s1_3",
+                textFieldSx: { height: 40 },
+              })}
+              <Box
                 sx={{
-                  backgroundColor: "black",
-                  color: "white",
-                  "&:hover": {
-                    backgroundColor: "green",
-                  },
+                  display: 'flex',
+                  justifyContent: 'flex-start',
+                  padding: 2
                 }}
-                onClick={submitAdminAction}
               >
-                Submit{" "}
-              </Button>
-            </Box>
-          </Box>
-        )
-        }
-
-        {firstDropdownValue === "delete USES relation" && (
-          <Box sx={{ ml: 1 }}>
-            {renderCmidInput({
-              label: "CMID of category",
-              name: "s1_2",
-              textFieldSx: { height: 40 },
-            })}
-            {add_edit_delete_usesprops_Options !== "" &&
-              <>
-                <InputLabel id="api-results-label" style={{ color: "black" }}>
-                  Choose USES tie to change
-                </InputLabel>
-                <Select
-                  name="s1_7"
-                  sx={{ width: 300, height: 40, mb: 3 }}
-                  value={formData.s1_7 || ""}
-                  onChange={updateFormFieldValue}
+                <Button
+                  variant="contained"
+                  sx={{
+                    backgroundColor: "black",
+                    color: "white",
+                    "&:hover": {
+                      backgroundColor: "green",
+                    },
+                  }}
+                  onClick={checkForAmbiguousUsesTies}
                 >
-                  {add_edit_delete_usesprops_Options.map(([n, r, d], index) => (
-                    <MenuItem key={index} value={JSON.stringify([n, r, d])}>
-                      {`${n.CMName} ---- USES Key: ${r.Key} --- ${d.CMName}`}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </>
-            }
-            <Box
-              sx={{
-                display: 'flex',
-                justifyContent: 'flex-start',
-                padding: 2
-              }}
-            >
-              <Button
-                variant="contained"
-                sx={{
-                  backgroundColor: "black",
-                  color: "white",
-                  "&:hover": {
-                    backgroundColor: "green",
-                  },
-                }}
-                onClick={submitAdminAction}
-              >
-                Submit{" "}
-              </Button>
+                  Move Ties{" "}
+                </Button>
+              </Box>
             </Box>
-          </Box>
-        )
-        }
+          )
+          }
 
-        {firstDropdownValue === "delete EQUIVALENT relation" && (
-          <Box sx={{ ml: 1 }}>
-            {renderCmidInput({
-              label: "CMID of category",
-              name: "s1_2",
-              textFieldSx: { height: 40 },
-            })}
-            {add_edit_delete_usesprops_Options !== "" &&
-              <>
-                <InputLabel id="api-results-label" style={{ color: "black" }}>
-                  Choose EQUIVALENT tie to change
-                </InputLabel>
-                <Select
-                  name="s1_7"
-                  sx={{ width: 300, height: 40, mb: 3 }}
-                  value={formData.s1_7 || ""}
-                  onChange={updateFormFieldValue}
+          {firstDropdownValue === "move EQUIVALENT tie" && (
+            <Box sx={{ ml: 1 }}>
+              {renderCmidInput({
+                label: "CMID moving from",
+                name: "s1_2",
+                textFieldSx: { height: 40 },
+              })}
+              {add_edit_delete_usesprops_Options !== "" &&
+                <>
+                  <InputLabel id="api-results-label" style={{ color: "black" }}>
+                    Choose EQUIVALENT tie to change
+                  </InputLabel>
+                  <Select
+                    name="s1_7"
+                    sx={{ width: 300, height: 40, mb: 3 }}
+                    value={formData.s1_7 || ""}
+                    onChange={updateFormFieldValue}
+                  >
+                    {add_edit_delete_usesprops_Options.map(([n, r, d], index) => (
+                      <MenuItem key={index} value={JSON.stringify([n, r, d])}>
+                        {`${n.CMName} ---- EQUIVALENT Key: ${r.Key || "NA"} --- ${d.CMName}`}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </>
+              }
+              {renderCmidInput({
+                label: "CMID moving to",
+                name: "s1_3",
+                textFieldSx: { height: 40 },
+              })}
+              <Box
+                sx={{
+                  display: 'flex',
+                  justifyContent: 'flex-start',
+                  padding: 2
+                }}
+              >
+                <Button
+                  variant="contained"
+                  sx={{
+                    backgroundColor: "black",
+                    color: "white",
+                    "&:hover": {
+                      backgroundColor: "green",
+                    },
+                  }}
+                  onClick={submitAdminAction}
                 >
-                  {add_edit_delete_usesprops_Options.map(([n, r, d], index) => (
-                    <MenuItem key={index} value={JSON.stringify([n, r, d])}>
-                      {`${n.CMName} ---- EQUIVALENT Key: ${r.Key || "NA"} --- ${d.CMName}`}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </>
-            }
-            <Box
-              sx={{
-                display: 'flex',
-                justifyContent: 'flex-start',
-                padding: 2
-              }}
-            >
-              <Button
-                variant="contained"
-                sx={{
-                  backgroundColor: "black",
-                  color: "white",
-                  "&:hover": {
-                    backgroundColor: "green",
-                  },
-                }}
-                onClick={submitAdminAction}
+                  Submit{" "}
+                </Button>
+              </Box>
+            </Box>
+          )
+          }
+
+          {firstDropdownValue === "add credible comment" && (
+            <Box sx={{ ml: 1 }}>
+              <h4 style={{ color: "black", padding: "2px" }}>
+                Is the value credible?
+              </h4>
+              <RadioGroup
+                defaultValue="TRUE"
+                name="uploadOption"
+                sx={{ mb: 2 }}
+                value={formData.s1_1}
+                onChange={updateActionType}
               >
-                Submit{" "}
+                <FormControlLabel value="TRUE" control={<Radio />} label="TRUE" />
+                <FormControlLabel value="FALSE" control={<Radio />} label="FALSE" />
+              </RadioGroup>
+              {renderCmidInput({
+                label: "ID of node connected to relationship",
+                name: "s1_2",
+                textFieldSx: { height: 40 },
+              })}
+              <InputLabel id="domain-label" style={{ color: "black " }}>
+                Reason why this comment is necessary
+              </InputLabel>
+              <TextField
+                name="s1_3"
+                value={formData.s1_3}
+                onChange={updateFormFieldValue}
+                sx={{ width: 300, height: 40, mb: 4, mt: 0 }}
+                variant="outlined"
+                margin="normal"
+                size="small"
+              />
+            </Box>
+          )
+          }
+
+          {firstDropdownValue === "delete node" && (
+            <Box sx={{ ml: 1 }}>
+              {renderCmidInput({
+                label: "CMID of node to delete",
+                name: "s1_2",
+                textFieldSx: { height: 40 },
+              })}
+              <Box
+                sx={{
+                  display: 'flex',
+                  justifyContent: 'flex-start',
+                  padding: 2
+                }}
+              >
+                <Button
+                  variant="contained"
+                  sx={{
+                    backgroundColor: "black",
+                    color: "white",
+                    "&:hover": {
+                      backgroundColor: "green",
+                    },
+                  }}
+                  onClick={submitAdminAction}
+                >
+                  Submit{" "}
+                </Button>
+              </Box>
+            </Box>
+          )
+          }
+
+          {firstDropdownValue === "delete USES relation" && (
+            <Box sx={{ ml: 1 }}>
+              {renderCmidInput({
+                label: "CMID of category",
+                name: "s1_2",
+                textFieldSx: { height: 40 },
+              })}
+              {add_edit_delete_usesprops_Options !== "" &&
+                <>
+                  <InputLabel id="api-results-label" style={{ color: "black" }}>
+                    Choose USES tie to change
+                  </InputLabel>
+                  <Select
+                    name="s1_7"
+                    sx={{ width: 300, height: 40, mb: 3 }}
+                    value={formData.s1_7 || ""}
+                    onChange={updateFormFieldValue}
+                  >
+                    {add_edit_delete_usesprops_Options.map(([n, r, d], index) => (
+                      <MenuItem key={index} value={JSON.stringify([n, r, d])}>
+                        {`${n.CMName} ---- USES Key: ${r.Key} --- ${d.CMName}`}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </>
+              }
+              <Box
+                sx={{
+                  display: 'flex',
+                  justifyContent: 'flex-start',
+                  padding: 2
+                }}
+              >
+                <Button
+                  variant="contained"
+                  sx={{
+                    backgroundColor: "black",
+                    color: "white",
+                    "&:hover": {
+                      backgroundColor: "green",
+                    },
+                  }}
+                  onClick={submitAdminAction}
+                >
+                  Submit{" "}
+                </Button>
+              </Box>
+            </Box>
+          )
+          }
+
+          {firstDropdownValue === "delete EQUIVALENT relation" && (
+            <Box sx={{ ml: 1 }}>
+              {renderCmidInput({
+                label: "CMID of category",
+                name: "s1_2",
+                textFieldSx: { height: 40 },
+              })}
+              {add_edit_delete_usesprops_Options !== "" &&
+                <>
+                  <InputLabel id="api-results-label" style={{ color: "black" }}>
+                    Choose EQUIVALENT tie to change
+                  </InputLabel>
+                  <Select
+                    name="s1_7"
+                    sx={{ width: 300, height: 40, mb: 3 }}
+                    value={formData.s1_7 || ""}
+                    onChange={updateFormFieldValue}
+                  >
+                    {add_edit_delete_usesprops_Options.map(([n, r, d], index) => (
+                      <MenuItem key={index} value={JSON.stringify([n, r, d])}>
+                        {`${n.CMName} ---- EQUIVALENT Key: ${r.Key || "NA"} --- ${d.CMName}`}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </>
+              }
+              <Box
+                sx={{
+                  display: 'flex',
+                  justifyContent: 'flex-start',
+                  padding: 2
+                }}
+              >
+                <Button
+                  variant="contained"
+                  sx={{
+                    backgroundColor: "black",
+                    color: "white",
+                    "&:hover": {
+                      backgroundColor: "green",
+                    },
+                  }}
+                  onClick={submitAdminAction}
+                >
+                  Submit{" "}
+                </Button>
+              </Box>
+            </Box>
+          )
+          }
+
+          {firstDropdownValue === "create new domain" && (
+            <Box sx={{ ml: 1 }}>
+              <Typography sx={{ maxWidth: 720, mb: 2 }}>
+                Domain creation now lives in the Metadata Manager. That workflow supports the full LABEL metadata schema and now creates the matching Neo4j full-text index on <code>normNames</code>.
+              </Typography>
+              <Button component={Link} to="/admin/metadata" variant="contained">
+                Open Metadata Manager
               </Button>
             </Box>
-          </Box>
-        )
-        }
+          )
+          }
 
-        {firstDropdownValue === "create new domain" && (
-          <Box sx={{ ml: 1 }}>
-            <Typography sx={{ maxWidth: 720, mb: 2 }}>
-              Domain creation now lives in the Metadata Manager. That workflow supports the full LABEL metadata schema and now creates the matching Neo4j full-text index on <code>normNames</code>.
-            </Typography>
-            <Button component={Link} to="/admin/metadata" variant="contained">
-              Open Metadata Manager
-            </Button>
-          </Box>
-        )
-        }
-
-        {/* {firstDropdownValue === "add foci" && (
+          {/* {firstDropdownValue === "add foci" && (
    <Box sx={{ ml: 1 }}>
    <InputLabel id="domain-label" style={{ color: "black " }}>
    CMID of DATASET to add foci to
@@ -2003,568 +2003,510 @@ const Admin = ({ database }) => {
 )
 } */}
 
-        {firstDropdownValue === "lookup/edit users" && (
-          <Box sx={{ ml: 1, width: "100%", minWidth: 0, pb: 3 }}>
-            <Box
-              sx={{
-                display: "flex",
-                flexWrap: "wrap",
-                gap: 1,
-                alignItems: "center",
-                mb: 2,
-                px: 1.25,
-                py: 1,
-                border: "1px solid #d9d9d9",
-                borderRadius: 1,
-                backgroundColor: "#f7f7f7",
-              }}
-            >
-              <Typography variant="body2" sx={{ fontWeight: 700 }}>
-                User totals:
-              </Typography>
-              <Typography variant="body2">
-                Total {statusSummaryTotal}
-              </Typography>
-              {statusSummaryEntries.map(([status, count]) => (
-                <Typography key={status} variant="body2">
-                  {status} {count}
-                </Typography>
-              ))}
-            </Box>
-            <Typography variant="body1" sx={{ mb: 1 }}>
-              Search by user ID, username, email, first name, or last name.
-            </Typography>
-            <Box sx={{ display: "flex", gap: 1, alignItems: "center", mb: 2, flexWrap: "wrap" }}>
-              <TextField
-                value={userLookupQuery}
-                onChange={(e) => setUserLookupQuery(e.target.value)}
-                label="Lookup"
-                size="small"
-                sx={{ width: 360 }}
-              />
-              <Button
-                variant="contained"
-                sx={{
-                  backgroundColor: "black",
-                  color: "white",
-                  "&:hover": {
-                    backgroundColor: "green",
-                  },
-                }}
-                onClick={lookupUsers}
-              >
-                Search Users
-              </Button>
-            </Box>
-
-            {userLookupResults.length > 0 && (
+          {firstDropdownValue === "lookup/edit users" && (
+            <Box sx={{ ml: 1, width: "100%", minWidth: 0, pb: 3 }}>
               <Box
                 sx={{
-                  width: "100%",
-                  minWidth: 0,
+                  display: "flex",
+                  flexWrap: "wrap",
+                  gap: 1,
+                  alignItems: "center",
                   mb: 2,
+                  px: 1.25,
+                  py: 1,
                   border: "1px solid #d9d9d9",
                   borderRadius: 1,
-                  backgroundColor: "#fff",
-                  overflow: "hidden",
+                  backgroundColor: "#f7f7f7",
                 }}
               >
-                <DataGrid
-                  autoHeight
-                  density="compact"
-                  rows={userLookupResults}
-                  columns={userLookupColumns}
-                  getRowId={(row) => row.userid}
-                  filterModel={userLookupFilterModel}
-                  onFilterModelChange={setUserLookupFilterModel}
-                  columnVisibilityModel={userLookupColumnVisibilityModel}
-                  onColumnVisibilityModelChange={setUserLookupColumnVisibilityModel}
-                  pageSizeOptions={[5, 10, 20, 50]}
-                  checkboxSelection={false}
-                  disableRowSelectionOnClick={false}
-                  disableColumnResize={false}
-                  rowSelectionModel={selectedLookupUserId ? [selectedLookupUserId] : []}
-                  slots={{ toolbar: GridToolbar }}
-                  slotProps={{
-                    toolbar: {
-                      showQuickFilter: true,
-                      csvOptions: { disableToolbarButton: true },
-                      printOptions: { disableToolbarButton: true },
-                    },
-                  }}
-                  initialState={{
-                    pagination: {
-                      paginationModel: { page: 0, pageSize: 10 },
-                    },
-                  }}
-                  onRowSelectionModelChange={(newSelection) => {
-                    const selected = Array.isArray(newSelection) ? newSelection[0] : null;
-                    if (!selected) return;
-                    const row = userLookupResults.find((item) => String(item.userid) === String(selected));
-                    if (row) {
-                      hydrateUserEditForm(row);
-                    }
-                  }}
-                  sx={{
-                    border: 0,
-                    '& .MuiDataGrid-columnHeaders': {
-                      fontSize: '0.82rem',
-                    },
-                    '& .MuiDataGrid-cell': {
-                      fontSize: '0.8rem',
-                      py: 0.25,
-                    },
-                    '& .MuiDataGrid-toolbarContainer': {
-                      justifyContent: 'space-between',
-                      gap: 1,
-                      px: 1,
-                      py: 0.75,
-                      borderBottom: '1px solid #ececec',
-                    },
-                    '& .MuiDataGrid-footerContainer': {
-                      minHeight: 44,
-                    },
-                  }}
-                />
+                <Typography variant="body2" sx={{ fontWeight: 700 }}>
+                  User totals:
+                </Typography>
+                <Typography variant="body2">
+                  Total {statusSummaryTotal}
+                </Typography>
+                {statusSummaryEntries.map(([status, count]) => (
+                  <Typography key={status} variant="body2">
+                    {status} {count}
+                  </Typography>
+                ))}
               </Box>
-            )}
+              <Typography variant="body1" sx={{ mb: 1 }}>
+                Search by user ID, username, email, first name, or last name.
+              </Typography>
+              <Box sx={{ display: "flex", gap: 1, alignItems: "center", mb: 2, flexWrap: "wrap" }}>
+                <TextField
+                  value={userLookupQuery}
+                  onChange={(e) => setUserLookupQuery(e.target.value)}
+                  label="Lookup"
+                  size="small"
+                  sx={{ width: 360 }}
+                />
+                <Button
+                  variant="contained"
+                  sx={{
+                    backgroundColor: "black",
+                    color: "white",
+                    "&:hover": {
+                      backgroundColor: "green",
+                    },
+                  }}
+                  onClick={lookupUsers}
+                >
+                  Search Users
+                </Button>
+              </Box>
 
-            {selectedLookupUser && (
-              <Box sx={{ border: "1px solid #d9d9d9", borderRadius: 1, p: 2, mb: 2, backgroundColor: "#fafafa" }}>
-                <Typography variant="h6" sx={{ mb: 1 }}>
-                  Edit User {selectedLookupUser.userid}
-                </Typography>
-                <Typography variant="body2" sx={{ mb: 1 }}>
-                  Update stats:
-                  {" "}Total {selectedLookupStats.totalActions || 0}
-                  {" | "}Created Nodes {selectedLookupStats.createdNodes || 0}
-                  {" | "}Updated Nodes {selectedLookupStats.updatedNodes || 0}
-                  {" | "}Updated Relationships {selectedLookupStats.updatedRelationships || 0}
-                  {" | "}Deleted {selectedLookupStats.deletedObjects || 0}
-                </Typography>
-                <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: 1.5 }}>
-                  <TextField label="First Name" name="first" value={userEditForm.first} onChange={updateUserEditField} size="small" />
-                  <TextField label="Last Name" name="last" value={userEditForm.last} onChange={updateUserEditField} size="small" />
-                  <TextField label="Username" name="username" value={userEditForm.username} onChange={updateUserEditField} size="small" />
-                  <TextField label="Email" name="email" value={userEditForm.email} onChange={updateUserEditField} size="small" />
-                  <TextField label="Database (e.g., sociomap|archamap)" name="database" value={userEditForm.database} onChange={updateUserEditField} size="small" />
-                  <TextField label="Intended Use" name="intendedUse" value={userEditForm.intendedUse} onChange={updateUserEditField} size="small" />
-                  <Select
-                    name="access"
-                    value={userEditForm.access}
-                    onChange={updateUserEditField}
-                    size="small"
-                  >
-                    <MenuItem value="enabled">enabled</MenuItem>
-                    <MenuItem value="pending">pending</MenuItem>
-                    <MenuItem value="disabled">disabled</MenuItem>
-                  </Select>
-                  <Select
-                    name="role"
-                    value={userEditForm.role}
-                    onChange={updateUserEditField}
-                    size="small"
-                  >
-                    <MenuItem value="user">user</MenuItem>
-                    <MenuItem value="admin">admin</MenuItem>
-                  </Select>
-                </Box>
-                <Box sx={{ mt: 2 }}>
-                  <Button
-                    variant="contained"
-                    sx={{
-                      backgroundColor: "black",
-                      color: "white",
-                      "&:hover": {
-                        backgroundColor: "green",
+              {userLookupResults.length > 0 && (
+                <Box
+                  sx={{
+                    width: "100%",
+                    minWidth: 0,
+                    mb: 2,
+                    border: "1px solid #d9d9d9",
+                    borderRadius: 1,
+                    backgroundColor: "#fff",
+                    overflow: "hidden",
+                  }}
+                >
+                  <DataGrid
+                    autoHeight
+                    density="compact"
+                    rows={userLookupResults}
+                    columns={userLookupColumns}
+                    getRowId={(row) => row.userid}
+                    filterModel={userLookupFilterModel}
+                    onFilterModelChange={setUserLookupFilterModel}
+                    columnVisibilityModel={userLookupColumnVisibilityModel}
+                    onColumnVisibilityModelChange={setUserLookupColumnVisibilityModel}
+                    pageSizeOptions={[5, 10, 20, 50]}
+                    checkboxSelection={false}
+                    disableRowSelectionOnClick={false}
+                    disableColumnResize={false}
+                    rowSelectionModel={selectedLookupUserId ? [selectedLookupUserId] : []}
+                    slots={{ toolbar: GridToolbar }}
+                    slotProps={{
+                      toolbar: {
+                        showQuickFilter: true,
+                        csvOptions: { disableToolbarButton: true },
+                        printOptions: { disableToolbarButton: true },
                       },
                     }}
-                    onClick={saveUserEdit}
-                  >
-                    Save User Changes
-                  </Button>
+                    initialState={{
+                      pagination: {
+                        paginationModel: { page: 0, pageSize: 10 },
+                      },
+                    }}
+                    onRowSelectionModelChange={(newSelection) => {
+                      const selected = Array.isArray(newSelection) ? newSelection[0] : null;
+                      if (!selected) return;
+                      const row = userLookupResults.find((item) => String(item.userid) === String(selected));
+                      if (row) {
+                        hydrateUserEditForm(row);
+                      }
+                    }}
+                    sx={{
+                      border: 0,
+                      '& .MuiDataGrid-columnHeaders': {
+                        fontSize: '0.82rem',
+                      },
+                      '& .MuiDataGrid-cell': {
+                        fontSize: '0.8rem',
+                        py: 0.25,
+                      },
+                      '& .MuiDataGrid-toolbarContainer': {
+                        justifyContent: 'space-between',
+                        gap: 1,
+                        px: 1,
+                        py: 0.75,
+                        borderBottom: '1px solid #ececec',
+                      },
+                      '& .MuiDataGrid-footerContainer': {
+                        minHeight: 44,
+                      },
+                    }}
+                  />
                 </Box>
-              </Box>
-            )}
-          </Box>
-        )}
+              )}
 
-        {firstDropdownValue === "create new user" && (
-          <Box sx={{ ml: 1 }}>
-            <InputLabel id="domain-label" style={{ color: "black " }}>
-              username   </InputLabel>
-            <TextField
-              name="s1_2"
-              value={formData.s1_2}
-              onChange={updateFormFieldValue}
-              sx={{ width: 300, height: 40, mb: 3, mt: 0 }}
-              variant="outlined"
-              margin="normal"
-              size="small"
-            />
-            <InputLabel id="domain-label" style={{ color: "black " }}>
-              first name   </InputLabel>
-            <TextField
-              name="s1_3"
-              value={formData.s1_3}
-              onChange={updateFormFieldValue}
-              sx={{ width: 300, height: 40, mb: 3, mt: 0 }}
-              variant="outlined"
-              margin="normal"
-              size="small"
-            />
-            <InputLabel id="domain-label" style={{ color: "black " }}>
-              last name   </InputLabel>
-            <TextField
-              name="s1_4"
-              value={formData.s1_4}
-              onChange={updateFormFieldValue}
-              sx={{ width: 300, height: 40, mb: 3, mt: 0 }}
-              variant="outlined"
-              margin="normal"
-            />
-            <InputLabel id="domain-label" style={{ color: "black " }}>
-              email   </InputLabel>
-            <TextField
-              name="s1_5"
-              value={formData.s1_5}
-              onChange={updateFormFieldValue}
-              sx={{ width: 300, height: 40, mb: 3, mt: 1 }}
-              variant="outlined"
-              margin="normal"
-              size="small"
-            />
-            <InputLabel id="domain-label" style={{ color: "black " }}>Select role:</InputLabel>
-            <br />
-            <Select
-              labelId="domain-label"
-              id="domain"
-              name="s1_7"
-              value={formData.s1_7}
-              onChange={updateFormFieldValue}
-              sx={{ width: 300, height: 40, mb: 3 }}
-              margin="normal"
-            >
-              <MenuItem value={"user"}>user</MenuItem>
-              <MenuItem value={"admin"}>admin</MenuItem>
-            </Select>
-            <InputLabel id="domain-label" style={{ color: "black " }}>
-              password   </InputLabel>
-            <TextField
-              name="s1_6"
-              value={formData.s1_6}
-              onChange={updateFormFieldValue}
-              sx={{ width: 300, height: 40, mb: 3, mt: 0 }}
-              variant="outlined"
-              margin="normal"
-            />
-          </Box>
-        )
-        }
-
-        {firstDropdownValue === "change user password" && (
-          <Box sx={{ ml: 1 }}>
-            <InputLabel id="domain-label" style={{ color: "black " }}>
-              username
-            </InputLabel>
-            <TextField
-              name="s1_2"
-              value={formData.s1_2}
-              onChange={updateFormFieldValue}
-              sx={{ width: 300, height: 40, mb: 3 }}
-              variant="outlined"
-              margin="normal"
-              size="small"
-            />
-            <InputLabel id="domain-label" style={{ color: "black " }}>
-              new password
-            </InputLabel>
-            <TextField
-              name="s1_3"
-              type="password"
-              value={formData.s1_3}
-              onChange={updateFormFieldValue}
-              sx={{ width: 300, height: 40, mb: 4 }}
-              variant="outlined"
-              margin="normal"
-              size="small"
-            />
-            <Box sx={{ mt: 1 }}>
-              <Button
-                variant="contained"
-                sx={{
-                  backgroundColor: "black",
-                  color: "white",
-                  "&:hover": {
-                    backgroundColor: "green",
-                  },
-                }}
-                onClick={requestPasswordChangeConfirmation}
-              >
-                Submit Password Change
-              </Button>
+              {selectedLookupUser && (
+                <Box sx={{ border: "1px solid #d9d9d9", borderRadius: 1, p: 2, mb: 2, backgroundColor: "#fafafa" }}>
+                  <Typography variant="h6" sx={{ mb: 1 }}>
+                    Edit User {selectedLookupUser.userid}
+                  </Typography>
+                  <Typography variant="body2" sx={{ mb: 1 }}>
+                    Update stats:
+                    {" "}Total {selectedLookupStats.totalActions || 0}
+                    {" | "}Created Nodes {selectedLookupStats.createdNodes || 0}
+                    {" | "}Updated Nodes {selectedLookupStats.updatedNodes || 0}
+                    {" | "}Updated Relationships {selectedLookupStats.updatedRelationships || 0}
+                    {" | "}Deleted {selectedLookupStats.deletedObjects || 0}
+                  </Typography>
+                  <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: 1.5 }}>
+                    <TextField label="First Name" name="first" value={userEditForm.first} onChange={updateUserEditField} size="small" />
+                    <TextField label="Last Name" name="last" value={userEditForm.last} onChange={updateUserEditField} size="small" />
+                    <TextField label="Username" name="username" value={userEditForm.username} onChange={updateUserEditField} size="small" />
+                    <TextField label="Email" name="email" value={userEditForm.email} onChange={updateUserEditField} size="small" />
+                    <TextField label="Database (e.g., sociomap|archamap)" name="database" value={userEditForm.database} onChange={updateUserEditField} size="small" />
+                    <TextField label="Intended Use" name="intendedUse" value={userEditForm.intendedUse} onChange={updateUserEditField} size="small" />
+                    <Select
+                      name="access"
+                      value={userEditForm.access}
+                      onChange={updateUserEditField}
+                      size="small"
+                    >
+                      <MenuItem value="enabled">enabled</MenuItem>
+                      <MenuItem value="pending">pending</MenuItem>
+                      <MenuItem value="disabled">disabled</MenuItem>
+                    </Select>
+                    <Select
+                      name="role"
+                      value={userEditForm.role}
+                      onChange={updateUserEditField}
+                      size="small"
+                    >
+                      <MenuItem value="user">user</MenuItem>
+                      <MenuItem value="admin">admin</MenuItem>
+                    </Select>
+                  </Box>
+                  <Box sx={{ mt: 2 }}>
+                    <Button
+                      variant="contained"
+                      sx={{
+                        backgroundColor: "black",
+                        color: "white",
+                        "&:hover": {
+                          backgroundColor: "green",
+                        },
+                      }}
+                      onClick={saveUserEdit}
+                    >
+                      Save User Changes
+                    </Button>
+                  </Box>
+                </Box>
+              )}
             </Box>
-          </Box>
-        )
-        }
+          )}
 
-        {firstDropdownValue === "CSV database backup" && (
-          <Box sx={{ ml: 1 }}>
-            <InputLabel id="domain-label" style={{ color: "black " }}>Choose label</InputLabel>
-            <br />
-            <Select
-              labelId="domain-label"
-              id="domain"
-              name="s1_7"
-              value={formData.s1_7}
-              onChange={updateFormFieldValue}
-              sx={{ width: 300, height: 40 }}
-              margin="normal"
-            >
-              <MenuItem value={"ANY DOMAIN"}>ANY DOMAIN</MenuItem>
-              <MenuItem value={"DATASET"}>DATASET</MenuItem>
-              <MenuItem value={"AREA"}>AREA</MenuItem>
-              <MenuItem value={"ETHNICITY"}>ETHNICITY</MenuItem>
-              <MenuItem value={"GENERIC"}>GENERIC</MenuItem>
-              <MenuItem value={"LANGUOID"}>LANGUOID</MenuItem>
-              <MenuItem value={"RELIGION"}>RELIGION</MenuItem>
-              <MenuItem value={"USER"}>USER</MenuItem>
-              <MenuItem value={"VARIABLE"}>VARIABLE</MenuItem>
-            </Select>
-          </Box>
-        )
-        }
-
-        {firstDropdownValue === "fix USES defined relationships" && (
-          <Box sx={{ ml: 1, mb: 1 }}>
-            <InputLabel id="domain-label" style={{ color: "black " }}>Choose label</InputLabel>
-            <br />
-            <Select
-              labelId="domain-label"
-              id="domain"
-              name="s1_7"
-              value={formData.s1_7}
-              onChange={updateFormFieldValue}
-              sx={{ width: 300, height: 40 }}
-              margin="normal"
-            >
-              <MenuItem value={"CONTAINS"}>CONTAINS</MenuItem>
-              <MenuItem value={"DISTRICT_OF"}>DISTRICT_OF</MenuItem>
-              <MenuItem value={"LANGUOID_OF"}>LANGUOID_OF</MenuItem>
-              <MenuItem value={"RELIGION_OF"}>RELIGION_OF</MenuItem>
-
-            </Select>
-          </Box>
-        )
-        }
-        {isDatabaseRoutineSelected && (
-          <Box sx={{ ml: 1, maxWidth: 900 }}>
-            <Typography variant="h6" sx={{ mb: 1 }}>
-              Routine Runner: {routineOptionByKey[firstDropdownValue]?.label || firstDropdownValue}
-            </Typography>
-            <Typography variant="body2" sx={{ mb: 2 }}>
-              Runs routine endpoint `/routines/{firstDropdownValue}/{database}`.
-            </Typography>
-
-            <InputLabel sx={{ color: "black" }}>Return type</InputLabel>
-            <Select
-              name="return_type"
-              value={routineParams.return_type}
-              onChange={updateRoutineParam}
-              sx={{ width: 300, height: 40, mb: 2 }}
-            >
-              <MenuItem value="info">info</MenuItem>
-              <MenuItem value="data">data</MenuItem>
-            </Select>
-
-            {(firstDropdownValue === "noUSES" || firstDropdownValue === "checkUSES") && (
-              <>
-                <InputLabel sx={{ color: "black" }}>Save results to DB</InputLabel>
-                <Select
-                  name="save"
-                  value={routineParams.save}
-                  onChange={updateRoutineParam}
-                  sx={{ width: 300, height: 40, mb: 2 }}
-                >
-                  <MenuItem value="true">true</MenuItem>
-                  <MenuItem value="false">false</MenuItem>
-                </Select>
-              </>
-            )}
-
-            {firstDropdownValue === "validateJSON" && (
-              <>
-                <InputLabel sx={{ color: "black" }}>JSON property</InputLabel>
-                <Select
-                  name="property"
-                  value={routineParams.property}
-                  onChange={updateRoutineParam}
-                  sx={{ width: 300, height: 40, mb: 2 }}
-                >
-                  <MenuItem value="parentContext">parentContext</MenuItem>
-                  <MenuItem value="geoCoords">geoCoords</MenuItem>
-                </Select>
-              </>
-            )}
-
-            {firstDropdownValue === "updateUSES" && (
-              <>
-                <InputLabel sx={{ color: "black" }}>CMID (optional)</InputLabel>
-                <TextField
-                  name="cmid"
-                  value={routineParams.cmid}
-                  onChange={updateRoutineParam}
-                  sx={{ width: 300, mb: 1 }}
-                  size="small"
-                  placeholder="Leave blank to run for entire database"
-                />
-                <Typography variant="caption" sx={{ display: "block", mb: 2 }}>
-                  Uses the current admin page database (`{database}`). Provide one CMID to scope the run.
-                </Typography>
-              </>
-            )}
-
-            {firstDropdownValue === "reportChanges" && (
-              <>
-                <InputLabel sx={{ color: "black" }}>Start date (YYYY-MM-DD)</InputLabel>
-                <TextField
-                  name="dateStart"
-                  value={routineParams.dateStart}
-                  onChange={updateRoutineParam}
-                  sx={{ width: 300, mb: 2 }}
-                  size="small"
-                />
-                <InputLabel sx={{ color: "black" }}>End date (YYYY-MM-DD)</InputLabel>
-                <TextField
-                  name="dateEnd"
-                  value={routineParams.dateEnd}
-                  onChange={updateRoutineParam}
-                  sx={{ width: 300, mb: 2 }}
-                  size="small"
-                />
-                <InputLabel sx={{ color: "black" }}>Action</InputLabel>
-                <TextField
-                  name="action"
-                  value={routineParams.action}
-                  onChange={updateRoutineParam}
-                  sx={{ width: 300, mb: 2 }}
-                  size="small"
-                />
-                <InputLabel sx={{ color: "black" }}>User</InputLabel>
-                <TextField
-                  name="user"
-                  value={routineParams.user}
-                  onChange={updateRoutineParam}
-                  sx={{ width: 300, mb: 2 }}
-                  size="small"
-                />
-              </>
-            )}
-
-            {firstDropdownValue === "is_valid_json" && (
-              <>
-                <InputLabel sx={{ color: "black" }}>Value to validate</InputLabel>
-                <TextField
-                  name="value"
-                  value={routineParams.value}
-                  onChange={updateRoutineParam}
-                  sx={{ width: "100%", maxWidth: 700, mb: 2 }}
-                  size="small"
-                  multiline
-                  minRows={3}
-                />
-              </>
-            )}
-
-            <Box sx={{ display: "flex", justifyContent: "flex-start", pb: 2 }}>
-              <Button
-                variant="contained"
-                sx={{
-                  backgroundColor: "black",
-                  color: "white",
-                  "&:hover": {
-                    backgroundColor: "green",
-                  },
-                }}
-                onClick={runDatabaseRoutine}
-              >
-                Run Routine
-              </Button>
-            </Box>
-
-            <InputLabel sx={{ color: "black" }}>Output</InputLabel>
-            <TextField
-              value={routineOutput}
-              placeholder="Routine output will appear here."
-              sx={{ width: "100%", maxWidth: 900, mb: 2 }}
-              multiline
-              minRows={8}
-              InputProps={{ readOnly: true }}
-            />
-          </Box>
-        )}
-        {firstDropdownValue === "approve new users" && (
-          <div>
-            <Typography variant="p">Check for new users and approve them:</Typography>
-
-            <Box
-              sx={{
-                display: 'flex',
-                justifyContent: 'flex-start',
-                padding: 2
-              }}
-            >
-              <Button
-                variant="contained"
-                sx={{
-                  backgroundColor: "black",
-                  color: "white",
-                  "&:hover": {
-                    backgroundColor: "green",
-                  },
-                }}
-                onClick={loadPendingUsersForApproval}
-              >
-                Check for new users{" "}
-              </Button>
-            </Box>
-
-            <Box sx={{
-              display: 'flex',
-              flexDirection: 'column',
-            }}>
-              {users.length > 0 && <DataGrid
-                sx={{
-                  border: "1px solid #d9d9d9",
-                  backgroundColor: "#fff",
-                  '& .MuiDataGrid-columnHeaders': {
-                    fontSize: '0.82rem',
-                  },
-                  '& .MuiDataGrid-cell': {
-                    fontSize: '0.8rem',
-                    py: 0.25,
-                  },
-                }}
-                autoHeight
-                density="compact"
-                rows={users}
-                columns={columns}
-                pageSizeOptions={[5, 10, 20]}
-                initialState={{
-                  pagination: {
-                    paginationModel: { page: 0, pageSize: 10 },
-                  },
-                }}
-                checkboxSelection
-                onRowSelectionModelChange={(newSelectionModel) => {
-                  updateSelectedUserIds(newSelectionModel);
-                }}
-                getRowId={(row) => row.userid}
+          {firstDropdownValue === "create new user" && (
+            <Box sx={{ ml: 1 }}>
+              <InputLabel id="domain-label" style={{ color: "black " }}>
+                username   </InputLabel>
+              <TextField
+                name="s1_2"
+                value={formData.s1_2}
+                onChange={updateFormFieldValue}
+                sx={{ width: 300, height: 40, mb: 3, mt: 0 }}
+                variant="outlined"
+                margin="normal"
+                size="small"
               />
-              }
+              <InputLabel id="domain-label" style={{ color: "black " }}>
+                first name   </InputLabel>
+              <TextField
+                name="s1_3"
+                value={formData.s1_3}
+                onChange={updateFormFieldValue}
+                sx={{ width: 300, height: 40, mb: 3, mt: 0 }}
+                variant="outlined"
+                margin="normal"
+                size="small"
+              />
+              <InputLabel id="domain-label" style={{ color: "black " }}>
+                last name   </InputLabel>
+              <TextField
+                name="s1_4"
+                value={formData.s1_4}
+                onChange={updateFormFieldValue}
+                sx={{ width: 300, height: 40, mb: 3, mt: 0 }}
+                variant="outlined"
+                margin="normal"
+              />
+              <InputLabel id="domain-label" style={{ color: "black " }}>
+                email   </InputLabel>
+              <TextField
+                name="s1_5"
+                value={formData.s1_5}
+                onChange={updateFormFieldValue}
+                sx={{ width: 300, height: 40, mb: 3, mt: 1 }}
+                variant="outlined"
+                margin="normal"
+                size="small"
+              />
+              <InputLabel id="domain-label" style={{ color: "black " }}>Select role:</InputLabel>
+              <br />
+              <Select
+                labelId="domain-label"
+                id="domain"
+                name="s1_7"
+                value={formData.s1_7}
+                onChange={updateFormFieldValue}
+                sx={{ width: 300, height: 40, mb: 3 }}
+                margin="normal"
+              >
+                <MenuItem value={"user"}>user</MenuItem>
+                <MenuItem value={"admin"}>admin</MenuItem>
+              </Select>
+              <InputLabel id="domain-label" style={{ color: "black " }}>
+                password   </InputLabel>
+              <TextField
+                name="s1_6"
+                value={formData.s1_6}
+                onChange={updateFormFieldValue}
+                sx={{ width: 300, height: 40, mb: 3, mt: 0 }}
+                variant="outlined"
+                margin="normal"
+              />
             </Box>
-            {
-              selectedUserIds.length > 0 &&
+          )
+          }
+
+          {firstDropdownValue === "change user password" && (
+            <Box sx={{ ml: 1 }}>
+              <InputLabel id="domain-label" style={{ color: "black " }}>
+                username
+              </InputLabel>
+              <TextField
+                name="s1_2"
+                value={formData.s1_2}
+                onChange={updateFormFieldValue}
+                sx={{ width: 300, height: 40, mb: 3 }}
+                variant="outlined"
+                margin="normal"
+                size="small"
+              />
+              <InputLabel id="domain-label" style={{ color: "black " }}>
+                new password
+              </InputLabel>
+              <TextField
+                name="s1_3"
+                type="password"
+                value={formData.s1_3}
+                onChange={updateFormFieldValue}
+                sx={{ width: 300, height: 40, mb: 4 }}
+                variant="outlined"
+                margin="normal"
+                size="small"
+              />
+              <Box sx={{ mt: 1 }}>
+                <Button
+                  variant="contained"
+                  sx={{
+                    backgroundColor: "black",
+                    color: "white",
+                    "&:hover": {
+                      backgroundColor: "green",
+                    },
+                  }}
+                  onClick={requestPasswordChangeConfirmation}
+                >
+                  Submit Password Change
+                </Button>
+              </Box>
+            </Box>
+          )
+          }
+
+          {firstDropdownValue === "CSV database backup" && (
+            <Box sx={{ ml: 1 }}>
+              <InputLabel id="domain-label" style={{ color: "black " }}>Choose label</InputLabel>
+              <br />
+              <Select
+                labelId="domain-label"
+                id="domain"
+                name="s1_7"
+                value={formData.s1_7}
+                onChange={updateFormFieldValue}
+                sx={{ width: 300, height: 40 }}
+                margin="normal"
+              >
+                <MenuItem value={"ANY DOMAIN"}>ANY DOMAIN</MenuItem>
+                <MenuItem value={"DATASET"}>DATASET</MenuItem>
+                <MenuItem value={"AREA"}>AREA</MenuItem>
+                <MenuItem value={"ETHNICITY"}>ETHNICITY</MenuItem>
+                <MenuItem value={"GENERIC"}>GENERIC</MenuItem>
+                <MenuItem value={"LANGUOID"}>LANGUOID</MenuItem>
+                <MenuItem value={"RELIGION"}>RELIGION</MenuItem>
+                <MenuItem value={"USER"}>USER</MenuItem>
+                <MenuItem value={"VARIABLE"}>VARIABLE</MenuItem>
+              </Select>
+            </Box>
+          )
+          }
+
+          {firstDropdownValue === "fix USES defined relationships" && (
+            <Box sx={{ ml: 1, mb: 1 }}>
+              <InputLabel id="domain-label" style={{ color: "black " }}>Choose label</InputLabel>
+              <br />
+              <Select
+                labelId="domain-label"
+                id="domain"
+                name="s1_7"
+                value={formData.s1_7}
+                onChange={updateFormFieldValue}
+                sx={{ width: 300, height: 40 }}
+                margin="normal"
+              >
+                <MenuItem value={"CONTAINS"}>CONTAINS</MenuItem>
+                <MenuItem value={"DISTRICT_OF"}>DISTRICT_OF</MenuItem>
+                <MenuItem value={"LANGUOID_OF"}>LANGUOID_OF</MenuItem>
+                <MenuItem value={"RELIGION_OF"}>RELIGION_OF</MenuItem>
+
+              </Select>
+            </Box>
+          )
+          }
+          {isDatabaseRoutineSelected && (
+            <Box sx={{ ml: 1, maxWidth: 900 }}>
+              <Typography variant="h6" sx={{ mb: 1 }}>
+                Routine Runner: {routineOptionByKey[firstDropdownValue]?.label || firstDropdownValue}
+              </Typography>
+              <Typography variant="body2" sx={{ mb: 2 }}>
+                Runs routine endpoint `/routines/{firstDropdownValue}/{database}`.
+              </Typography>
+
+              <InputLabel sx={{ color: "black" }}>Return type</InputLabel>
+              <Select
+                name="return_type"
+                value={routineParams.return_type}
+                onChange={updateRoutineParam}
+                sx={{ width: 300, height: 40, mb: 2 }}
+              >
+                <MenuItem value="info">info</MenuItem>
+                <MenuItem value="data">data</MenuItem>
+              </Select>
+
+              {(firstDropdownValue === "noUSES" || firstDropdownValue === "checkUSES") && (
+                <>
+                  <InputLabel sx={{ color: "black" }}>Save results to DB</InputLabel>
+                  <Select
+                    name="save"
+                    value={routineParams.save}
+                    onChange={updateRoutineParam}
+                    sx={{ width: 300, height: 40, mb: 2 }}
+                  >
+                    <MenuItem value="true">true</MenuItem>
+                    <MenuItem value="false">false</MenuItem>
+                  </Select>
+                </>
+              )}
+
+              {firstDropdownValue === "validateJSON" && (
+                <>
+                  <InputLabel sx={{ color: "black" }}>JSON property</InputLabel>
+                  <Select
+                    name="property"
+                    value={routineParams.property}
+                    onChange={updateRoutineParam}
+                    sx={{ width: 300, height: 40, mb: 2 }}
+                  >
+                    <MenuItem value="parentContext">parentContext</MenuItem>
+                    <MenuItem value="geoCoords">geoCoords</MenuItem>
+                  </Select>
+                </>
+              )}
+
+              {firstDropdownValue === "updateUSES" && (
+                <>
+                  <InputLabel sx={{ color: "black" }}>CMID (optional)</InputLabel>
+                  <TextField
+                    name="cmid"
+                    value={routineParams.cmid}
+                    onChange={updateRoutineParam}
+                    sx={{ width: 300, mb: 1 }}
+                    size="small"
+                    placeholder="Leave blank to run for entire database"
+                  />
+                  <Typography variant="caption" sx={{ display: "block", mb: 2 }}>
+                    Uses the current admin page database (`{database}`). Provide one CMID to scope the run.
+                  </Typography>
+                </>
+              )}
+
+              {firstDropdownValue === "reportChanges" && (
+                <>
+                  <InputLabel sx={{ color: "black" }}>Start date (YYYY-MM-DD)</InputLabel>
+                  <TextField
+                    name="dateStart"
+                    value={routineParams.dateStart}
+                    onChange={updateRoutineParam}
+                    sx={{ width: 300, mb: 2 }}
+                    size="small"
+                  />
+                  <InputLabel sx={{ color: "black" }}>End date (YYYY-MM-DD)</InputLabel>
+                  <TextField
+                    name="dateEnd"
+                    value={routineParams.dateEnd}
+                    onChange={updateRoutineParam}
+                    sx={{ width: 300, mb: 2 }}
+                    size="small"
+                  />
+                  <InputLabel sx={{ color: "black" }}>Action</InputLabel>
+                  <TextField
+                    name="action"
+                    value={routineParams.action}
+                    onChange={updateRoutineParam}
+                    sx={{ width: 300, mb: 2 }}
+                    size="small"
+                  />
+                  <InputLabel sx={{ color: "black" }}>User</InputLabel>
+                  <TextField
+                    name="user"
+                    value={routineParams.user}
+                    onChange={updateRoutineParam}
+                    sx={{ width: 300, mb: 2 }}
+                    size="small"
+                  />
+                </>
+              )}
+
+              {firstDropdownValue === "is_valid_json" && (
+                <>
+                  <InputLabel sx={{ color: "black" }}>Value to validate</InputLabel>
+                  <TextField
+                    name="value"
+                    value={routineParams.value}
+                    onChange={updateRoutineParam}
+                    sx={{ width: "100%", maxWidth: 700, mb: 2 }}
+                    size="small"
+                    multiline
+                    minRows={3}
+                  />
+                </>
+              )}
+
+              <Box sx={{ display: "flex", justifyContent: "flex-start", pb: 2 }}>
+                <Button
+                  variant="contained"
+                  sx={{
+                    backgroundColor: "black",
+                    color: "white",
+                    "&:hover": {
+                      backgroundColor: "green",
+                    },
+                  }}
+                  onClick={runDatabaseRoutine}
+                >
+                  Run Routine
+                </Button>
+              </Box>
+
+              <InputLabel sx={{ color: "black" }}>Output</InputLabel>
+              <TextField
+                value={routineOutput}
+                placeholder="Routine output will appear here."
+                sx={{ width: "100%", maxWidth: 900, mb: 2 }}
+                multiline
+                minRows={8}
+                InputProps={{ readOnly: true }}
+              />
+            </Box>
+          )}
+          {firstDropdownValue === "approve new users" && (
+            <div>
+              <Typography variant="p">Check for new users and approve them:</Typography>
+
               <Box
                 sx={{
                   display: 'flex',
@@ -2581,18 +2523,76 @@ const Admin = ({ database }) => {
                       backgroundColor: "green",
                     },
                   }}
-                  onClick={approveSelectedUsers}
+                  onClick={loadPendingUsersForApproval}
                 >
-                  Approve users{" "}
+                  Check for new users{" "}
                 </Button>
               </Box>
-            }
-            <Dialog open={popen} onClose={closeApprovalDialog}>
-              <DialogContent>
-                <p>{CMIDText}</p>
-              </DialogContent>
-            </Dialog>
-          </div>)}
+
+              <Box sx={{
+                display: 'flex',
+                flexDirection: 'column',
+              }}>
+                {users.length > 0 && <DataGrid
+                  sx={{
+                    border: "1px solid #d9d9d9",
+                    backgroundColor: "#fff",
+                    '& .MuiDataGrid-columnHeaders': {
+                      fontSize: '0.82rem',
+                    },
+                    '& .MuiDataGrid-cell': {
+                      fontSize: '0.8rem',
+                      py: 0.25,
+                    },
+                  }}
+                  autoHeight
+                  density="compact"
+                  rows={users}
+                  columns={columns}
+                  pageSizeOptions={[5, 10, 20]}
+                  initialState={{
+                    pagination: {
+                      paginationModel: { page: 0, pageSize: 10 },
+                    },
+                  }}
+                  checkboxSelection
+                  onRowSelectionModelChange={(newSelectionModel) => {
+                    updateSelectedUserIds(newSelectionModel);
+                  }}
+                  getRowId={(row) => row.userid}
+                />
+                }
+              </Box>
+              {
+                selectedUserIds.length > 0 &&
+                <Box
+                  sx={{
+                    display: 'flex',
+                    justifyContent: 'flex-start',
+                    padding: 2
+                  }}
+                >
+                  <Button
+                    variant="contained"
+                    sx={{
+                      backgroundColor: "black",
+                      color: "white",
+                      "&:hover": {
+                        backgroundColor: "green",
+                      },
+                    }}
+                    onClick={approveSelectedUsers}
+                  >
+                    Approve users{" "}
+                  </Button>
+                </Box>
+              }
+              <Dialog open={popen} onClose={closeApprovalDialog}>
+                <DialogContent>
+                  <p>{CMIDText}</p>
+                </DialogContent>
+              </Dialog>
+            </div>)}
         </Box>
       </Box>
 
@@ -2611,12 +2611,12 @@ const Admin = ({ database }) => {
       <Dialog open={mergeConfirmOpen} onClose={() => setMergeConfirmOpen(false)}>
         <DialogTitle>Confirm Merge Nodes</DialogTitle>
         <DialogContent>
-          <Typography sx={{ mb: 2 }}>
+          <Typography component="div" sx={{ mb: 2, color: "text.primary" }}>
             Please confirm you want to merge these nodes:
           </Typography>
-          <Typography><strong>Keep:</strong> {mergePreview.keep?.CMID} - {mergePreview.keep?.CMName}</Typography>
-          <Typography><strong>Discard:</strong> {mergePreview.discard?.CMID} - {mergePreview.discard?.CMName}</Typography>
-          <Typography sx={{ mt: 2 }}><strong>Primary domain:</strong> {mergePreview.keep?.primaryDomain}</Typography>
+          <Typography component="div" sx={{ color: "text.primary" }}><strong>Keep:</strong> {mergePreview.keep?.CMID} - {mergePreview.keep?.CMName}</Typography>
+          <Typography component="div" sx={{ color: "text.primary" }}><strong>Discard:</strong> {mergePreview.discard?.CMID} - {mergePreview.discard?.CMName}</Typography>
+          <Typography component="div" sx={{ mt: 2, color: "text.primary" }}><strong>Primary domain:</strong> {mergePreview.keep?.primaryDomain}</Typography>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setMergeConfirmOpen(false)}>Cancel</Button>

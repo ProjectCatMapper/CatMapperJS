@@ -25,7 +25,7 @@ describe('mergeTemplateHelpers', () => {
     });
   });
 
-  it('builds wide and long link-file sheets from equivalence ties', () => {
+  it('builds stack-aware wide and long link-file sheets from equivalence ties', () => {
     const sheets = buildLinkFileSheets(
       [
         { datasetID: 'AD354274', datasetName: 'Becoming Hopi - Kivas' },
@@ -42,9 +42,9 @@ describe('mergeTemplateHelpers', () => {
           equivalentCMName: 'Canonical A',
         },
         {
-          stackID: 'AD959',
+          stackID: 'AD958',
           datasetID: 'AD354275',
-          Key: 'Site_Num == AZ D:11:109',
+          Key: 'Site == Red Rock House && Site_Num == AZ J:6:1',
           originalCMID: 'AM2',
           originalCMName: 'Original B',
           equivalentCMID: 'AM900',
@@ -58,13 +58,14 @@ describe('mergeTemplateHelpers', () => {
     expect(sheets[1].sheetName).toBe('LinkFileLong');
     expect(sheets[0].rows).toEqual([
       {
+        stackID: 'AD958',
         CMID: 'AM900',
         CMName: 'Canonical A',
-        'AD354274 Key': 'Site == Red Rock House && Site_Num == AZ J:6:1',
-        'AD354274 Site': 'Red Rock House',
-        'AD354274 Site_Num': 'AZ J:6:1',
-        'AD354275 Key': 'Site_Num == AZ D:11:109',
-        'AD354275 Site_Num': 'AZ D:11:109',
+        Key: 'Site == Red Rock House && Site_Num == AZ J:6:1',
+        Site: 'Red Rock House',
+        Site_Num: 'AZ J:6:1',
+        datasetIDs: 'AD354274, AD354275',
+        datasetNames: 'Becoming Hopi - Kivas; Becoming Hopi - Pithouses',
       },
     ]);
     expect(sheets[1].rows[0]).toMatchObject({
