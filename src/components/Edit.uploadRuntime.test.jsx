@@ -214,4 +214,32 @@ describe('Edit upload runtime', () => {
     expect(document.body.textContent).toContain('Finished upload');
     expect(document.body.textContent).toContain('Close');
   });
+
+  it('requires Key for variable merging uploads', async () => {
+    sessionStorage.setItem(
+      'catmapper.edit.uploadState.archamap',
+      JSON.stringify({
+        selectedOption: 'standard',
+        advselectedOption: 'add_merging',
+      }),
+    );
+
+    parseTabularFileMock.mockResolvedValue({
+      headers: ['mergingID', 'datasetID', 'variableID', 'varName'],
+      rows2d: [['M1', 'AD1', 'V1', 'value_a']],
+      records: [
+        {
+          mergingID: 'M1',
+          datasetID: 'AD1',
+          variableID: 'V1',
+          varName: 'value_a',
+        },
+      ],
+    });
+
+    await renderEdit(root);
+    await uploadFile(container, 'variable-merge.csv');
+
+    expect(document.body.textContent).toContain('Missing the following required columns: Key');
+  });
 });

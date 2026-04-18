@@ -922,7 +922,7 @@ const Edit = ({ database }) => {
     add_uses: 'Create USES ties for rows and include new or existing nodes. Rows can be aggregated by datasetID, CMID, and Key.',
     update_add: 'Update existing USES ties by adding values without removing current values.',
     update_replace: 'Replace one property on existing USES ties. Replace mode supports one property column.',
-    add_merging: 'Create merging ties for rows in the upload file. Requires mergingID and datasetID. If a stackID column is also provided, no new STACK node is created — the existing STACK node is used and MERGING ties are created from the MERGING node to that STACK and from that STACK to the DATASET. If stackID is omitted, a new STACK node is auto-created for each row.',
+    add_merging: 'Create merging ties for rows in the upload file. Requires mergingID and datasetID. Variable-merging uploads also require Key so the DATASET-to-VARIABLE MERGING tie can be scoped to a specific dataset key without changing the dataset itself. If a stackID column is also provided, no new STACK node is created — the existing STACK node is used and MERGING ties are created from the MERGING node to that STACK and from that STACK to the DATASET. If stackID is omitted, a new STACK node is auto-created for each row.',
     merging_add: 'Update existing merging tie properties by adding values without replacing current values.',
     merging_replace: 'Replace one property on an existing merging tie. Replace mode supports one property column.',
   };
@@ -1101,7 +1101,7 @@ const Edit = ({ database }) => {
           // if variableID is present, then uploading merging ties to variables
           if (cols.includes("variableID")) {
             setMergingType("merging_ties_to_variables")
-            required = ["mergingID", "datasetID", "variableID", "varName"];
+            required = ["mergingID", "datasetID", "variableID", "varName", "Key"];
           }
 
           // if categoryID is present, but no variableID then assume equivalence ties
@@ -1146,7 +1146,7 @@ const Edit = ({ database }) => {
             required = ["variableID", "stackID"]
 
             if (cols.includes("datasetTransform")) {
-              required = ["datasetID", "variableID", "stackID"];
+              required = ["datasetID", "variableID", "stackID", "Key"];
             }
           }
 
