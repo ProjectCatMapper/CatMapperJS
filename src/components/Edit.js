@@ -22,6 +22,9 @@ const TEMPLATE_FILES = {
   nodes: { label: "New Category Nodes", file: "upload_new_categories_template.xlsx" },
   uses: { label: "New Uses Ties", file: "upload_new_uses_template.xlsx" },
   update_uses: { label: "Update Uses Ties", file: "update_uses_template.xlsx" },
+  equivalent_ties: { label: "New Equivalent Ties", file: "upload_new_equivalent_ties_template.xlsx" },
+  merging_ties_datasets: { label: "New Merging Ties for Datasets", file: "upload_new_merging_ties_template.xlsx" },
+  merging_ties_variables: { label: "New Merging Ties for Variables", file: "upload_new_merging_ties_variables_template.xlsx" },
 };
 
 const getInitialFormData = () => ({
