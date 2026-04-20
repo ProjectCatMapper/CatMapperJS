@@ -1145,7 +1145,7 @@ const Edit = ({ database }) => {
             setMergingType("merging_ties_to_variables");
             required = ["variableID", "stackID"]
 
-            if (cols.includes("datasetTransform")) {
+            if (cols.includes("datasetTransform") || cols.includes("categoryType")) {
               required = ["datasetID", "variableID", "stackID", "Key"];
             }
           }
