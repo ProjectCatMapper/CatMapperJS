@@ -130,9 +130,10 @@ const toBoolean = (value = false) => {
   return false;
 };
 
+// This has hardcoded values that should be dynamic.
 const getExplicitProperty = (value = "") => {
   const propertyMatch = value.match(
-    /\b(?:property|by)\s*(?:is|=|:)?\s*(name|key|cmid|catmapper\s*id)\b/i
+    /\b(?:property|by)\s*(?:is|=|:)?\s*(name|key|cmid|catmapper\s*id|glottocode|iso3)\b/i
   );
   if (!propertyMatch) return "";
   const key = propertyMatch[1].toLowerCase().replace(/\s+/g, " ").trim();
