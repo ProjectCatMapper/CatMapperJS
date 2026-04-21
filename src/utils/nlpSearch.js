@@ -1,3 +1,4 @@
+// TODO: PROPERTY_KEYWORDS should be dynamically generated from actual schema metadata instead of hardcoded.
 const PROPERTY_KEYWORDS = {
   name: "Name",
   key: "Key",
@@ -40,7 +41,7 @@ const SAFE_ID_REGEX = /^[A-Za-z0-9._:-]{1,80}$/;
 const SAFE_COUNTRY_CODE_REGEX = /^[A-Za-z0-9_-]{1,10}$/;
 const SAFE_YEAR_REGEX = /^-?\d{1,4}$/;
 const ALLOWED_CONTEXT_DOMAINS = new Set(["DISTRICT", "CATEGORY", "DATASET"]);
-const ALLOWED_PROPERTIES = new Set(["Name", "Key", "CMID"]);
+const ALLOWED_PROPERTIES = new Set(["Name", "Key", "CMID", "glottocode", "ISO3"]);
 const LEADING_ARTICLE_REGEX = /^(the|a|an)\s+/i;
 const LEADING_ARTICLE_EXCEPTIONS = new Set([
   "the gambia",
