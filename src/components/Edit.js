@@ -918,16 +918,43 @@ const Edit = ({ database }) => {
     setadvSelectedOption(event.target.value);
   };
 
-  const standardOptionHelpText = {
-    add_node: 'Create a new node for each row. Use when each row represents a distinct new node.',
-    node_add: 'Update existing node properties by adding values without replacing current values.',
-    node_replace: 'Update one existing node property by replacing its value. Replace mode supports one property column.',
-    add_uses: 'Create USES ties for rows and include new or existing nodes. Rows can be aggregated by datasetID, CMID, and Key.',
-    update_add: 'Update existing USES ties by adding values without removing current values.',
-    update_replace: 'Replace one property on existing USES ties. Replace mode supports one property column.',
-    add_merging: 'Create merging ties for rows in the upload file. Requires mergingID and datasetID. Variable-merging uploads also require Key so the DATASET-to-VARIABLE MERGING tie can be scoped to a specific dataset key without changing the dataset itself. If a stackID column is also provided, no new STACK node is created — the existing STACK node is used and MERGING ties are created from the MERGING node to that STACK and from that STACK to the DATASET. If stackID is omitted, a new STACK node is auto-created for each row.',
-    merging_add: 'Update existing merging tie properties by adding values without replacing current values.',
-    merging_replace: 'Replace one property on an existing merging tie. Replace mode supports one property column.',
+  const standardOptions = {
+    add_node: {
+      label: 'Adding new node for every row',
+      helpText: 'Create a new node for each row. Use when each row represents a distinct new node.'
+    },
+    node_add: {
+      label: 'Updating existing Node properties--add or add to properties',
+      helpText: 'Update existing node properties by adding values without replacing current values.'
+    },
+    node_replace: {
+      label: 'Updating existing Node properties--replace one property',
+      helpText: 'Update one existing node property by replacing its value. Replace mode supports one property column.'
+    },
+    add_uses: {
+      label: 'Adding new uses ties (with old or new nodes)',
+      helpText: 'Create USES ties for rows and include new or existing nodes. Rows can be aggregated by datasetID, CMID, and Key.'
+    },
+    update_add: {
+      label: 'Updating existing USES only--add or add to properties',
+      helpText: 'Update existing USES ties by adding values without removing current values.'
+    },
+    update_replace: {
+      label: 'Updating existing USES only--replace one property',
+      helpText: 'Replace one property on existing USES ties. Replace mode supports one property column.'
+    },
+    add_merging: {
+      label: 'Adding new merging ties for every row',
+      helpText: 'Create merging ties for rows in the upload file. Requires mergingID and datasetID. Variable-merging uploads also require Key so the DATASET-to-VARIABLE MERGING tie can be scoped to a specific dataset key without changing the dataset itself. If a stackID column is also provided, no new STACK node is created — the existing STACK node is used and MERGING ties are created from the MERGING node to that STACK and from that STACK to the DATASET. If stackID is omitted, a new STACK node is auto-created for each row.'
+    },
+    merging_add: {
+      label: 'Updating existing Merging tie properties--add or add to properties',
+      helpText: 'Update existing merging tie properties by adding values without replacing current values.'
+    },
+    merging_replace: {
+      label: 'Updating existing Merging tie properties--replace one property',
+      helpText: 'Replace one property on an existing merging tie. Replace mode supports one property column.'
+    },
   };
 
   const fetchAvailableUploadProperties = async () => {
@@ -1673,54 +1700,54 @@ const Edit = ({ database }) => {
             <FormControlLabel
               value="add_node"
               control={<Radio />}
-              label={<StandardOptionLabel label="Adding new node for every row" helpText={standardOptionHelpText.add_node} />}
+              label={<StandardOptionLabel label={standardOptions.add_node.label} helpText={standardOptions.add_node.helpText} />}
             />
             <FormControlLabel
               value="node_add"
               control={<Radio />}
-              label={<StandardOptionLabel label="Updating existing Node properties--add or add to properties" helpText={standardOptionHelpText.node_add} />}
+              label={<StandardOptionLabel label={standardOptions.node_add.label} helpText={standardOptions.node_add.helpText} />}
             />
             {authLevel === 2 && (
               <FormControlLabel
                 value="node_replace"
                 control={<Radio />}
-                label={<StandardOptionLabel label="Updating existing Node properties--replace one property" helpText={standardOptionHelpText.node_replace} />}
+                label={<StandardOptionLabel label={standardOptions.node_replace.label} helpText={standardOptions.node_replace.helpText} />}
               />
             )}
             <Typography variant="subtitle2" sx={{ mt: 2, color: "black", fontWeight: "bold" }}>Uses ties</Typography>
             <FormControlLabel
               value="add_uses"
               control={<Radio />}
-              label={<StandardOptionLabel label="Adding new uses ties (with old or new nodes)" helpText={standardOptionHelpText.add_uses} />}
+              label={<StandardOptionLabel label={standardOptions.add_uses.label} helpText={standardOptions.add_uses.helpText} />}
             />
             <FormControlLabel
               value="update_add"
               control={<Radio />}
-              label={<StandardOptionLabel label="Updating existing USES only--add or add to properties" helpText={standardOptionHelpText.update_add} />}
+              label={<StandardOptionLabel label={standardOptions.update_add.label} helpText={standardOptions.update_add.helpText} />}
             />
             {authLevel === 2 && (
               <FormControlLabel
                 value="update_replace"
                 control={<Radio />}
-                label={<StandardOptionLabel label="Updating existing USES only--replace one property" helpText={standardOptionHelpText.update_replace} />}
+                label={<StandardOptionLabel label={standardOptions.update_replace.label} helpText={standardOptions.update_replace.helpText} />}
               />
             )}
             <Typography variant="subtitle2" sx={{ mt: 2, color: "black", fontWeight: "bold" }}>Merging & Equivalence ties</Typography>
             <FormControlLabel
               value="add_merging"
               control={<Radio />}
-              label={<StandardOptionLabel label="Adding new merging ties for every row" helpText={standardOptionHelpText.add_merging} />}
+              label={<StandardOptionLabel label={standardOptions.add_merging.label} helpText={standardOptions.add_merging.helpText} />}
             />
             <FormControlLabel
               value="merging_add"
               control={<Radio />}
-              label={<StandardOptionLabel label="Updating existing Merging tie properties--add or add to properties" helpText={standardOptionHelpText.merging_add} />}
+              label={<StandardOptionLabel label={standardOptions.merging_add.label} helpText={standardOptions.merging_add.helpText} />}
             />
             {authLevel === 2 && (
               <FormControlLabel
                 value="merging_replace"
                 control={<Radio />}
-                label={<StandardOptionLabel label="Updating existing Merging tie properties--replace one property" helpText={standardOptionHelpText.merging_replace} />}
+                label={<StandardOptionLabel label={standardOptions.merging_replace.label} helpText={standardOptions.merging_replace.helpText} />}
               />
             )}
           </RadioGroup>
