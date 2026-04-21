@@ -73,11 +73,13 @@ const buildPhraseRegex = (phrase = "") => {
   }
   return new RegExp(`\\b${escaped}s?\\b`, "i");
 };
-
+// TODO: This should be based on actual schema metadata instead of hardcoded rules.
 const normalizeProperty = (value = "Name") => {
   const normalized = String(value).toLowerCase();
   if (normalized.includes("cmid")) return "CMID";
   if (normalized.includes("key")) return "Key";
+  if (normalized.includes("glottocode")) return "glottocode";
+  if (normalized.includes("iso3")) return "ISO3";
   return "Name";
 };
 
