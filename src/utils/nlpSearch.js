@@ -2,6 +2,7 @@ const PROPERTY_KEYWORDS = {
   name: "Name",
   key: "Key",
   cmid: "CMID",
+  glottocode: "glottocode",
   "catmapper id": "CMID"
 };
 
