@@ -258,11 +258,6 @@ const Admin = ({ database }) => {
       const combinedData = tableData.map((row, idx) => {
         const optionA = tableDropdownValues[idx];
 
-        // Throw error if any dropdown is empty
-        if (optionA === "default") {
-          alert(`Dropdown values missing for row ${idx + 1}`);
-        }
-
         return {
           ...row,       // original table data columns
           optionA,      // first dropdown
@@ -344,7 +339,7 @@ const Admin = ({ database }) => {
           setTableData(result.child_USES_check)
           const initialDropdowns = {};
           (result.child_USES_check || []).forEach((row, idx) => {
-            initialDropdowns[idx] = "default"; // default value
+            initialDropdowns[idx] = "From"; // default value
           });
           setTableDropdownValues(initialDropdowns);
           openAmbiguousTiesModal();
