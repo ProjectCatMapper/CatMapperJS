@@ -36,6 +36,7 @@ export default defineConfig(({ mode }) => {
     server: {
       host: true,
       port: 3000,
+      allowedHosts: ['dev.catmapper.org', 'catmapperjs-dev'],
     },
     preview: {
       host: true,
