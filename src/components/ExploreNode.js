@@ -153,7 +153,7 @@ export default function Tableclick({ cmid, database, tabval }) {
   const [selectedValues, setSelectedValues] = useState([]);
   const [selectedNodes, setSelectedNodes] = useState(["All"]);
   const [allNodeOptions, setAllNodeOptions] = useState(["All"]);
-  const [selectedDatasets, setSelectedDatasets] = useState([]);
+  const [selectedDatasets, setSelectedDatasets] = useState(["All"]);
   const [dropdownNodeLimit, setDropdownNodeLimit] = useState(10);
   const [eventTypes, setEventTypes] = useState([]);
   const [selectedEventTypes, setSelectedEventTypes] = useState(["All"]);
@@ -816,11 +816,111 @@ export default function Tableclick({ cmid, database, tabval }) {
     }
   };
 
+  const getDatasetOptionsFromEdges = (edges = []) => {
+    const datasetvalues = new Set();
+    edges.forEach((object) => {
+      let keys = object.referenceKey;
+
+      if (typeof keys === "string") {
+        keys = [keys];
+      }
+
+      if (Array.isArray(keys)) {
+        keys.forEach((key) => {
+          let datasetName;
+          if (key.includes(" Key:")) {
+            datasetName = key.split(" Key:")[0].trim();
+          } else {
+            datasetName = key.trim();
+          }
+          if (datasetName) {
+            datasetvalues.add(datasetName);
+          }
+        });
+      }
+    });
+
+    return ["All", ...Array.from(datasetvalues).sort()];
+  };
+
+  const getPrimaryFilteredNetworkData = (data, filters) => {
+    if (!data) return { nodes: [], edges: [] };
+
+    let currentEdges = data.edges || [];
+    let currentNodes = data.nodes || [];
+
+    if (filters.dataset !== "All") {
+      currentEdges = currentEdges.filter((edge) => {
+        const keys = Array.isArray(edge.referenceKey)
+          ? edge.referenceKey
+          : edge.referenceKey
+            ? [edge.referenceKey]
+            : [];
+        return keys.some((key) => String(key).includes(filters.dataset));
+      });
+    }
+
+    let validNodeIds = new Set(currentNodes.map(n => n.id));
+    if (filters.dataset !== "All") {
+      validNodeIds = new Set(currentEdges.flatMap((edge) => [edge.from, edge.to]));
+    }
+
+    currentNodes = currentNodes.filter((node, index) => {
+      if (index === 0) return true;
+      if (!validNodeIds.has(node.id)) return false;
+
+      if (Array.isArray(filters.domain) && filters.domain.length > 0 && !filters.domain.includes("All")) {
+        const validSearch = filters.domain.filter((d) => d !== "All");
+
+        if (validSearch.length > 0) {
+          const filterDomains = node.filterDomains || node.domain || [];
+          const hasMatch = filterDomains.some(tag =>
+            validSearch.some(s => s.includes(tag) || tag.includes(s))
+          );
+          if (!hasMatch) return false;
+        }
+      }
+
+      return true;
+    });
+
+    const finalNodeIds = new Set(currentNodes.map(n => n.id));
+    currentEdges = currentEdges.filter(e =>
+      finalNodeIds.has(e.from) && finalNodeIds.has(e.to)
+    );
+
+    return { nodes: currentNodes, edges: currentEdges };
+  };
+
+  const updateDependentNetworkOptions = (data, filters, relationValue = firstDropdownValue) => {
+    const filtered = getPrimaryFilteredNetworkData(data, filters);
+
+    const nodevalues = filtered.nodes
+      .map((object) => object.label)
+      .slice(1)
+      .sort()
+      .slice(0, limit);
+    nodevalues.unshift("All");
+    setAllNodeOptions([...nodevalues]);
+    setSelectedNodes([...nodevalues]);
+
+    if (relationValue === "CONTAINS") {
+      const eventSet = new Set();
+      filtered.edges.forEach((edge) => {
+        if (Array.isArray(edge.eventType)) {
+          edge.eventType.forEach((ev) => eventSet.add(ev));
+        }
+      });
+      setEventTypes(["All", ...Array.from(eventSet).sort()]);
+    } else {
+      setEventTypes([]);
+    }
+  };
+
   const fetchData = async (eventOrOptions = {}) => {
     setLoadingNetwork(true);
     const relationValue = eventOrOptions?.target?.value ?? eventOrOptions?.relation ?? firstDropdownValue;
     const requestedDomainsRaw = eventOrOptions?.domains ?? [];
-    const preserveDomainOptions = Boolean(eventOrOptions?.preserveDomainOptions);
     const requestedDomains = (Array.isArray(requestedDomainsRaw) ? requestedDomainsRaw : [requestedDomainsRaw])
       .map((value) => String(value || "").trim())
       .filter(Boolean)
@@ -947,87 +1047,33 @@ export default function Tableclick({ cmid, database, tabval }) {
       });
 
       let domainOptions = domains;
-      if (!preserveDomainOptions) {
-        domainOptions = nodes.map((object) => object.filterDomains || object.domain).slice(1);
-        domainOptions = Array.from(new Set(domainOptions.flat()));
-        domainOptions = domainOptions.filter((value) => value !== "CATEGORY");
-        setdomains(domainOptions);
-      }
+      domainOptions = nodes.map((object) => object.filterDomains || object.domain).slice(1);
+      domainOptions = Array.from(new Set(domainOptions.flat()));
+      domainOptions = domainOptions.filter((value) => value !== "CATEGORY");
+      setdomains(domainOptions);
       const selectedDomainOptions = requestedDomains.length > 0
         ? domainOptions.filter((option) => requestedDomains.includes(option))
-        : (preserveDomainOptions ? [] : domainOptions);
+        : domainOptions;
       setSelectedValues(selectedDomainOptions);
 
-      let nodevalues = nodes
-        .map((object) => object.label)
-        .slice(1)
-        .sort()
-        .slice(0, limit);
-      nodevalues.unshift("All");
-      setAllNodeOptions([...nodevalues]);
-      setSelectedNodes([...nodevalues]);
       setThirdDropdownValue(["All"]);
 
-      if (
-        relationValue !== "USES" &&
-        !cmid.startsWith("SD") &&
-        !cmid.startsWith("AD")
-      ) {
-        let datasetvalues = new Set();
-        edges.forEach((object) => {
-          let keys = object.referenceKey;
+      const datasetOptions = relationValue !== "USES" ? getDatasetOptionsFromEdges(edges) : ["All"];
+      setSelectedDatasets(datasetOptions);
 
-          if (typeof keys === "string") {
-            keys = [keys];
-          }
-
-          if (Array.isArray(keys)) {
-            keys.forEach((key) => {
-              let datasetName;
-              if (key.includes(" Key:")) {
-                datasetName = key.split(" Key:")[0].trim();
-              } else {
-                datasetName = key.trim();
-              }
-              datasetvalues.add(datasetName);
-            });
-          }
-        });
-
-        datasetvalues = Array.from(datasetvalues).sort();
-        datasetvalues.unshift("All");
-        setSelectedDatasets(datasetvalues);
-      }
-
-      setoriginaldata({ nodes, edges });
-      setVisData({ nodes, edges });
-
-      if (relationValue === "CONTAINS") {
-        let eventSet = new Set();
-
-        edges.forEach((edge) => {
-          if (Array.isArray(edge.eventType)) {
-            edge.eventType.forEach((ev) => eventSet.add(ev));
-          }
-        });
-
-        const evTypes = Array.from(eventSet).sort();
-        evTypes.unshift("All");
-        setEventTypes(evTypes);
-        setSelectedEventTypes(["All"]);
-      } else {
-        setEventTypes([]);
-        setSelectedEventTypes(["All"]);
-      }
-
-      setFourthDropdownValue("All");
-      setActiveFilters((prev) => ({
-        ...prev,
+      const nextOriginalData = { nodes, edges };
+      const nextFilters = {
         domain: selectedDomainOptions,
         nodeLabel: ["All"],
         dataset: "All",
         eventType: ["All"],
-      }));
+      };
+      setoriginaldata(nextOriginalData);
+      updateDependentNetworkOptions(nextOriginalData, nextFilters, relationValue);
+      setVisData(getPrimaryFilteredNetworkData(nextOriginalData, nextFilters));
+      setSelectedEventTypes(["All"]);
+      setFourthDropdownValue("All");
+      setActiveFilters(nextFilters);
     } catch (error) {
       console.error("Error fetching data:", error);
     } finally {
@@ -1125,14 +1171,13 @@ export default function Tableclick({ cmid, database, tabval }) {
     const newVal = Array.from(
       new Set((Array.isArray(rawValue) ? rawValue : [rawValue]).map((value) => String(value || "").trim()).filter(Boolean))
     );
-    const newFilters = { ...activeFilters, domain: newVal, nodeLabel: ["All"], dataset: "All", eventType: ["All"] };
+    const newFilters = { ...activeFilters, domain: newVal, nodeLabel: ["All"], eventType: ["All"] };
     setActiveFilters(newFilters);
     setSelectedValues(newVal);
-    setFourthDropdownValue("All");
     setSelectedEventTypes(["All"]);
     setThirdDropdownValue(["All"]);
-    setSelectedNodes(allNodeOptions);
-    fetchData({ relation: firstDropdownValue, domains: newVal, preserveDomainOptions: true });
+    updateDependentNetworkOptions(originaldata, newFilters);
+    applyFilters(newFilters);
   };
 
   // 2. Node Label Handler
@@ -1164,10 +1209,13 @@ export default function Tableclick({ cmid, database, tabval }) {
   // 3. Dataset Handler
   const updateDatasetNodeData = (event) => {
     const newVal = event.target.value;
-    const newFilters = { ...activeFilters, dataset: newVal };
+    const newFilters = { ...activeFilters, dataset: newVal, nodeLabel: ["All"], eventType: ["All"] };
 
     setActiveFilters(newFilters);
     setFourthDropdownValue(newVal); // Update UI Dropdown
+    setThirdDropdownValue(["All"]);
+    setSelectedEventTypes(["All"]);
+    updateDependentNetworkOptions(originaldata, newFilters);
 
     applyFilters(newFilters);
   };

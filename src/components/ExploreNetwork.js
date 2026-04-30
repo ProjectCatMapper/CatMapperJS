@@ -1,5 +1,5 @@
 import React from 'react';
-import { Typography, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
+import { Box, Typography, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
 import { red } from '@mui/material/colors';
 import Neo4jVisualization from "./VisNet";
 import "./ExploreNode.css";
@@ -57,108 +57,102 @@ const NetworkExplorerView = ({
                 </Tooltip>
             </Typography>
 
-            <FormControl sx={{ m: 1, width: 300 }}>
-                <InputLabel htmlFor="first-dropdown">Relationship</InputLabel>
-                <Select
-                    label="First Dropdown"
-                    value={firstDropdownValue}
-                    onChange={fetchData}
-                >
-                    {orderedProperties.map((property) => (
-                        <MenuItem key={property} value={property}>
-                            {property}
-                        </MenuItem>
-                    ))}
-                </Select>
-            </FormControl>
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center' }}>
+                <FormControl sx={{ m: 1, width: 300 }}>
+                    <InputLabel htmlFor="first-dropdown">Relationship</InputLabel>
+                    <Select
+                        label="Relationship"
+                        value={firstDropdownValue}
+                        onChange={fetchData}
+                    >
+                        {orderedProperties.map((property) => (
+                            <MenuItem key={property} value={property}>
+                                {property}
+                            </MenuItem>
+                        ))}
+                    </Select>
+                </FormControl>
 
-            <FormControl sx={{ m: 1, width: 300 }}>
-                <InputLabel htmlFor="second-dropdown">Domain</InputLabel>
-                <Select
-                    multiple
-                    value={selectedValues}
-                    onChange={updateData}
-                    label="Select Multiple Items"
-                >
-                    {domains?.map((option) => (
-                        <MenuItem key={option} value={option}>{option}</MenuItem>
-                    ))}
-                </Select>
-            </FormControl>
+                <FormControl sx={{ m: 1, width: 300 }}>
+                    <InputLabel htmlFor="second-dropdown">Domain</InputLabel>
+                    <Select
+                        multiple
+                        value={selectedValues}
+                        onChange={updateData}
+                        label="Domain"
+                    >
+                        {domains?.map((option) => (
+                            <MenuItem key={option} value={option}>{option}</MenuItem>
+                        ))}
+                    </Select>
+                </FormControl>
 
-            <FormControl sx={{ m: 1, width: 300 }}>
-                <InputLabel htmlFor="third-dropdown">Nodes</InputLabel>
-                <Select
-                    multiple
-                    label="Nodes"
-                    value={thirdDropdownValue}
-                    onChange={updateNodeData}
-                    renderValue={(selected) => Array.isArray(selected) ? selected.join(", ") : selected}
-                >
-                    {selectedNodes.map((option) => (
-                        <MenuItem key={option} value={option}>{option}</MenuItem>
-                    ))}
-                </Select>
-            </FormControl>
+                <FormControl sx={{ m: 1, width: 300 }} disabled={selectedDatasets.length <= 1}>
+                    <InputLabel htmlFor="fourth-dropdown">Dataset Filter</InputLabel>
+                    <Select
+                        label="Dataset Filter"
+                        value={fourthDropdownValue}
+                        onChange={updateDatasetNodeData}
+                    >
+                        {selectedDatasets.map((option) => (
+                            <MenuItem key={option} value={option}>
+                                {option}
+                            </MenuItem>
+                        ))}
+                    </Select>
+                </FormControl>
+            </Box>
 
-            <FormControl sx={{ m: 1, width: 300 }}>
-                <InputLabel htmlFor="dropdown-nodelimit">
-                    Limit Display Nodes
-                </InputLabel>
-                <Select
-                    label="Limit Display Nodes"
-                    id="dropdown-nodelimit"
-                    value={dropdownNodeLimit}
-                    onChange={(event) => setDropdownNodeLimit(event.target.value)}
-                >
-                    {[5, 10, 25, 50].map((num) => (
-                        <MenuItem key={num} value={num}>
-                            {num}
-                        </MenuItem>
-                    ))}
-                </Select>
-            </FormControl>
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center' }}>
+                <FormControl sx={{ m: 1, width: 300 }}>
+                    <InputLabel htmlFor="third-dropdown">Nodes</InputLabel>
+                    <Select
+                        multiple
+                        label="Nodes"
+                        value={thirdDropdownValue}
+                        onChange={updateNodeData}
+                        renderValue={(selected) => Array.isArray(selected) ? selected.join(", ") : selected}
+                    >
+                        {selectedNodes.map((option) => (
+                            <MenuItem key={option} value={option}>{option}</MenuItem>
+                        ))}
+                    </Select>
+                </FormControl>
 
-            {domainType === "CATEGORY" && (
-                <React.Fragment>
-                    {/* Dataset Filter: Only if not USES */}
-                    {firstDropdownValue !== "USES" && (
-                        <FormControl sx={{ m: 1, width: 300 }}>
-                            <InputLabel htmlFor="fourth-dropdown">Dataset Filter</InputLabel>
-                            <Select
-                                label="Fourth Dropdown"
-                                value={fourthDropdownValue}
-                                onChange={updateDatasetNodeData}
-                            >
-                                {selectedDatasets.map((option) => (
-                                    <MenuItem key={option} value={option}>
-                                        {option}
-                                    </MenuItem>
-                                ))}
-                            </Select>
-                        </FormControl>
-                    )}
+                <FormControl sx={{ m: 1, width: 300 }} disabled={firstDropdownValue !== "CONTAINS"}>
+                    <InputLabel htmlFor="event-type-dropdown">Event Type</InputLabel>
+                    <Select
+                        multiple
+                        value={selectedEventTypes}
+                        onChange={updateEventTypeData}
+                        label="Event Type"
+                    >
+                        {(eventTypes.length > 0 ? eventTypes : ["All"]).map((option) => (
+                            <MenuItem key={option} value={option}>
+                                {option}
+                            </MenuItem>
+                        ))}
+                    </Select>
+                </FormControl>
 
-                    {/* Event Type Filter: Only if CONTAINS */}
-                    {firstDropdownValue === "CONTAINS" && (
-                        <FormControl sx={{ m: 1, width: 300 }}>
-                            <InputLabel htmlFor="fourth-dropdown">Event Type</InputLabel>
-                            <Select
-                                multiple
-                                value={selectedEventTypes}
-                                onChange={updateEventTypeData}
-                                label="Event Type"
-                            >
-                                {eventTypes.map((option) => (
-                                    <MenuItem key={option} value={option}>
-                                        {option}
-                                    </MenuItem>
-                                ))}
-                            </Select>
-                        </FormControl>
-                    )}
-                </React.Fragment>
-            )}
+                <FormControl sx={{ m: 1, width: 300 }}>
+                    <InputLabel htmlFor="dropdown-nodelimit">
+                        Limit Display Nodes
+                    </InputLabel>
+                    <Select
+                        label="Limit Display Nodes"
+                        id="dropdown-nodelimit"
+                        value={dropdownNodeLimit}
+                        onChange={(event) => setDropdownNodeLimit(event.target.value)}
+                    >
+                        {[5, 10, 25, 50].map((num) => (
+                            <MenuItem key={num} value={num}>
+                                {num}
+                            </MenuItem>
+                        ))}
+                    </Select>
+                </FormControl>
+            </Box>
 
             <div style={{ width: "100%", height: "500px", marginTop: '20px' }}>
                 {/* {console.log(database)} */}
