@@ -171,6 +171,7 @@ export default function Tableclick({ cmid, database, tabval }) {
     "PERIOD_OF",
     "CULTURE_OF",
     "POLITY_OF",
+    "VARIABLE_OF",
     "USES",
     "EQUIVALENT",
     "MERGING"
@@ -816,33 +817,6 @@ export default function Tableclick({ cmid, database, tabval }) {
     }
   };
 
-  const getDatasetOptionsFromEdges = (edges = []) => {
-    const datasetvalues = new Set();
-    edges.forEach((object) => {
-      let keys = object.referenceKey;
-
-      if (typeof keys === "string") {
-        keys = [keys];
-      }
-
-      if (Array.isArray(keys)) {
-        keys.forEach((key) => {
-          let datasetName;
-          if (key.includes(" Key:")) {
-            datasetName = key.split(" Key:")[0].trim();
-          } else {
-            datasetName = key.trim();
-          }
-          if (datasetName) {
-            datasetvalues.add(datasetName);
-          }
-        });
-      }
-    });
-
-    return ["All", ...Array.from(datasetvalues).sort()];
-  };
-
   const getPrimaryFilteredNetworkData = (data, filters) => {
     if (!data) return { nodes: [], edges: [] };
 
@@ -917,10 +891,58 @@ export default function Tableclick({ cmid, database, tabval }) {
     }
   };
 
+  const normalizeNetworkRelationships = (relationships = []) => {
+    let ordered = orderOfProperties.filter((prop) => relationships.includes(prop));
+    const extraRelationships = relationships
+      .filter((prop) => !orderOfProperties.includes(prop))
+      .sort();
+    ordered = ordered.concat(extraRelationships);
+    if (ordered.includes("MERGING")) {
+      ordered = ordered.filter((prop) => prop !== "MERGING").concat("MERGING");
+    }
+    return ordered;
+  };
+
+  const fetchNetworkOptions = async (relationValue = firstDropdownValue) => {
+    const queryParams = new URLSearchParams({
+      cmid,
+      database,
+    });
+    if (relationValue) {
+      queryParams.set("relation", relationValue);
+    }
+
+    const response = await fetch(`${process.env.REACT_APP_API_URL}/networkOptions?${queryParams.toString()}`);
+    if (!response.ok) {
+      throw new Error(`Network options request failed with status ${response.status}`);
+    }
+
+    const options = await response.json();
+    const relationships = normalizeNetworkRelationships(Array.isArray(options?.relationships) ? options.relationships : []);
+    const optionDomains = Array.isArray(options?.domains) ? options.domains : [];
+    const optionDatasets = Array.isArray(options?.datasets) && options.datasets.length > 0 ? options.datasets : ["All"];
+
+    if (relationships.length > 0) {
+      setOrderedProperties(relationships);
+    }
+    setdomains(optionDomains);
+    setSelectedValues(optionDomains);
+    setSelectedDatasets(optionDatasets);
+    setFourthDropdownValue("All");
+
+    return {
+      relationships,
+      domains: optionDomains,
+      datasets: optionDatasets,
+    };
+  };
+
   const fetchData = async (eventOrOptions = {}) => {
     setLoadingNetwork(true);
     const relationValue = eventOrOptions?.target?.value ?? eventOrOptions?.relation ?? firstDropdownValue;
     const requestedDomainsRaw = eventOrOptions?.domains ?? [];
+    const datasetValue = eventOrOptions?.dataset ?? fourthDropdownValue;
+    const isRelationshipChange = Boolean(eventOrOptions?.target?.value) || eventOrOptions?.resetOptions;
     const requestedDomains = (Array.isArray(requestedDomainsRaw) ? requestedDomainsRaw : [requestedDomainsRaw])
       .map((value) => String(value || "").trim())
       .filter(Boolean)
@@ -928,6 +950,14 @@ export default function Tableclick({ cmid, database, tabval }) {
 
     setFirstDropdownValue(relationValue);
     try {
+      let activeDomains = requestedDomains;
+      let activeDataset = datasetValue || "All";
+      if (isRelationshipChange) {
+        const options = await fetchNetworkOptions(relationValue);
+        activeDomains = options.domains;
+        activeDataset = "All";
+      }
+
       const queryParams = new URLSearchParams({
         cmid,
         database,
@@ -935,8 +965,11 @@ export default function Tableclick({ cmid, database, tabval }) {
         response: "records",
         limit: String(limit),
       });
-      if (requestedDomains.length > 0) {
-        queryParams.set("domain", requestedDomains.join(","));
+      if (activeDomains.length > 0) {
+        queryParams.set("domain", activeDomains.join(","));
+      }
+      if (activeDataset && activeDataset !== "All") {
+        queryParams.set("dataset", activeDataset);
       }
 
       const response = await fetch(`${process.env.REACT_APP_API_URL}/networksjs?${queryParams.toString()}`);
@@ -1046,33 +1079,22 @@ export default function Tableclick({ cmid, database, tabval }) {
         return edge;
       });
 
-      let domainOptions = domains;
-      domainOptions = nodes.map((object) => object.filterDomains || object.domain).slice(1);
-      domainOptions = Array.from(new Set(domainOptions.flat()));
-      domainOptions = domainOptions.filter((value) => value !== "CATEGORY");
-      setdomains(domainOptions);
-      const selectedDomainOptions = requestedDomains.length > 0
-        ? domainOptions.filter((option) => requestedDomains.includes(option))
-        : domainOptions;
-      setSelectedValues(selectedDomainOptions);
+      setSelectedValues(activeDomains);
 
       setThirdDropdownValue(["All"]);
 
-      const datasetOptions = relationValue !== "USES" ? getDatasetOptionsFromEdges(edges) : ["All"];
-      setSelectedDatasets(datasetOptions);
-
       const nextOriginalData = { nodes, edges };
       const nextFilters = {
-        domain: selectedDomainOptions,
+        domain: activeDomains,
         nodeLabel: ["All"],
-        dataset: "All",
+        dataset: activeDataset,
         eventType: ["All"],
       };
       setoriginaldata(nextOriginalData);
       updateDependentNetworkOptions(nextOriginalData, nextFilters, relationValue);
       setVisData(getPrimaryFilteredNetworkData(nextOriginalData, nextFilters));
       setSelectedEventTypes(["All"]);
-      setFourthDropdownValue("All");
+      setFourthDropdownValue(activeDataset);
       setActiveFilters(nextFilters);
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -1176,8 +1198,7 @@ export default function Tableclick({ cmid, database, tabval }) {
     setSelectedValues(newVal);
     setSelectedEventTypes(["All"]);
     setThirdDropdownValue(["All"]);
-    updateDependentNetworkOptions(originaldata, newFilters);
-    applyFilters(newFilters);
+    fetchData({ relation: firstDropdownValue, domains: newVal, dataset: fourthDropdownValue });
   };
 
   // 2. Node Label Handler
@@ -1215,9 +1236,7 @@ export default function Tableclick({ cmid, database, tabval }) {
     setFourthDropdownValue(newVal); // Update UI Dropdown
     setThirdDropdownValue(["All"]);
     setSelectedEventTypes(["All"]);
-    updateDependentNetworkOptions(originaldata, newFilters);
-
-    applyFilters(newFilters);
+    fetchData({ relation: firstDropdownValue, domains: selectedValues, dataset: newVal });
   };
 
   // 4. Event Type Handler
