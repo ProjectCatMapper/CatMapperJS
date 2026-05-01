@@ -101,6 +101,7 @@ const App = () => {
           <Route path='/:database/forgot-password' element={<DatabaseRoute><ForgotPassword /></DatabaseRoute>} />
           <Route path='/:database/reset-password' element={<DatabaseRoute><ForgotPassword /></DatabaseRoute>} />
           <Route path="/:database/register" element={<DatabaseRoute><RegisterPage /></DatabaseRoute>} />
+          <Route path="/:database/register/verify" element={<DatabaseRoute><RegisterPage /></DatabaseRoute>} />
           <Route path='/:database/explore' element={<DatabaseRoute><Explore /></DatabaseRoute>} />
           <Route path='/:database/translate' element={<DatabaseRoute><Translate /></DatabaseRoute>} />
           <Route path='/:database/:cmid' element={<DatabaseRoute><ExploreNode /></DatabaseRoute>} />
