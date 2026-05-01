@@ -19,7 +19,6 @@ import {
   Tabs,
   Tooltip,
   Typography,
-  Tooltip as MuiTool,
   LinearProgress,
   Snackbar,
   Alert,
@@ -1621,39 +1620,6 @@ export default function Tableclick({ cmid, database, tabval }) {
         >
           <Box className={`category-info-layout${showDatasetHeaderTools ? " category-info-layout-with-tools" : ""}`}>
             <Box className="category-info-main-column">
-              <div className="category-info-header-row">
-                <div className="category-info-header-pill">
-                  <h2 className="category-info-header-title">
-                    {isDeletedNode ? "DELETED Node Info" : "Category Info"}
-                  </h2>
-                  <MuiTool
-                    title={
-                      <Typography sx={{ fontSize: "1rem", fontWeight: "bold" }}>
-                        Here, you can toggle between viewing sample info, maps, and
-                        the network of contextual ties to this category.
-                      </Typography>
-                    }
-                    arrow
-                    componentsProps={{
-                      tooltip: {
-                        sx: {
-                          backgroundColor: "rgba(255, 255, 255, 0.9)",
-                          color: "#000000",
-                          border: "1px solid rgba(0, 0, 0, 0.2)",
-                          boxShadow: "0 2px 8px rgba(0, 0, 0, 0.2)",
-                        },
-                      },
-                      arrow: {
-                        sx: {
-                          color: "rgba(255, 255, 255, 0.9)",
-                        },
-                      },
-                    }}
-                  >
-                    <InfoIcon className="category-info-header-info-icon" />
-                  </MuiTool>
-                </div>
-              </div>
               {isDeletedNode && (
                 <Alert
                   severity={hasDeletedRedirect ? "info" : "warning"}
