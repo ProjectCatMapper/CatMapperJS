@@ -75,6 +75,59 @@ const ROUTINE_OPTIONS = [
   { key: "runRoutinesStream", label: "runRoutinesStream" },
 ];
 
+const formatRoutineCellValue = (value) => {
+  if (value === null || value === undefined) {
+    return "";
+  }
+  if (typeof value === "object") {
+    return JSON.stringify(value);
+  }
+  return String(value);
+};
+
+const getRoutineDataRows = (data) => {
+  if (Array.isArray(data)) {
+    return data.map((item, index) => {
+      const row = item && typeof item === "object" && !Array.isArray(item)
+        ? item
+        : { value: item };
+      return { id: index, ...row };
+    });
+  }
+
+  if (data && typeof data === "object") {
+    return Object.entries(data).map(([key, value], index) => {
+      if (value && typeof value === "object" && !Array.isArray(value)) {
+        return { id: index, key, ...value };
+      }
+      return { id: index, key, value };
+    });
+  }
+
+  return data === null || data === undefined ? [] : [{ id: 0, value: data }];
+};
+
+const getRoutineDataColumns = (rows) => {
+  const fields = Array.from(
+    rows.reduce((fieldSet, row) => {
+      Object.keys(row).forEach((field) => {
+        if (field !== "id") {
+          fieldSet.add(field);
+        }
+      });
+      return fieldSet;
+    }, new Set())
+  );
+
+  return fields.map((field) => ({
+    field,
+    headerName: field,
+    minWidth: 160,
+    flex: 1,
+    valueFormatter: ({ value }) => formatRoutineCellValue(value),
+  }));
+};
+
 const Admin = ({ database }) => {
   const { cred, user } = useAuth();
   const [firstDropdownValue, setFirstDropdownValue] = useState(
@@ -131,6 +184,8 @@ const Admin = ({ database }) => {
     value: "",
   });
   const [routineOutput, setRoutineOutput] = useState("");
+  const [routineDataRows, setRoutineDataRows] = useState([]);
+  const [routineDataColumns, setRoutineDataColumns] = useState([]);
 
   const openAmbiguousTiesModal = () => setOpen(true);
   const closeAmbiguousTiesModal = () => setOpen(false);
@@ -854,6 +909,9 @@ const Admin = ({ database }) => {
       }
 
       setLoading(true);
+      setRoutineOutput("");
+      setRoutineDataRows([]);
+      setRoutineDataColumns([]);
 
       const params = new URLSearchParams();
       if (routineParams.return_type) {
@@ -901,17 +959,34 @@ const Admin = ({ database }) => {
       );
 
       const contentType = response.headers.get("content-type") || "";
-      const result = contentType.includes("application/json")
-        ? JSON.stringify(await response.json(), null, 2)
-        : await response.text();
+      const isJsonResponse = contentType.includes("application/json");
+      const responseBody = isJsonResponse ? await response.json() : await response.text();
+      const result = isJsonResponse
+        ? JSON.stringify(responseBody, null, 2)
+        : responseBody;
 
       if (!response.ok) {
         throw new Error(result || `Routine failed (${response.status})`);
       }
 
-      setRoutineOutput(result || "Routine completed with no output.");
+      if (routineParams.return_type === "data" && isJsonResponse) {
+        const rows = getRoutineDataRows(responseBody);
+        const columns = getRoutineDataColumns(rows);
+
+        if (rows.length > 0 && columns.length > 0) {
+          setRoutineDataRows(rows);
+          setRoutineDataColumns(columns);
+          setRoutineOutput("");
+        } else {
+          setRoutineOutput("Routine completed with no rows.");
+        }
+      } else {
+        setRoutineOutput(result || "Routine completed with no output.");
+      }
     } catch (error) {
       const message = error?.message || "Unable to run routine.";
+      setRoutineDataRows([]);
+      setRoutineDataColumns([]);
       setRoutineOutput(message);
       alert(message);
     } finally {
@@ -2488,14 +2563,42 @@ const Admin = ({ database }) => {
               </Box>
 
               <InputLabel sx={{ color: "black" }}>Output</InputLabel>
-              <TextField
-                value={routineOutput}
-                placeholder="Routine output will appear here."
-                sx={{ width: "100%", maxWidth: 900, mb: 2 }}
-                multiline
-                minRows={8}
-                InputProps={{ readOnly: true }}
-              />
+              {routineDataRows.length > 0 && routineDataColumns.length > 0 ? (
+                <Box sx={{ width: "100%", maxWidth: 1100, mb: 2 }}>
+                  <DataGrid
+                    rows={routineDataRows}
+                    columns={routineDataColumns}
+                    autoHeight
+                    disableRowSelectionOnClick
+                    slots={{ toolbar: GridToolbar }}
+                    initialState={{
+                      pagination: {
+                        paginationModel: { pageSize: 25 },
+                      },
+                    }}
+                    pageSizeOptions={[10, 25, 50, 100]}
+                    sx={{
+                      '& .MuiDataGrid-columnHeaders': {
+                        backgroundColor: '#f5f5f5',
+                        fontWeight: 'bold',
+                      },
+                      '& .MuiDataGrid-cell': {
+                        whiteSpace: 'normal',
+                        lineHeight: 1.4,
+                      },
+                    }}
+                  />
+                </Box>
+              ) : (
+                <TextField
+                  value={routineOutput}
+                  placeholder="Routine output will appear here."
+                  sx={{ width: "100%", maxWidth: 900, mb: 2 }}
+                  multiline
+                  minRows={8}
+                  InputProps={{ readOnly: true }}
+                />
+              )}
             </Box>
           )}
           {firstDropdownValue === "approve new users" && (
