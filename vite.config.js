@@ -21,6 +21,16 @@ export default defineConfig(({ mode }) => {
     ],
     envPrefix: ['VITE_', 'REACT_APP_'],
     define: defineEnv,
+    resolve: {
+      dedupe: [
+        'react',
+        'react-dom',
+        '@emotion/react',
+        '@emotion/styled',
+        '@mui/material',
+        '@mui/system',
+      ],
+    },
     esbuild: {
       loader: 'jsx',
       include: /src\/.*\.js$/,
