@@ -1090,16 +1090,19 @@ const Admin = ({ database }) => {
         }
       );
 
-      const payload = await response.json().catch(() => ({}));
+      const responseText = await response.text();
+      let payload = {};
+      try {
+        payload = responseText ? JSON.parse(responseText) : {};
+      } catch (parseError) {
+        payload = { error: responseText };
+      }
       const failed = Array.isArray(payload.failed) ? payload.failed : [];
       if (failed.length > 0) {
         const message = [
           "Some duplicate USES ties could not be merged:",
           ...failed.map(formatDuplicateTripletMergeFailure),
         ].join("\n");
-        if (!payload.count) {
-          throw new Error(message);
-        }
         setRoutineOutput(message);
         alert(message);
       } else if (!response.ok) {
@@ -1110,9 +1113,9 @@ const Admin = ({ database }) => {
       setSelectedDuplicateTripletIds([]);
       if (payload.count) {
         alert(`Merged duplicate USES ties for ${payload.count} selected row(s).`);
+        setLoading(false);
+        await runDatabaseRoutine();
       }
-      setLoading(false);
-      await runDatabaseRoutine();
     } catch (error) {
       const message = error?.message || "Unable to merge duplicate USES ties.";
       setRoutineOutput(message);
