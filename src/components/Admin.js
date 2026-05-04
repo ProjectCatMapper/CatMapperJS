@@ -164,6 +164,21 @@ const getRoutineDataColumns = (rows) => {
   }));
 };
 
+const formatDuplicateTripletMergeFailure = (failure) => {
+  const details = failure?.details;
+  const rowLabel = `CMID ${failure?.CMID || "unknown"}, Key ${failure?.Key || "unknown"}, datasetID ${failure?.datasetID || "unknown"}`;
+  if (details?.conflicts?.length > 0) {
+    const conflictText = details.conflicts.map((conflict) => {
+      const values = (conflict.values || [])
+        .map((item) => `${item.relID || "unknown rel"}: ${JSON.stringify(item.value)}`)
+        .join("; ");
+      return `${conflict.property}: ${values}`;
+    }).join("; ");
+    return `${rowLabel} -> ${conflictText}`;
+  }
+  return `${rowLabel} -> ${failure?.error || "Unable to merge"}`;
+};
+
 const Admin = ({ database }) => {
   const { cred, user } = useAuth();
   const [firstDropdownValue, setFirstDropdownValue] = useState(
@@ -1076,13 +1091,26 @@ const Admin = ({ database }) => {
       );
 
       const payload = await response.json().catch(() => ({}));
-      if (!response.ok) {
+      const failed = Array.isArray(payload.failed) ? payload.failed : [];
+      if (failed.length > 0) {
+        const message = [
+          "Some duplicate USES ties could not be merged:",
+          ...failed.map(formatDuplicateTripletMergeFailure),
+        ].join("\n");
+        if (!payload.count) {
+          throw new Error(message);
+        }
+        setRoutineOutput(message);
+        alert(message);
+      } else if (!response.ok) {
         throw new Error(payload?.error || `Unable to merge duplicate USES ties (${response.status}).`);
       }
 
       setDuplicateTripletMergeConfirmOpen(false);
       setSelectedDuplicateTripletIds([]);
-      alert(`Merged duplicate USES ties for ${payload.count || selectedDuplicateTripletRows.length} selected row(s).`);
+      if (payload.count) {
+        alert(`Merged duplicate USES ties for ${payload.count} selected row(s).`);
+      }
       setLoading(false);
       await runDatabaseRoutine();
     } catch (error) {
