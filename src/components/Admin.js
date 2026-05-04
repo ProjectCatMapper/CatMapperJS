@@ -85,19 +85,55 @@ const formatRoutineCellValue = (value) => {
   return String(value);
 };
 
+const isRoutineTableRow = (value) => (
+  value && typeof value === "object" && !Array.isArray(value)
+);
+
+const getRowsFromRoutineArray = (items) => items.map((item, index) => {
+  const row = isRoutineTableRow(item) ? item : { value: item };
+  return { ...row, id: row.id ?? index };
+});
+
+const getRoutineSummaryRows = (data, tableKey) => {
+  if (!data || typeof data !== "object" || Array.isArray(data)) {
+    return [];
+  }
+
+  return Object.entries(data)
+    .filter(([key]) => key !== tableKey)
+    .filter(([, value]) => !Array.isArray(value) && !isRoutineTableRow(value))
+    .map(([key, value]) => ({ key, value: formatRoutineCellValue(value) }));
+};
+
+const getNestedRoutineTable = (data) => {
+  if (!data || typeof data !== "object" || Array.isArray(data)) {
+    return null;
+  }
+
+  const nestedTableEntry = Object.entries(data).find(([, value]) => (
+    Array.isArray(value) && value.length > 0
+  ));
+
+  if (!nestedTableEntry) {
+    return null;
+  }
+
+  const [tableKey, tableItems] = nestedTableEntry;
+  return {
+    title: tableKey,
+    rows: getRowsFromRoutineArray(tableItems),
+    summaryRows: getRoutineSummaryRows(data, tableKey),
+  };
+};
+
 const getRoutineDataRows = (data) => {
   if (Array.isArray(data)) {
-    return data.map((item, index) => {
-      const row = item && typeof item === "object" && !Array.isArray(item)
-        ? item
-        : { value: item };
-      return { id: index, ...row };
-    });
+    return getRowsFromRoutineArray(data);
   }
 
   if (data && typeof data === "object") {
     return Object.entries(data).map(([key, value], index) => {
-      if (value && typeof value === "object" && !Array.isArray(value)) {
+      if (isRoutineTableRow(value)) {
         return { id: index, key, ...value };
       }
       return { id: index, key, value };
@@ -173,7 +209,7 @@ const Admin = ({ database }) => {
     "Database Checks": true,
   });
   const [routineParams, setRoutineParams] = useState({
-    return_type: "info",
+    return_type: "data",
     save: "true",
     cmid: "",
     dateStart: "",
@@ -184,6 +220,8 @@ const Admin = ({ database }) => {
     value: "",
   });
   const [routineOutput, setRoutineOutput] = useState("");
+  const [routineDataTitle, setRoutineDataTitle] = useState("");
+  const [routineSummaryRows, setRoutineSummaryRows] = useState([]);
   const [routineDataRows, setRoutineDataRows] = useState([]);
   const [routineDataColumns, setRoutineDataColumns] = useState([]);
 
@@ -910,6 +948,8 @@ const Admin = ({ database }) => {
 
       setLoading(true);
       setRoutineOutput("");
+      setRoutineDataTitle("");
+      setRoutineSummaryRows([]);
       setRoutineDataRows([]);
       setRoutineDataColumns([]);
 
@@ -970,10 +1010,13 @@ const Admin = ({ database }) => {
       }
 
       if (routineParams.return_type === "data" && isJsonResponse) {
-        const rows = getRoutineDataRows(responseBody);
+        const nestedTable = getNestedRoutineTable(responseBody);
+        const rows = nestedTable ? nestedTable.rows : getRoutineDataRows(responseBody);
         const columns = getRoutineDataColumns(rows);
 
         if (rows.length > 0 && columns.length > 0) {
+          setRoutineDataTitle(nestedTable?.title || "");
+          setRoutineSummaryRows(nestedTable?.summaryRows || []);
           setRoutineDataRows(rows);
           setRoutineDataColumns(columns);
           setRoutineOutput("");
@@ -985,6 +1028,8 @@ const Admin = ({ database }) => {
       }
     } catch (error) {
       const message = error?.message || "Unable to run routine.";
+      setRoutineDataTitle("");
+      setRoutineSummaryRows([]);
       setRoutineDataRows([]);
       setRoutineDataColumns([]);
       setRoutineOutput(message);
@@ -2443,8 +2488,8 @@ const Admin = ({ database }) => {
                 onChange={updateRoutineParam}
                 sx={{ width: 300, height: 40, mb: 2 }}
               >
-                <MenuItem value="info">info</MenuItem>
                 <MenuItem value="data">data</MenuItem>
+                <MenuItem value="info">info</MenuItem>
               </Select>
 
               {(firstDropdownValue === "noUSES" || firstDropdownValue === "checkUSES") && (
@@ -2565,6 +2610,20 @@ const Admin = ({ database }) => {
               <InputLabel sx={{ color: "black" }}>Output</InputLabel>
               {routineDataRows.length > 0 && routineDataColumns.length > 0 ? (
                 <Box sx={{ width: "100%", maxWidth: 1100, mb: 2 }}>
+                  {routineDataTitle && (
+                    <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 700 }}>
+                      {routineDataTitle}
+                    </Typography>
+                  )}
+                  {routineSummaryRows.length > 0 && (
+                    <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2, mb: 1 }}>
+                      {routineSummaryRows.map((summary) => (
+                        <Typography key={summary.key} variant="body2">
+                          <strong>{summary.key}:</strong> {summary.value}
+                        </Typography>
+                      ))}
+                    </Box>
+                  )}
                   <DataGrid
                     rows={routineDataRows}
                     columns={routineDataColumns}
