@@ -224,6 +224,8 @@ const Admin = ({ database }) => {
   const [routineSummaryRows, setRoutineSummaryRows] = useState([]);
   const [routineDataRows, setRoutineDataRows] = useState([]);
   const [routineDataColumns, setRoutineDataColumns] = useState([]);
+  const [selectedDuplicateTripletIds, setSelectedDuplicateTripletIds] = useState([]);
+  const [duplicateTripletMergeConfirmOpen, setDuplicateTripletMergeConfirmOpen] = useState(false);
 
   const openAmbiguousTiesModal = () => setOpen(true);
   const closeAmbiguousTiesModal = () => setOpen(false);
@@ -260,6 +262,10 @@ const Admin = ({ database }) => {
   );
   const routineKeys = ROUTINE_OPTIONS.map((option) => option.key);
   const isDatabaseRoutineSelected = routineKeys.includes(firstDropdownValue);
+  const isDuplicateTripletsRoutine = firstDropdownValue === "get_duplicate_triplets";
+  const selectedDuplicateTripletRows = routineDataRows.filter((row) => (
+    selectedDuplicateTripletIds.includes(row.id)
+  ));
 
   const toggleSectionCollapse = (sectionLabel) => {
     setCollapsedSections((prev) => ({
@@ -952,6 +958,7 @@ const Admin = ({ database }) => {
       setRoutineSummaryRows([]);
       setRoutineDataRows([]);
       setRoutineDataColumns([]);
+      setSelectedDuplicateTripletIds([]);
 
       const params = new URLSearchParams();
       if (routineParams.return_type) {
@@ -1032,6 +1039,54 @@ const Admin = ({ database }) => {
       setRoutineSummaryRows([]);
       setRoutineDataRows([]);
       setRoutineDataColumns([]);
+      setSelectedDuplicateTripletIds([]);
+      setRoutineOutput(message);
+      alert(message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const mergeSelectedDuplicateTriplets = async () => {
+    try {
+      if (selectedDuplicateTripletRows.length === 0) {
+        alert("Select at least one duplicate triplet row to merge.");
+        return;
+      }
+
+      setLoading(true);
+      const response = await fetch(
+        `${process.env.REACT_APP_API_URL}/mergeUSESties`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(cred ? { Authorization: `Bearer ${cred}` } : {}),
+          },
+          body: JSON.stringify({
+            database,
+            cred,
+            rows: selectedDuplicateTripletRows.map(({ CMID, Key, datasetID }) => ({
+              CMID,
+              Key,
+              datasetID,
+            })),
+          }),
+        }
+      );
+
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(payload?.error || `Unable to merge duplicate USES ties (${response.status}).`);
+      }
+
+      setDuplicateTripletMergeConfirmOpen(false);
+      setSelectedDuplicateTripletIds([]);
+      alert(`Merged duplicate USES ties for ${payload.count || selectedDuplicateTripletRows.length} selected row(s).`);
+      setLoading(false);
+      await runDatabaseRoutine();
+    } catch (error) {
+      const message = error?.message || "Unable to merge duplicate USES ties.";
       setRoutineOutput(message);
       alert(message);
     } finally {
@@ -2607,6 +2662,25 @@ const Admin = ({ database }) => {
                 </Button>
               </Box>
 
+              {isDuplicateTripletsRoutine && routineDataRows.length > 0 && (
+                <Box sx={{ display: "flex", justifyContent: "flex-start", pb: 2 }}>
+                  <Button
+                    variant="contained"
+                    disabled={selectedDuplicateTripletRows.length === 0 || loading}
+                    sx={{
+                      backgroundColor: "black",
+                      color: "white",
+                      "&:hover": {
+                        backgroundColor: "green",
+                      },
+                    }}
+                    onClick={() => setDuplicateTripletMergeConfirmOpen(true)}
+                  >
+                    MERGE
+                  </Button>
+                </Box>
+              )}
+
               <InputLabel sx={{ color: "black" }}>Output</InputLabel>
               {routineDataRows.length > 0 && routineDataColumns.length > 0 ? (
                 <Box sx={{ width: "100%", maxWidth: 1100, mb: 2 }}>
@@ -2627,6 +2701,13 @@ const Admin = ({ database }) => {
                   <DataGrid
                     rows={routineDataRows}
                     columns={routineDataColumns}
+                    checkboxSelection={isDuplicateTripletsRoutine}
+                    rowSelectionModel={isDuplicateTripletsRoutine ? selectedDuplicateTripletIds : []}
+                    onRowSelectionModelChange={(newSelectionModel) => {
+                      if (isDuplicateTripletsRoutine) {
+                        setSelectedDuplicateTripletIds(newSelectionModel);
+                      }
+                    }}
                     autoHeight
                     disableRowSelectionOnClick
                     slots={{ toolbar: GridToolbar }}
@@ -2786,6 +2867,34 @@ const Admin = ({ database }) => {
             }}
           >
             Confirm Merge
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={duplicateTripletMergeConfirmOpen}
+        onClose={() => setDuplicateTripletMergeConfirmOpen(false)}
+      >
+        <DialogTitle>Confirm Duplicate USES Merge</DialogTitle>
+        <DialogContent>
+          <Typography component="div" sx={{ mb: 2, color: "text.primary" }}>
+            The duplicate USES ties for the selected rows will be merged together.
+          </Typography>
+          <Typography component="div" sx={{ color: "text.primary" }}>
+            Selected rows: {selectedDuplicateTripletRows.length}
+          </Typography>
+          <Typography component="div" sx={{ mt: 2, color: "text.primary" }}>
+            Lists will be combined and deduplicated. If any non-list property has conflicting non-null values, the merge will stop and report the property, values, and USES ties that cannot be merged.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDuplicateTripletMergeConfirmOpen(false)}>Cancel</Button>
+          <Button
+            color="success"
+            variant="contained"
+            onClick={mergeSelectedDuplicateTriplets}
+          >
+            MERGE
           </Button>
         </DialogActions>
       </Dialog>
