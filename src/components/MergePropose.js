@@ -20,7 +20,9 @@ const Propose_Merge = ({ database }) => {
   const [resultFormat, setResultFormat] = useState("key-to-key");
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [showKeys, setShowKeys] = useState(false);
-  const [keysByDataset, setkeysByDataset] = useState(false);
+  const [keysByDataset, setkeysByDataset] = useState({});
+  const [loadingKeys, setLoadingKeys] = useState(false);
+  const [keyLoadError, setKeyLoadError] = useState('');
   const [selectedKeyVariables, setSelectedKeyVariables] = useState({});
   const { infodata } = useMetadata(database);
   const [selectedCategory, setSelectedCategory] = useState({});
@@ -42,6 +44,12 @@ const Propose_Merge = ({ database }) => {
       .split(',')
       .map((value) => value.trim())
       .filter(Boolean);
+
+  const resetKeySelection = () => {
+    setkeysByDataset({});
+    setSelectedKeyVariables({});
+    setKeyLoadError('');
+  };
 
   const toDomainLabel = (value) => (value === "DISTRICT" ? "AREA" : value);
   const fromDomainLabel = (value) => (value === "AREA" ? "DISTRICT" : value);
@@ -227,6 +235,8 @@ const Propose_Merge = ({ database }) => {
       alert('Select a source domain before loading key variables.');
       return;
     }
+    setLoadingKeys(true);
+    setKeyLoadError('');
     try {
       const response = await fetch(`${process.env.REACT_APP_API_URL}/getKeys`, {
         method: 'POST',
@@ -241,17 +251,23 @@ const Propose_Merge = ({ database }) => {
       });
 
       const result = await response.json();
-      if (result.success === true) {
-        setkeysByDataset(result.keysByDataset || {});
-        setIsValid(true);
-      }
-      else {
-        //alert(`Validation failed: ${result.message}`);
-        setIsValid(false);
-        setkeysByDataset(result.keysByDataset || {});
+      setkeysByDataset(result.keysByDataset || {});
+      setSelectedKeyVariables((prev) => {
+        const next = {};
+        Object.entries(result.keysByDataset || {}).forEach(([datasetID, keys]) => {
+          if (Array.isArray(keys) && keys.includes(prev[datasetID])) {
+            next[datasetID] = prev[datasetID];
+          }
+        });
+        return next;
+      });
+      if (!response.ok || result.success !== true) {
+        setKeyLoadError(result.message || result.error || 'Unable to load key variables.');
       }
     } catch (error) {
-      alert('Validation failed. Please try again.');
+      setKeyLoadError('Unable to load key variables. Please try again.');
+    } finally {
+      setLoadingKeys(false);
     }
   };
 
@@ -378,6 +394,7 @@ const Propose_Merge = ({ database }) => {
             setMergeInputError('');
             setIsValid(false);
             setValidatedDatasets([]);
+            resetKeySelection();
           }}
           error={Boolean(mergeInputError)}
           helperText={mergeInputError || 'Only DATASET CMIDs are valid here (SD/AD).'}
@@ -398,6 +415,9 @@ const Propose_Merge = ({ database }) => {
             const ids = parseDatasetIds();
             if (!ids.includes(cmid)) {
               setInputValue([...ids, cmid].join(', '));
+              resetKeySelection();
+              setIsValid(false);
+              setValidatedDatasets([]);
             }
           }}
         />
@@ -477,6 +497,7 @@ const Propose_Merge = ({ database }) => {
                   setFirstDropdownValue(newDomain);
                   setadvoptions(subdomains);
                   setadvdomainDrop(subdomains[0] || '');
+                  resetKeySelection();
                 }}
               >
                 {Object.keys(selectedCategory).map((category, index) => (
@@ -521,6 +542,7 @@ const Propose_Merge = ({ database }) => {
                 }}
                 onChange={(event) => {
                   setadvdomainDrop(event.target.value);
+                  resetKeySelection();
                 }}
               >
                 {advoptions.map((value, index) => (
@@ -571,7 +593,10 @@ const Propose_Merge = ({ database }) => {
                     padding: "8px 12px",
                   },
                 }}
-                onChange={(event) => setCrossSourceDomain(event.target.value)}
+                onChange={(event) => {
+                  setCrossSourceDomain(event.target.value);
+                  resetKeySelection();
+                }}
               >
                 {crossDomainOptions.map((value) => (
                   <option key={`cross-source-${value}`} value={value}>{toDomainLabel(value)}</option>
@@ -707,6 +732,8 @@ const Propose_Merge = ({ database }) => {
                     setShowKeys(checked)
                     if (checked) {
                       getKeys();
+                    } else {
+                      resetKeySelection();
                     }
                   }}
                   sx={{
@@ -719,8 +746,19 @@ const Propose_Merge = ({ database }) => {
               }
               label="Select Key variables"
             />
-            {showKeys && isValid && (
+            {showKeys && (
               <Box sx={{ mt: 2 }}>
+                {loadingKeys && (
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: 'white', mb: 1 }}>
+                    <CircularProgress size={18} sx={{ color: 'white' }} />
+                    <span>Loading key variables...</span>
+                  </Box>
+                )}
+                {keyLoadError && (
+                  <Alert severity="warning" sx={{ mb: 1 }}>
+                    {keyLoadError}
+                  </Alert>
+                )}
                 {Object.entries(keysByDataset).map(([datasetID, keys]) => {
                   const hasKeys = keys && keys.length > 0;
 
