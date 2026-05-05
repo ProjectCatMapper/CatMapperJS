@@ -39,10 +39,10 @@ const Propose_Merge = ({ database }) => {
 
   const [advoptions, setadvoptions] = React.useState(['ANY DOMAIN']);
 
-  const parseDatasetIds = () =>
-    inputValue
-      .split(',')
-      .map((value) => value.trim())
+  const parseDatasetIds = (value = inputValue) =>
+    String(value)
+      .split(/[\s,;|]+/)
+      .map((datasetId) => datasetId.trim())
       .filter(Boolean);
 
   const resetKeySelection = () => {
@@ -361,7 +361,7 @@ const Propose_Merge = ({ database }) => {
       alert("There is no data available to download.");
       return; // Exit the function early
     }
-    const filename = inputValue.split(",").map(s => s.trim()).join("_");
+    const filename = parseDatasetIds().join("_");
     const modeLabel = isCrossDomain
       ? `${toDomainLabel(crossSourceDomain)}_to_${toDomainLabel(crossTargetDomain)}`
       : advdomainDrop;
@@ -386,7 +386,7 @@ const Propose_Merge = ({ database }) => {
       </h4>
       <Box sx={{ display: 'flex', alignItems: 'center', mt: 2 }}>
         <TextField
-          label="Enter DatasetIDs separated by commas"
+          label="Enter dataset CMIDs separated by commas, spaces, or other separators"
           variant="outlined"
           value={inputValue}
           onChange={(e) => {
