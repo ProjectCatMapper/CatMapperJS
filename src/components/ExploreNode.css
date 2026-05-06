@@ -244,7 +244,19 @@ h1,h4,p,a{
 
 .category-info-detail-item.category-info-item-citation .category-info-inline,
 .category-info-detail-item.category-info-item-datasetcitation .category-info-inline {
+  display: block;
   width: auto;
+}
+
+.category-info-detail-item.category-info-item-citation .category-info-key,
+.category-info-detail-item.category-info-item-datasetcitation .category-info-key {
+  margin-right: 6px;
+  vertical-align: baseline;
+}
+
+.category-info-detail-item.category-info-item-citation .category-info-value,
+.category-info-detail-item.category-info-item-datasetcitation .category-info-value {
+  display: inline;
 }
 
 .category-info-key {
