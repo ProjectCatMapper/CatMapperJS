@@ -837,10 +837,10 @@ const Propose_Merge = ({ database }) => {
       {selectedOption === "Extended" && (
         <Box>
           <Typography variant="h7" style={{ color: 'black', padding: '1px' }}>
-            Choose Merge Level for Extended Merge
+            Choose Maximum Pairwise Distance for Extended Merge
           </Typography>
           <Select
-            label="Merge Level"
+            label="Maximum Pairwise Distance"
             value={mergeLevel}
             style={{ height: 40 }}
             sx={{ m: 1, width: '12vw' }}
@@ -850,7 +850,7 @@ const Propose_Merge = ({ database }) => {
               <MenuItem key={level} value={level}>{level}</MenuItem>
             ))}
           </Select>
-          <Tooltip title={"This specifies how many steps to search through the CONTAINS tie network to find a potential matching category."} arrow>
+          <Tooltip title={"This is the maximum allowed node-to-node path distance for extended merge matches. The path passes through the shared lowest common ancestor, so two nodes that are each one CONTAINS step from the same parent have a maximum pairwise distance of 2."} arrow>
             <Button startIcon={<InfoIcon sx={{ height: '28px', width: '28px' }} />} />
           </Tooltip>
         </Box>
