@@ -36,6 +36,7 @@ const Propose_Merge = ({ database }) => {
   const [validatedDatasets, setValidatedDatasets] = useState([]);
   const [mergeWarning, setMergeWarning] = useState('');
   const [mergeError, setMergeError] = useState('');
+  const [ancestorOnly, setAncestorOnly] = useState(false);
 
   const [advoptions, setadvoptions] = React.useState(['ANY DOMAIN']);
 
@@ -303,6 +304,7 @@ const Propose_Merge = ({ database }) => {
         "intersection": returnAllCategories,
         "database": database,
         "mergelevel": mergeLevel,
+        "ancestorOnly": selectedOption === "Extended" ? ancestorOnly : false,
         "equivalence": selectedOption,
         "resultFormat": resultFormat,
         "selectedKeyvariable": selectedKeyVariables
@@ -853,6 +855,16 @@ const Propose_Merge = ({ database }) => {
           <Tooltip title={"This is the maximum allowed node-to-node path distance for extended merge matches. The path passes through the shared lowest common ancestor, so two nodes that are each one CONTAINS step from the same parent have a maximum pairwise distance of 2."} arrow>
             <Button startIcon={<InfoIcon sx={{ height: '28px', width: '28px' }} />} />
           </Tooltip>
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={ancestorOnly}
+                onChange={(event) => setAncestorOnly(event.target.checked)}
+                name="ancestorOnly"
+              />
+            }
+            label="Only match categories where one category is an ancestor"
+          />
         </Box>
       )}
       {selectedOption === "CrossDomain" && (

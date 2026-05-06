@@ -82,10 +82,22 @@ describe('Propose Merge extended distance control', () => {
     });
 
     expect(container.textContent).toContain('Choose Maximum Pairwise Distance for Extended Merge');
+    expect(container.textContent).toContain('Only match categories where one category is an ancestor');
 
     const infoButton = Array.from(container.querySelectorAll('button')).find(
       (button) => button.getAttribute('aria-label')?.includes('maximum allowed node-to-node path distance')
     );
     expect(infoButton?.getAttribute('aria-label')).toContain('shared lowest common ancestor');
+
+    const ancestorCheckbox = container.querySelector('input[name="ancestorOnly"]');
+    expect(ancestorCheckbox).toBeTruthy();
+    expect(ancestorCheckbox.checked).toBe(false);
+
+    await act(async () => {
+      ancestorCheckbox.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      await flushPromises();
+    });
+
+    expect(ancestorCheckbox.checked).toBe(true);
   });
 });
