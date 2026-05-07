@@ -65,7 +65,7 @@ describe('Propose Merge extended distance control', () => {
     vi.restoreAllMocks();
   });
 
-  it('names the extended merge level as maximum pairwise distance', async () => {
+  it('names the extended merge level as LCA distance', async () => {
     await act(async () => {
       root.render(React.createElement(ProposeMerge, { database: 'ArchaMap' }));
       await flushPromises();
@@ -81,13 +81,13 @@ describe('Propose Merge extended distance control', () => {
       await flushPromises();
     });
 
-    expect(container.textContent).toContain('Choose Maximum Pairwise Distance for Extended Merge');
+    expect(container.textContent).toContain('Choose LCA Distance for Extended Merge');
     expect(container.textContent).toContain('Only match along a direct ancestor chain');
 
     const infoButton = Array.from(container.querySelectorAll('button')).find(
-      (button) => button.getAttribute('aria-label')?.includes('maximum allowed node-to-node path distance')
+      (button) => button.getAttribute('aria-label')?.includes('maximum allowed LCA distance')
     );
-    expect(infoButton?.getAttribute('aria-label')).toContain('shared lowest common ancestor');
+    expect(infoButton?.getAttribute('aria-label')).toContain('dist(x,a) + dist(x,b) + dist(x,c)');
 
     const ancestorCheckbox = container.querySelector('input[name="ancestorOnly"]');
     expect(ancestorCheckbox).toBeTruthy();
