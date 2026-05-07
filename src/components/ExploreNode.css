@@ -238,33 +238,18 @@ h1,h4,p,a{
   line-height: 1.28;
 }
 
-.category-info-detail-item .category-info-inline {
-  width: 100%;
-}
-
-.category-info-detail-item .category-info-inline,
-.category-info-compact-item.category-info-item-location .category-info-inline,
-.category-info-compact-item.category-info-item-datasetlocation .category-info-inline {
+.category-info-inline-flow-item .category-info-inline {
   display: block;
   width: auto;
 }
 
-.category-info-detail-item .category-info-key,
-.category-info-compact-item.category-info-item-location .category-info-key,
-.category-info-compact-item.category-info-item-datasetlocation .category-info-key {
+.category-info-inline-flow-item .category-info-key {
   margin-right: 6px;
   vertical-align: baseline;
 }
 
-.category-info-detail-item .category-info-value,
-.category-info-compact-item.category-info-item-location .category-info-value,
-.category-info-compact-item.category-info-item-datasetlocation .category-info-value {
-  display: inline;
-}
-
-.category-info-detail-item .category-info-link,
-.category-info-compact-item.category-info-item-location .category-info-link,
-.category-info-compact-item.category-info-item-datasetlocation .category-info-link {
+.category-info-inline-flow-item .category-info-value,
+.category-info-inline-flow-item .category-info-link {
   display: inline;
 }
 

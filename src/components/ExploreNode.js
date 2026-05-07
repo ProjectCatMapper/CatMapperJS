@@ -1459,6 +1459,7 @@ export default function Tableclick({ cmid, database, tabval }) {
         entry.normalized.includes("location") ||
         entry.normalized === "citation" ||
         entry.normalized === "datasetcitation";
+      const useInlineTextFlow = sectionName === "detail" || disablePreviewForFullWrap;
       const previewLimit =
         sectionName === "detail"
           ? CATEGORY_INFO_PREVIEW_LIMITS.detail
@@ -1471,7 +1472,7 @@ export default function Tableclick({ cmid, database, tabval }) {
       return (
         <Box
           key={`${entry.key}-${sectionName}`}
-          className={`category-info-item category-info-${sectionName}-item category-info-item-${entry.normalized}`}
+          className={`category-info-item category-info-${sectionName}-item category-info-item-${entry.normalized}${useInlineTextFlow ? " category-info-inline-flow-item" : ""}`}
         >
           <Box component="span" className="category-info-inline">
             <Box component="span" className="category-info-key">
