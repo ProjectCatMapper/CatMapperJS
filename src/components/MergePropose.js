@@ -863,7 +863,7 @@ const Propose_Merge = ({ database }) => {
                 name="ancestorOnly"
               />
             }
-            label="Only match categories where one category is an ancestor"
+            label="Only match along a direct ancestor chain"
           />
         </Box>
       )}

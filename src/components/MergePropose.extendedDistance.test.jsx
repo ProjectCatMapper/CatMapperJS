@@ -82,7 +82,7 @@ describe('Propose Merge extended distance control', () => {
     });
 
     expect(container.textContent).toContain('Choose Maximum Pairwise Distance for Extended Merge');
-    expect(container.textContent).toContain('Only match categories where one category is an ancestor');
+    expect(container.textContent).toContain('Only match along a direct ancestor chain');
 
     const infoButton = Array.from(container.querySelectorAll('button')).find(
       (button) => button.getAttribute('aria-label')?.includes('maximum allowed node-to-node path distance')
