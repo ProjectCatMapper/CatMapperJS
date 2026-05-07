@@ -85,6 +85,40 @@ verify_git_write_access() {
   run_as_deploy_user sh -c 'tmp=".git/refs/tags/.cm_write_test_$$"; : > "$tmp" && rm -f "$tmp"' || return 1
 }
 
+verify_build_path_access() {
+  local path="$1"
+  local label="$2"
+  local issue_list
+
+  if [ ! -d "$path" ]; then
+    return 0
+  fi
+
+  if [ ! -w "$path" ] || [ ! -x "$path" ]; then
+    echo "❌ Error: $label is not writable/traversable by $DEPLOY_USER: $path"
+    return 1
+  fi
+
+  issue_list="$(
+    find "$path" \
+      \( -type d \( ! -writable -o ! -executable \) -o ! -user "$DEPLOY_USER" \) \
+      -printf '%M %u:%g %p\n' \
+      | sed -n '1,20p'
+  )"
+
+  if [ -n "$issue_list" ]; then
+    echo "❌ Error: $label contains files or directories not owned/writable by $DEPLOY_USER."
+    echo "Vite must be able to empty this path before building:"
+    echo "$issue_list"
+    echo "Fix ownership/permissions, then rerun deploy. Example:"
+    echo "  sudo chown -R $DEPLOY_USER:catmapper $path"
+    echo "  sudo chmod -R u+rwX,g+rwX $path"
+    return 1
+  fi
+
+  return 0
+}
+
 # Initialize variables
 SKIP_VERSION=false
 FAST_BUILD=true
@@ -135,6 +169,12 @@ mkdir -p dist node_modules/.vite
 if [ ! -w dist ] || [ ! -w node_modules/.vite ]; then
   echo "❌ Error: Build output/cache directories are not writable by $DEPLOY_USER."
   echo "Check permissions for $(pwd)/dist and $(pwd)/node_modules/.vite and rerun."
+  exit 1
+fi
+if ! verify_build_path_access dist "Build output directory"; then
+  exit 1
+fi
+if ! verify_build_path_access node_modules/.vite "Vite cache directory"; then
   exit 1
 fi
 
