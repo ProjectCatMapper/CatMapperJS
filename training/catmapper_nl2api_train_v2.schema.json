@@ -45,7 +45,7 @@
       ],
       "properties": {
         "place_context_domain": {
-          "const": "DISTRICT"
+          "const": "AREA"
         },
         "dataset_context_domain": {
           "const": "DATASET"
@@ -124,7 +124,7 @@
         "context_routing_decision": {
           "type": "string",
           "enum": [
-            "DISTRICT",
+            "AREA",
             "DATASET",
             "CATEGORY",
             "NONE"
@@ -164,7 +164,7 @@
         "resolution_domain": {
           "type": "string",
           "enum": [
-            "DISTRICT",
+            "AREA",
             "DATASET",
             "CATEGORY",
             "ADM0"

@@ -12,18 +12,18 @@ afterEach(() => {
 });
 
 describe("parseNaturalLanguageSearch", () => {
-  it("parses place context and routes it to DISTRICT", () => {
+  it("parses place context and routes it to AREA", () => {
     const parsed = parseNaturalLanguageSearch({
       query: "look up Yoruba in Ghana",
       fallbackDomain: "ALL NODES",
       fallbackProperty: "Name",
-      availableSubdomains: ["ALL NODES", "ETHNICITY", "DISTRICT"],
+      availableSubdomains: ["ALL NODES", "ETHNICITY", "AREA"],
       countryNames: ["Ghana", "Kenya"]
     });
 
     expect(parsed.term).toBe("Yoruba");
     expect(parsed.contextTerm).toBe("Ghana");
-    expect(parsed.contextDomain).toBe("DISTRICT");
+    expect(parsed.contextDomain).toBe("AREA");
     expect(parsed.property).toBe("Name");
   });
 
@@ -32,7 +32,7 @@ describe("parseNaturalLanguageSearch", () => {
       query: "find the Yoruba in Ghana",
       fallbackDomain: "ALL NODES",
       fallbackProperty: "Name",
-      availableSubdomains: ["ALL NODES", "ETHNICITY", "DISTRICT"],
+      availableSubdomains: ["ALL NODES", "ETHNICITY", "AREA"],
       countryNames: ["Ghana"]
     });
 
@@ -44,7 +44,7 @@ describe("parseNaturalLanguageSearch", () => {
       query: "find cmid CM12345 in ethnicity",
       fallbackDomain: "ALL NODES",
       fallbackProperty: "Name",
-      availableSubdomains: ["ALL NODES", "ETHNICITY", "DISTRICT"]
+      availableSubdomains: ["ALL NODES", "ETHNICITY", "AREA"]
     });
 
     expect(parsed.property).toBe("CMID");
@@ -102,14 +102,14 @@ describe("parseNaturalLanguageSearch", () => {
       query: "I want to find periods from the iron age in Italy",
       fallbackDomain: "ALL NODES",
       fallbackProperty: "Name",
-      availableSubdomains: ["ALL NODES", "PERIOD", "DISTRICT"],
+      availableSubdomains: ["ALL NODES", "PERIOD", "AREA"],
       countryNames: ["Italy"]
     });
 
     expect(parsed.domain).toBe("PERIOD");
     expect(parsed.term).toBe("iron age");
     expect(parsed.contextTerm).toBe("Italy");
-    expect(parsed.contextDomain).toBe("DISTRICT");
+    expect(parsed.contextDomain).toBe("AREA");
   });
 
   it("parses explicit datasetID expressions", () => {
@@ -145,7 +145,7 @@ describe("resolveContextCmid", () => {
       apiUrl: "http://localhost:5000",
       database: "sociomap",
       contextTerm: "Ghana",
-      contextDomain: "DISTRICT"
+      contextDomain: "AREA"
     });
 
     expect(resolved.status).toBe("resolved");
@@ -170,7 +170,7 @@ describe("resolveContextCmid", () => {
       apiUrl: "http://localhost:5000",
       database: "archamap",
       contextTerm: "Mississippi",
-      contextDomain: "DISTRICT"
+      contextDomain: "AREA"
     });
 
     expect(resolved.status).toBe("ambiguous");
@@ -178,7 +178,7 @@ describe("resolveContextCmid", () => {
     expect(resolved.candidates.length).toBeGreaterThan(1);
   });
 
-  it("prefers ADM0 candidate for DISTRICT context when top name scores tie", async () => {
+  it("prefers ADM0 candidate for AREA context when top name scores tie", async () => {
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue({
@@ -196,7 +196,7 @@ describe("resolveContextCmid", () => {
       apiUrl: "http://localhost:5000",
       database: "sociomap",
       contextTerm: "Ghana",
-      contextDomain: "DISTRICT"
+      contextDomain: "AREA"
     });
 
     expect(resolved.status).toBe("resolved");
@@ -221,7 +221,7 @@ describe("resolveContextCmid", () => {
       apiUrl: "http://localhost:5000",
       database: "sociomap",
       contextTerm: "Ghana",
-      contextDomain: "DISTRICT"
+      contextDomain: "AREA"
     });
 
     expect(resolved.status).toBe("resolved");
@@ -249,7 +249,7 @@ describe("resolveContextCmid", () => {
       apiUrl: "http://localhost:5000",
       database: "sociomap",
       contextTerm: "Ghana",
-      contextDomain: "DISTRICT"
+      contextDomain: "AREA"
     });
 
     expect(resolved.status).toBe("resolved");
@@ -269,7 +269,7 @@ describe("parseNaturalLanguageSearchWithLlm", () => {
             domain: "ETHNICITY",
             property: "Name",
             contextTerm: "Ghana",
-            contextDomain: "DISTRICT",
+            contextDomain: "AREA",
             intentAll: false
           })
         })
@@ -280,7 +280,7 @@ describe("parseNaturalLanguageSearchWithLlm", () => {
       query: "look up Yoruba in Ghana",
       fallbackDomain: "ALL NODES",
       fallbackProperty: "Name",
-      availableSubdomains: ["ALL NODES", "ETHNICITY", "DISTRICT"],
+      availableSubdomains: ["ALL NODES", "ETHNICITY", "AREA"],
       countryNames: ["Ghana"],
       ollamaUrl: "http://localhost:11434",
       model: "qwen3-nl2api:q4km"
@@ -289,7 +289,7 @@ describe("parseNaturalLanguageSearchWithLlm", () => {
     expect(result.status).toBe("ok");
     expect(result.parsed.term).toBe("Yoruba");
     expect(result.parsed.domain).toBe("ETHNICITY");
-    expect(result.parsed.contextDomain).toBe("DISTRICT");
+    expect(result.parsed.contextDomain).toBe("AREA");
     expect(result.prompt).toContain("Input: look up Yoruba in Ghana");
     expect(result.raw).toContain("Yoruba");
   });
@@ -309,7 +309,7 @@ describe("parseNaturalLanguageSearchWithLlm", () => {
       query: "look up Yoruba in Ghana",
       fallbackDomain: "ALL NODES",
       fallbackProperty: "Name",
-      availableSubdomains: ["ALL NODES", "ETHNICITY", "DISTRICT"]
+      availableSubdomains: ["ALL NODES", "ETHNICITY", "AREA"]
     });
 
     expect(result.status).toBe("invalid_json");

@@ -379,7 +379,7 @@ export default function Searchbar({ database }) {
         <tbody>
           {categories.map((category, index) => (
             <tr key={index}>
-              <td className="table-cell">{category.label === "DISTRICT" ? "AREA" : category.label}</td>
+              <td className="table-cell">{category.label}</td>
               <td className="table-cell">{category.description}</td>
             </tr>
           ))}
@@ -693,13 +693,13 @@ export default function Searchbar({ database }) {
 
     if (parsed.contextTerm && !resolvedContextID && !resolvedDatasetID) {
       const normalizedContextDomain = String(parsed.contextDomain || "").toUpperCase();
-      if (normalizedContextDomain === "DISTRICT") {
+      if (normalizedContextDomain === "AREA") {
         const countryContextID = findCountryCode(parsed.contextTerm);
         if (countryContextID) {
           resolvedContextID = countryContextID;
           resolutionDetails = {
             status: "resolved_country_lookup",
-            domain: "DISTRICT",
+            domain: "AREA",
             context_term: parsed.contextTerm,
             cmid: countryContextID,
             matched_name: parsed.contextTerm,
@@ -752,7 +752,7 @@ export default function Searchbar({ database }) {
           message: `NLP needs clarification: context "${parsed.contextTerm}" is ambiguous in ${resolutionDomain}. Candidates: ${candidateNames || "none"}.`
         });
         return;
-      } else if (resolutionDomain === "DISTRICT") {
+      } else if (resolutionDomain === "AREA") {
         resolvedCountryCode = findCountryCode(parsed.contextTerm);
         if (resolvedCountryCode) {
           summaryBits.push(`Place "${parsed.contextTerm}" applied as country filter`);
@@ -1089,7 +1089,7 @@ export default function Searchbar({ database }) {
                     >
                       {Object.keys(selectedCategory).map((category, index) => (
                         <option key={index} value={category}>
-                          {category === "DISTRICT" ? "AREA" : category}
+                          {category}
                         </option>
                       ))}
                     </NativeSelect>
@@ -1117,7 +1117,7 @@ export default function Searchbar({ database }) {
                     >
                       {advoptions.map((value, index) => (
                         <option key={index} value={value}>
-                          {value === "DISTRICT" ? "AREA" : value}
+                          {value}
                         </option>
                       ))}
                     </NativeSelect>

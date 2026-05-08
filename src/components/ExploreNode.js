@@ -164,7 +164,7 @@ export default function Tableclick({ cmid, database, tabval }) {
   const [loadingBackground, setLoadingBackground] = useState(false);
   const orderOfProperties = [
     "CONTAINS",
-    "DISTRICT_OF",
+    "AREA_OF",
     "LANGUOID_OF",
     "RELIGION_OF",
     "PERIOD_OF",
@@ -185,7 +185,7 @@ export default function Tableclick({ cmid, database, tabval }) {
 
   //   const orderOfProperties = [
   //   "CONTAINS",
-  //   "DISTRICT_OF",
+  //   "AREA_OF",
   //   "*_OF",
   //   "USES",
   //   "EQUIVALENT"
@@ -514,7 +514,7 @@ export default function Tableclick({ cmid, database, tabval }) {
         <tbody>
           {categories.map((category, index) => (
             <tr key={index}>
-              <td style={{ borderBottom: '1px solid #ddd', padding: '8px' }}>{category.label === "DISTRICT" ? "AREA" : category.label}</td>
+              <td style={{ borderBottom: '1px solid #ddd', padding: '8px' }}>{category.label}</td>
               <td style={{ borderBottom: '1px solid #ddd', padding: '8px' }}>{category.description}</td>
             </tr>
           ))}
@@ -1527,7 +1527,7 @@ export default function Tableclick({ cmid, database, tabval }) {
             >
               {Object.keys(selectedCategory).map((category, index) => (
                 <option key={index} value={category}>
-                  {category === "DISTRICT" ? "AREA" : category}
+                  {category}
                 </option>
               ))}
             </NativeSelect>
@@ -1559,7 +1559,7 @@ export default function Tableclick({ cmid, database, tabval }) {
             >
               {advoptions.map((value, index) => (
                 <option key={index} value={value}>
-                  {value === "DISTRICT" ? "AREA" : value}
+                  {value}
                 </option>
               ))}
             </NativeSelect>

@@ -567,13 +567,6 @@ function TranslateComponent({ database }) {
         const updatedData = Array.isArray(data)
           ? data.map((item) => {
             if (item && typeof item === "object" && "group" in item) {
-              if (item.group === "DISTRICT") {
-                return {
-                  ...item,
-                  group: "AREA",
-                  nodes: item.nodes.map((n) => (n === "DISTRICT" ? "AREA" : n)),
-                };
-              }
               return item;
             }
             return item;
@@ -701,7 +694,7 @@ function TranslateComponent({ database }) {
         <tbody>
           {categories.map((category, index) => (
             <tr key={index}>
-              <td id="tooltip-table">{category.label === "DISTRICT" ? "AREA" : category.label}</td>
+              <td id="tooltip-table">{category.label}</td>
               <td id="tooltip-table">{category.description}</td>
             </tr>
           ))}
@@ -721,9 +714,9 @@ function TranslateComponent({ database }) {
           </tr>
         </thead>
         <tbody>
-          {infodata && selectedCategory?.[(firstDropdownValue === "AREA" ? "DISTRICT" : firstDropdownValue)]?.length > 0 ? (
+          {infodata && selectedCategory?.[firstDropdownValue]?.length > 0 ? (
             infodata
-              .filter(desc => selectedCategory[firstDropdownValue === "AREA" ? "DISTRICT" : firstDropdownValue].includes(desc.label))
+              .filter(desc => selectedCategory[firstDropdownValue].includes(desc.label))
               .map((category, index) => (
                 <tr key={index}>
                   <td id="tooltip-table">{category.label}</td>

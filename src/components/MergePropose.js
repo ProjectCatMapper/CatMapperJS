@@ -52,8 +52,8 @@ const Propose_Merge = ({ database }) => {
     setKeyLoadError('');
   };
 
-  const toDomainLabel = (value) => (value === "DISTRICT" ? "AREA" : value);
-  const fromDomainLabel = (value) => (value === "AREA" ? "DISTRICT" : value);
+  const toDomainLabel = (value) => value;
+  const fromDomainLabel = (value) => value;
 
   const crossDomainOptions = useMemo(() => {
     const subdomains = Object.values(selectedCategory || {}).flat().filter(Boolean);
@@ -119,7 +119,7 @@ const Propose_Merge = ({ database }) => {
         <tbody>
           {categories.map((category, index) => (
             <tr key={index}>
-              <td style={{ borderBottom: '1px solid #ddd', padding: '8px' }}>{category.label === "DISTRICT" ? "AREA" : category.label}</td>
+              <td style={{ borderBottom: '1px solid #ddd', padding: '8px' }}>{category.label}</td>
               <td style={{ borderBottom: '1px solid #ddd', padding: '8px' }}>{category.description}</td>
             </tr>
           ))}

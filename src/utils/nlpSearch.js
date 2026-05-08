@@ -8,8 +8,8 @@ const PROPERTY_KEYWORDS = {
 };
 
 const DOMAIN_ALIASES = {
-  area: "DISTRICT",
-  district: "DISTRICT",
+  area: "AREA",
+  district: "AREA",
   "all nodes": "ALL NODES",
   all: "ALL NODES",
   "any domain": "ANY DOMAIN",
@@ -40,7 +40,7 @@ const NOISE_WORDS_REGEX =
 const SAFE_ID_REGEX = /^[A-Za-z0-9._:-]{1,80}$/;
 const SAFE_COUNTRY_CODE_REGEX = /^[A-Za-z0-9_-]{1,10}$/;
 const SAFE_YEAR_REGEX = /^-?\d{1,4}$/;
-const ALLOWED_CONTEXT_DOMAINS = new Set(["DISTRICT", "CATEGORY", "DATASET"]);
+const ALLOWED_CONTEXT_DOMAINS = new Set(["AREA", "CATEGORY", "DATASET"]);
 const ALLOWED_PROPERTIES = new Set(["Name", "Key", "CMID", "glottocode", "ISO3"]);
 const LEADING_ARTICLE_REGEX = /^(the|a|an)\s+/i;
 const LEADING_ARTICLE_EXCEPTIONS = new Set([
@@ -295,7 +295,7 @@ const classifyContext = ({ contextTerm = "", hint = "", countryNames = [] } = {}
   }
 
   if (hint === "place" || isKnownCountry || hasPlaceCue) {
-    return { contextType: "place", contextDomain: "DISTRICT" };
+    return { contextType: "place", contextDomain: "AREA" };
   }
 
   return { contextType: "non_place", contextDomain: "CATEGORY" };
@@ -610,7 +610,7 @@ export function validateParsedNlpJson(
     parsed.contextDomain = classification.contextDomain;
   }
 
-  if (parsed.contextTerm && parsed.contextDomain === "DISTRICT" && !parsed.countryName) {
+  if (parsed.contextTerm && parsed.contextDomain === "AREA" && !parsed.countryName) {
     parsed.countryName = parsed.contextTerm;
   }
 
@@ -646,7 +646,7 @@ const buildLlmPrompt = ({
     "Allowed keys: term, domain, property, contextID, contextTerm, contextDomain, datasetID, yearStart, yearEnd, countryName, intentAll.",
     "Rules:",
     "- property must be one of: Name, Key, CMID.",
-    "- contextDomain must be one of: DISTRICT, CATEGORY, DATASET.",
+    "- contextDomain must be one of: AREA, CATEGORY, DATASET.",
     "- Use empty string for missing optional fields.",
     "- Preserve exact search text in term where possible.",
     `- If domain is missing, use ${fallbackDomain}.`,
@@ -929,7 +929,7 @@ export async function resolveContextCmid({
     }
 
     const payload = await response.json();
-    const preferAdm0 = String(contextDomain || "").toUpperCase() === "DISTRICT";
+    const preferAdm0 = String(contextDomain || "").toUpperCase() === "AREA";
     const mappedCandidates = (Array.isArray(payload?.data) ? payload.data : [])
       .map((candidate) => ({
         CMID: candidate.CMID,

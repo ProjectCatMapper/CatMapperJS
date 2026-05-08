@@ -2550,7 +2550,7 @@ const Admin = ({ database }) => {
                 margin="normal"
               >
                 <MenuItem value={"CONTAINS"}>CONTAINS</MenuItem>
-                <MenuItem value={"DISTRICT_OF"}>DISTRICT_OF</MenuItem>
+                <MenuItem value={"AREA_OF"}>AREA_OF</MenuItem>
                 <MenuItem value={"LANGUOID_OF"}>LANGUOID_OF</MenuItem>
                 <MenuItem value={"RELIGION_OF"}>RELIGION_OF</MenuItem>
 

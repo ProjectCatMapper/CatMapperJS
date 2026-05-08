@@ -122,7 +122,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Maharashtra&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Maharashtra&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -136,7 +136,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Punjab&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Punjab&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -150,7 +150,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Oromia&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Oromia&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -164,7 +164,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Nairobi&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Nairobi&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -346,7 +346,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Maharashtra&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Maharashtra&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -360,7 +360,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Punjab&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Punjab&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -374,7 +374,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Oromia&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Oromia&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -388,7 +388,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Nairobi&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Nairobi&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -570,7 +570,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Maharashtra&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Maharashtra&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -584,7 +584,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Punjab&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Punjab&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -598,7 +598,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Oromia&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Oromia&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -612,7 +612,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Nairobi&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Nairobi&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -794,7 +794,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Maharashtra&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Maharashtra&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -808,7 +808,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Punjab&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Punjab&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -822,7 +822,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Oromia&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Oromia&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -836,7 +836,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Nairobi&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Nairobi&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -1018,7 +1018,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Maharashtra&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Maharashtra&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -1032,7 +1032,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Punjab&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Punjab&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -1046,7 +1046,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Oromia&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Oromia&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -1060,7 +1060,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Nairobi&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Nairobi&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -1242,7 +1242,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Maharashtra&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Maharashtra&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -1256,7 +1256,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Punjab&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Punjab&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -1270,7 +1270,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Oromia&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Oromia&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -1284,7 +1284,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Nairobi&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Nairobi&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -1466,7 +1466,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Maharashtra&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Maharashtra&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -1480,7 +1480,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Punjab&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Punjab&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -1494,7 +1494,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Oromia&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Oromia&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -1508,7 +1508,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Nairobi&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Nairobi&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -1690,7 +1690,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Maharashtra&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Maharashtra&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -1704,7 +1704,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Punjab&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Punjab&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -1718,7 +1718,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Oromia&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Oromia&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -1732,7 +1732,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Nairobi&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Nairobi&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -1914,7 +1914,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Maharashtra&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Maharashtra&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -1928,7 +1928,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Punjab&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Punjab&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -1942,7 +1942,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Oromia&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Oromia&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -1956,7 +1956,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Nairobi&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Nairobi&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -2138,7 +2138,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Maharashtra&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Maharashtra&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -2152,7 +2152,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Punjab&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Punjab&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -2166,7 +2166,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Oromia&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Oromia&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -2180,7 +2180,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Nairobi&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Nairobi&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -2362,7 +2362,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Maharashtra&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Maharashtra&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -2376,7 +2376,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Punjab&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Punjab&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -2390,7 +2390,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Oromia&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Oromia&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -2404,7 +2404,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Nairobi&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Nairobi&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -2586,7 +2586,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Maharashtra&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Maharashtra&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -2600,7 +2600,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Punjab&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Punjab&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -2614,7 +2614,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Oromia&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Oromia&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -2628,7 +2628,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Nairobi&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Nairobi&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -2810,7 +2810,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Maharashtra&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Maharashtra&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -2824,7 +2824,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Punjab&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Punjab&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -2838,7 +2838,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Oromia&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Oromia&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -2852,7 +2852,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Nairobi&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Nairobi&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -3034,7 +3034,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Maharashtra&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Maharashtra&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -3048,7 +3048,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Punjab&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Punjab&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -3062,7 +3062,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Oromia&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Oromia&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -3076,7 +3076,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Nairobi&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Nairobi&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -3258,7 +3258,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Maharashtra&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Maharashtra&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -3272,7 +3272,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Punjab&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Punjab&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -3286,7 +3286,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Oromia&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Oromia&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -3300,7 +3300,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Nairobi&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Nairobi&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -3482,7 +3482,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Maharashtra&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Maharashtra&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -3496,7 +3496,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Punjab&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Punjab&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -3510,7 +3510,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Oromia&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Oromia&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -3524,7 +3524,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Nairobi&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Nairobi&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -3706,7 +3706,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Maharashtra&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Maharashtra&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -3720,7 +3720,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Punjab&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Punjab&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -3734,7 +3734,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Oromia&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Oromia&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -3748,7 +3748,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Nairobi&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Nairobi&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -3930,7 +3930,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Maharashtra&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Maharashtra&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -3944,7 +3944,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Punjab&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Punjab&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -3958,7 +3958,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Oromia&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Oromia&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -3972,7 +3972,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Nairobi&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Nairobi&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -4154,7 +4154,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Maharashtra&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Maharashtra&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -4168,7 +4168,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Punjab&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Punjab&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -4182,7 +4182,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Oromia&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Oromia&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -4196,7 +4196,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Nairobi&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Nairobi&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -4378,7 +4378,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Maharashtra&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Maharashtra&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -4392,7 +4392,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Punjab&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Punjab&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -4406,7 +4406,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Oromia&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Oromia&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -4420,7 +4420,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Nairobi&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Nairobi&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -4602,7 +4602,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Maharashtra&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Maharashtra&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -4616,7 +4616,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Punjab&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Punjab&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -4630,7 +4630,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Oromia&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Oromia&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -4644,7 +4644,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Nairobi&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Nairobi&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -4826,7 +4826,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Maharashtra&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Maharashtra&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -4840,7 +4840,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Punjab&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Punjab&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -4854,7 +4854,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Oromia&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Oromia&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -4868,7 +4868,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Nairobi&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Nairobi&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -5050,7 +5050,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Maharashtra&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Maharashtra&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -5064,7 +5064,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Punjab&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Punjab&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -5078,7 +5078,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Oromia&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Oromia&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -5092,7 +5092,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Nairobi&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Nairobi&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -5274,7 +5274,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Maharashtra&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Maharashtra&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -5288,7 +5288,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Punjab&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Punjab&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -5302,7 +5302,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Oromia&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Oromia&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -5316,7 +5316,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Nairobi&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Nairobi&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -5498,7 +5498,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Maharashtra&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Maharashtra&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -5512,7 +5512,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Punjab&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Punjab&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -5526,7 +5526,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Oromia&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Oromia&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -5540,7 +5540,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Nairobi&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Nairobi&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -5722,7 +5722,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Maharashtra&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Maharashtra&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -5736,7 +5736,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Punjab&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Punjab&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -5750,7 +5750,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Oromia&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Oromia&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -5764,7 +5764,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Nairobi&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Nairobi&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -5946,7 +5946,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Maharashtra&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Maharashtra&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -5960,7 +5960,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Punjab&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Punjab&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -5974,7 +5974,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Oromia&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Oromia&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -5988,7 +5988,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Nairobi&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Nairobi&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -6170,7 +6170,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Maharashtra&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Maharashtra&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -6184,7 +6184,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Punjab&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Punjab&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -6198,7 +6198,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Oromia&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Oromia&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -6212,7 +6212,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Nairobi&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Nairobi&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -6394,7 +6394,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Maharashtra&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Maharashtra&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -6408,7 +6408,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Punjab&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Punjab&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -6422,7 +6422,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Oromia&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Oromia&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -6436,7 +6436,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Nairobi&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Nairobi&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -6618,7 +6618,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Maharashtra&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Maharashtra&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -6632,7 +6632,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Punjab&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Punjab&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -6646,7 +6646,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Oromia&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Oromia&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -6660,7 +6660,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Nairobi&domain=DISTRICT&context={country_cmid}&property=Name&query=false"
+      "final_url_template": "/search?database={database}&term=Nairobi&domain=AREA&context={country_cmid}&property=Name&query=false"
     }
   },
   {
@@ -6842,7 +6842,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Maharashtra&domain=DISTRICT&context={country_cmid}&property=Name&yearStart=1950&yearEnd=1970&query=false"
+      "final_url_template": "/search?database={database}&term=Maharashtra&domain=AREA&context={country_cmid}&property=Name&yearStart=1950&yearEnd=1970&query=false"
     }
   },
   {
@@ -6856,7 +6856,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Punjab&domain=DISTRICT&context={country_cmid}&property=Name&yearStart=1975&yearEnd=1995&query=false"
+      "final_url_template": "/search?database={database}&term=Punjab&domain=AREA&context={country_cmid}&property=Name&yearStart=1975&yearEnd=1995&query=false"
     }
   },
   {
@@ -6982,7 +6982,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Maharashtra&domain=DISTRICT&context={country_cmid}&property=Name&yearStart=1950&yearEnd=1970&query=false"
+      "final_url_template": "/search?database={database}&term=Maharashtra&domain=AREA&context={country_cmid}&property=Name&yearStart=1950&yearEnd=1970&query=false"
     }
   },
   {
@@ -6996,7 +6996,7 @@
           "store_as": "{country_cmid}"
         }
       ],
-      "final_url_template": "/search?database={database}&term=Punjab&domain=DISTRICT&context={country_cmid}&property=Name&yearStart=1975&yearEnd=1995&query=false"
+      "final_url_template": "/search?database={database}&term=Punjab&domain=AREA&context={country_cmid}&property=Name&yearStart=1975&yearEnd=1995&query=false"
     }
   }
 ]

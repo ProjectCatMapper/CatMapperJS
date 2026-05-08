@@ -109,7 +109,7 @@ const Sociomap_UserGuide = () => {
         </tbody>
       </table>
       <p>CatMapper stores contextual information about categories through a
-        range of ties (e.g., contains, district_of, language_of, religion_of)
+        range of ties (e.g., contains, area_of, language_of, religion_of)
         (<strong>Table 2</strong>).</p>
       <p><strong>Table 2. Ties that store contextual information about
         categories</strong></p>
@@ -130,7 +130,7 @@ const Sociomap_UserGuide = () => {
             <td style={{ textalign: 'left' }}>Y is a sub-category of X</td>
           </tr>
           <tr>
-            <td style={{ textalign: 'left' }}>X DISTRICT_OF Y</td>
+            <td style={{ textalign: 'left' }}>X AREA_OF Y</td>
             <td style={{ textalign: 'left' }}>X is a geospatial locale for Y</td>
           </tr>
           <tr>
@@ -397,7 +397,7 @@ const Sociomap_UserGuide = () => {
         through the <em>Network Explorer</em>.</p>
       <p>In the <em>Network Explorer</em> tab in the <em>Info page</em>, the
         drop down menu labeled "<em>Choose Relationship to View"</em> gives you
-        the choice of exploring CONTAINS ties, LANGUAGE_OF ties, DISTRICT_OF
+        the choice of exploring CONTAINS ties, LANGUAGE_OF ties, AREA_OF
         ties, and USES ties which describe how different datasets encode the
         category.</p>
       <figure>
@@ -425,7 +425,7 @@ const Sociomap_UserGuide = () => {
         <figcaption aria-hidden="true">A screenshot of a computer Description
           automatically generated</figcaption>
       </figure>
-      <p>Changing the <em>Relationship</em> to DISTRICT_OF, you can see that
+      <p>Changing the <em>Relationship</em> to AREA_OF, you can see that
         the Yoruba live in Ghana, Benin, Nigeria, and Togo. In some examples,
         you may be able to find more specific administrative level districts by
         changing the Administrative level in the <em>Domain</em> drop down.</p>
