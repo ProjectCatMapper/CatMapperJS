@@ -172,7 +172,6 @@ export default function Tableclick({ cmid, database, tabval }) {
     "POLITY_OF",
     "VARIABLE_OF",
     "USES",
-    "EQUIVALENT",
     "MERGING"
   ];
 
@@ -188,7 +187,6 @@ export default function Tableclick({ cmid, database, tabval }) {
   //   "AREA_OF",
   //   "*_OF",
   //   "USES",
-  //   "EQUIVALENT"
   // ];
 
   const [rememberChoice, setRememberChoice] = useState(false);
@@ -807,11 +805,11 @@ export default function Tableclick({ cmid, database, tabval }) {
         `${cmid}_merging_ties_${dateTag}.xlsx`,
         "MergingTies"
       );
-    } else {
+    } else if (tieType === "category") {
       void downloadRowsAsXlsx(
-        mergeTemplateSummary.equivalenceTies || [],
-        `${cmid}_equivalence_ties_${dateTag}.xlsx`,
-        "EquivalenceTies"
+        mergeTemplateSummary.categoryMergingTies || [],
+        `${cmid}_category_merging_ties_${dateTag}.xlsx`,
+        "CategoryMergingTies"
       );
     }
   };
@@ -1845,8 +1843,8 @@ export default function Tableclick({ cmid, database, tabval }) {
                         <Button variant="contained" onClick={() => downloadMergingTemplateTies("merging")}>
                           Download Merging Ties
                         </Button>
-                        <Button variant="contained" onClick={() => downloadMergingTemplateTies("equivalence")}>
-                          Download Equivalence Ties
+                        <Button variant="contained" onClick={() => downloadMergingTemplateTies("category")}>
+                          Download Category Merging Ties
                         </Button>
                       </Box>
                       <TableContainer component={Paper} variant="outlined">
@@ -1856,8 +1854,8 @@ export default function Tableclick({ cmid, database, tabval }) {
                               <TableCell>Stack CMID</TableCell>
                               <TableCell>Stack CMName</TableCell>
                               <TableCell># of Datasets</TableCell>
-                              <TableCell># of Equivalence Ties</TableCell>
-                              <TableCell># of Key Reassignment</TableCell>
+                              <TableCell># of Category Merging Ties</TableCell>
+                              <TableCell># of Key Reassignments</TableCell>
                               <TableCell># of Variables</TableCell>
                             </TableRow>
                           </TableHead>
@@ -1876,7 +1874,7 @@ export default function Tableclick({ cmid, database, tabval }) {
                                 </TableCell>
                                 <TableCell>{row.stackCMName || ""}</TableCell>
                                 <TableCell>{row.datasetCount || 0}</TableCell>
-                                <TableCell>{row.equivalenceTieCount || 0}</TableCell>
+                                <TableCell>{row.categoryMergingTieCount || 0}</TableCell>
                                 <TableCell>{row.keyReassignmentCount || 0}</TableCell>
                                 <TableCell>{row.variableCount || 0}</TableCell>
                               </TableRow>
@@ -1885,7 +1883,7 @@ export default function Tableclick({ cmid, database, tabval }) {
                               <TableCell sx={{ fontWeight: 700 }}>Total</TableCell>
                               <TableCell />
                               <TableCell sx={{ fontWeight: 700 }}>{mergeTemplateSummary.stackSummaryTotals?.datasetCount || 0}</TableCell>
-                              <TableCell sx={{ fontWeight: 700 }}>{mergeTemplateSummary.stackSummaryTotals?.equivalenceTieCount || 0}</TableCell>
+                              <TableCell sx={{ fontWeight: 700 }}>{mergeTemplateSummary.stackSummaryTotals?.categoryMergingTieCount || 0}</TableCell>
                               <TableCell sx={{ fontWeight: 700 }}>{mergeTemplateSummary.stackSummaryTotals?.keyReassignmentCount || 0}</TableCell>
                               <TableCell sx={{ fontWeight: 700 }}>{mergeTemplateSummary.stackSummaryTotals?.variableCount || 0}</TableCell>
                             </TableRow>
@@ -1904,8 +1902,8 @@ export default function Tableclick({ cmid, database, tabval }) {
                         <Button variant="contained" onClick={() => downloadMergingTemplateTies("merging")}>
                           Download Merging Ties
                         </Button>
-                        <Button variant="contained" onClick={() => downloadMergingTemplateTies("equivalence")}>
-                          Download Equivalence Ties
+                        <Button variant="contained" onClick={() => downloadMergingTemplateTies("category")}>
+                          Download Category Merging Ties
                         </Button>
                       </Box>
                       <TableContainer component={Paper} variant="outlined">
@@ -1914,8 +1912,8 @@ export default function Tableclick({ cmid, database, tabval }) {
                             <TableRow>
                               <TableCell>Dataset CMID</TableCell>
                               <TableCell>Dataset CMName</TableCell>
-                              <TableCell># of Equivalence Ties</TableCell>
-                              <TableCell># of Key Reassignment</TableCell>
+                              <TableCell># of Category Merging Ties</TableCell>
+                              <TableCell># of Key Reassignments</TableCell>
                               <TableCell># of Variables</TableCell>
                             </TableRow>
                           </TableHead>
@@ -1933,7 +1931,7 @@ export default function Tableclick({ cmid, database, tabval }) {
                                   </Button>
                                 </TableCell>
                                 <TableCell>{row.datasetCMName || ""}</TableCell>
-                                <TableCell>{row.equivalenceTieCount || 0}</TableCell>
+                                <TableCell>{row.categoryMergingTieCount || 0}</TableCell>
                                 <TableCell>{row.keyReassignmentCount || 0}</TableCell>
                                 <TableCell>{row.variableCount || 0}</TableCell>
                               </TableRow>

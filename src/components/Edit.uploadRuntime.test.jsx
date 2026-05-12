@@ -121,12 +121,11 @@ describe('Edit upload runtime', () => {
     );
 
     parseTabularFileMock.mockResolvedValue({
-      headers: ['categoryID1', 'categoryID2', 'stackID', 'comment'],
-      rows2d: [['C1', 'C2', 'S1', 'note']],
+      headers: ['categoryID', 'stackID', 'comment'],
+      rows2d: [['C1', 'S1', 'note']],
       records: [
         {
-          categoryID1: 'C1',
-          categoryID2: 'C2',
+          categoryID: 'C1',
           stackID: 'S1',
           comment: 'note',
         },
@@ -141,7 +140,7 @@ describe('Edit upload runtime', () => {
     const mergeReplaceRadio = container.querySelector('input[value="merging_replace"]');
     expect(mergeReplaceRadio?.checked).toBe(true);
 
-    const errorText = 'Adding or replacing proeprties for existing equivalence ties is not permitted for now.';
+    const errorText = 'Adding or replacing properties for existing category merging ties is not permitted for now.';
     expect(document.body.textContent).toContain(errorText);
     expect(document.body.textContent.split(errorText).length - 1).toBe(1);
   });

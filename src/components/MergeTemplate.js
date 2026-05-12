@@ -179,7 +179,7 @@ const MergeTemplate = ({ database }) => {
         } else if (summaryStatus.canDownloadLinkFile) {
           setMessage(`Template found for "${inputValue}" with no variable mappings. Download the link file instead.`);
         } else {
-          setMessage(`Template found for "${inputValue}", but it has no variable mappings or equivalence ties.`);
+          setMessage(`Template found for "${inputValue}", but it has no variable mappings or category merging ties.`);
         }
         setTemplateFound(true);
       } else {
@@ -211,12 +211,12 @@ const MergeTemplate = ({ database }) => {
 
   const handleDownloadLinkFile = async () => {
     if (!linkFileDownloadEnabled) {
-      alert('A link file is only available when the merging template has equivalence ties.');
+      alert('A link file is only available when the merging template has category merging ties.');
       return;
     }
 
     const { downloadSheetsAsXlsx } = await import('../utils/excelExport');
-    const sheets = buildLinkFileSheets(templateData, templateSummary?.equivalenceTies || []);
+    const sheets = buildLinkFileSheets(templateData, templateSummary?.categoryMergingTies || []);
     await downloadSheetsAsXlsx(sheets, {
       fileName: `link_file_${inputValue}.xlsx`,
     });

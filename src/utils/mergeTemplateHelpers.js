@@ -1,17 +1,17 @@
 export function summarizeMergeTemplate(summary) {
   const nodeType = String(summary?.nodeType || '').toUpperCase();
   const variableCount = Number(summary?.stackSummaryTotals?.variableCount || 0);
-  const equivalenceTieCount = Array.isArray(summary?.equivalenceTies)
-    ? summary.equivalenceTies.length
+  const categoryMergingTieCount = Array.isArray(summary?.categoryMergingTies)
+    ? summary.categoryMergingTies.length
     : 0;
 
   return {
     nodeType,
     isMergingTemplate: nodeType === 'MERGING',
     hasVariableMappings: variableCount > 0,
-    canDownloadLinkFile: nodeType === 'MERGING' && equivalenceTieCount > 0,
+    canDownloadLinkFile: nodeType === 'MERGING' && categoryMergingTieCount > 0,
     variableCount,
-    equivalenceTieCount,
+    categoryMergingTieCount,
   };
 }
 
@@ -48,18 +48,18 @@ export function parseKeyExpression(key) {
   }, {});
 }
 
-export function buildLinkFileSheets(templateRows = [], equivalenceTies = []) {
+export function buildLinkFileSheets(templateRows = [], categoryMergingTies = []) {
   const datasetLookup = new Map(
     (templateRows || [])
       .filter((row) => row?.datasetID)
       .map((row) => [String(row.datasetID), row])
   );
 
-  const longRows = (equivalenceTies || []).map((row) => {
+  const longRows = (categoryMergingTies || []).map((row) => {
     const datasetID = String(row?.datasetID || '');
     const datasetMeta = datasetLookup.get(datasetID) || {};
-    const canonicalCMID = row?.equivalentCMID || row?.originalCMID || '';
-    const canonicalCMName = row?.equivalentCMName || row?.originalCMName || '';
+    const canonicalCMID = row?.categoryCMID || '';
+    const canonicalCMName = row?.categoryCMName || '';
 
     return {
       stackID: row?.stackID || '',
@@ -67,8 +67,8 @@ export function buildLinkFileSheets(templateRows = [], equivalenceTies = []) {
       datasetName: datasetMeta?.datasetName || '',
       CMID: canonicalCMID,
       CMName: canonicalCMName,
-      originalCMID: row?.originalCMID || '',
-      originalCMName: row?.originalCMName || '',
+      categoryCMID: row?.categoryCMID || canonicalCMID,
+      categoryCMName: row?.categoryCMName || canonicalCMName,
       Key: row?.Key || '',
       ...parseKeyExpression(row?.Key || ''),
     };

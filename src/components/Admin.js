@@ -250,15 +250,15 @@ const Admin = ({ database }) => {
       label: "Edit Options",
       keys: [
         "add/edit/delete USES property",
-        "add/edit/delete EQUIVALENT property",
+        "add/edit/delete CATEGORY MERGING property",
         "add/edit/delete node property",
         "merge nodes",
         "move USES tie",
-        "move EQUIVALENT tie",
+        "move CATEGORY MERGING tie",
         "add credible comment",
         "delete node",
         "delete USES relation",
-        "delete EQUIVALENT relation",
+        "delete CATEGORY MERGING relation",
         "create new domain",
         //"add foci",
       ],
@@ -318,7 +318,7 @@ const Admin = ({ database }) => {
         }
       }
 
-      if (firstDropdownValue === "delete EQUIVALENT relation") {
+      if (firstDropdownValue === "delete CATEGORY MERGING relation") {
         const confirmed = window.confirm(
           `Are you sure you want to ${firstDropdownValue} of ${JSON.parse(formData.s1_7)[0].CMName} -> ${JSON.parse(formData.s1_7)[2].CMName} (Key: ${JSON.parse(formData.s1_7)[1].Key || "NA"})? This action cannot be undone.`
         );
@@ -1250,12 +1250,12 @@ const Admin = ({ database }) => {
       firstDropdownValue === "add/edit/delete USES property" ||
       firstDropdownValue === "delete USES relation" ||
       firstDropdownValue === "move USES tie";
-    const isEquivalentMode =
-      firstDropdownValue === "add/edit/delete EQUIVALENT property" ||
-      firstDropdownValue === "delete EQUIVALENT relation" ||
-      firstDropdownValue === "move EQUIVALENT tie";
+    const isCategoryMergingMode =
+      firstDropdownValue === "add/edit/delete CATEGORY MERGING property" ||
+      firstDropdownValue === "delete CATEGORY MERGING relation" ||
+      firstDropdownValue === "move CATEGORY MERGING tie";
 
-    if (!isUsesMode && !isEquivalentMode) {
+    if (!isUsesMode && !isCategoryMergingMode) {
       setDropdown1Options([]); // reset dropdown if not in this mode
       return;
     }
@@ -1272,8 +1272,8 @@ const Admin = ({ database }) => {
     if (pattern.test(cmid)) {
       const fetchData = async () => {
         try {
-          const endpoint = isEquivalentMode
-            ? "/admin_add_edit_delete_equivalentproperties"
+          const endpoint = isCategoryMergingMode
+            ? "/admin_add_edit_delete_category_merging_properties"
             : "/admin_add_edit_delete_usesproperties";
           const res = await fetch(`${process.env.REACT_APP_API_URL}${endpoint}?CMID=` + cmid + "&database=" + database, {
             //const res = await fetch("http://127.0.0.1:5001/admin_add_edit_delete_usesproperties?CMID="+cmid+"&database="+database, {
@@ -1584,7 +1584,7 @@ const Admin = ({ database }) => {
             </Box>
           )}
 
-          {firstDropdownValue === "add/edit/delete EQUIVALENT property" && (
+          {firstDropdownValue === "add/edit/delete CATEGORY MERGING property" && (
             <Box sx={{ ml: 1 }}>
               <h4 style={{ color: "black", padding: "2px" }}>
                 choose to add a new property or edit <br /> or delete an existing
@@ -1614,7 +1614,7 @@ const Admin = ({ database }) => {
               {add_edit_delete_usesprops_Options !== "" &&
                 <>
                   <InputLabel id="api-results-label" style={{ color: "black" }}>
-                    Choose EQUIVALENT tie to change
+                    Choose category merging tie to change
                   </InputLabel>
                   <Select
                     name="s1_7"
@@ -1624,7 +1624,7 @@ const Admin = ({ database }) => {
                   >
                     {add_edit_delete_usesprops_Options.map(([n, r, d], index) => (
                       <MenuItem key={index} value={index + 1}>
-                        {`${n.CMName} ---- EQUIVALENT Key: ${r.Key || "NA"} --- ${d.CMName}`}
+                        {`${d.CMName} ---- CATEGORY MERGING Key: ${r.Key || "NA"} --- ${n.CMName}`}
                       </MenuItem>
                     ))}
                   </Select>
@@ -1635,7 +1635,7 @@ const Admin = ({ database }) => {
                 <>
                   {(() => {
                     const [, r] = add_edit_delete_usesprops_Options[formData.s1_7 - 1];
-                    const editableProps = ["stack", "dataset", "Key"];
+                    const editableProps = ["stack", "Key"];
                     let dropdown2Options = [];
 
                     if (formData.s1_1 === "edit" || formData.s1_1 === "delete") {
@@ -1938,7 +1938,7 @@ const Admin = ({ database }) => {
           )
           }
 
-          {firstDropdownValue === "move EQUIVALENT tie" && (
+          {firstDropdownValue === "move CATEGORY MERGING tie" && (
             <Box sx={{ ml: 1 }}>
               {renderCmidInput({
                 label: "CMID moving from",
@@ -1948,7 +1948,7 @@ const Admin = ({ database }) => {
               {add_edit_delete_usesprops_Options !== "" &&
                 <>
                   <InputLabel id="api-results-label" style={{ color: "black" }}>
-                    Choose EQUIVALENT tie to change
+                    Choose category merging tie to change
                   </InputLabel>
                   <Select
                     name="s1_7"
@@ -1958,7 +1958,7 @@ const Admin = ({ database }) => {
                   >
                     {add_edit_delete_usesprops_Options.map(([n, r, d], index) => (
                       <MenuItem key={index} value={JSON.stringify([n, r, d])}>
-                        {`${n.CMName} ---- EQUIVALENT Key: ${r.Key || "NA"} --- ${d.CMName}`}
+                        {`${d.CMName} ---- CATEGORY MERGING Key: ${r.Key || "NA"} --- ${n.CMName}`}
                       </MenuItem>
                     ))}
                   </Select>
@@ -2113,7 +2113,7 @@ const Admin = ({ database }) => {
           )
           }
 
-          {firstDropdownValue === "delete EQUIVALENT relation" && (
+          {firstDropdownValue === "delete CATEGORY MERGING relation" && (
             <Box sx={{ ml: 1 }}>
               {renderCmidInput({
                 label: "CMID of category",
@@ -2123,7 +2123,7 @@ const Admin = ({ database }) => {
               {add_edit_delete_usesprops_Options !== "" &&
                 <>
                   <InputLabel id="api-results-label" style={{ color: "black" }}>
-                    Choose EQUIVALENT tie to change
+                    Choose category merging tie to change
                   </InputLabel>
                   <Select
                     name="s1_7"
@@ -2133,7 +2133,7 @@ const Admin = ({ database }) => {
                   >
                     {add_edit_delete_usesprops_Options.map(([n, r, d], index) => (
                       <MenuItem key={index} value={JSON.stringify([n, r, d])}>
-                        {`${n.CMName} ---- EQUIVALENT Key: ${r.Key || "NA"} --- ${d.CMName}`}
+                        {`${d.CMName} ---- CATEGORY MERGING Key: ${r.Key || "NA"} --- ${n.CMName}`}
                       </MenuItem>
                     ))}
                   </Select>

@@ -10,7 +10,7 @@ describe('mergeTemplateHelpers', () => {
     const summary = summarizeMergeTemplate({
       nodeType: 'MERGING',
       stackSummaryTotals: { variableCount: 0 },
-      equivalenceTies: [{ datasetID: 'AD1' }],
+      categoryMergingTies: [{ datasetID: 'AD1' }],
     });
 
     expect(summary.isMergingTemplate).toBe(true);
@@ -25,7 +25,7 @@ describe('mergeTemplateHelpers', () => {
     });
   });
 
-  it('builds stack-aware wide and long link-file sheets from equivalence ties', () => {
+  it('builds stack-aware wide and long link-file sheets from category merging ties', () => {
     const sheets = buildLinkFileSheets(
       [
         { datasetID: 'AD354274', datasetName: 'Becoming Hopi - Kivas' },
@@ -36,19 +36,15 @@ describe('mergeTemplateHelpers', () => {
           stackID: 'AD958',
           datasetID: 'AD354274',
           Key: 'Site == Red Rock House && Site_Num == AZ J:6:1',
-          originalCMID: 'AM1',
-          originalCMName: 'Original A',
-          equivalentCMID: 'AM900',
-          equivalentCMName: 'Canonical A',
+          categoryCMID: 'AM900',
+          categoryCMName: 'Canonical A',
         },
         {
           stackID: 'AD958',
           datasetID: 'AD354275',
           Key: 'Site == Red Rock House && Site_Num == AZ J:6:1',
-          originalCMID: 'AM2',
-          originalCMName: 'Original B',
-          equivalentCMID: 'AM900',
-          equivalentCMName: 'Canonical A',
+          categoryCMID: 'AM900',
+          categoryCMName: 'Canonical A',
         },
       ]
     );

@@ -143,10 +143,6 @@ const Neo4jVisualization = ({
       return [...grouped.top, ...grouped.middle, ...grouped.bottom];
     }
 
-    if (edge.type === 'EQUIVALENT') {
-      return [`stack: ${edge.stack}`, `dataset: ${edge.dataset}`, `Key: ${edge.Key}`];
-    }
-
     if (edge.type === 'MERGING') {
       const { from, to, color, id, ...rest } = edge;
       const lines = Object.entries(rest)

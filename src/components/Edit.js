@@ -1134,20 +1134,12 @@ const Edit = ({ database }) => {
             required = ["mergingID", "datasetID", "variableID", "varName", "Key"];
           }
 
-          // if categoryID is present, but no variableID then assume equivalence ties
+          // if categoryID is present, but no variableID then assume category merging ties
           else if (cols.includes("categoryID")) {
-            setMergingType("equivalence_ties")
-
-            const keyColumns = cols.filter(c => c.startsWith("Key_"));
-
-            if (keyColumns.length === 2) {
-              const [key1, key2] = keyColumns;
-              required = ["mergingID", "categoryID", key1, key2];
-            } else if (cols.includes("datasetID")) {
-              required = ["mergingID", "categoryID", "Key", "datasetID"];
-            }
-            else {
-              mergeConfigError = "Not all required columns are present.";
+            setMergingType("merging_ties_to_categories")
+            required = ["datasetID", "categoryID", "Key"];
+            if (!cols.includes("stackID") && !cols.includes("mergingID")) {
+              mergeConfigError = "Category merging ties require stackID, or mergingID to infer stackID.";
               setMergingType("0");
               required = [];
             }
@@ -1180,8 +1172,8 @@ const Edit = ({ database }) => {
             }
           }
 
-          else if (cols.includes("categoryID1") && cols.includes("categoryID2")) {
-            mergeConfigError = "Adding or replacing proeprties for existing equivalence ties is not permitted for now.";
+          else if (cols.includes("categoryID")) {
+            mergeConfigError = "Adding or replacing properties for existing category merging ties is not permitted for now.";
             setMergingType("0");
             required = [];
           }
@@ -1206,7 +1198,8 @@ const Edit = ({ database }) => {
     setError((previous) => {
       const transientMergeErrors = new Set([
         'Not all required columns are present.',
-        'Adding or replacing proeprties for existing equivalence ties is not permitted for now.',
+        'Adding or replacing properties for existing category merging ties is not permitted for now.',
+        'Category merging ties require stackID, or mergingID to infer stackID.',
         'Nothing to update for this type of merging tie.',
       ]);
 
@@ -1732,7 +1725,7 @@ const Edit = ({ database }) => {
                 label={<StandardOptionLabel label={standardOptions.update_replace.label} helpText={standardOptions.update_replace.helpText} />}
               />
             )}
-            <Typography variant="subtitle2" sx={{ mt: 2, color: "black", fontWeight: "bold" }}>Merging & Equivalence ties</Typography>
+            <Typography variant="subtitle2" sx={{ mt: 2, color: "black", fontWeight: "bold" }}>Merging ties</Typography>
             <FormControlLabel
               value="add_merging"
               control={<Radio />}

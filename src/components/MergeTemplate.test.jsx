@@ -56,15 +56,13 @@ describe('MergeTemplate branching', () => {
           json: async () => ({
             nodeType: 'MERGING',
             stackSummaryTotals: { variableCount: 0 },
-            equivalenceTies: [
+            categoryMergingTies: [
               {
                 stackID: 'AD958',
                 datasetID: 'AD354274',
                 Key: 'Site == Red Rock House',
-                originalCMID: 'AM1',
-                originalCMName: 'Original A',
-                equivalentCMID: 'AM900',
-                equivalentCMName: 'Canonical A',
+                categoryCMID: 'AM900',
+                categoryCMName: 'Canonical A',
               },
             ],
           }),
@@ -142,7 +140,7 @@ describe('MergeTemplate branching', () => {
           json: async () => ({
             nodeType: 'MERGING',
             stackSummaryTotals: { variableCount: 3 },
-            equivalenceTies: [{ datasetID: 'SD1' }],
+            categoryMergingTies: [{ datasetID: 'SD1' }],
           }),
         });
       }
