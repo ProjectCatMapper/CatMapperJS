@@ -1,3 +1,4 @@
+import { apiBaseUrl } from '../api/endpoints';
 import React, { useEffect, useState } from 'react';
 import { styled } from '@mui/material/styles';
 import InputBase from '@mui/material/InputBase';
@@ -131,7 +132,7 @@ export default function Searchbar({ database }) {
     const fetchCountries = async () => {
       try {
 
-        const response = await fetch(`${process.env.REACT_APP_API_URL}/metadata/getCountries/${database}`);
+        const response = await fetch(`${apiBaseUrl()}/metadata/getCountries/${database}`);
 
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
@@ -157,7 +158,7 @@ export default function Searchbar({ database }) {
   const [selectedCategory, setSelectedCategory] = useState({});
 
   useEffect(() => {
-    fetch(`${process.env.REACT_APP_API_URL}/metadata/subdomains/${database}`)
+    fetch(`${apiBaseUrl()}/metadata/subdomains/${database}`)
       .then((res) => {
         if (!res.ok) throw new Error(`Server error: ${res.status}`);
         return res.json();
@@ -185,7 +186,7 @@ export default function Searchbar({ database }) {
   const [categories, setCategories] = useState([]);
 
   useEffect(() => {
-    fetch(`${process.env.REACT_APP_API_URL}/metadata/domainDescriptions/${database}`)
+    fetch(`${apiBaseUrl()}/metadata/domainDescriptions/${database}`)
       .then((res) => {
         if (!res.ok) throw new Error("Failed to load domain descriptions");
         return res.json();
@@ -354,7 +355,7 @@ export default function Searchbar({ database }) {
 
   const persistNlpLogOnServer = async (entry = {}) => {
     try {
-      await fetch(`${process.env.REACT_APP_API_URL}/nlp/parse-log`, {
+      await fetch(`${apiBaseUrl()}/nlp/parse-log`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -509,7 +510,7 @@ export default function Searchbar({ database }) {
 
     setLoading(true);
 
-    fetch(`${process.env.REACT_APP_API_URL}/search?${paramsToUse.toString()}&query=false`, {
+    fetch(`${apiBaseUrl()}/search?${paramsToUse.toString()}&query=false`, {
       method: "GET"
     })
       .then(response => response.json())
@@ -715,7 +716,7 @@ export default function Searchbar({ database }) {
     if (parsed.contextTerm && !resolvedContextID && !resolvedDatasetID) {
       const resolutionDomain = parsed.contextDomain || "CATEGORY";
       const resolution = await resolveContextCmid({
-        apiUrl: process.env.REACT_APP_API_URL,
+        apiUrl: apiBaseUrl(),
         database,
         contextTerm: parsed.contextTerm,
         contextDomain: resolutionDomain

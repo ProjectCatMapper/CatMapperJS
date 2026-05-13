@@ -1,3 +1,4 @@
+import { apiBaseUrl } from '../api/endpoints';
 import React, { useState, useEffect } from 'react';
 import { Box, Tooltip, Button, Select, MenuItem } from '@mui/material';
 import InfoIcon from '@mui/icons-material/Info';
@@ -14,7 +15,7 @@ export default function DomainSelector({ database, orientation = 'vertical', dom
         if (!database) return;
 
         const getDomains = async () => {
-            const response = await fetch(`${process.env.REACT_APP_API_URL}/getDomains/${database}`);
+            const response = await fetch(`${apiBaseUrl()}/getDomains/${database}`);
             const data = await response.json();
             setDomainsData(data);
 

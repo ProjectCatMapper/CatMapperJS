@@ -1,3 +1,4 @@
+import { apiBaseUrl } from '../api/endpoints';
 import { useEffect, useState } from "react";
 import {
   Box,
@@ -333,7 +334,7 @@ const Admin = ({ database }) => {
         s1_3: formData.s1_3.trim(),
       };
 
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/admin/edit`, {
+      const response = await fetch(`${apiBaseUrl()}/admin/edit`, {
         //const response = await fetch("http://127.0.0.1:5001/admin/edit", {
         method: "POST",
         headers: {
@@ -384,7 +385,7 @@ const Admin = ({ database }) => {
         s1_3: formData.s1_3.trim(),
       };
 
-      await fetch(`${process.env.REACT_APP_API_URL}/admin/edit`, {
+      await fetch(`${apiBaseUrl()}/admin/edit`, {
         //const response = await fetch("http://127.0.0.1:5001/admin/edit", {
         method: "POST",
         headers: {
@@ -421,7 +422,7 @@ const Admin = ({ database }) => {
         s1_3: formData.s1_3.trim(),
       };
 
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/check_ambiguous_usesties`, {
+      const response = await fetch(`${apiBaseUrl()}/check_ambiguous_usesties`, {
         //const response = await fetch("http://127.0.0.1:5001/check_ambiguous_usesties", {
         method: "POST",
         headers: {
@@ -471,7 +472,7 @@ const Admin = ({ database }) => {
   const loadPendingUsersForApproval = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/updateNewUsers`, {
+      const response = await fetch(`${apiBaseUrl()}/updateNewUsers`, {
         //const response = await fetch("http://127.0.0.1:5001/updateNewUsers", {
         method: "POST",
         headers: {
@@ -520,7 +521,7 @@ const Admin = ({ database }) => {
       }
 
       setLoading(true);
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/updateNewUsers`, {
+      const response = await fetch(`${apiBaseUrl()}/updateNewUsers`, {
         //const response = await fetch("http://127.0.0.1:5001/updateNewUsers", {
         method: "POST",
         headers: {
@@ -596,7 +597,7 @@ const Admin = ({ database }) => {
   const lookupUsers = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/admin/users/lookup`, {
+      const response = await fetch(`${apiBaseUrl()}/admin/users/lookup`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -648,7 +649,7 @@ const Admin = ({ database }) => {
 
   const loadUserStatusSummary = async () => {
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/admin/users/status-summary`, {
+      const response = await fetch(`${apiBaseUrl()}/admin/users/status-summary`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -686,7 +687,7 @@ const Admin = ({ database }) => {
         return;
       }
       setLoading(true);
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/admin/users/update`, {
+      const response = await fetch(`${apiBaseUrl()}/admin/users/update`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -763,7 +764,7 @@ const Admin = ({ database }) => {
       return localMatch;
     }
 
-    const response = await fetch(`${process.env.REACT_APP_API_URL}/admin/users/lookup`, {
+    const response = await fetch(`${apiBaseUrl()}/admin/users/lookup`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -819,7 +820,7 @@ const Admin = ({ database }) => {
       }
 
       setLoading(true);
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/admin/users/update`, {
+      const response = await fetch(`${apiBaseUrl()}/admin/users/update`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -1011,7 +1012,7 @@ const Admin = ({ database }) => {
 
       const queryString = params.toString();
       const response = await fetch(
-        `${process.env.REACT_APP_API_URL}/routines/${encodeURIComponent(firstDropdownValue)}/${encodeURIComponent(database)}${queryString ? `?${queryString}` : ""}`,
+        `${apiBaseUrl()}/routines/${encodeURIComponent(firstDropdownValue)}/${encodeURIComponent(database)}${queryString ? `?${queryString}` : ""}`,
         {
           method: "GET",
           headers: {
@@ -1071,7 +1072,7 @@ const Admin = ({ database }) => {
 
       setLoading(true);
       const response = await fetch(
-        `${process.env.REACT_APP_API_URL}/mergeUSESties`,
+        `${apiBaseUrl()}/mergeUSESties`,
         {
           method: "POST",
           headers: {
@@ -1131,7 +1132,7 @@ const Admin = ({ database }) => {
 
   const fetchMergeNodeSummary = async (cmid) => {
     const response = await fetch(
-      `${process.env.REACT_APP_API_URL}/admin/nodeSummary?CMID=${encodeURIComponent(cmid)}&database=${encodeURIComponent(database)}`,
+      `${apiBaseUrl()}/admin/nodeSummary?CMID=${encodeURIComponent(cmid)}&database=${encodeURIComponent(database)}`,
       {
         method: "GET",
         headers: {
@@ -1207,7 +1208,7 @@ const Admin = ({ database }) => {
     if (pattern.test(cmid)) {
       const fetchData = async () => {
         try {
-          const res = await fetch(`${process.env.REACT_APP_API_URL}/admin_add_edit_delete_nodeproperties?CMID=` + cmid + "&database=" + database + "&option=" + option, {
+          const res = await fetch(`${apiBaseUrl()}/admin_add_edit_delete_nodeproperties?CMID=` + cmid + "&database=" + database + "&option=" + option, {
             //const res = await fetch("http://127.0.0.1:5001/admin_add_edit_delete_nodeproperties?CMID="+cmid+"&database="+database, {
             method: "GET",
           });
@@ -1275,7 +1276,7 @@ const Admin = ({ database }) => {
           const endpoint = isCategoryMergingMode
             ? "/admin_add_edit_delete_category_merging_properties"
             : "/admin_add_edit_delete_usesproperties";
-          const res = await fetch(`${process.env.REACT_APP_API_URL}${endpoint}?CMID=` + cmid + "&database=" + database, {
+          const res = await fetch(`${apiBaseUrl()}${endpoint}?CMID=` + cmid + "&database=" + database, {
             //const res = await fetch("http://127.0.0.1:5001/admin_add_edit_delete_usesproperties?CMID="+cmid+"&database="+database, {
             method: "GET",
           });

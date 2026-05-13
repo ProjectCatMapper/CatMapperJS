@@ -27,7 +27,7 @@ describe('editUploadApi auth headers', () => {
     });
 
     const [url, options] = global.fetch.mock.calls[0];
-    expect(url).toBe('http://api.test/uploadInputNodes');
+    expect(url).toBe('http://api.test/api/uploads/input-nodes');
     expect(options.headers).toMatchObject({
       'Content-Type': 'application/json',
       Authorization: 'Bearer token-123',
@@ -42,7 +42,7 @@ describe('editUploadApi auth headers', () => {
     });
 
     const [url, options] = global.fetch.mock.calls[0];
-    expect(url).toBe('http://api.test/updateWaitingUSES');
+    expect(url).toBe('http://api.test/api/updateWaitingUSES');
     expect(options.headers.Authorization).toBe('Bearer token-abc');
     expect(JSON.parse(options.body)).toEqual({ database: 'SocioMap', user: '42' });
   });
@@ -55,7 +55,7 @@ describe('editUploadApi auth headers', () => {
     });
 
     const [url, options] = global.fetch.mock.calls[0];
-    expect(url).toBe('http://api.test/uploadWaitingUSESStatus');
+    expect(url).toBe('http://api.test/api/uploads/waiting-uses/status');
     expect(options.headers.Authorization).toBe('Bearer token-xyz');
     expect(JSON.parse(options.body)).toEqual({ taskId: 'task-001', user: '42' });
   });
@@ -69,7 +69,7 @@ describe('editUploadApi auth headers', () => {
     });
 
     const [url, options] = global.fetch.mock.calls[0];
-    expect(url).toBe('http://api.test/uploadInputNodesStatus');
+    expect(url).toBe('http://api.test/api/uploads/input-nodes/status');
     expect(options.headers.Authorization).toBe('Bearer token-upload');
     expect(JSON.parse(options.body)).toEqual({ taskId: 'upload-001', user: '42', cursor: 12 });
   });
@@ -83,7 +83,7 @@ describe('editUploadApi auth headers', () => {
     });
 
     const [url, options] = global.fetch.mock.calls[0];
-    expect(url).toBe('http://api.test/uploadInputNodesCancel');
+    expect(url).toBe('http://api.test/api/uploads/input-nodes/cancel');
     expect(options.headers.Authorization).toBe('Bearer token-upload');
     expect(JSON.parse(options.body)).toEqual({ taskId: 'upload-002', user: '42', cursor: 3 });
   });
@@ -95,7 +95,7 @@ describe('editUploadApi auth headers', () => {
     });
 
     const [url, options] = global.fetch.mock.calls[0];
-    expect(url).toBe('http://api.test/metadata/uploadProperties/archamap');
+    expect(url).toBe('http://api.test/api/databases/archamap/metadata/upload-properties');
     expect(options.method).toBe('GET');
     expect(options.headers.Authorization).toBe('Bearer token-upload');
   });

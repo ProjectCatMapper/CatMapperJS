@@ -1,3 +1,4 @@
+import { apiBaseUrl } from '../api/endpoints';
 import React, { useState, useEffect, useMemo } from 'react'
 import { Box, Button, FormControlLabel, Radio, RadioGroup, Checkbox, Typography, Divider, Select, NativeSelect, TextField, MenuItem, FormControl, FormGroup, Snackbar, Alert, Paper, Tooltip, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
 import CircularProgress from '@mui/material/CircularProgress';
@@ -72,7 +73,7 @@ const Propose_Merge = ({ database }) => {
   };
 
   useEffect(() => {
-    fetch(`${process.env.REACT_APP_API_URL}/metadata/subdomains/${database}`)
+    fetch(`${apiBaseUrl()}/metadata/subdomains/${database}`)
       .then((res) => res.json())
       .then((data) => {
         const normalized = {};
@@ -93,7 +94,7 @@ const Propose_Merge = ({ database }) => {
   const [categories, setCategories] = useState([]);
 
   useEffect(() => {
-    fetch(`${process.env.REACT_APP_API_URL}/metadata/domainDescriptions/${database}`)
+    fetch(`${apiBaseUrl()}/metadata/domainDescriptions/${database}`)
       .then((res) => {
         if (!res.ok) throw new Error("Failed to load domain descriptions");
         return res.json();
@@ -195,7 +196,7 @@ const Propose_Merge = ({ database }) => {
   const handleValidate = async () => {
     if (!validateDatasetInputs()) return;
     try {
-      const response = await fetch(process.env.REACT_APP_API_URL + "/validateDatasets", {
+      const response = await fetch(apiBaseUrl() + "/validateDatasets", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -239,7 +240,7 @@ const Propose_Merge = ({ database }) => {
     setLoadingKeys(true);
     setKeyLoadError('');
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/getKeys`, {
+      const response = await fetch(`${apiBaseUrl()}/getKeys`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -316,7 +317,7 @@ const Propose_Merge = ({ database }) => {
         payload.primaryDataset = crossPrimaryDataset;
         payload.maxHops = Number(crossMaxHops) || 3;
       }
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/proposeMergeSubmit`, {
+      const response = await fetch(`${apiBaseUrl()}/proposeMergeSubmit`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

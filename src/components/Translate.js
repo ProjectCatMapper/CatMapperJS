@@ -1,3 +1,4 @@
+import { apiBaseUrl } from '../api/endpoints';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import domainOptions from "./SearchSelectDropdown";
 import { Select, MenuItem } from '@mui/material';
@@ -189,7 +190,7 @@ function TranslateComponent({ database }) {
 
     translatePollTimeoutRef.current = setTimeout(async () => {
       try {
-        const response = await fetch(`${process.env.REACT_APP_API_URL}/translate/status`, {
+        const response = await fetch(`${apiBaseUrl()}/translate/status`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -265,7 +266,7 @@ function TranslateComponent({ database }) {
     setLoadingPercent(10);
     setLoadingElapsedSeconds(0);
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/translate/start`, {
+      const response = await fetch(`${apiBaseUrl()}/translate/start`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -336,7 +337,7 @@ function TranslateComponent({ database }) {
     }
     if (translateTaskId) {
       try {
-        await fetch(`${process.env.REACT_APP_API_URL}/translate/cancel`, {
+        await fetch(`${apiBaseUrl()}/translate/cancel`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -552,7 +553,7 @@ function TranslateComponent({ database }) {
     const fetchData = async () => {
       try {
 
-        const response = await fetch(`${process.env.REACT_APP_API_URL}/getTranslatedomains?database=` + database, {
+        const response = await fetch(`${apiBaseUrl()}/getTranslatedomains?database=` + database, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -632,7 +633,7 @@ function TranslateComponent({ database }) {
   const [categories, setCategories] = useState([]);
 
   useEffect(() => {
-    fetch(`${process.env.REACT_APP_API_URL}/metadata/domainDescriptions/${database}`)
+    fetch(`${apiBaseUrl()}/metadata/domainDescriptions/${database}`)
       .then((res) => {
         if (!res.ok) throw new Error("Failed to load domain descriptions");
         return res.json();
@@ -648,7 +649,7 @@ function TranslateComponent({ database }) {
   const [selectedCategory, setSelectedCategory] = useState({});
 
   useEffect(() => {
-    fetch(`${process.env.REACT_APP_API_URL}/metadata/subdomains/${database}`)
+    fetch(`${apiBaseUrl()}/metadata/subdomains/${database}`)
       .then((res) => res.json())
       .then((data) => {
         const normalized = {};

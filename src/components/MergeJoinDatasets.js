@@ -1,3 +1,4 @@
+import { apiBaseUrl } from '../api/endpoints';
 import React, { useState } from 'react';
 import { Box, Button, Typography, Divider, IconButton, TextField, Tooltip } from '@mui/material';
 import CircularProgress from '@mui/material/CircularProgress';
@@ -86,7 +87,7 @@ const JoinDatasets_Merge = ({ database }) => {
       const normalizedLeft = normalizeJoinRowsWithDatasetID(fileLeft, leftDatasetID, 'First dataset');
       const normalizedRight = normalizeJoinRowsWithDatasetID(fileRight, rightDatasetID, 'Second dataset');
 
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/joinDatasets`, {
+      const response = await fetch(`${apiBaseUrl()}/joinDatasets`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

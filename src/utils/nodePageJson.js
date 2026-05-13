@@ -1,6 +1,6 @@
 export function buildNodePageJsonUrl(apiBase, database, cmid) {
   const base = String(apiBase || "").replace(/\/+$/, "");
-  return `${base}/entity/${encodeURIComponent(database)}/${encodeURIComponent(cmid)}.json`;
+  return `${base}/databases/${encodeURIComponent(database)}/nodes/${encodeURIComponent(cmid)}/page.json`;
 }
 
 export function downloadJsonObject(data, fileName) {

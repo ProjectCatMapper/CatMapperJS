@@ -1,3 +1,4 @@
+import { apiBaseUrl } from '../api/endpoints';
 import React, { useState } from 'react';
 import {
   Box,
@@ -73,7 +74,7 @@ const MergeTemplate = ({ database }) => {
     }
 
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/merge/syntax/${database}`, {
+      const response = await fetch(`${apiBaseUrl()}/merge/syntax/${database}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -108,7 +109,7 @@ const MergeTemplate = ({ database }) => {
 
       if (result && result.download?.hash) {
         setDownloadHash(result.download.hash);
-        window.open(`${process.env.REACT_APP_API_URL}/download/zip/${result.download.hash}`, '_blank');
+        window.open(`${apiBaseUrl()}/download/zip/${result.download.hash}`, '_blank');
       }
 
       return msgToDisplay;
@@ -135,7 +136,7 @@ const MergeTemplate = ({ database }) => {
       setJsondata(null);
 
       const summaryResponse = await fetch(
-        `${process.env.REACT_APP_API_URL}/merge/template/summary/${database}/${inputValue}`,
+        `${apiBaseUrl()}/merge/template/summary/${database}/${inputValue}`,
         {
           method: 'GET',
         }
@@ -157,7 +158,7 @@ const MergeTemplate = ({ database }) => {
         return;
       }
 
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/merge/template/${database}/${inputValue}`, {
+      const response = await fetch(`${apiBaseUrl()}/merge/template/${database}/${inputValue}`, {
         method: 'GET',
       });
 

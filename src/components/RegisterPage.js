@@ -1,3 +1,4 @@
+import { apiBaseUrl } from '../api/endpoints';
 // RegisterPage.js
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -75,7 +76,7 @@ const RegisterPage = ({ database }) => {
             setErrorMessage('');
             setIsSubmitting(true);
             const payload = buildRegistrationPayload();
-            const response = await fetch(`${process.env.REACT_APP_API_URL}/newuser`, {
+            const response = await fetch(`${apiBaseUrl()}/newuser`, {
                 //const response = await fetch("http://127.0.0.1:5001/newuser", {
                 method: 'POST',
                 headers: {
@@ -115,7 +116,7 @@ const RegisterPage = ({ database }) => {
             }
 
             setIsSubmitting(true);
-            const response = await fetch(`${process.env.REACT_APP_API_URL}/newuser/confirm-email`, {
+            const response = await fetch(`${apiBaseUrl()}/newuser/confirm-email`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

@@ -1,3 +1,4 @@
+import { apiBaseUrl } from '../api/endpoints';
 import React from 'react'
 import { useEffect, useState } from 'react';
 import Box from '@mui/material/Box';
@@ -65,7 +66,7 @@ const AppBody = ({ database }) => {
 
   useEffect(() => {
 
-    fetch(`${process.env.REACT_APP_API_URL}/progress/${database}`,
+    fetch(`${apiBaseUrl()}/progress/${database}`,
       {
         method: "GET"
       })
@@ -81,7 +82,7 @@ const AppBody = ({ database }) => {
 
   useEffect(() => {
     if (database !== "sociomap") return;
-    fetch(`${process.env.REACT_APP_API_URL}/foci?database=${database}`, {
+    fetch(`${apiBaseUrl()}/foci?database=${database}`, {
       method: "GET",
     })
       .then((response) => response.json())
@@ -105,7 +106,7 @@ const AppBody = ({ database }) => {
 
   useEffect(() => {
 
-    fetch(`${process.env.REACT_APP_API_URL}/metadata/domaincount/${database}/DATASET`, {
+    fetch(`${apiBaseUrl()}/metadata/domaincount/${database}/DATASET`, {
       method: "GET"
     })
       .then(response => response.json())

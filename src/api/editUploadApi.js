@@ -1,4 +1,4 @@
-const getApiBase = () => process.env.REACT_APP_API_URL;
+import { apiEndpoints, apiUrl } from './endpoints';
 
 const authHeaders = (cred) => ({
   'Content-Type': 'application/json',
@@ -6,7 +6,7 @@ const authHeaders = (cred) => ({
 });
 
 export const uploadInputNodes = ({ cred, payload }) => {
-  return fetch(`${getApiBase()}/uploadInputNodes`, {
+  return fetch(apiUrl(apiEndpoints.uploadInputNodes()), {
     method: 'POST',
     headers: authHeaders(cred),
     body: JSON.stringify(payload),
@@ -14,7 +14,7 @@ export const uploadInputNodes = ({ cred, payload }) => {
 };
 
 export const updateWaitingUSES = ({ cred, database, user }) => {
-  return fetch(`${getApiBase()}/updateWaitingUSES`, {
+  return fetch(apiUrl('/updateWaitingUSES'), {
     method: 'POST',
     headers: authHeaders(cred),
     body: JSON.stringify({ database, user }),
@@ -22,7 +22,7 @@ export const updateWaitingUSES = ({ cred, database, user }) => {
 };
 
 export const getWaitingUSESStatus = ({ cred, taskId, user }) => {
-  return fetch(`${getApiBase()}/uploadWaitingUSESStatus`, {
+  return fetch(apiUrl(apiEndpoints.waitingUsesStatus()), {
     method: 'POST',
     headers: authHeaders(cred),
     body: JSON.stringify({ taskId, user }),
@@ -30,7 +30,7 @@ export const getWaitingUSESStatus = ({ cred, taskId, user }) => {
 };
 
 export const getUploadInputNodesStatus = ({ cred, taskId, user, cursor = 0 }) => {
-  return fetch(`${getApiBase()}/uploadInputNodesStatus`, {
+  return fetch(apiUrl(apiEndpoints.uploadInputNodesStatus()), {
     method: 'POST',
     headers: authHeaders(cred),
     body: JSON.stringify({ taskId, user, cursor }),
@@ -38,7 +38,7 @@ export const getUploadInputNodesStatus = ({ cred, taskId, user, cursor = 0 }) =>
 };
 
 export const cancelUploadInputNodes = ({ cred, taskId, user, cursor = 0 }) => {
-  return fetch(`${getApiBase()}/uploadInputNodesCancel`, {
+  return fetch(apiUrl(apiEndpoints.uploadInputNodesCancel()), {
     method: 'POST',
     headers: authHeaders(cred),
     body: JSON.stringify({ taskId, user, cursor }),
@@ -46,7 +46,7 @@ export const cancelUploadInputNodes = ({ cred, taskId, user, cursor = 0 }) => {
 };
 
 export const getUploadProperties = ({ cred, database }) => {
-  return fetch(`${getApiBase()}/metadata/uploadProperties/${database}`, {
+  return fetch(apiUrl(apiEndpoints.uploadProperties(database)), {
     method: 'GET',
     headers: authHeaders(cred),
   });

@@ -1,3 +1,4 @@
+import { apiBaseUrl } from '../api/endpoints';
 import React, { useState } from 'react';
 import { Button, CircularProgress } from '@mui/material';
 
@@ -8,7 +9,7 @@ const DownloadDatasetButton = ({ databaseName = "sociomap", fileName = "dataset_
         setLoading(true);
         try {
             const response = await fetch(
-                `${process.env.REACT_APP_API_URL}/allDatasets?database=${databaseName}`,
+                `${apiBaseUrl()}/allDatasets?database=${databaseName}`,
                 {
                     method: "GET",
                     headers: { "Content-Type": "application/json" },

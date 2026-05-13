@@ -1,3 +1,4 @@
+import { apiBaseUrl } from '../api/endpoints';
 import React, { useMemo, useState, useEffect } from "react";
 import {
   TextField,
@@ -110,7 +111,7 @@ const DynamicPropertiesForm = () => {
       setSuccessMessage(null);
       try {
         if (isListView) {
-          const response = await fetch(`${process.env.REACT_APP_API_URL}/admin/metadata/nodes`, {
+          const response = await fetch(`${apiBaseUrl()}/admin/metadata/nodes`, {
             headers: fetchHeaders,
           });
           const result = await response.json();
@@ -130,7 +131,7 @@ const DynamicPropertiesForm = () => {
           setFormData([]);
         } else {
           const dbParam = database ? `?database=${database}` : '';
-          const response = await fetch(`${process.env.REACT_APP_API_URL}/admin/metadata/node/${cmid}${dbParam}`, {
+          const response = await fetch(`${apiBaseUrl()}/admin/metadata/node/${cmid}${dbParam}`, {
             headers: fetchHeaders,
           });
           const result = await response.json();
@@ -182,7 +183,7 @@ const DynamicPropertiesForm = () => {
             option: 'add',
           });
           const response = await fetch(
-            `${process.env.REACT_APP_API_URL}/admin_add_edit_delete_nodeproperties?${query.toString()}`,
+            `${apiBaseUrl()}/admin_add_edit_delete_nodeproperties?${query.toString()}`,
             { headers: fetchHeaders }
           );
           const result = await response.json();
@@ -210,7 +211,7 @@ const DynamicPropertiesForm = () => {
         const target = String(createNodeData.databaseTarget || 'both').trim().toLowerCase();
         const query = new URLSearchParams({ databaseTarget: target });
         const response = await fetch(
-          `${process.env.REACT_APP_API_URL}/admin/metadata/properties/${nodeLabel}?${query.toString()}`,
+          `${apiBaseUrl()}/admin/metadata/properties/${nodeLabel}?${query.toString()}`,
           { headers: fetchHeaders },
         );
         const result = await response.json();
@@ -344,7 +345,7 @@ const DynamicPropertiesForm = () => {
         })),
       };
 
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/admin/saveMetadata`, {
+      const response = await fetch(`${apiBaseUrl()}/admin/saveMetadata`, {
         method: "POST",
         headers: fetchHeaders,
         body: JSON.stringify(payload),
@@ -466,7 +467,7 @@ const DynamicPropertiesForm = () => {
         properties: { ...(createNodeData.properties || {}) },
       };
 
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/admin/metadata/create`, {
+      const response = await fetch(`${apiBaseUrl()}/admin/metadata/create`, {
         method: 'POST',
         headers: fetchHeaders,
         body: JSON.stringify(payload),

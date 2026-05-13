@@ -83,11 +83,11 @@ describe('profileApi bookmark/history normalization', () => {
     });
 
     const [requestUrl, requestOptions] = global.fetch.mock.calls[0];
-    expect(requestUrl).toContain('/profile/request-api-key');
+    expect(requestUrl).toContain('/api/api-key-requests');
     expect(requestOptions.headers.Authorization).toBe('Bearer token-123');
 
     const [confirmUrl, confirmOptions] = global.fetch.mock.calls[1];
-    expect(confirmUrl).toContain('/profile/confirm-api-key');
+    expect(confirmUrl).toContain('/api/api-key-confirmations');
     expect(JSON.parse(confirmOptions.body)).toEqual({
       userId: '42',
       requestId: 'apikey_123',

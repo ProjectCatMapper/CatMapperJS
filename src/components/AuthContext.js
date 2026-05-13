@@ -1,3 +1,4 @@
+import { apiBaseUrl } from '../api/endpoints';
 import { createContext, useState, useContext, useEffect, useRef } from 'react';
 import {
     AUTH_INVALID_EVENT,
@@ -98,7 +99,7 @@ export const AuthProvider = ({ children }) => {
     useEffect(() => {
         if (typeof window === 'undefined' || typeof window.fetch !== 'function') return;
 
-        const apiBase = String(process.env.REACT_APP_API_URL || '');
+        const apiBase = String(apiBaseUrl() || '');
         const originalFetch = window.fetch.bind(window);
 
         const resolveUrl = (input) => {
@@ -167,7 +168,7 @@ export const AuthProvider = ({ children }) => {
 
     const login = async (username, password) => {
         try {
-            const response = await fetch(`${process.env.REACT_APP_API_URL}/login`, {
+            const response = await fetch(`${apiBaseUrl()}/login`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

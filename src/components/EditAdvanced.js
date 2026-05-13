@@ -1,3 +1,4 @@
+import { apiBaseUrl } from '../api/endpoints';
 import {
   Dialog, DialogTitle, DialogContent, DialogActions,
   FormControlLabel, Checkbox, Button, Typography, CircularProgress
@@ -69,7 +70,7 @@ const DownloadDialogButton = ({ users, database, domain, count,cmid_download }) 
 
       try {
         const response = await fetch(
-          `${process.env.REACT_APP_API_URL}/metadata/CMIDProperties/${database}/${domain}`,
+          `${apiBaseUrl()}/metadata/CMIDProperties/${database}/${domain}`,
           {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -108,7 +109,7 @@ const DownloadDialogButton = ({ users, database, domain, count,cmid_download }) 
     try {
       setLoading(true);
       // Download with selected node properties from API
-      const res = await fetch(`${process.env.REACT_APP_API_URL}/download/advanced/${database}`, {
+      const res = await fetch(`${apiBaseUrl()}/download/advanced/${database}`, {
       //const res = await fetch(`http://127.0.0.1:5001/download/advanced/${database}`, {
 
   method: 'POST',

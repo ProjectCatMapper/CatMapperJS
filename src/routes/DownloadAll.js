@@ -1,3 +1,4 @@
+import { apiBaseUrl } from '../api/endpoints';
 import React, { useEffect, useState } from 'react';
 import Navbar from '../components/NavbarHome';
 import FooterLinks from '../components/FooterLinks';
@@ -34,7 +35,7 @@ const DownloadAll = () => {
   };
 
   const fetchData = async (db) => {
-    const response = await fetch(`${process.env.REACT_APP_API_URL}/CSVURLs/${db}?mostRecent=False`);
+    const response = await fetch(`${apiBaseUrl()}/CSVURLs/${db}?mostRecent=False`);
     const data = await response.json();
 
     const files = Array.isArray(data.urls)

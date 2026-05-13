@@ -15,20 +15,23 @@ const ApiGuide = () => {
         </Typography>
 
         <Typography variant="body1" gutterBottom>
-          This user guide documents public CatMapper API endpoints. The API base URL is{' '}
-          <Link className="link" href="https://api.catmapper.org" target="_blank" rel="noopener">
-            https://api.catmapper.org
+          This user guide documents public CatMapper API endpoints. The canonical REST API base URL is{' '}
+          <Link className="link" href="https://api.catmapper.org/api" target="_blank" rel="noopener">
+            https://api.catmapper.org/api
           </Link>.
+        </Typography>
+        <Typography variant="body1" gutterBottom>
+          Existing unprefixed endpoints remain available as deprecated compatibility aliases during the REST migration.
         </Typography>
         <Typography variant="body1" gutterBottom>
           Example:{' '}
           <Link
             className="link"
-            href="https://api.catmapper.org/CMID/SocioMap/SM1"
+            href="https://api.catmapper.org/api/databases/SocioMap/nodes/SM1"
             target="_blank"
             rel="noopener"
           >
-            https://api.catmapper.org/CMID/SocioMap/SM1
+            https://api.catmapper.org/api/databases/SocioMap/nodes/SM1
           </Link>
         </Typography>
         <Typography variant="body1" gutterBottom>
@@ -55,7 +58,7 @@ const ApiGuide = () => {
             <strong>Endpoint Description</strong>
           </Typography>
           <Typography variant="body1" gutterBottom>
-            The <code className="codetext">/search</code> endpoint supports Explore-style search over
+            The <code className="codetext">/api/search</code> endpoint supports Explore-style search over
             CatMapper categories and datasets. You can filter by domain, year range, country, context,
             contexts, and dataset.
           </Typography>
@@ -77,7 +80,7 @@ const ApiGuide = () => {
             <strong>Resource URL</strong>
           </Typography>
           <Typography variant="body1" gutterBottom>
-            <code className="codetext">/search</code>
+            <code className="codetext">/api/search</code>
           </Typography>
         </Box>
 
@@ -179,15 +182,15 @@ const ApiGuide = () => {
           </Typography>
           <Typography variant="body1" gutterBottom>
             <code className="codetext">
-              GET /search?database=SocioMap&term=Yoruba&domain=ETHNICITY&property=Name&query=false
+              GET /api/search?database=SocioMap&term=Yoruba&domain=ETHNICITY&property=Name&query=false
             </code>
             <br />
             <code className="codetext">
-              GET /search?database=ArchaMap&term=Grasshopper&domain=SITE&property=Name&dataset=AD1&query=false
+              GET /api/search?database=ArchaMap&term=Grasshopper&domain=SITE&property=Name&dataset=AD1&query=false
             </code>
             <br />
             <code className="codetext">
-              GET /search?database=SocioMap&term=Yoruba&domain=ETHNICITY&property=Name&contexts=SM47,SM2508&contextMode=all&query=false
+              GET /api/search?database=SocioMap&term=Yoruba&domain=ETHNICITY&property=Name&contexts=SM47,SM2508&contextMode=all&query=false
             </code>
           </Typography>
         </Box>
@@ -261,7 +264,7 @@ const ApiGuide = () => {
             <strong>Resource URL</strong>
           </Typography>
           <Typography variant="body1" gutterBottom>
-            <code className="codetext">/CMID/&lt;database&gt;/&lt;cmid&gt;</code>
+            <code className="codetext">/api/databases/&lt;database&gt;/nodes/&lt;cmid&gt;</code>
           </Typography>
         </Box>
 
@@ -292,9 +295,9 @@ const ApiGuide = () => {
             <strong>Request Examples</strong>
           </Typography>
           <Typography variant="body1" gutterBottom>
-            <code className="codetext">GET /CMID/SocioMap/SM1</code>
+            <code className="codetext">GET /api/databases/SocioMap/nodes/SM1</code>
             <br />
-            <code className="codetext">GET /CMID/ArchaMap/AM1</code>
+            <code className="codetext">GET /api/databases/ArchaMap/nodes/AM1</code>
           </Typography>
         </Box>
 
@@ -364,7 +367,7 @@ const ApiGuide = () => {
             <strong>Resource URL</strong>
           </Typography>
           <Typography variant="body1" gutterBottom>
-            <code className="codetext">/entity/&lt;database&gt;/&lt;cmid&gt;.json</code>
+            <code className="codetext">/api/databases/&lt;database&gt;/nodes/&lt;cmid&gt;/page.json</code>
           </Typography>
         </Box>
 
@@ -395,9 +398,9 @@ const ApiGuide = () => {
             <strong>Request Examples</strong>
           </Typography>
           <Typography variant="body1" gutterBottom>
-            <code className="codetext">GET /entity/SocioMap/SM1.json</code>
+            <code className="codetext">GET /api/databases/SocioMap/nodes/SM1/page.json</code>
             <br />
-            <code className="codetext">GET /entity/ArchaMap/AM1.json</code>
+            <code className="codetext">GET /api/databases/ArchaMap/nodes/AM1/page.json</code>
           </Typography>
         </Box>
 
@@ -476,7 +479,7 @@ const ApiGuide = () => {
             <strong>Resource URL</strong>
           </Typography>
           <Typography variant="body1" gutterBottom>
-            <code className="codetext">/dataset</code>
+            <code className="codetext">/api/dataset</code>
           </Typography>
         </Box>
 
@@ -532,10 +535,10 @@ const ApiGuide = () => {
           </Typography>
           <Typography variant="body1" gutterBottom>
             <code className="codetext">
-              GET /dataset?database=SocioMap&cmid=SD1&domain=CATEGORY&children=false
+              GET /api/dataset?database=SocioMap&cmid=SD1&domain=CATEGORY&children=false
             </code>
             <br />
-            <code className="codetext">GET /dataset?database=ArchaMap&cmid=AD1&children=true</code>
+            <code className="codetext">GET /api/dataset?database=ArchaMap&cmid=AD1&children=true</code>
           </Typography>
         </Box>
 
@@ -604,7 +607,7 @@ const ApiGuide = () => {
             <strong>Resource URL</strong>
           </Typography>
           <Typography variant="body1" gutterBottom>
-            <code className="codetext">/allDatasets</code>
+            <code className="codetext">/api/datasets</code>
           </Typography>
         </Box>
 
@@ -628,9 +631,9 @@ const ApiGuide = () => {
             <strong>Request Examples</strong>
           </Typography>
           <Typography variant="body1" gutterBottom>
-            <code className="codetext">GET /allDatasets?database=SocioMap</code>
+            <code className="codetext">GET /api/datasets?database=SocioMap</code>
             <br />
-            <code className="codetext">GET /allDatasets?database=ArchaMap</code>
+            <code className="codetext">GET /api/datasets?database=ArchaMap</code>
           </Typography>
         </Box>
 

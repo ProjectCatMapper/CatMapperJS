@@ -1,3 +1,4 @@
+import { apiBaseUrl } from '../api/endpoints';
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import './video.css'
@@ -7,7 +8,7 @@ import mainvideo from "../assets/world.webm"
 const Video = ({ database }) => {
     const [displayData, setDisplayData] = useState([]);
     useEffect(() => {
-        fetch(`${process.env.REACT_APP_API_URL}/homepagecount/${database}`, {
+        fetch(`${apiBaseUrl()}/homepagecount/${database}`, {
             method: "GET"
         })
             .then(response => response.json())

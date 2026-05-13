@@ -1,3 +1,4 @@
+import { apiBaseUrl } from '../api/endpoints';
 // useMetadata.js
 import { useState, useEffect } from 'react';
 
@@ -16,7 +17,7 @@ export const useMetadata = (database) => {
             try {
                 const dbParam = database.toLowerCase();
                 const response = await fetch(
-                    `${process.env.REACT_APP_API_URL}/metadata/domainDescriptions/${dbParam}`
+                    `${apiBaseUrl()}/metadata/domainDescriptions/${dbParam}`
                 );
 
                 if (!response.ok) {

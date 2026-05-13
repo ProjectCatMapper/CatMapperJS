@@ -1,5 +1,5 @@
 import { looksLikeAuthFailure, SESSION_EXPIRED_MESSAGE, signalAuthInvalid } from '../utils/authSession';
-const API_BASE = process.env.REACT_APP_API_URL;
+import { apiEndpoints, apiUrl } from './endpoints';
 
 const normalizeScalar = (value) => (value == null ? '' : String(value).trim());
 
@@ -86,7 +86,7 @@ const authHeaders = (cred) => ({
 
 export const getUserProfile = async ({ userId, cred }) => {
   ensureAuth({ userId, cred });
-  return requestJson(`${API_BASE}/profile/${encodeURIComponent(userId)}`, {
+  return requestJson(apiUrl(apiEndpoints.profile(userId)), {
     method: 'GET',
     headers: authHeaders(cred)
   });
@@ -95,7 +95,7 @@ export const getUserProfile = async ({ userId, cred }) => {
 export const getUserActivity = async ({ userId, database, cred }) => {
   ensureAuth({ userId, cred });
   const params = new URLSearchParams({ database });
-  return requestJson(`${API_BASE}/profile/activity/${encodeURIComponent(userId)}?${params.toString()}`, {
+  return requestJson(`${apiUrl(`/users/${encodeURIComponent(userId)}/activity`)}?${params.toString()}`, {
     method: 'GET',
     headers: authHeaders(cred)
   });
@@ -103,7 +103,7 @@ export const getUserActivity = async ({ userId, database, cred }) => {
 
 export const getBookmarks = async ({ userId, cred }) => {
   ensureAuth({ userId, cred });
-  const data = await requestJson(`${API_BASE}/profile/bookmarks/${encodeURIComponent(userId)}`, {
+  const data = await requestJson(apiUrl(apiEndpoints.bookmarks(userId)), {
     method: 'GET',
     headers: authHeaders(cred)
   });
@@ -125,7 +125,7 @@ export const addBookmark = async ({ userId, database, cmid, cmname, cred, item }
   }
 
   ensureAuth({ userId, cred });
-  return requestJson(`${API_BASE}/profile/bookmarks/add`, {
+  return requestJson(apiUrl('/users/bookmarks'), {
     method: 'POST',
     headers: authHeaders(cred),
     body: JSON.stringify({
@@ -139,7 +139,7 @@ export const addBookmark = async ({ userId, database, cmid, cmname, cred, item }
 
 export const removeBookmarks = async ({ userId, items, cred }) => {
   ensureAuth({ userId, cred });
-  return requestJson(`${API_BASE}/profile/bookmarks/remove`, {
+  return requestJson(apiUrl('/users/bookmarks/remove'), {
     method: 'POST',
     headers: authHeaders(cred),
     body: JSON.stringify({ userId, items })
@@ -148,7 +148,7 @@ export const removeBookmarks = async ({ userId, items, cred }) => {
 
 export const getHistory = async ({ userId, cred }) => {
   ensureAuth({ userId, cred });
-  const data = await requestJson(`${API_BASE}/profile/history/${encodeURIComponent(userId)}`, {
+  const data = await requestJson(apiUrl(apiEndpoints.history(userId)), {
     method: 'GET',
     headers: authHeaders(cred)
   });
@@ -160,7 +160,7 @@ export const getHistory = async ({ userId, cred }) => {
 
 export const addHistoryItem = async ({ userId, database, cmid, cmname, cred }) => {
   ensureAuth({ userId, cred });
-  return requestJson(`${API_BASE}/profile/history/add`, {
+  return requestJson(apiUrl('/users/history'), {
     method: 'POST',
     headers: authHeaders(cred),
     body: JSON.stringify({ userId, database, cmid, cmname })
@@ -169,7 +169,7 @@ export const addHistoryItem = async ({ userId, database, cmid, cmname, cred }) =
 
 export const requestProfileUpdate = async ({ userId, updates, cred }) => {
   ensureAuth({ userId, cred });
-  return requestJson(`${API_BASE}/profile/request-update`, {
+  return requestJson(apiUrl('/profile-update-requests'), {
     method: 'POST',
     headers: authHeaders(cred),
     body: JSON.stringify({
@@ -181,7 +181,7 @@ export const requestProfileUpdate = async ({ userId, updates, cred }) => {
 
 export const confirmProfileUpdate = async ({ userId, requestId, verificationCode, cred }) => {
   ensureAuth({ userId, cred });
-  return requestJson(`${API_BASE}/profile/confirm-update`, {
+  return requestJson(apiUrl('/profile-update-confirmations'), {
     method: 'POST',
     headers: authHeaders(cred),
     body: JSON.stringify({
@@ -194,7 +194,7 @@ export const confirmProfileUpdate = async ({ userId, requestId, verificationCode
 
 export const requestPasswordChange = async ({ userId, currentPassword, newPassword, cred }) => {
   ensureAuth({ userId, cred });
-  return requestJson(`${API_BASE}/profile/request-password-change`, {
+  return requestJson(apiUrl('/password-change-requests'), {
     method: 'POST',
     headers: authHeaders(cred),
     body: JSON.stringify({
@@ -207,7 +207,7 @@ export const requestPasswordChange = async ({ userId, currentPassword, newPasswo
 
 export const confirmPasswordChange = async ({ userId, requestId, verificationCode, cred }) => {
   ensureAuth({ userId, cred });
-  return requestJson(`${API_BASE}/profile/confirm-password-change`, {
+  return requestJson(apiUrl('/password-change-confirmations'), {
     method: 'POST',
     headers: authHeaders(cred),
     body: JSON.stringify({
@@ -220,7 +220,7 @@ export const confirmPasswordChange = async ({ userId, requestId, verificationCod
 
 export const requestApiKeyCreation = async ({ userId, cred }) => {
   ensureAuth({ userId, cred });
-  return requestJson(`${API_BASE}/profile/request-api-key`, {
+  return requestJson(apiUrl('/api-key-requests'), {
     method: 'POST',
     headers: authHeaders(cred),
     body: JSON.stringify({
@@ -231,7 +231,7 @@ export const requestApiKeyCreation = async ({ userId, cred }) => {
 
 export const confirmApiKeyCreation = async ({ userId, requestId, verificationCode, cred }) => {
   ensureAuth({ userId, cred });
-  return requestJson(`${API_BASE}/profile/confirm-api-key`, {
+  return requestJson(apiUrl('/api-key-confirmations'), {
     method: 'POST',
     headers: authHeaders(cred),
     body: JSON.stringify({
@@ -252,7 +252,7 @@ export const requestForgotPassword = async ({ user, email, newPassword }) => {
     throw new Error('New password is required.');
   }
 
-  return requestJson(`${API_BASE}/forgot-password/request`, {
+  return requestJson(apiUrl('/password-reset-requests'), {
     method: 'POST',
     body: JSON.stringify({
       user: normalizedUser,
@@ -269,7 +269,7 @@ export const confirmForgotPassword = async ({ user, email, requestId, verificati
     throw new Error('Missing required confirmation fields.');
   }
 
-  return requestJson(`${API_BASE}/forgot-password/confirm`, {
+  return requestJson(apiUrl('/password-reset-confirmations'), {
     method: 'POST',
     body: JSON.stringify({
       user: normalizedUser,

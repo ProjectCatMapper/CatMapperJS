@@ -1,3 +1,4 @@
+import { apiBaseUrl } from '../api/endpoints';
 /* eslint-disable react-hooks/exhaustive-deps */
 import { useState, useEffect, useRef } from 'react'
 import { Box, Button, IconButton, FormControlLabel, Radio, RadioGroup, Checkbox, Typography, Divider, Select, TextField, MenuItem, InputLabel, FormControl, FormGroup, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TablePagination, Paper, Snackbar, Alert, LinearProgress } from '@mui/material';
@@ -637,7 +638,7 @@ const Edit = ({ database }) => {
 
     const loadSimpleDomains = async () => {
       try {
-        const response = await fetch(`${process.env.REACT_APP_API_URL}/getDomains/${database}`);
+        const response = await fetch(`${apiBaseUrl()}/getDomains/${database}`);
         if (!response.ok) {
           throw new Error(`Failed to load simple upload domains (${response.status}).`);
         }
@@ -869,7 +870,7 @@ const Edit = ({ database }) => {
           return filteredItem;
         }) : jsonData;
 
-      console.log(`${process.env.REACT_APP_API_URL}`)
+      console.log(`${apiBaseUrl()}`)
 
       const response = await uploadInputNodes({
         cred,

@@ -12,7 +12,7 @@ describe('nodePageJson', () => {
 
   it('builds the canonical node-page JSON endpoint URL', () => {
     expect(buildNodePageJsonUrl('https://catmapper.org/api/', 'ArchaMap', 'AM1')).toBe(
-      'https://catmapper.org/api/entity/ArchaMap/AM1.json'
+      'https://catmapper.org/api/databases/ArchaMap/nodes/AM1/page.json'
     );
   });
 
@@ -32,7 +32,7 @@ describe('nodePageJson', () => {
     ).resolves.toEqual({ cmid: 'AM1', version: '1.0' });
 
     expect(fetchImpl).toHaveBeenCalledWith(
-      'https://catmapper.org/api/entity/ArchaMap/AM1.json',
+      'https://catmapper.org/api/databases/ArchaMap/nodes/AM1/page.json',
       { signal: undefined }
     );
   });

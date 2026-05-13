@@ -1,3 +1,4 @@
+import { apiBaseUrl } from '../api/endpoints';
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Button, CircularProgress, Alert } from '@mui/material';
@@ -15,7 +16,7 @@ const LogsViewer = () => {
             try {
                 setLoading(true);
                 const response = await fetch(
-                    `${process.env.REACT_APP_API_URL}/logs/${safeDatabase}/${cmid}`
+                    `${apiBaseUrl()}/logs/${safeDatabase}/${cmid}`
                 );
 
                 if (!response.ok) {

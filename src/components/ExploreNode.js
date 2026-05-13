@@ -1,3 +1,4 @@
+import { apiBaseUrl } from '../api/endpoints';
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 
@@ -352,7 +353,7 @@ export default function Tableclick({ cmid, database, tabval }) {
     const { signal } = controller;
     const isLatestRequest = () => nodeRequestIdRef.current === requestId;
 
-    const baseUrl = process.env.REACT_APP_API_URL;
+    const baseUrl = apiBaseUrl();
     const infoUrl = `${baseUrl}/info/${database}/${cmid}`;
     const categoryUrl = `${baseUrl}/category/${database}/${cmid}`;
     const geometryUrl = `${baseUrl}/exploreGeometry/${database}/${cmid}`;
@@ -555,7 +556,7 @@ export default function Tableclick({ cmid, database, tabval }) {
   );
 
   useEffect(() => {
-    fetch(`${process.env.REACT_APP_API_URL}/metadata/subdomains/${database}`)
+    fetch(`${apiBaseUrl()}/metadata/subdomains/${database}`)
       .then((res) => {
         if (!res.ok) throw new Error(`Server error: ${res.status}`);
         return res.json();
@@ -589,7 +590,7 @@ export default function Tableclick({ cmid, database, tabval }) {
     const fetchData = async () => {
       try {
         const response = await fetch(
-          `${process.env.REACT_APP_API_URL}/datasetDomains`,
+          `${apiBaseUrl()}/datasetDomains`,
           {
             method: "POST",
             headers: {
@@ -677,7 +678,7 @@ export default function Tableclick({ cmid, database, tabval }) {
     }
     try {
       const response = await fetch(
-        `${process.env.REACT_APP_API_URL}/dataset?cmid=` +
+        `${apiBaseUrl()}/dataset?cmid=` +
         cmid +
         "&database=" +
         database +
@@ -753,7 +754,7 @@ export default function Tableclick({ cmid, database, tabval }) {
 
     try {
       const payload = await fetchNodePageJson({
-        apiBase: process.env.REACT_APP_API_URL,
+        apiBase: apiBaseUrl(),
         database,
         cmid,
         signal: controller.signal,
@@ -909,7 +910,7 @@ export default function Tableclick({ cmid, database, tabval }) {
       queryParams.set("relation", relationValue);
     }
 
-    const response = await fetch(`${process.env.REACT_APP_API_URL}/networkOptions?${queryParams.toString()}`);
+    const response = await fetch(`${apiBaseUrl()}/networkOptions?${queryParams.toString()}`);
     if (!response.ok) {
       throw new Error(`Network options request failed with status ${response.status}`);
     }
@@ -969,7 +970,7 @@ export default function Tableclick({ cmid, database, tabval }) {
         queryParams.set("dataset", activeDataset);
       }
 
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/networksjs?${queryParams.toString()}`);
+      const response = await fetch(`${apiBaseUrl()}/networksjs?${queryParams.toString()}`);
       const result = await response.json();
 
       const rawNodes = [
@@ -1343,7 +1344,7 @@ export default function Tableclick({ cmid, database, tabval }) {
       return;
     }
     setLoadingMergeTemplateSummary(true);
-    fetch(`${process.env.REACT_APP_API_URL}/merge/template/summary/${database}/${cmid}`)
+    fetch(`${apiBaseUrl()}/merge/template/summary/${database}/${cmid}`)
       .then((res) => res.json())
       .then((data) => setMergeTemplateSummary(data))
       .catch((err) => {
