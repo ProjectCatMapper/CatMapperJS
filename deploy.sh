@@ -5,9 +5,13 @@ set -e
 
 DEPLOY_USER="rjbischo"
 APP_DIR="/mnt/storage/app/CatMapperJS"
+TARGET_DIR="/mnt/storage/app/nginx/html"
 DEPLOY_USER_LOCAL_BIN="/home/$DEPLOY_USER/.local/bin"
 SYSTEM_PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 ENV_FILE="$APP_DIR/.env"
+PERMISSION_FIX_SCRIPT="/mnt/storage/app/fix_deploy_permissions.sh"
+
+umask 0002
 
 if [ ! -d "$APP_DIR" ]; then
   echo "❌ Error: App directory not found: $APP_DIR"
@@ -69,6 +73,7 @@ run_as_deploy_user() {
 
 run_node_cmd_as_deploy_user() {
   run_as_deploy_user bash -c '
+    umask 0002
     if [ -s "$HOME/.nvm/nvm.sh" ]; then
       . "$HOME/.nvm/nvm.sh" >/dev/null 2>&1
       nvm use --silent default >/dev/null 2>&1 || true
@@ -119,6 +124,36 @@ verify_build_path_access() {
   return 0
 }
 
+permission_fix_hint() {
+  echo "Run this once to repair deploy permissions:"
+  echo "  sudo $PERMISSION_FIX_SCRIPT"
+}
+
+verify_write_access() {
+  local path="$1"
+  local label="$2"
+  local tmp_file
+
+  if [ ! -d "$path" ]; then
+    echo "❌ Error: $label is missing: $path"
+    permission_fix_hint
+    return 1
+  fi
+
+  if [ ! -w "$path" ] || [ ! -x "$path" ]; then
+    echo "❌ Error: $label is not writable/traversable by $DEPLOY_USER: $path"
+    permission_fix_hint
+    return 1
+  fi
+
+  tmp_file="$path/.deploy_write_test_$$"
+  if ! run_as_deploy_user sh -c "umask 0002 && : > '$tmp_file' && rm -f '$tmp_file'"; then
+    echo "❌ Error: $DEPLOY_USER cannot create files in $label: $path"
+    permission_fix_hint
+    return 1
+  fi
+}
+
 # Initialize variables
 SKIP_VERSION=false
 FAST_BUILD=true
@@ -165,12 +200,11 @@ fi
 echo "📦 Running npm build..."
 
 # Ensure output/cache paths are writable by deploy user before build.
-mkdir -p dist node_modules/.vite
-if [ ! -w dist ] || [ ! -w node_modules/.vite ]; then
-  echo "❌ Error: Build output/cache directories are not writable by $DEPLOY_USER."
-  echo "Check permissions for $(pwd)/dist and $(pwd)/node_modules/.vite and rerun."
-  exit 1
-fi
+mkdir -p dist node_modules/.vite "$TARGET_DIR"
+verify_write_access dist "Build output directory" || exit 1
+verify_write_access node_modules "Dependency directory" || exit 1
+verify_write_access node_modules/.vite "Vite cache directory" || exit 1
+verify_write_access "$TARGET_DIR" "Nginx frontend target" || exit 1
 if ! verify_build_path_access dist "Build output directory"; then
   exit 1
 fi
@@ -188,7 +222,7 @@ fi
 
 # 5. Deploy the files
 echo "🚚 Syncing files to Nginx storage..."
-rsync -av --delete dist/ /mnt/storage/app/nginx/html/
+rsync -av --delete --exclude '/media/' --chmod=Du=rwx,Dg=rwx,Do=rx,Fu=rw,Fg=rw,Fo=r dist/ "$TARGET_DIR/"
 
 # 6. Git Tagging & Pushing (Only if not skipped)
 if [ "$SKIP_VERSION" = false ]; then
