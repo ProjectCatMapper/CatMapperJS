@@ -40,6 +40,7 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 import PropTypes from "prop-types";
 
 import CategoriesTable from "./TableCategories";
+import CategoryMergingTiesTable from "./CategoryMergingTiesTable";
 import ClickTable from "./ExploreTabs";
 import NetworkExplorerView from "./ExploreNetwork";
 import LoadingSpinner from "./LoadingSpinner";
@@ -1891,6 +1892,11 @@ export default function Tableclick({ cmid, database, tabval }) {
                           </TableBody>
                         </Table>
                       </TableContainer>
+                      <CategoryMergingTiesTable
+                        rows={mergeTemplateSummary.categoryMergingTies || []}
+                        filterBy="stack"
+                        goToCmidInfo={goToCmidInfo}
+                      />
                     </Box>
                   )}
 
@@ -1940,6 +1946,11 @@ export default function Tableclick({ cmid, database, tabval }) {
                           </TableBody>
                         </Table>
                       </TableContainer>
+                      <CategoryMergingTiesTable
+                        rows={mergeTemplateSummary.categoryMergingTies || []}
+                        filterBy="dataset"
+                        goToCmidInfo={goToCmidInfo}
+                      />
                     </Box>
                   )}
                 </CustomTabPanel>
