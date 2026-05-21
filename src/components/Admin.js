@@ -220,9 +220,9 @@ const Admin = ({ database }) => {
   const [passwordConfirmTarget, setPasswordConfirmTarget] = useState(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [collapsedSections, setCollapsedSections] = useState({
-    "Edit Options": true,
-    "User Options": true,
-    "Database Checks": true,
+    "Edit Options": false,
+    "User Options": false,
+    "Database Checks": false,
   });
   const [routineParams, setRoutineParams] = useState({
     return_type: "data",
@@ -1349,6 +1349,9 @@ const Admin = ({ database }) => {
             display: "flex",
             flexDirection: "column",
             overflow: "hidden",
+            maxHeight: { xs: isSidebarOpen ? "70vh" : "none", md: "calc(100vh - 122px)" },
+            position: { md: "sticky" },
+            top: { md: 106 },
             transition: "width 0.2s ease, min-width 0.2s ease",
           }}
         >
@@ -1372,7 +1375,7 @@ const Admin = ({ database }) => {
               <Typography sx={{ px: 1.5, py: 1.25, fontSize: "0.85rem", color: "text.secondary", borderBottom: "1px solid #ececec" }}>
                 Admin panel: these functions are intended for admin users to identify and fix problems in the database, add and modify users, and to initiate database integrity checks
               </Typography>
-              <Box sx={{ flex: 1 }}>
+              <Box sx={{ flex: 1, minHeight: 0, overflowY: "auto" }}>
                 <List disablePadding>
                   {sections.map((section) => (
                     <Box key={section.label}>
