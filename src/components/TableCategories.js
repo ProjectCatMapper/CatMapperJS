@@ -138,6 +138,7 @@ export default function CategoriesTable(props) {
                 style={{ Color: "pink" }}
                 rows={rows}
                 columns={columns}
+                disableEval
                 initialState={{
                     pagination: {
                         paginationModel: { page: 0, pageSize: 10 },

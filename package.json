@@ -18,7 +18,7 @@
     "@mui/x-data-grid": "^6.16.0",
     "d3-scale": "^4.0.2",
     "d3-scale-chromatic": "^3.1.0",
-    "exceljs": "^4.4.0",
+    "fflate": "^0.8.3",
     "framer-motion": "^12.12.2",
     "json2csv": "^6.0.0-alpha.2",
     "leaflet": "^1.9.4",
@@ -35,9 +35,11 @@
     "react-map-gl": "^7.1.9",
     "react-responsive-carousel": "^3.2.23",
     "react-router-dom": "^6.16.0",
+    "read-excel-file": "^9.0.9",
     "recharts": "^2.15.3",
     "vis-data": "^7.1.9",
-    "vis-network": "^9.1.9"
+    "vis-network": "^9.1.9",
+    "write-excel-file": "^4.0.6"
   },
   "scripts": {
     "start": "vite --host --port 3000",

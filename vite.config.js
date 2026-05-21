@@ -14,6 +14,7 @@ export default defineConfig(({ mode }) => {
   }
 
   return {
+    cacheDir: process.env.VITE_CACHE_DIR || '/tmp/catmapperjs-vite-cache',
     plugins: [
       react({
         include: /\.(js|jsx|ts|tsx)$/,
@@ -22,6 +23,10 @@ export default defineConfig(({ mode }) => {
     envPrefix: ['VITE_', 'REACT_APP_'],
     define: defineEnv,
     resolve: {
+      alias: [
+        { find: /^vis-data$/, replacement: 'vis-data/esnext/esm/vis-data.js' },
+        { find: /^vis-network$/, replacement: 'vis-network/esnext/esm/vis-network.js' },
+      ],
       dedupe: [
         'react',
         'react-dom',

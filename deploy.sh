@@ -10,6 +10,7 @@ DEPLOY_USER_LOCAL_BIN="/home/$DEPLOY_USER/.local/bin"
 SYSTEM_PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 ENV_FILE="$APP_DIR/.env"
 PERMISSION_FIX_SCRIPT="/mnt/storage/app/fix_deploy_permissions.sh"
+export VITE_CACHE_DIR="${VITE_CACHE_DIR:-/tmp/catmapperjs-vite-cache}"
 
 umask 0002
 
@@ -200,15 +201,15 @@ fi
 echo "📦 Running npm build..."
 
 # Ensure output/cache paths are writable by deploy user before build.
-mkdir -p dist node_modules/.vite "$TARGET_DIR"
+mkdir -p dist "$VITE_CACHE_DIR" "$TARGET_DIR"
 verify_write_access dist "Build output directory" || exit 1
 verify_write_access node_modules "Dependency directory" || exit 1
-verify_write_access node_modules/.vite "Vite cache directory" || exit 1
+verify_write_access "$VITE_CACHE_DIR" "Vite cache directory" || exit 1
 verify_write_access "$TARGET_DIR" "Nginx frontend target" || exit 1
 if ! verify_build_path_access dist "Build output directory"; then
   exit 1
 fi
-if ! verify_build_path_access node_modules/.vite "Vite cache directory"; then
+if ! verify_build_path_access "$VITE_CACHE_DIR" "Vite cache directory"; then
   exit 1
 fi
 

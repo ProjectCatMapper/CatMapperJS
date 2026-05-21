@@ -184,6 +184,7 @@ export default function ClickTable(props) {
         <DataGrid
           className="custom-row-height"
           autoHeight
+          disableEval
           density={isCompactLayout ? "compact" : "standard"}
           rows={rows}
           getRowHeight={getRowHeight}

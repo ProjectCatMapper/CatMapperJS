@@ -1,4 +1,6 @@
 // TODO: PROPERTY_KEYWORDS should be dynamically generated from actual schema metadata instead of hardcoded.
+import { apiUrl } from "../api/endpoints";
+
 const PROPERTY_KEYWORDS = {
   name: "Name",
   key: "Key",
@@ -665,8 +667,10 @@ export async function parseNaturalLanguageSearchWithLlm({
   availableSubdomains = [],
   countryNames = [],
   ollamaUrl = process.env.REACT_APP_OLLAMA_URL || "http://127.0.0.1:11434",
+  nlpParseUrl = process.env.REACT_APP_NLP_PARSE_URL || apiUrl("/nlp/parse"),
   model = process.env.REACT_APP_OLLAMA_MODEL || "qwen3-nl2api:q4km",
-  timeoutMs = 12000
+  timeoutMs = 12000,
+  useDirectOllama = process.env.REACT_APP_NLP_USE_DIRECT_OLLAMA === "true"
 } = {}) {
   const defaultParsed = createDefaultParsed({
     fallbackDomain,
@@ -688,19 +692,29 @@ export async function parseNaturalLanguageSearchWithLlm({
   const llmPrompt = buildLlmPrompt({ query, fallbackDomain, fallbackProperty, availableSubdomains });
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
-
-  try {
-    const response = await fetch(`${ollamaUrl.replace(/\/+$/, "")}/api/generate`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
+  const endpointUrl = useDirectOllama
+    ? `${ollamaUrl.replace(/\/+$/, "")}/api/generate`
+    : nlpParseUrl;
+  const requestBody = useDirectOllama
+    ? {
         model,
         prompt: llmPrompt,
         stream: false,
         options: {
           temperature: 0
         }
-      }),
+      }
+    : {
+        model,
+        prompt: llmPrompt,
+        timeoutSeconds: Math.ceil(timeoutMs / 1000)
+      };
+
+  try {
+    const response = await fetch(endpointUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(requestBody),
       signal: controller.signal
     });
 
@@ -716,15 +730,17 @@ export async function parseNaturalLanguageSearchWithLlm({
     }
 
     const payload = await response.json();
-    const rawObject = parseFirstJsonObject(payload?.response || "");
+    const responseText = payload?.response || "";
+    const responseModel = payload?.model || model;
+    const rawObject = parseFirstJsonObject(responseText);
     if (!rawObject) {
       return {
         status: "invalid_json",
         parsed: defaultParsed,
         errors: ["LLM response did not contain valid JSON."],
-        model,
+        model: responseModel,
         prompt: llmPrompt,
-        raw: payload?.response || ""
+        raw: responseText
       };
     }
 
@@ -739,9 +755,9 @@ export async function parseNaturalLanguageSearchWithLlm({
       status: validated.valid ? "ok" : "invalid_schema",
       parsed: validated.parsed,
       errors: validated.errors,
-      model,
+      model: responseModel,
       prompt: llmPrompt,
-      raw: payload?.response || ""
+      raw: responseText
     };
   } catch (error) {
     if (error?.name === "AbortError") {

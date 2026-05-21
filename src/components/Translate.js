@@ -1136,6 +1136,7 @@ function TranslateComponent({ database }) {
                   rows={previewGridRows}
                   columns={previewGridColumns}
                   getRowId={(row) => row.__previewId}
+                  disableEval
                   disableColumnResize={false}
                   pageSizeOptions={[10, 25, 50]}
                   initialState={{ pagination: { paginationModel: { page: 0, pageSize: 10 } } }}

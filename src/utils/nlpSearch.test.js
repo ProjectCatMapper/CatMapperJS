@@ -283,10 +283,21 @@ describe("parseNaturalLanguageSearchWithLlm", () => {
       availableSubdomains: ["ALL NODES", "ETHNICITY", "AREA"],
       countryNames: ["Ghana"],
       ollamaUrl: "http://localhost:11434",
+      nlpParseUrl: "/api/nlp/parse",
       model: "qwen3-nl2api:q4km"
     });
 
     expect(result.status).toBe("ok");
+    expect(globalThis.fetch).toHaveBeenCalledWith(
+      "/api/nlp/parse",
+      expect.objectContaining({
+        method: "POST",
+        headers: { "Content-Type": "application/json" }
+      })
+    );
+    const requestBody = JSON.parse(globalThis.fetch.mock.calls[0][1].body);
+    expect(requestBody.model).toBe("qwen3-nl2api:q4km");
+    expect(requestBody.prompt).toContain("Input: look up Yoruba in Ghana");
     expect(result.parsed.term).toBe("Yoruba");
     expect(result.parsed.domain).toBe("ETHNICITY");
     expect(result.parsed.contextDomain).toBe("AREA");

@@ -127,6 +127,7 @@ export default function DataTable({ users, snackbarOpen, setSnackbarOpen, databa
         className="custom-row-height"
         rows={rows}
         columns={columns}
+        disableEval
         getRowHeight={getRowHeight}
         paginationModel={paginationModel}
         onPaginationModelChange={setPaginationModel}

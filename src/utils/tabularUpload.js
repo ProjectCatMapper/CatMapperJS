@@ -1,5 +1,6 @@
-import ExcelJS from 'exceljs';
 import Papa from 'papaparse';
+import { readSheet } from 'read-excel-file/browser';
+import { strFromU8, unzipSync } from 'fflate';
 
 const SUPPORTED_EXTENSIONS = new Set(['csv', 'tsv', 'xlsx']);
 
@@ -38,40 +39,98 @@ function normalizeExcelCellValue(value) {
   return value;
 }
 
-async function parseSpreadsheetRows(file, { checkMergedCells }) {
-  const workbook = new ExcelJS.Workbook();
-  const buffer = await file.arrayBuffer();
-  await workbook.xlsx.load(buffer);
+function parseXmlDocument(xml) {
+  return new DOMParser().parseFromString(xml, 'application/xml');
+}
 
-  const worksheet = workbook.worksheets[0];
-  if (!worksheet) {
+function getXmlElements(document, tagName) {
+  return Array.from(document.getElementsByTagName(tagName));
+}
+
+function normalizeXlsxPath(path) {
+  const parts = String(path || '')
+    .replace(/^\/+/, '')
+    .split('/');
+  const normalized = [];
+
+  parts.forEach((part) => {
+    if (!part || part === '.') return;
+    if (part === '..') {
+      normalized.pop();
+      return;
+    }
+    normalized.push(part);
+  });
+
+  return normalized.join('/');
+}
+
+function findFirstWorksheetPath(zipEntries) {
+  const workbookEntry = zipEntries['xl/workbook.xml'];
+  const relsEntry = zipEntries['xl/_rels/workbook.xml.rels'];
+
+  if (!workbookEntry || !relsEntry) {
+    return 'xl/worksheets/sheet1.xml';
+  }
+
+  const workbook = parseXmlDocument(strFromU8(workbookEntry));
+  const firstSheet = getXmlElements(workbook, 'sheet')[0];
+  const relationshipId = firstSheet?.getAttribute('r:id');
+
+  if (!relationshipId) {
+    return 'xl/worksheets/sheet1.xml';
+  }
+
+  const rels = parseXmlDocument(strFromU8(relsEntry));
+  const relationship = getXmlElements(rels, 'Relationship').find(
+    (rel) => rel.getAttribute('Id') === relationshipId
+  );
+  const target = relationship?.getAttribute('Target');
+
+  if (!target) {
+    return 'xl/worksheets/sheet1.xml';
+  }
+
+  return normalizeXlsxPath(target.startsWith('/') ? target : `xl/${target}`);
+}
+
+async function spreadsheetHasMergedCells(file) {
+  const buffer = await file.arrayBuffer();
+  const zipEntries = unzipSync(new Uint8Array(buffer));
+  const worksheetPath = findFirstWorksheetPath(zipEntries);
+  const worksheetEntry = zipEntries[worksheetPath];
+
+  if (!worksheetEntry) {
+    return false;
+  }
+
+  const worksheet = parseXmlDocument(strFromU8(worksheetEntry));
+  return getXmlElements(worksheet, 'mergeCell').length > 0;
+}
+
+async function parseSpreadsheetRows(file, { checkMergedCells }) {
+  if (checkMergedCells && await spreadsheetHasMergedCells(file)) {
+    throw new Error('Merged cells detected. Please unmerge all cells before uploading.');
+  }
+
+  const rows = await readSheet(file, 1, { trim: false });
+
+  if (!Array.isArray(rows) || rows.length === 0) {
     throw new Error('No worksheet found in uploaded file.');
   }
 
-  if (checkMergedCells) {
-    const merges = Array.isArray(worksheet.model?.merges)
-      ? worksheet.model.merges
-      : [];
-    if (merges.length > 0) {
-      throw new Error('Merged cells detected. Please unmerge all cells before uploading.');
+  const width = rows.reduce((max, row) => Math.max(max, row.length), 0);
+  const rows2dRaw = rows.map((row) => {
+    const values = row.map((cell) => normalizeExcelCellValue(cell));
+    while (values.length < width) {
+      values.push('');
     }
-  }
-
-  const width = Math.max(worksheet.actualColumnCount || 0, worksheet.columnCount || 0);
-  const rows2dRaw = [];
-
-  worksheet.eachRow({ includeEmpty: true }, (row) => {
-    const rowWidth = Math.max(width, row.cellCount || 0, row.actualCellCount || 0);
-    const rowValues = [];
-    for (let idx = 1; idx <= rowWidth; idx += 1) {
-      rowValues.push(normalizeExcelCellValue(row.getCell(idx).value));
-    }
-    rows2dRaw.push(rowValues);
+    return values;
   });
 
   return {
     rows2dRaw,
-    sheetName: worksheet.name || 'Sheet1',
+    sheetName: 'Sheet1',
   };
 }
 

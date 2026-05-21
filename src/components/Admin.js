@@ -2274,6 +2274,7 @@ const Admin = ({ database }) => {
                   <DataGrid
                     autoHeight
                     density="compact"
+                    disableEval
                     rows={userLookupResults}
                     columns={userLookupColumns}
                     getRowId={(row) => row.userid}
@@ -2733,6 +2734,7 @@ const Admin = ({ database }) => {
                   <DataGrid
                     rows={routineDataRows}
                     columns={routineDataColumns}
+                    disableEval
                     checkboxSelection={isDuplicateTripletsRoutine}
                     rowSelectionModel={isDuplicateTripletsRoutine ? selectedDuplicateTripletIds : []}
                     onRowSelectionModelChange={(newSelectionModel) => {
@@ -2804,6 +2806,7 @@ const Admin = ({ database }) => {
                 flexDirection: 'column',
               }}>
                 {users.length > 0 && <DataGrid
+                  disableEval
                   sx={{
                     border: "1px solid #d9d9d9",
                     backgroundColor: "#fff",

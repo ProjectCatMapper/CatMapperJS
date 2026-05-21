@@ -350,6 +350,7 @@ const TranslateMatchReview = ({
           rows={visibleRows}
           columns={gridColumns}
           getRowId={(row) => row.__reviewId}
+          disableEval
           getRowClassName={getRowClassName}
           disableColumnResize={false}
           filterModel={filterModel}

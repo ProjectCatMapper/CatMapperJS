@@ -1,7 +1,4 @@
-import ExcelJS from 'exceljs';
-
-const XLSX_MIME_TYPE =
-  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+import writeXlsxFile from 'write-excel-file/browser';
 
 const INVALID_SHEET_CHARS = /[\\/?*:[\]]/g;
 const MAX_SHEET_NAME_LENGTH = 31;
@@ -46,52 +43,42 @@ function collectHeaders(rows = [], headers) {
   return Array.from(discovered);
 }
 
-function addJsonSheet(workbook, rows, { sheetName = 'Sheet1', headers } = {}) {
-  const worksheet = workbook.addWorksheet(sanitizeSheetName(sheetName));
+function createJsonSheet(rows, { sheetName = 'Sheet1', headers } = {}) {
   const finalHeaders = collectHeaders(rows, headers);
+  const sheetRows = [];
 
   if (finalHeaders.length > 0) {
-    worksheet.addRow(finalHeaders);
+    sheetRows.push(finalHeaders);
   }
 
   (rows || []).forEach((row) => {
     const values = finalHeaders.map((header) => normalizeCellValue(row?.[header]));
-    worksheet.addRow(values);
+    sheetRows.push(values);
   });
-}
 
-async function triggerWorkbookDownload(workbook, fileName) {
-  const buffer = await workbook.xlsx.writeBuffer();
-  const blob = new Blob([buffer], { type: XLSX_MIME_TYPE });
-  const url = window.URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = fileName;
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-  window.URL.revokeObjectURL(url);
+  return {
+    data: sheetRows,
+    sheet: sanitizeSheetName(sheetName),
+  };
 }
 
 export async function downloadJsonAsXlsx(
   rows,
   { fileName = 'export.xlsx', sheetName = 'Sheet1', headers } = {}
 ) {
-  const workbook = new ExcelJS.Workbook();
-  addJsonSheet(workbook, rows, { sheetName, headers });
-  await triggerWorkbookDownload(workbook, fileName);
+  const sheet = createJsonSheet(rows, { sheetName, headers });
+  await writeXlsxFile(sheet.data, { sheet: sheet.sheet }).toFile(fileName);
 }
 
 export async function downloadSheetsAsXlsx(
   sheets = [],
   { fileName = 'export.xlsx' } = {}
 ) {
-  const workbook = new ExcelJS.Workbook();
-  sheets.forEach((sheet, index) => {
-    addJsonSheet(workbook, sheet?.rows || [], {
+  const sheetData = sheets.map((sheet, index) =>
+    createJsonSheet(sheet?.rows || [], {
       sheetName: sheet?.sheetName || `Sheet${index + 1}`,
       headers: sheet?.headers,
-    });
-  });
-  await triggerWorkbookDownload(workbook, fileName);
+    })
+  );
+  await writeXlsxFile(sheetData).toFile(fileName);
 }

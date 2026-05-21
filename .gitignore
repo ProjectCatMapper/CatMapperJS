@@ -11,6 +11,8 @@ public/*
 
 # testing
 /coverage
+/tmp
+.nfs*
 
 # production
 /build
