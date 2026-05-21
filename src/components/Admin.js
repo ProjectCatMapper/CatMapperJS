@@ -53,8 +53,8 @@ const COMPACT_ADMIN_SELECT_MENU_PROPS = {
   PaperProps: {
     sx: {
       "& .MuiMenuItem-root": {
-        minHeight: 30,
-        py: 0.5,
+        minHeight: 26,
+        py: 0.25,
       },
     },
   },
@@ -77,17 +77,23 @@ const compactSelectSx = (sx) => {
   const nextSx = sx && !Array.isArray(sx) && typeof sx === "object" ? { ...sx } : sx;
 
   if (nextSx && typeof nextSx === "object" && !Array.isArray(nextSx)) {
-    if (typeof nextSx.height === "number" && nextSx.height > 34) {
-      nextSx.height = 34;
+    if (typeof nextSx.height === "number" && nextSx.height > 30) {
+      nextSx.height = 30;
     }
-    if (typeof nextSx.minHeight === "number" && nextSx.minHeight > 34) {
-      nextSx.minHeight = 34;
+    if (typeof nextSx.minHeight === "number" && nextSx.minHeight > 30) {
+      nextSx.minHeight = 30;
+    }
+    if (typeof nextSx.mb === "number" && nextSx.mb > 1) {
+      nextSx.mb = 1;
+    }
+    if (typeof nextSx.mt === "number" && nextSx.mt > 0.5) {
+      nextSx.mt = 0.5;
     }
 
     return {
       ...nextSx,
       "& .MuiSelect-select": {
-        py: 0.45,
+        py: 0.2,
         minHeight: "1.25em",
         ...nextSx["& .MuiSelect-select"],
       },
@@ -95,7 +101,7 @@ const compactSelectSx = (sx) => {
   }
 
   return [
-    { "& .MuiSelect-select": { py: 0.45, minHeight: "1.25em" } },
+    { "& .MuiSelect-select": { py: 0.2, minHeight: "1.25em" } },
     ...(Array.isArray(sx) ? sx : sx ? [sx] : []),
   ];
 };
@@ -1415,7 +1421,7 @@ const Admin = ({ database }) => {
             transition: "width 0.2s ease, min-width 0.2s ease",
           }}
         >
-          <Box sx={{ display: "flex", alignItems: "center", justifyContent: isSidebarOpen ? "space-between" : "center", px: 1, py: 0.75, borderBottom: "1px solid #ececec" }}>
+          <Box sx={{ display: "flex", alignItems: "center", justifyContent: isSidebarOpen ? "space-between" : "center", px: 0.75, py: 0.5, borderBottom: "1px solid #ececec" }}>
             {isSidebarOpen && (
               <Typography sx={{ fontWeight: 700 }}>
                 Admin Options
@@ -1432,7 +1438,7 @@ const Admin = ({ database }) => {
 
           {isSidebarOpen && (
             <>
-              <Typography sx={{ px: 1, py: 0.75, fontSize: "0.8rem", color: "text.secondary", borderBottom: "1px solid #ececec" }}>
+              <Typography sx={{ px: 0.75, py: 0.5, fontSize: "0.78rem", color: "text.secondary", borderBottom: "1px solid #ececec" }}>
                 Admin panel: these functions are intended for admin users to identify and fix problems in the database, add and modify users, and to initiate database integrity checks
               </Typography>
               <Box sx={{ flex: 1, minHeight: 0, overflowY: "auto" }}>
@@ -1441,7 +1447,7 @@ const Admin = ({ database }) => {
                     <Box key={section.label}>
                       <ListItemButton
                         onClick={() => toggleSectionCollapse(section.label)}
-                        sx={{ borderRadius: 1, mx: 0.5, my: 0.25, py: 0.5, minHeight: 36 }}
+                        sx={{ borderRadius: 1, mx: 0.5, my: 0.15, py: 0.3, minHeight: 30 }}
                       >
                         <ListItemText
                           primary={section.label}
@@ -1458,7 +1464,7 @@ const Admin = ({ database }) => {
                               key={key}
                               selected={firstDropdownValue === key}
                               onClick={() => selectAdminOption(key)}
-                              sx={{ borderRadius: 1, mx: 1, mb: 0.25, py: 0.35, pl: 2.5, minHeight: 30 }}
+                              sx={{ borderRadius: 1, mx: 1, mb: 0.15, py: 0.2, pl: 2.25, minHeight: 26 }}
                             >
                               <ListItemText
                                 primary={routineOptionByKey[key]?.label || key}
@@ -1471,7 +1477,7 @@ const Admin = ({ database }) => {
                   ))}
                 </List>
               </Box>
-              <Box sx={{ p: 1, borderTop: "1px solid #ececec" }}>
+              <Box sx={{ p: 0.75, borderTop: "1px solid #ececec" }}>
                 <Button component={Link} to="/admin/metadata" variant="outlined" fullWidth>
                   Open Metadata Manager
                 </Button>
