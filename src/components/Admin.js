@@ -1447,13 +1447,14 @@ const Admin = ({ database }) => {
                     <Box key={section.label}>
                       <ListItemButton
                         onClick={() => toggleSectionCollapse(section.label)}
-                        sx={{ borderRadius: 1, mx: 0.5, my: 0.15, py: 0.3, minHeight: 30 }}
+                        sx={{ borderRadius: 1, mx: 0.5, my: 0, py: 0.15, minHeight: 26 }}
                       >
                         <ListItemText
                           primary={section.label}
-                          primaryTypographyProps={{ fontWeight: 700 }}
+                          sx={{ my: 0 }}
+                          primaryTypographyProps={{ fontWeight: 700, fontSize: "0.9rem", lineHeight: 1.15 }}
                         />
-                        <Typography variant="body2">
+                        <Typography variant="body2" sx={{ lineHeight: 1 }}>
                           {collapsedSections[section.label] ? "−" : "+"}
                         </Typography>
                       </ListItemButton>
@@ -1464,10 +1465,12 @@ const Admin = ({ database }) => {
                               key={key}
                               selected={firstDropdownValue === key}
                               onClick={() => selectAdminOption(key)}
-                              sx={{ borderRadius: 1, mx: 1, mb: 0.15, py: 0.2, pl: 2.25, minHeight: 26 }}
+                              sx={{ borderRadius: 1, mx: 1, mb: 0, py: 0.05, pl: 2.25, minHeight: 22 }}
                             >
                               <ListItemText
                                 primary={routineOptionByKey[key]?.label || key}
+                                sx={{ my: 0 }}
+                                primaryTypographyProps={{ fontSize: "0.88rem", lineHeight: 1.12 }}
                               />
                             </ListItemButton>
                           ))}
