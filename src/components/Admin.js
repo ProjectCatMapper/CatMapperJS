@@ -142,6 +142,33 @@ const ROUTINE_OPTIONS = [
   { key: "runRoutinesStream", label: "runRoutinesStream" },
 ];
 
+export const formatAdminPropertyValue = (value) => {
+  if (value === null || value === undefined) {
+    return "";
+  }
+
+  if (Array.isArray(value)) {
+    return value
+      .map((item) => {
+        if (item === null || item === undefined) {
+          return "";
+        }
+        if (typeof item === "object") {
+          return item.label ?? item.CMName ?? item.CMID ?? JSON.stringify(item);
+        }
+        return String(item);
+      })
+      .filter((item) => item.trim() !== "")
+      .join(" || ");
+  }
+
+  if (typeof value === "object") {
+    return JSON.stringify(value);
+  }
+
+  return String(value);
+};
+
 const formatRoutineCellValue = (value) => {
   if (value === null || value === undefined) {
     return "";
@@ -1870,7 +1897,7 @@ const Admin = ({ database }) => {
                       </Select>
                       {formData.s1_7 && (
                         <Typography variant="body1" sx={{ mb: 1 }}>
-                          Current value is : {add_edit_delete_Nodeprops_Options[formData.s1_7]}
+                          Current value is : {formatAdminPropertyValue(add_edit_delete_Nodeprops_Options[formData.s1_7]) || "N/A"}
                         </Typography>
                       )}
                     </>
@@ -1880,7 +1907,7 @@ const Admin = ({ database }) => {
               {(formData.s1_1 === "add" || formData.s1_1 === "edit") && (
                 <>
                   <InputLabel id="domain-label" style={{ color: "black " }}>
-                    Property value
+                    Property value (use ' || ' to split values)
                   </InputLabel>
                   <TextField
                     name="s1_3"
