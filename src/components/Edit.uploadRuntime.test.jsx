@@ -214,6 +214,48 @@ describe('Edit upload runtime', () => {
     expect(document.body.textContent).toContain('Close');
   });
 
+  it('alerts upload API warnings returned when the task is queued', async () => {
+    parseTabularFileMock.mockResolvedValue({
+      headers: ['CMName', 'Name', 'Key', 'label', 'datasetID'],
+      rows2d: [['Node A', 'Node A', 'Var == 1==2', 'LANGUOID', 'AD1']],
+      records: [
+        {
+          CMName: 'Node A',
+          Name: 'Node A',
+          Key: 'Var == 1==2',
+          label: 'LANGUOID',
+          datasetID: 'AD1',
+        },
+      ],
+    });
+
+    vi.mocked(editUploadApi.uploadInputNodes).mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        taskId: 'task-warning',
+        status: 'queued',
+        warnings: ['Key row 1: Does the original variable value contain "=="?'],
+      }),
+    });
+
+    await renderEdit(root);
+    await uploadFile(container, 'warning.csv');
+
+    const uploadButton = Array.from(container.querySelectorAll('button')).find(
+      (button) => button.textContent?.trim() === 'UPLOAD',
+    );
+    expect(uploadButton).toBeTruthy();
+
+    await act(async () => {
+      uploadButton.click();
+      await flushPromises();
+    });
+
+    expect(window.alert).toHaveBeenCalledWith(
+      'Warning: Key row 1: Does the original variable value contain "=="?',
+    );
+  });
+
   it('requires Key for variable merging uploads', async () => {
     sessionStorage.setItem(
       'catmapper.edit.uploadState.archamap',

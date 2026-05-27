@@ -895,6 +895,13 @@ const Edit = ({ database }) => {
         return;
       }
 
+      const uploadWarnings = Array.isArray(result?.warnings)
+        ? result.warnings.filter((msg) => typeof msg === 'string' && msg.trim() !== '')
+        : [];
+      if (uploadWarnings.length > 0) {
+        alert(`Warning: ${uploadWarnings.join(' ')}`);
+      }
+
       if (result?.taskId) {
         setUploadTaskId(result.taskId);
         setUploadTaskState(result);
