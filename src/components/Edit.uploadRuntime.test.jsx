@@ -198,6 +198,9 @@ describe('Edit upload runtime', () => {
     });
 
     expect(editUploadApi.uploadInputNodes).toHaveBeenCalledTimes(1);
+    const uploadCall = editUploadApi.uploadInputNodes.mock.calls[0][0];
+    expect(uploadCall.payload).toHaveProperty('optionalProperties');
+    expect(uploadCall.payload).not.toHaveProperty('allContext');
 
     await act(async () => {
       await vi.advanceTimersByTimeAsync(1600);

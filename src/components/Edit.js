@@ -882,7 +882,7 @@ const Edit = ({ database }) => {
           ao: advselectedOption,
           addoptions: addiColumns,
           user: user,
-          allContext: columnsToUse,
+          optionalProperties: columnsToUse,
           mergingType: mergingType
         },
       });
