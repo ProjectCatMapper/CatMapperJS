@@ -1279,12 +1279,14 @@ const Admin = ({ database }) => {
   };
 
   const [add_edit_delete_Nodeprops_Options, setDropdownOptions] = useState([]);
+  const [nodePropsLookupComplete, setNodePropsLookupComplete] = useState(false);
   const [add_edit_delete_usesprops_Options, setDropdown1Options] = useState([]);
   const [add_edit_delete_usesprops_properties, setDropdown2Options] = useState([]);
 
   useEffect(() => {
     if (firstDropdownValue !== "add/edit/delete node property" && firstDropdownValue !== "delete node") {
       setDropdownOptions([]); // reset dropdown if not in this mode
+      setNodePropsLookupComplete(false);
       return;
     }
 
@@ -1301,6 +1303,7 @@ const Admin = ({ database }) => {
     if (pattern.test(cmid)) {
       const fetchData = async () => {
         try {
+          setNodePropsLookupComplete(false);
           const res = await fetch(`${apiBaseUrl()}/admin_add_edit_delete_nodeproperties?CMID=` + cmid + "&database=" + database + "&option=" + option, {
             //const res = await fetch("http://127.0.0.1:5001/admin_add_edit_delete_nodeproperties?CMID="+cmid+"&database="+database, {
             method: "GET",
@@ -1309,6 +1312,7 @@ const Admin = ({ database }) => {
 
           if (data.error) {
             alert("An error occurred: " + data.error);
+            setNodePropsLookupComplete(false);
             return;
           }
 
@@ -1319,6 +1323,7 @@ const Admin = ({ database }) => {
                 ? prevFormData
                 : { ...prevFormData, s1_7: cmName }
             ));
+            setNodePropsLookupComplete(true);
             return;
           }
 
@@ -1327,15 +1332,18 @@ const Admin = ({ database }) => {
           } else if (formData.s1_1 === "edit" || formData.s1_1 === "delete") {
             setDropdownOptions(data.r);
           }
+          setNodePropsLookupComplete(true);
 
 
         } catch (err) {
           setDropdownOptions([]); // reset on error
+          setNodePropsLookupComplete(false);
         }
       };
       fetchData();
     } else {
       setDropdownOptions([]); // reset dropdown if input does not match
+      setNodePropsLookupComplete(false);
     }
   }, [database, formData.s1_1, formData.s1_2, firstDropdownValue]);
 
@@ -1903,6 +1911,15 @@ const Admin = ({ database }) => {
                     </>
                   )
                 ))}
+
+              {formData.s1_1 === "add" &&
+                nodePropsLookupComplete &&
+                Array.isArray(add_edit_delete_Nodeprops_Options) &&
+                add_edit_delete_Nodeprops_Options.length === 0 && (
+                  <Typography variant="body2" sx={{ mb: 3, color: "text.secondary" }}>
+                    No valid properties are available to add for this node.
+                  </Typography>
+                )}
 
               {(formData.s1_1 === "add" || formData.s1_1 === "edit") && (
                 <>
