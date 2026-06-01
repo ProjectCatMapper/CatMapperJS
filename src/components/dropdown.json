@@ -7,12 +7,7 @@
     "ANY DOMAIN": [
         "Name",
         "Key",
-        "CatMapper ID (CMID)",
-        "glottocode",
-        "FIPS",
-        "ISO2",
-        "ISO3",
-        "ISONumeric"
+        "CatMapper ID (CMID)"
     ],
     "AREA": [
         "Name",
