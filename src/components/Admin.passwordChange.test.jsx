@@ -85,6 +85,20 @@ describe('Admin change user password flow', () => {
       await flushPromises();
     });
 
+    const userOptionsLabel = Array.from(container.querySelectorAll('*')).find(
+      (node) => node.textContent?.trim().toLowerCase() === 'user options'
+    );
+    const userOptionsButton =
+      userOptionsLabel?.closest('button')
+      || userOptionsLabel?.closest('[role="button"]')
+      || userOptionsLabel;
+    expect(userOptionsButton).toBeTruthy();
+
+    await act(async () => {
+      userOptionsButton.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      await flushPromises();
+    });
+
     const changePasswordOptionLabel = Array.from(container.querySelectorAll('*')).find(
       (node) => node.textContent?.trim().toLowerCase() === 'change user password'
     );
