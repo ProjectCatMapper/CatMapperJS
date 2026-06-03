@@ -1026,6 +1026,16 @@ const Admin = ({ database }) => {
     }));
   };
 
+  const updateTiePropertyActionType = (event) => {
+    setFormData(prevFormData => ({
+      ...prevFormData,
+      s1_1: event.target.value,
+      s1_7: "",
+      s1_8: "",
+      s1_3: ""
+    }));
+  };
+
   const updateAmbiguousTieParentChoice = (idx, value) => {
     setTableDropdownValues((prev) => ({ ...prev, [idx]: value }));
   };
@@ -1403,7 +1413,7 @@ const Admin = ({ database }) => {
     } else {
       setDropdown1Options([]); // reset dropdown if input does not match
     }
-  }, [database, formData.s1_1, formData.s1_2, firstDropdownValue]);
+  }, [database, formData.s1_2, firstDropdownValue]);
 
   useEffect(() => {
     setRoutineParams((prev) => ({
@@ -1543,7 +1553,7 @@ const Admin = ({ database }) => {
                 name="uploadOption"
                 sx={{ mb: 2 }}
                 value={formData.s1_1}
-                onChange={updateActionType}
+                onChange={updateTiePropertyActionType}
               >
                 <FormControlLabel value="add" control={<Radio />} label="add" />
                 <FormControlLabel value="edit" control={<Radio />} label="edit" />
@@ -1704,7 +1714,7 @@ const Admin = ({ database }) => {
                 name="uploadOption"
                 sx={{ mb: 2 }}
                 value={formData.s1_1}
-                onChange={updateActionType}
+                onChange={updateTiePropertyActionType}
               >
                 <FormControlLabel value="add" control={<Radio />} label="add" />
                 <FormControlLabel value="edit" control={<Radio />} label="edit" />
