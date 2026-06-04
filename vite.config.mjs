@@ -1,5 +1,29 @@
-import { defineConfig, loadEnv } from 'vite';
+import { defineConfig, loadEnv, transformWithOxc } from 'vite';
 import react from '@vitejs/plugin-react';
+
+const jsAsJsxPlugin = () => ({
+  name: 'catmapper-js-as-jsx',
+  enforce: 'pre',
+  async transform(code, id) {
+    const [filepath] = id.split('?');
+    if (!filepath.includes('/src/') || !filepath.endsWith('.js')) {
+      return null;
+    }
+
+    const result = await transformWithOxc(code, id, {
+      lang: 'jsx',
+      jsx: {
+        runtime: 'automatic',
+        development: this.environment?.mode !== 'build',
+      },
+    });
+
+    return {
+      code: result.code,
+      map: result.map,
+    };
+  },
+});
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
@@ -16,6 +40,7 @@ export default defineConfig(({ mode }) => {
   return {
     cacheDir: process.env.VITE_CACHE_DIR || '/tmp/catmapperjs-vite-cache',
     plugins: [
+      jsAsJsxPlugin(),
       react({
         include: /\.(js|jsx|ts|tsx)$/,
       }),
@@ -36,18 +61,6 @@ export default defineConfig(({ mode }) => {
         '@mui/system',
       ],
     },
-    esbuild: {
-      loader: 'jsx',
-      include: /src\/.*\.js$/,
-      exclude: [],
-    },
-    optimizeDeps: {
-      esbuildOptions: {
-        loader: {
-          '.js': 'jsx',
-        },
-      },
-    },
     server: {
       host: true,
       port: 3000,
@@ -61,7 +74,7 @@ export default defineConfig(({ mode }) => {
       // Route-level lazy loading keeps the initial app shell small. The
       // remaining large chunks are lazy, route-local data/export modules.
       chunkSizeWarningLimit: 4000,
-      rollupOptions: {
+      rolldownOptions: {
         onwarn(warning, warn) {
           const warningText = String(warning?.message || '');
           const isLoadersChildProcessWarning =
