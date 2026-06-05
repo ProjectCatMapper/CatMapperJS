@@ -63,6 +63,7 @@ import {
   getCategoryInfoPreview,
 } from "./categoryInfoLayout";
 import { downloadJsonObject, fetchNodePageJson } from "../utils/nodePageJson";
+import { buildDatasetDownloadDomainOptions } from "../utils/datasetDownloadDomains";
 
 import "./ExploreNode.css";
 
@@ -617,15 +618,10 @@ export default function Tableclick({ cmid, database, tabval }) {
 
         // console.log(normalizedRef)
 
-        const matchingDomains = Object.fromEntries([
-          ["ANY DOMAIN", ["ANY DOMAIN"]],
-          ...Object.entries(subdomainCatalog)
-            .map(([domain, values]) => {
-              const found = values.filter(v => allowedKeys.has(v));
-              return [domain, found];
-            })
-            .filter(([_, found]) => found.length > 0) // only keep domains with matches
-        ]);
+        const matchingDomains = buildDatasetDownloadDomainOptions(
+          subdomainCatalog,
+          Array.from(allowedKeys)
+        );
 
         // console.log(matchingDomains)
 
