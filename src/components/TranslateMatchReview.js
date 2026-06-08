@@ -254,6 +254,7 @@ const TranslateMatchReview = ({
     const matchTypeKey = `matchType_${termColumn}`;
     const normalized = String(params?.row?.[matchTypeKey] || '').trim().toLowerCase();
 
+    if (!normalized) return 'translate-match-row-blank';
     if (normalized === 'exact match') return 'translate-match-row-exact';
     if (normalized === 'fuzzy match') return 'translate-match-row-fuzzy';
     if (normalized === 'one-to-many') return 'translate-match-row-one-to-many';
@@ -367,6 +368,7 @@ const TranslateMatchReview = ({
           sx={
             {
               '& .translate-match-row-exact': { backgroundColor: '#FFFFFF' },
+              '& .translate-match-row-blank': { backgroundColor: '#FFFFFF' },
               '& .translate-match-row-fuzzy': { backgroundColor: '#F6C594' },
               '& .translate-match-row-one-to-many': { backgroundColor: '#F6AD94' },
               '& .translate-match-row-many-to-one': { backgroundColor: '#e48dd9' },

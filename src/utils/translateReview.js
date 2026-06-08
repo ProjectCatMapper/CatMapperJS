@@ -28,6 +28,15 @@ const clearGeneratedValues = (row, matchColumns) => {
   return next;
 };
 
+const clearMatchTypeValue = (row, columns, termColumn) => {
+  const matchTypeColumn = `matchType_${termColumn}`;
+  if (!columns.includes(matchTypeColumn)) return row;
+  return {
+    ...row,
+    [matchTypeColumn]: '',
+  };
+};
+
 export const removeMatchFromRow = (row, columns = [], termColumn = '') => {
   const matchColumns = getMatchColumns(columns, termColumn);
   return clearGeneratedValues(row, matchColumns);
@@ -91,11 +100,18 @@ export const resolveOneToManyGroup = ({
 }) => {
   const matchColumns = getMatchColumns(columns, termColumn);
   if (keepRowId) {
-    // "Resolve Group": keep the selected row and remove duplicate rows entirely.
-    return rows.filter((row) => {
-      if (row.CMuniqueRowID !== groupId) return true;
-      return row.__reviewId === keepRowId;
-    });
+    // "Resolve Group": keep the selected row, remove duplicate rows entirely,
+    // and clear the one-to-many marker now that the ambiguity is resolved.
+    return rows.reduce((acc, row) => {
+      if (row.CMuniqueRowID !== groupId) {
+        acc.push(row);
+        return acc;
+      }
+      if (row.__reviewId === keepRowId) {
+        acc.push(clearMatchTypeValue(row, columns, termColumn));
+      }
+      return acc;
+    }, []);
   }
 
   // "Set Group To None": keep one row for the group (first encountered),

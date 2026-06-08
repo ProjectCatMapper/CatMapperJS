@@ -23,7 +23,7 @@ module.exports = defineConfig({
     video: 'retain-on-failure',
   },
   webServer: {
-    command: 'npm start',
+    command: 'npm run build && npm run preview',
     url: BASE_URL,
     reuseExistingServer: true,
     timeout: 120_000,
@@ -35,4 +35,3 @@ module.exports = defineConfig({
     },
   ],
 });
-

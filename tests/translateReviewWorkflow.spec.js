@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import XLSX from 'xlsx';
+import { readSheet } from 'read-excel-file/node';
 
 const BASE_URL = process.env.E2E_BASE_URL || 'http://localhost:3000';
 
@@ -59,6 +59,25 @@ const translateResponse = {
 const selectByIndex = async (page, index, optionName) => {
   await page.locator('div[role="combobox"]').nth(index).click();
   await page.getByRole('option', { name: optionName, exact: true }).click();
+};
+
+const readDownloadedRows = async (filePath) => {
+  const [headers = [], ...rows] = await readSheet(filePath);
+  const normalizedHeaders = headers.map((header) => String(header || ''));
+  return rows.map((row) =>
+    Object.fromEntries(
+      normalizedHeaders.map((header, index) => [header, row[index] ?? ''])
+    )
+  );
+};
+
+const seedAuthStorage = async (page) => {
+  await page.evaluate(() => {
+    localStorage.setItem('userId', 'tester');
+    localStorage.setItem('authToken', 'fake-token');
+    localStorage.setItem('authLevel', '2');
+    localStorage.setItem('cookie-consent', 'false');
+  });
 };
 
 test.describe('Translate review workflow', () => {
@@ -142,7 +161,7 @@ test.describe('Translate review workflow', () => {
       });
     });
 
-    await page.route('**/profile/bookmarks/tester', async (route) => {
+    await page.route('**/users/tester/bookmarks', async (route) => {
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
@@ -152,7 +171,7 @@ test.describe('Translate review workflow', () => {
       });
     });
 
-    await page.route('**/profile/history/tester', async (route) => {
+    await page.route('**/users/tester/history', async (route) => {
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
@@ -162,12 +181,14 @@ test.describe('Translate review workflow', () => {
   });
 
   test('supports remove, manual replace, bookmark replace, one-to-many resolution, and clean export', async ({ page }) => {
+    await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
+    await seedAuthStorage(page);
     await page.goto(`${BASE_URL}/sociomap/translate`, { waitUntil: 'domcontentloaded' });
 
     await page.locator('#fileInput').setInputFiles({
       name: 'translate-input.csv',
       mimeType: 'text/csv',
-      buffer: Buffer.from('term,note\nalpha,a\nbeta,b\n'),
+      buffer: Buffer.from('term,note\nalpha,a\nbeta,b'),
     });
 
     await selectByIndex(page, 0, 'term');
@@ -223,9 +244,7 @@ test.describe('Translate review workflow', () => {
     const filePath = await download.path();
 
     expect(filePath).toBeTruthy();
-    const workbook = XLSX.readFile(filePath);
-    const sheet = workbook.Sheets[workbook.SheetNames[0]];
-    const exportedRows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+    const exportedRows = await readDownloadedRows(filePath);
 
     expect(exportedRows.length).toBeGreaterThan(0);
     expect(Object.keys(exportedRows[0])).not.toContain('__reviewId');
@@ -234,5 +253,10 @@ test.describe('Translate review workflow', () => {
     expect(beta).toBeTruthy();
     expect(beta.CMID_term).toBe('SM999');
     expect(beta.note).toBe('b');
+
+    const alpha = exportedRows.find((row) => row.term === 'alpha');
+    expect(alpha).toBeTruthy();
+    expect(alpha.CMID_term).toBe('SM2');
+    expect(alpha.matchType_term).toBe('');
   });
 });

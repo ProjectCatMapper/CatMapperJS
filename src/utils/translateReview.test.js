@@ -133,6 +133,7 @@ describe('translateReview utils', () => {
     expect(out).toHaveLength(2);
     expect(out.find((r) => r.__reviewId === 'r-1')).toBeUndefined();
     expect(out.find((r) => r.__reviewId === 'r-2')?.CMID_Name).toBe('SM2');
+    expect(out.find((r) => r.__reviewId === 'r-2')?.matchType_Name).toBe('');
     expect(out.find((r) => r.__reviewId === 'r-3')?.CMID_Name).toBe('SM3');
   });
 
