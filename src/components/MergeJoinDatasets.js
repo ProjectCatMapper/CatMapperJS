@@ -225,15 +225,24 @@ const JoinDatasets_Merge = ({ database }) => {
 
       <Box sx={{
         mb: 2,
-        display: 'flex',
-        alignItems: 'center',
-        gap: 30,
+        display: 'grid',
+        gridTemplateColumns: { xs: 'minmax(0, 1fr)', sm: 'repeat(2, minmax(0, 1fr))' },
+        alignItems: 'start',
+        gap: { xs: 2, sm: 3, md: 5 },
+        width: '100%',
+        boxSizing: 'border-box',
         backgroundColor: '#87CEEB',
         borderRadius: 4,
         padding: 2,
         boxShadow: 1,
+        '& input[type="file"]': {
+          color: 'black',
+          display: 'block',
+          maxWidth: '100%',
+          width: '100%',
+        },
       }}>
-        <Box>
+        <Box sx={{ minWidth: 0 }}>
           <Typography variant="h6" sx={{ color: 'black', fontWeight: 'bold', mb: 0.5 }}>
             Upload first Dataset
           </Typography>
@@ -248,7 +257,7 @@ const JoinDatasets_Merge = ({ database }) => {
           />
         </Box>
 
-        <Box>
+        <Box sx={{ minWidth: 0 }}>
           <Typography variant="h6" sx={{ color: 'black', fontWeight: 'bold', mb: 0.5 }}>
             Upload second Dataset
           </Typography>
