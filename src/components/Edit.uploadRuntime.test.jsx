@@ -259,6 +259,60 @@ describe('Edit upload runtime', () => {
     );
   });
 
+  it('warns before add-node uploads when the spreadsheet includes CMID', async () => {
+    parseTabularFileMock.mockResolvedValue({
+      headers: ['CMID', 'CMName', 'Name', 'Key', 'label', 'datasetID'],
+      rows2d: [['AM1', 'Node A', 'Node A', 'Var == A', 'LANGUOID', 'AD1']],
+      records: [
+        {
+          CMID: 'AM1',
+          CMName: 'Node A',
+          Name: 'Node A',
+          Key: 'Var == A',
+          label: 'LANGUOID',
+          datasetID: 'AD1',
+        },
+      ],
+    });
+
+    vi.mocked(editUploadApi.uploadInputNodes).mockResolvedValue({
+      ok: true,
+      json: async () => ({ taskId: 'task-cmid-warning', status: 'queued' }),
+    });
+
+    await renderEdit(root);
+    await uploadFile(container, 'cmid-add-node.csv');
+
+    const uploadButton = Array.from(container.querySelectorAll('button')).find(
+      (button) => button.textContent?.trim() === 'UPLOAD',
+    );
+    expect(uploadButton).toBeTruthy();
+
+    await act(async () => {
+      uploadButton.click();
+      await flushPromises();
+    });
+
+    expect(editUploadApi.uploadInputNodes).not.toHaveBeenCalled();
+    expect(document.body.textContent).toContain(
+      'You will be creating new nodes, instead of adding uses ties to existing nodes. Do you want to continue?',
+    );
+    expect(document.body.textContent).toContain('Cancel');
+    expect(document.body.textContent).toContain('Continue');
+
+    const continueButton = Array.from(document.body.querySelectorAll('button')).find(
+      (button) => button.textContent?.trim() === 'Continue',
+    );
+    expect(continueButton).toBeTruthy();
+
+    await act(async () => {
+      continueButton.click();
+      await flushPromises();
+    });
+
+    expect(editUploadApi.uploadInputNodes).toHaveBeenCalledTimes(1);
+  });
+
   it('requires Key for variable merging uploads', async () => {
     sessionStorage.setItem(
       'catmapper.edit.uploadState.archamap',

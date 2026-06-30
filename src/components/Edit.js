@@ -64,6 +64,7 @@ const Edit = ({ database }) => {
   const [missingCount, setMissingCount] = useState(0);
   const [missingCol, setMissingCol] = useState(0);
   const [openDialog, setOpenDialog] = useState(false);
+  const [addNodeCmidWarningOpen, setAddNodeCmidWarningOpen] = useState(false);
   const [selectedOption, setSelectedOption] = useState('standard');
   const [advselectedOption, setadvSelectedOption] = useState('add_node');
   const [formData, setFormData] = useState(getInitialFormData);
@@ -351,6 +352,7 @@ const Edit = ({ database }) => {
     setAllRequiredColumnsFound(false);
     setMissingCount(0);
     setMissingCol(0);
+    setAddNodeCmidWarningOpen(false);
     setMergingType("0");
     setCMIDText('The new dataset CMID is pending.');
     setLoading(false);
@@ -619,6 +621,15 @@ const Edit = ({ database }) => {
     }
   };
 
+  const handleAddNodeCmidWarningClose = () => {
+    setAddNodeCmidWarningOpen(false);
+  };
+
+  const handleAddNodeCmidWarningContinue = () => {
+    setAddNodeCmidWarningOpen(false);
+    continueWithSubmit();
+  };
+
   useEffect(() => {
     if (!database) return;
 
@@ -817,6 +828,15 @@ const Edit = ({ database }) => {
     if (typeof validationResult === 'number' && validationResult > 0) {
       setMissingCount(validationResult);
       setOpenDialog(true);
+      return;
+    }
+
+    if (
+      selectedOption === "standard" &&
+      advselectedOption === "add_node" &&
+      columns.some((column) => String(column).trim() === "CMID")
+    ) {
+      setAddNodeCmidWarningOpen(true);
       return;
     }
 
@@ -1801,6 +1821,19 @@ const Edit = ({ database }) => {
             <DialogActions>
               <Button onClick={() => handleConfirm(false)} color="error">No</Button>
               <Button onClick={() => handleConfirm(true)} color="primary">Yes</Button>
+            </DialogActions>
+          </Dialog>
+
+          <Dialog open={addNodeCmidWarningOpen} onClose={handleAddNodeCmidWarningClose}>
+            <DialogTitle>Warning</DialogTitle>
+            <DialogContent>
+              <DialogContentText>
+                You will be creating new nodes, instead of adding uses ties to existing nodes. Do you want to continue?
+              </DialogContentText>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={handleAddNodeCmidWarningClose} color="error">Cancel</Button>
+              <Button onClick={handleAddNodeCmidWarningContinue} color="primary">Continue</Button>
             </DialogActions>
           </Dialog>
 
