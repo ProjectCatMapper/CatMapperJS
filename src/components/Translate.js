@@ -749,7 +749,9 @@ function TranslateComponent({ database }) {
             padding: isSidebarCollapsed ? '10px 6px' : '20px',
             border: '1px solid #ccc',
             borderRadius: '10px',
-            overflow: "auto",
+            overflowY: "auto",
+            overflowX: "hidden",
+            boxSizing: 'border-box',
             transition: 'width 0.2s ease, padding 0.2s ease',
           }}
         >
@@ -772,7 +774,7 @@ function TranslateComponent({ database }) {
               <Button startIcon={<InfoIcon sx={{ height: '28px', width: '28px' }} />} />
             </Tooltip>
           </Box>
-          <input id="fileInput" style={{ color: 'black', fontWeight: "bold", marginLeft: 7, padding: "2px" }} type="file" accept=".csv,.tsv,.xlsx" onChange={handleFileChange} />
+          <input id="fileInput" style={{ color: 'black', fontWeight: "bold", marginLeft: 7, padding: "2px", maxWidth: '100%', boxSizing: 'border-box' }} type="file" accept=".csv,.tsv,.xlsx" onChange={handleFileChange} />
           <br />
           {(selectedFile !== null || columns.length > 0) && (
             <div>
@@ -1062,10 +1064,15 @@ function TranslateComponent({ database }) {
             Search
           </Button>
           <br />
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', width: '100%', minWidth: 0, gap: 0.5 }}>
             <TranslateTable categories={tcategories} />
             <Tooltip title={getTooltipContent("MATCH_STATISTICS")} arrow>
-              <Button startIcon={<InfoIcon sx={{ height: '28px', width: '28px' }} />} />
+              <Button
+                aria-label="Match statistics"
+                sx={{ minWidth: 34, p: 0.5, flexShrink: 0 }}
+              >
+                <InfoIcon sx={{ height: '28px', width: '28px' }} />
+              </Button>
             </Tooltip>
           </Box>
           <br />

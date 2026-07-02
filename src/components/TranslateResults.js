@@ -1,6 +1,4 @@
 import * as React from 'react';
-import { useState } from 'react'
-import { DataGrid } from '@mui/x-data-grid';
 import "./TranslateResults.css"
 
 const MATCH_TYPES = [
@@ -13,19 +11,15 @@ const MATCH_TYPES = [
 ];
 
 export default function TranslateTable(props) {
-  const columns = [
-    { field: 'Type', headerName: 'Type', width: 150 },
-    { field: 'Count', headerName: 'Count', width: 100 },
-  ];
-  const [rows, setRows] = useState([]);
-  React.useEffect(() => {
+  const rows = React.useMemo(() => {
     let totalPercentage = 0;
+    const categories = props.categories || {};
     const updatedMatchTypes = MATCH_TYPES.map(match => {
       if (match.Type === "Total matches" || match.Type === "No matches") {
-        return match;
+        return { ...match };
       }
 
-      const count = props.categories[match.Type] || "0%";
+      const count = categories[match.Type] || "0%";
       if (count !== "0%") {
         totalPercentage += parseFloat(count.replace('%', ''));
       }
@@ -37,32 +31,37 @@ export default function TranslateTable(props) {
 
     const noMatchesIndex = updatedMatchTypes.findIndex(match => match.Type === "No matches");
     updatedMatchTypes[noMatchesIndex].Count = (100 - totalPercentage).toFixed(2) + "%";
-    console.log(updatedMatchTypes)
 
-    setRows(updatedMatchTypes);
+    return updatedMatchTypes;
   }, [props.categories])
 
-  const getRowClassName = (params) => {
-    if (params.row.id === 1) {
+  const getRowClassName = (row) => {
+    if (row.id === 1) {
       return '';
     } else {
-      const colorIndex = params.row.id;
+      const colorIndex = row.id;
       return `row-color-${colorIndex}`;
     }
   };
 
   return (
     <div className="translate-table-container">
-      <DataGrid
-        rows={rows}
-        columns={columns}
-        getRowClassName={getRowClassName}
-        disableEval
-        localeText={{ noRowsLabel: "No results to display" }}
-        rowHeight={25}
-        pagination={false}
-        hideFooter={true}
-      />
+      <table className="translate-results-table" aria-label="Match statistics">
+        <thead>
+          <tr>
+            <th scope="col">Type</th>
+            <th scope="col">Count</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row) => (
+            <tr key={row.id} className={getRowClassName(row)}>
+              <td>{row.Type}</td>
+              <td>{row.Count}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }

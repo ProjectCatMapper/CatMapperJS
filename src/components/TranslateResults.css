@@ -15,42 +15,40 @@
 }
 
 .translate-table-container {
-    height: 25vh;
-    width: 15vw;
+    flex: 1 1 auto;
+    min-width: 0;
+    max-width: 280px;
     overflow: hidden;
-  }
-  
-  @media screen and (max-width: 1536px) {
-    .translate-table-container {
-      height: 25vh;
-      width: 15vw;
-      overflow: hidden;
-    }
-  }
-  
-  @media screen and (max-width: 1366px) {
-    .translate-table-container {
-      height: 40vh;
-      width: 25vw;
-      overflow: hidden
-    }
-  }
-  
-.translate-table-container .MuiDataGrid-root {
-    border: none !important;
-  }
-  
-  .translate-table-container .MuiDataGrid-main {
-    overflow: hidden !important;
-  }
-  
-  .translate-table-container .MuiDataGrid-columnHeaders {
-    overflow: hidden !important;
-  }
-  
-  .translate-table-container .MuiDataGrid-cell {
-    overflow: hidden !important;
-    text-overflow: ellipsis;
+}
+
+.translate-results-table {
+    width: 100%;
+    table-layout: fixed;
+    border-collapse: collapse;
+    border: none;
+    color: #000000;
+    font-size: 0.8125rem;
+    line-height: 1.2;
+}
+
+.translate-results-table th,
+.translate-results-table td {
+    padding: 4px 6px;
+    border-bottom: 1px solid #d7d7d7;
+    overflow-wrap: anywhere;
+    word-break: normal;
+    vertical-align: middle;
+}
+
+.translate-results-table th {
+    background-color: #e0e0e0;
+    font-weight: 700;
+    text-align: left;
+}
+
+.translate-results-table th:last-child,
+.translate-results-table td:last-child {
+    width: 5.5em;
+    text-align: right;
     white-space: nowrap;
-  }
-  
+}
