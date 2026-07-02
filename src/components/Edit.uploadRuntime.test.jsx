@@ -340,4 +340,36 @@ describe('Edit upload runtime', () => {
 
     expect(document.body.textContent).toContain('Missing the following required columns: Key');
   });
+
+  it('does not treat Name as CMName for dataset node uploads', async () => {
+    parseTabularFileMock.mockResolvedValue({
+      headers: ['Name', 'label', 'shortName', 'DatasetCitation'],
+      rows2d: [['Dataset A', 'DATASET', 'Dataset A', 'Citation A']],
+      records: [
+        {
+          Name: 'Dataset A',
+          label: 'DATASET',
+          shortName: 'Dataset A',
+          DatasetCitation: 'Citation A',
+        },
+      ],
+    });
+
+    await renderEdit(root);
+    await uploadFile(container, 'dataset-without-cmname.csv');
+
+    expect(document.body.textContent).toContain('Missing the following required columns: CMName');
+
+    const cmNameRequiredLabel = Array.from(container.querySelectorAll('label')).find(
+      (label) => label.textContent?.trim() === 'CMName',
+    );
+    expect(cmNameRequiredLabel).toBeTruthy();
+    expect(cmNameRequiredLabel.querySelector('input')?.checked).toBe(false);
+
+    const uploadButton = Array.from(container.querySelectorAll('button')).find(
+      (button) => button.textContent?.trim() === 'UPLOAD',
+    );
+    expect(uploadButton).toBeTruthy();
+    expect(uploadButton.disabled).toBe(true);
+  });
 });

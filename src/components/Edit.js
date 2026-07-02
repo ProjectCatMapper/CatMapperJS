@@ -1116,7 +1116,7 @@ const Edit = ({ database }) => {
         const labelIndex = columns.indexOf('label');
         if (labelIndex !== -1) {
           const allowedDatasetLabels = ['DATASET', 'MERGING', 'STACK'];
-          const datasetValueFound = rows.some(row => allowedDatasetLabels.includes(row[labelIndex]));
+          const datasetValueFound = rows.some(row => allowedDatasetLabels.includes(String(row[labelIndex] || '').trim().toUpperCase()));
           if (datasetValueFound) {
             required = ['CMName', 'label', 'shortName', 'DatasetCitation'];
             allowedDatasetColumns = ["CMID", "CMName", "DatasetCitation", "DatasetLocation", "DatasetScope", "DatasetVersion",
@@ -1251,9 +1251,10 @@ const Edit = ({ database }) => {
       }
     });
 
-    // when uploading categories, if CMName is absent, use Name column and vice versa.
-    // Name and CMName columns are added in the backend
-    if (advselectedOption === "add_node") {
+    // For category nodes, Name and CMName can be filled from each other in the backend.
+    // DATASET uploads require a real CMName column.
+    const isDatasetNodeUpload = required.includes('DatasetCitation');
+    if (advselectedOption === "add_node" && !isDatasetNodeUpload) {
       const hasName = columns.includes("Name");
       const hasCMName = columns.includes("CMName");
 
@@ -1368,6 +1369,10 @@ const Edit = ({ database }) => {
       uploadTaskStatus === 'canceled'
     );
   const uploadPercent = Math.max(0, Math.min(100, Number(uploadTaskState?.progress?.percent ?? 0)));
+  const uploadDisabled =
+    loading ||
+    !showFields ||
+    (selectedOption === "standard" && !allRequiredColumnsFound);
 
   return (
     <Box sx={{ p: 4 }}>
@@ -2005,7 +2010,7 @@ const Edit = ({ database }) => {
         '&:hover': {
           backgroundColor: 'green',
         },
-      }} onClick={handleSubmit} disabled={loading}>
+      }} onClick={handleSubmit} disabled={uploadDisabled}>
         UPLOAD
       </Button>
       <Button variant="outlined" sx={{ ml: "1vw" }} onClick={clearUploadState}>
