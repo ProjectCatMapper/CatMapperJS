@@ -1733,7 +1733,7 @@ const Edit = ({ database }) => {
               control={<Radio />}
               label={<StandardOptionLabel label={standardOptions.node_add.label} helpText={standardOptions.node_add.helpText} />}
             />
-            {authLevel === 2 && (
+            {authLevel > 0 && (
               <FormControlLabel
                 value="node_replace"
                 control={<Radio />}
@@ -1751,7 +1751,7 @@ const Edit = ({ database }) => {
               control={<Radio />}
               label={<StandardOptionLabel label={standardOptions.update_add.label} helpText={standardOptions.update_add.helpText} />}
             />
-            {authLevel === 2 && (
+            {authLevel > 0 && (
               <FormControlLabel
                 value="update_replace"
                 control={<Radio />}

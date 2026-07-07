@@ -5,8 +5,10 @@ import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import Admin from './Admin';
 
+const authMock = vi.hoisted(() => ({ authLevel: 2 }));
+
 vi.mock('./AuthContext', () => ({
-  useAuth: () => ({ cred: 'test-token', user: '900' }),
+  useAuth: () => ({ authLevel: authMock.authLevel, cred: 'test-token', user: '900' }),
 }));
 
 vi.mock('./FooterLinks', () => ({
@@ -62,6 +64,7 @@ describe('Admin change user password flow', () => {
       })
     );
     window.alert = vi.fn();
+    authMock.authLevel = 2;
   });
 
   afterEach(async () => {
@@ -143,5 +146,43 @@ describe('Admin change user password flow', () => {
     expect(document.body.textContent).toContain('Confirm Password Change');
     expect(document.body.textContent).toContain("Are you sure you want to change this user's password?");
     expect(document.body.textContent).toContain('ada');
+  });
+
+  it('shows only owner-scoped edit tools for registered users', async () => {
+    authMock.authLevel = 1;
+
+    await act(async () => {
+      root.render(
+        React.createElement(
+          MemoryRouter,
+          { initialEntries: ['/sociomap/admin'] },
+          React.createElement(Admin, { database: 'sociomap' })
+        )
+      );
+      await flushPromises();
+    });
+
+    expect(document.body.textContent).toContain('Owner-scoped editing tools');
+    expect(document.body.textContent).not.toContain('User Options');
+    expect(document.body.textContent).not.toContain('Database Checks');
+
+    const editOptionsLabel = Array.from(container.querySelectorAll('*')).find(
+      (node) => node.textContent?.trim().toLowerCase() === 'edit options'
+    );
+    const editOptionsButton =
+      editOptionsLabel?.closest('button')
+      || editOptionsLabel?.closest('[role="button"]')
+      || editOptionsLabel;
+    expect(editOptionsButton).toBeTruthy();
+
+    await act(async () => {
+      editOptionsButton.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      await flushPromises();
+    });
+
+    expect(document.body.textContent).toContain('add/edit/delete node property');
+    expect(document.body.textContent).toContain('delete USES relation');
+    expect(document.body.textContent).not.toContain('merge nodes');
+    expect(document.body.textContent).not.toContain('create new user');
   });
 });

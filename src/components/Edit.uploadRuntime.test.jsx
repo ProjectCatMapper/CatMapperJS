@@ -4,6 +4,7 @@ import { createRoot } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const parseTabularFileMock = vi.fn();
+const authMock = vi.hoisted(() => ({ authLevel: 2 }));
 
 vi.mock('../utils/tabularUpload', () => ({
   parseTabularFile: (...args) => parseTabularFileMock(...args),
@@ -13,7 +14,7 @@ vi.mock('./AuthContext', () => ({
   useAuth: () => ({
     user: 'tester',
     cred: 'token',
-    authLevel: 2,
+    authLevel: authMock.authLevel,
   }),
 }));
 
@@ -92,6 +93,7 @@ describe('Edit upload runtime', () => {
     });
     global.fetch = fetchMock;
     window.alert = vi.fn();
+    authMock.authLevel = 2;
 
     parseTabularFileMock.mockReset();
     vi.mocked(editUploadApi.uploadInputNodes).mockReset();
@@ -339,6 +341,30 @@ describe('Edit upload runtime', () => {
     await uploadFile(container, 'variable-merge.csv');
 
     expect(document.body.textContent).toContain('Missing the following required columns: Key');
+  });
+
+  it('shows node and USES replacement uploads to registered users but keeps merging replacement admin-only', async () => {
+    authMock.authLevel = 1;
+
+    parseTabularFileMock.mockResolvedValue({
+      headers: ['CMID', 'Key', 'datasetID', 'CMName'],
+      rows2d: [['AM1', 'Type == A', 'AD1', 'Node A']],
+      records: [
+        {
+          CMID: 'AM1',
+          Key: 'Type == A',
+          datasetID: 'AD1',
+          CMName: 'Node A',
+        },
+      ],
+    });
+
+    await renderEdit(root);
+    await uploadFile(container, 'owned-replace.csv');
+
+    expect(container.querySelector('input[value="node_replace"]')).toBeTruthy();
+    expect(container.querySelector('input[value="update_replace"]')).toBeTruthy();
+    expect(container.querySelector('input[value="merging_replace"]')).toBeFalsy();
   });
 
   it('does not treat Name as CMName for dataset node uploads', async () => {

@@ -49,7 +49,7 @@ const NavbarApp = ({ database }) => {
                         <span className='cm-nav-link'> Edit <span className="cm-nav-dropdown-arrow">&#x25BC;</span></span>
                         <div className='cm-nav-dropdown-content'>
                             <Link to={`/${database}/edit`}>Edit</Link>
-                            {authLevel > 1 && <Link to={`/${database}/admin`}>Admin</Link>}
+                            {authLevel > 0 && <Link to={`/${database}/admin`}>Admin</Link>}
                         </div>
                     </li>}
                     <li className='cm-nav-dropdown'>

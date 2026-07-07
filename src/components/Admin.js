@@ -274,7 +274,8 @@ const formatDuplicateTripletMergeFailure = (failure) => {
 };
 
 const Admin = ({ database }) => {
-  const { cred, user } = useAuth();
+  const { authLevel, cred, user } = useAuth();
+  const isGlobalAdmin = Number(authLevel) > 1;
   const [firstDropdownValue, setFirstDropdownValue] = useState(
     "add/edit/delete USES property"
   );
@@ -339,7 +340,14 @@ const Admin = ({ database }) => {
   const openAmbiguousTiesModal = () => setOpen(true);
   const closeAmbiguousTiesModal = () => setOpen(false);
 
-  const sections = [
+  const ownerScopedEditKeys = [
+    "add/edit/delete USES property",
+    "add/edit/delete node property",
+    "move USES tie",
+    "delete USES relation",
+  ];
+
+  const allSections = [
     {
       label: "Edit Options",
       keys: [
@@ -366,6 +374,10 @@ const Admin = ({ database }) => {
       keys: ROUTINE_OPTIONS.map((option) => option.key),
     },
   ];
+  const sections = isGlobalAdmin
+    ? allSections
+    : [{ label: "Edit Options", keys: ownerScopedEditKeys }];
+  const visibleAdminKeys = sections.flatMap((section) => section.keys);
   const routineOptionByKey = Object.fromEntries(
     ROUTINE_OPTIONS.map((option) => [option.key, option])
   );
@@ -1317,6 +1329,9 @@ const Admin = ({ database }) => {
           const res = await fetch(`${apiBaseUrl()}/admin_add_edit_delete_nodeproperties?CMID=` + cmid + "&database=" + database + "&option=" + option, {
             //const res = await fetch("http://127.0.0.1:5001/admin_add_edit_delete_nodeproperties?CMID="+cmid+"&database="+database, {
             method: "GET",
+            headers: {
+              ...(cred ? { Authorization: `Bearer ${cred}` } : {}),
+            },
           });
           const data = await res.json();
 
@@ -1390,6 +1405,9 @@ const Admin = ({ database }) => {
           const res = await fetch(`${apiBaseUrl()}${endpoint}?CMID=` + cmid + "&database=" + database, {
             //const res = await fetch("http://127.0.0.1:5001/admin_add_edit_delete_usesproperties?CMID="+cmid+"&database="+database, {
             method: "GET",
+            headers: {
+              ...(cred ? { Authorization: `Bearer ${cred}` } : {}),
+            },
           });
           const data = await res.json();
 
@@ -1421,6 +1439,13 @@ const Admin = ({ database }) => {
       user: user || "",
     }));
   }, [user]);
+
+  useEffect(() => {
+    if (visibleAdminKeys.length > 0 && !visibleAdminKeys.includes(firstDropdownValue)) {
+      setFirstDropdownValue(visibleAdminKeys[0]);
+      resetAdminForm();
+    }
+  }, [authLevel, firstDropdownValue, visibleAdminKeys]);
 
   useEffect(() => {
     if (firstDropdownValue === "lookup/edit users") {
@@ -1484,7 +1509,9 @@ const Admin = ({ database }) => {
           {isSidebarOpen && (
             <>
               <Typography sx={{ px: 0.75, py: 0.5, fontSize: "0.78rem", color: "text.secondary", borderBottom: "1px solid #ececec" }}>
-                Admin panel: these functions are intended for admin users to identify and fix problems in the database, add and modify users, and to initiate database integrity checks
+                {isGlobalAdmin
+                  ? "Admin panel: these functions are intended for admin users to identify and fix problems in the database, add and modify users, and to initiate database integrity checks"
+                  : "Owner-scoped editing tools for nodes and USES ties created by your account"}
               </Typography>
               <Box sx={{ flex: 1, minHeight: 0, overflowY: "auto" }}>
                 <List disablePadding>
@@ -1525,11 +1552,13 @@ const Admin = ({ database }) => {
                   ))}
                 </List>
               </Box>
-              <Box sx={{ p: 0.75, borderTop: "1px solid #ececec" }}>
-                <Button component={Link} to="/admin/metadata" variant="outlined" fullWidth>
-                  Open Metadata Manager
-                </Button>
-              </Box>
+              {isGlobalAdmin && (
+                <Box sx={{ p: 0.75, borderTop: "1px solid #ececec" }}>
+                  <Button component={Link} to="/admin/metadata" variant="outlined" fullWidth>
+                    Open Metadata Manager
+                  </Button>
+                </Box>
+              )}
             </>
           )}
         </Box>

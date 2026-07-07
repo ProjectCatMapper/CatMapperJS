@@ -139,7 +139,7 @@ export const AuthProvider = ({ children }) => {
                 return response;
             }
 
-            if (response.status === 401 || response.status === 403) {
+            if (response.status === 401) {
                 signalAuthInvalid(SESSION_EXPIRED_MESSAGE);
                 return new Response(
                     JSON.stringify({ error: SESSION_EXPIRED_MESSAGE }),
@@ -149,7 +149,7 @@ export const AuthProvider = ({ children }) => {
 
             if (!response.ok) {
                 const errorMessage = await readErrorMessage(response);
-                if (looksLikeAuthFailure(errorMessage)) {
+                if (response.status !== 403 && looksLikeAuthFailure(errorMessage)) {
                     signalAuthInvalid(SESSION_EXPIRED_MESSAGE);
                     return new Response(
                         JSON.stringify({ error: SESSION_EXPIRED_MESSAGE }),
