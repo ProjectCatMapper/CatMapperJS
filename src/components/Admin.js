@@ -1437,6 +1437,10 @@ const Admin = ({ database }) => {
             return;
           }
 
+          if (isUsesMode && Array.isArray(data.r) && data.r.length === 0) {
+            alert("No USES ties are eligible for modification for this CMID.");
+          }
+
           setDropdown1Options(data.r);
           setFormData(prevFormData => ({
             ...prevFormData,

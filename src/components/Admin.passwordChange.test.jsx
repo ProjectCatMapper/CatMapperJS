@@ -186,4 +186,36 @@ describe('Admin change user password flow', () => {
     expect(document.body.textContent).toContain('delete USES relation');
     expect(document.body.textContent).not.toContain('create new user');
   });
+
+  it('alerts registered users when no USES ties are eligible', async () => {
+    authMock.authLevel = 1;
+    global.fetch = vi.fn(() =>
+      Promise.resolve({
+        ok: true,
+        json: async () => ({ r: [], r1: ['Key', 'label', 'Name'] }),
+      })
+    );
+
+    await act(async () => {
+      root.render(
+        React.createElement(
+          MemoryRouter,
+          { initialEntries: ['/sociomap/admin'] },
+          React.createElement(Admin, { database: 'sociomap' })
+        )
+      );
+      await flushPromises();
+    });
+
+    const cmidInput = container.querySelector('input[name="s1_2"]');
+    expect(cmidInput).toBeTruthy();
+
+    await act(async () => {
+      setInputValue(cmidInput, 'SM123');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    expect(window.alert).toHaveBeenCalledWith('No USES ties are eligible for modification for this CMID.');
+  });
 });
