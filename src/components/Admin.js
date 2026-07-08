@@ -343,7 +343,9 @@ const Admin = ({ database }) => {
   const ownerScopedEditKeys = [
     "add/edit/delete USES property",
     "add/edit/delete node property",
+    "merge nodes",
     "move USES tie",
+    "delete node",
     "delete USES relation",
   ];
 
@@ -387,6 +389,14 @@ const Admin = ({ database }) => {
   const selectedDuplicateTripletRows = routineDataRows.filter((row) => (
     selectedDuplicateTripletIds.includes(row.id)
   ));
+  const visiblePropertyOptions = (options) => (
+    isGlobalAdmin
+      ? options
+      : options.filter((option) => {
+        const normalized = String(option || "").trim().toLowerCase();
+        return normalized !== "log" && normalized !== "logid";
+      })
+  );
 
   const toggleSectionCollapse = (sectionLabel) => {
     setCollapsedSections((prev) => ({
@@ -1651,7 +1661,7 @@ const Admin = ({ database }) => {
                             value={formData.s1_8 || ""}
                             onChange={updateFormFieldValue}
                           >
-                            {[...dropdown2Options].filter(option => option.toLowerCase() !== "id").sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
+                            {visiblePropertyOptions([...dropdown2Options].filter(option => option.toLowerCase() !== "id")).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
                               .map((option, index) => (
                                 <MenuItem key={index} value={option}>
                                   {option}
@@ -1916,7 +1926,7 @@ const Admin = ({ database }) => {
                       value={formData.s1_7 || ""}
                       onChange={updateFormFieldValue}
                     >
-                      {add_edit_delete_Nodeprops_Options.map((value, index) => (
+                      {visiblePropertyOptions(add_edit_delete_Nodeprops_Options).map((value, index) => (
                         <MenuItem key={index} value={value}>
                           {value}
                         </MenuItem>
@@ -1936,7 +1946,7 @@ const Admin = ({ database }) => {
                         value={formData.s1_7 || ""}
                         onChange={updateFormFieldValue}
                       >
-                        {Object.keys(add_edit_delete_Nodeprops_Options).map((key, index) => (
+                        {visiblePropertyOptions(Object.keys(add_edit_delete_Nodeprops_Options)).map((key, index) => (
                           <MenuItem key={index} value={key}>
                             {key}
                           </MenuItem>

@@ -181,8 +181,9 @@ describe('Admin change user password flow', () => {
     });
 
     expect(document.body.textContent).toContain('add/edit/delete node property');
+    expect(document.body.textContent).toContain('merge nodes');
+    expect(document.body.textContent).toContain('delete node');
     expect(document.body.textContent).toContain('delete USES relation');
-    expect(document.body.textContent).not.toContain('merge nodes');
     expect(document.body.textContent).not.toContain('create new user');
   });
 });
