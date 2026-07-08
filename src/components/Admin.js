@@ -115,6 +115,8 @@ const Select = ({ MenuProps, size = "small", sx, ...props }) => (
   />
 );
 
+const OWNER_SCOPED_USES_EDITABLE_PROPERTIES = ["Key", "label", "Name"];
+
 const ROUTINE_OPTIONS = [
   { key: "is_valid_json", label: "is_valid_json" },
   { key: "validateJSON", label: "validateJSON" },
@@ -396,6 +398,15 @@ const Admin = ({ database }) => {
         const normalized = String(option || "").trim().toLowerCase();
         return normalized !== "log" && normalized !== "logid";
       })
+  );
+  const visibleUsesPropertyOptions = (options) => (
+    isGlobalAdmin
+      ? options
+      : options.filter((option) => (
+        OWNER_SCOPED_USES_EDITABLE_PROPERTIES
+          .map((prop) => prop.toLowerCase())
+          .includes(String(option || "").trim().toLowerCase())
+      ))
   );
 
   const toggleSectionCollapse = (sectionLabel) => {
@@ -1648,6 +1659,7 @@ const Admin = ({ database }) => {
                         (prop) => !rKeys.includes(prop)
                       );
                     }
+                    dropdown2Options = visibleUsesPropertyOptions(dropdown2Options);
 
                     return (
                       dropdown2Options.length !== 0 && (
