@@ -312,6 +312,9 @@ const Admin = ({ database }) => {
   const [datasetID, setDatasetID] = useState('')
   const [mergeConfirmOpen, setMergeConfirmOpen] = useState(false);
   const [mergePreview, setMergePreview] = useState({ keep: null, discard: null });
+  const [adminReviewOpen, setAdminReviewOpen] = useState(false);
+  const [adminReviewRequest, setAdminReviewRequest] = useState(null);
+  const [adminReviewReason, setAdminReviewReason] = useState("");
   const [passwordConfirmOpen, setPasswordConfirmOpen] = useState(false);
   const [passwordConfirmTarget, setPasswordConfirmTarget] = useState(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -409,6 +412,73 @@ const Admin = ({ database }) => {
       ))
   );
 
+  const buildNodeRemovalReviewRequest = (cleanedData, reviewResponse) => {
+    const targetCmid = firstDropdownValue === "merge nodes"
+      ? cleanedData.s1_3
+      : cleanedData.s1_2;
+    const keepCmid = firstDropdownValue === "merge nodes" ? cleanedData.s1_2 : "";
+
+    return {
+      action: firstDropdownValue,
+      database,
+      input: cleanedData,
+      targetCmid,
+      keepCmid,
+      review: reviewResponse?.review || null,
+      error: reviewResponse?.error || "This action needs admin review.",
+    };
+  };
+
+  const openNodeRemovalReviewDialog = (requestData) => {
+    setAdminReviewRequest(requestData);
+    setAdminReviewReason("");
+    setAdminReviewOpen(true);
+  };
+
+  const submitNodeRemovalReviewRequest = async () => {
+    const reason = adminReviewReason.trim();
+    if (!reason) {
+      alert("Please enter a reason for admin review.");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const response = await fetch(`${apiBaseUrl()}/admin/node-removal-review-request`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(cred ? { Authorization: `Bearer ${cred}` } : {}),
+        },
+        body: JSON.stringify({
+          database: adminReviewRequest?.database || database,
+          fun: adminReviewRequest?.action,
+          input: adminReviewRequest?.input,
+          reason,
+        }),
+      });
+      const contentType = response.headers.get("content-type") || "";
+      const result = contentType.includes("application/json")
+        ? await response.json()
+        : await response.text();
+
+      if (!response.ok) {
+        alert(typeof result === "string" ? result : result.error || "Admin review request failed.");
+        return;
+      }
+
+      alert(result.message || "Admin review request sent.");
+      setAdminReviewOpen(false);
+      setAdminReviewRequest(null);
+      setAdminReviewReason("");
+    } catch (error) {
+      console.error("Error requesting admin review:", error);
+      alert("Admin review request failed.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const toggleSectionCollapse = (sectionLabel) => {
     setCollapsedSections((prev) => ({
       ...prev,
@@ -476,9 +546,20 @@ const Admin = ({ database }) => {
         }),
       });
 
-      const result = await response.text();
+      const contentType = response.headers.get("content-type") || "";
+      const result = contentType.includes("application/json")
+        ? await response.json()
+        : await response.text();
       if (!response.ok) {
-        alert(result);
+        if (
+          firstDropdownValue === "merge nodes" || firstDropdownValue === "delete node"
+        ) {
+          if (result?.requiresAdminReview) {
+            openNodeRemovalReviewDialog(buildNodeRemovalReviewRequest(cleanedData, result));
+            return;
+          }
+        }
+        alert(typeof result === "string" ? result : result.error || "Action failed");
       } else {
         alert("Action completed");
       }
@@ -3083,6 +3164,55 @@ const Admin = ({ database }) => {
             }}
           >
             Confirm Merge
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={adminReviewOpen}
+        onClose={() => setAdminReviewOpen(false)}
+        fullWidth
+        maxWidth="sm"
+      >
+        <DialogTitle>Admin Review Required</DialogTitle>
+        <DialogContent>
+          <Typography component="div" sx={{ mb: 2, color: "text.primary" }}>
+            This action needs admin review because the CMID is used elsewhere in the database.
+          </Typography>
+          <Typography component="div" sx={{ color: "text.primary" }}>
+            <strong>Action:</strong> {adminReviewRequest?.action}
+          </Typography>
+          <Typography component="div" sx={{ color: "text.primary" }}>
+            <strong>Target CMID:</strong> {adminReviewRequest?.targetCmid}
+          </Typography>
+          {adminReviewRequest?.keepCmid && (
+            <Typography component="div" sx={{ color: "text.primary" }}>
+              <strong>Keep CMID:</strong> {adminReviewRequest.keepCmid}
+            </Typography>
+          )}
+          {adminReviewRequest?.error && (
+            <Typography component="div" sx={{ mt: 1.5, color: "text.secondary" }}>
+              {adminReviewRequest.error}
+            </Typography>
+          )}
+          <TextField
+            label="Reason for admin review"
+            value={adminReviewReason}
+            onChange={(event) => setAdminReviewReason(event.target.value)}
+            fullWidth
+            multiline
+            minRows={4}
+            sx={{ mt: 2 }}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setAdminReviewOpen(false)}>Cancel</Button>
+          <Button
+            color="success"
+            variant="contained"
+            onClick={submitNodeRemovalReviewRequest}
+          >
+            Send Request
           </Button>
         </DialogActions>
       </Dialog>

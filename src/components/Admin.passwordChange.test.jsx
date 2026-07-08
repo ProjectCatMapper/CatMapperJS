@@ -35,6 +35,13 @@ const setInputValue = (input, value) => {
   input.dispatchEvent(new Event('change', { bubbles: true }));
 };
 
+const setTextareaValue = (textarea, value) => {
+  const setter = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(textarea), 'value')?.set;
+  setter?.call(textarea, value);
+  textarea.dispatchEvent(new Event('input', { bubbles: true }));
+  textarea.dispatchEvent(new Event('change', { bubbles: true }));
+};
+
 describe('Admin change user password flow', () => {
   let container;
   let root;
@@ -217,5 +224,120 @@ describe('Admin change user password flow', () => {
     });
 
     expect(window.alert).toHaveBeenCalledWith('No USES ties are eligible for modification for this CMID.');
+  });
+
+  it('opens admin review request dialog for blocked registered user node deletion', async () => {
+    authMock.authLevel = 1;
+    window.confirm = vi.fn(() => true);
+    global.fetch = vi.fn((url) => {
+      if (String(url).includes('/admin/edit')) {
+        return Promise.resolve({
+          ok: false,
+          headers: { get: () => 'application/json' },
+          json: async () => ({
+            error: 'User is not authorized to merge or delete SM123; the CMID is referenced in other USES ties: rel-1',
+            requiresAdminReview: true,
+            review: {
+              cmid: 'SM123',
+              reasonCode: 'cmid_referenced_elsewhere',
+              details: { references: ['rel-1'] },
+            },
+          }),
+        });
+      }
+      if (String(url).includes('/admin/node-removal-review-request')) {
+        return Promise.resolve({
+          ok: true,
+          headers: { get: () => 'application/json' },
+          json: async () => ({ message: 'Admin review request sent.' }),
+        });
+      }
+      return Promise.resolve({
+        ok: true,
+        headers: { get: () => 'application/json' },
+        json: async () => ({ r: { CMName: 'Blocked Node' } }),
+      });
+    });
+
+    await act(async () => {
+      root.render(
+        React.createElement(
+          MemoryRouter,
+          { initialEntries: ['/sociomap/admin'] },
+          React.createElement(Admin, { database: 'sociomap' })
+        )
+      );
+      await flushPromises();
+    });
+
+    const editOptionsLabel = Array.from(container.querySelectorAll('*')).find(
+      (node) => node.textContent?.trim().toLowerCase() === 'edit options'
+    );
+    const editOptionsButton =
+      editOptionsLabel?.closest('button')
+      || editOptionsLabel?.closest('[role="button"]')
+      || editOptionsLabel;
+
+    await act(async () => {
+      editOptionsButton.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      await flushPromises();
+    });
+
+    const deleteNodeLabel = Array.from(container.querySelectorAll('*')).find(
+      (node) => node.textContent?.trim().toLowerCase() === 'delete node'
+    );
+    const deleteNodeOption =
+      deleteNodeLabel?.closest('button')
+      || deleteNodeLabel?.closest('[role="button"]')
+      || deleteNodeLabel;
+
+    await act(async () => {
+      deleteNodeOption.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      await flushPromises();
+    });
+
+    const cmidInput = container.querySelector('input[name="s1_2"]');
+    await act(async () => {
+      setInputValue(cmidInput, 'SM123');
+      await flushPromises();
+    });
+
+    const submitButton = Array.from(container.querySelectorAll('button')).find(
+      (node) => node.textContent?.trim() === 'Submit'
+    );
+
+    await act(async () => {
+      submitButton.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    expect(document.body.textContent).toContain('Admin Review Required');
+    expect(document.body.textContent).toContain('SM123');
+
+    const reasonInput = document.body.querySelector('textarea');
+    await act(async () => {
+      setTextareaValue(reasonInput, 'Please merge the duplicate I created by mistake.');
+      await flushPromises();
+    });
+
+    const sendButton = Array.from(document.body.querySelectorAll('button')).find(
+      (node) => node.textContent?.trim() === 'Send Request'
+    );
+
+    await act(async () => {
+      sendButton.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/admin/node-removal-review-request'),
+      expect.objectContaining({
+        method: 'POST',
+        body: expect.stringContaining('Please merge the duplicate I created by mistake.'),
+      })
+    );
+    expect(window.alert).toHaveBeenCalledWith('Admin review request sent.');
   });
 });
