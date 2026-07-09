@@ -167,6 +167,29 @@ const buildMapSources = (geometryData, preferDatasetPoints = false) => {
   ];
 };
 
+const formatNumber = (value) => Number(value || 0).toLocaleString();
+
+const getLayerNodeLimitMessage = (layer) => {
+  if (!layer?.nodeLimited) return "";
+  const shown = Number(layer.displayedNodeCount ?? layer.nodeCount ?? 0);
+  const total = Number(layer.totalNodeCount || 0);
+  if (!total || !shown) return "";
+  return `${layer.label}: showing ${formatNumber(shown)} of ${formatNumber(total)} candidate nodes.`;
+};
+
+const getLayerFeatureLimitMessage = (layer) => {
+  const truncated = Number(layer?.truncatedFeatureCount || 0);
+  if (!truncated) return "";
+  return `${layer.label}: ${formatNumber(truncated)} map features were omitted by the feature limit.`;
+};
+
+const getDepthCountsText = (layer) => {
+  if (!Array.isArray(layer?.depthCounts) || layer.depthCounts.length === 0) return "";
+  return layer.depthCounts
+    .map((entry) => `depth ${entry.depth}: ${formatNumber(entry.nodeCount)}`)
+    .join(", ");
+};
+
 export default function Tableclick({ cmid, database, tabval }) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -1634,6 +1657,44 @@ export default function Tableclick({ cmid, database, tabval }) {
     );
   };
 
+  const renderMapLimitNotice = () => {
+    if (availableInheritedMapLayers.length === 0) return null;
+
+    const limits = mapLayerOptions?.limits || {};
+    const selectedOptionLayers = availableInheritedMapLayers.filter((layer) =>
+      enabledInheritedLayerIds.includes(layer.id)
+    );
+    const layersForMessages = inheritedMapLayers.length > 0
+      ? inheritedMapLayers
+      : selectedOptionLayers;
+    const specificMessages = [
+      ...layersForMessages.map(getLayerNodeLimitMessage),
+      ...layersForMessages.map(getLayerFeatureLimitMessage),
+    ].filter(Boolean);
+    const selectedDescendantLayer = layersForMessages.find((layer) => layer.mode === "descendants");
+    const depthCountsText = getDepthCountsText(selectedDescendantLayer);
+
+    return (
+      <Alert severity={specificMessages.length > 0 ? "warning" : "info"} sx={{ marginBottom: 2 }}>
+        <Box>
+          <Typography variant="body2">
+            Inherited map layers are capped for performance: this view loads up to {formatNumber(limits.defaultNodeLimit || 250)} candidate nodes by default and up to {formatNumber(limits.defaultFeatureLimit || 2000)} map features. When the node cap is reached, deeper descendants can be omitted even if the selected depth includes them. Only nodes with direct point or polygon data are drawn.
+          </Typography>
+          {specificMessages.map((message) => (
+            <Typography key={message} variant="body2">
+              {message}
+            </Typography>
+          ))}
+          {depthCountsText && (
+            <Typography variant="body2">
+              Candidate descendants within selected depth: {depthCountsText}.
+            </Typography>
+          )}
+        </Box>
+      </Alert>
+    );
+  };
+
   if (loadingInfo || navigationLoading) {
     return (
       <Box
@@ -2231,6 +2292,7 @@ export default function Tableclick({ cmid, database, tabval }) {
                 <CustomTabPanel value={value} index={"map"}>
                   {(loadingBackground || loadingInheritedMap) && <LinearProgress sx={{ marginBottom: 2 }} />}
                   {renderCategoryMapControls()}
+                  {renderMapLimitNotice()}
                   {mapLayerError && (
                     <Alert severity="warning" sx={{ marginBottom: 2 }}>
                       {mapLayerError}
