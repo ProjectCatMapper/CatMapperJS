@@ -5,11 +5,11 @@ import { useAuth } from './AuthContext';
 import { ensureDatabase } from '../utils/database';
 
 const ProtectedRoute = ({ children, requiredLevel }) => {
-    const { authLevel } = useAuth();
+    const { authLevel, cred } = useAuth();
     const { database } = useParams();
     const location = useLocation();
 
-    if (authLevel < requiredLevel) {
+    if (authLevel < requiredLevel || !cred) {
         return <Navigate to={`/${ensureDatabase(database)}/login`} replace state={{ from: location }} />;
     }
 
