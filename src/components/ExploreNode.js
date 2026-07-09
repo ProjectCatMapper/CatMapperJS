@@ -134,6 +134,39 @@ const BootstrapInput = styled(InputBase)(({ theme }) => ({
   },
 }));
 
+const getMapPolygonFeatures = (polygons) => {
+  if (!polygons) return [];
+  if (Array.isArray(polygons)) return polygons;
+  if (Array.isArray(polygons.features)) return polygons.features;
+  return polygons.type ? [polygons] : [];
+};
+
+const hasMapPolygons = (polygons) => getMapPolygonFeatures(polygons).length > 0;
+
+const getAvailableInheritedMapLayers = (mapLayerOptions) =>
+  Array.isArray(mapLayerOptions?.layers)
+    ? mapLayerOptions.layers.filter((layer) => layer.id !== "direct" && layer.available)
+    : [];
+
+const buildMapSources = (geometryData, preferDatasetPoints = false) => {
+  const polygons = getMapPolygonFeatures(geometryData?.polygons);
+  const pointCandidates =
+    preferDatasetPoints && Array.isArray(geometryData?.datasetpoints) && geometryData.datasetpoints.length > 0
+      ? geometryData.datasetpoints
+      : Array.isArray(geometryData?.points)
+        ? geometryData.points
+        : [];
+
+  return [
+    ...new Set([
+      ...pointCandidates.map((point) => point.source).filter(Boolean),
+      ...polygons
+        .map((feature) => feature?.properties?.source || feature?.source)
+        .filter(Boolean),
+    ]),
+  ];
+};
+
 export default function Tableclick({ cmid, database, tabval }) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -147,6 +180,13 @@ export default function Tableclick({ cmid, database, tabval }) {
   const [childcategories, setChildCategories] = useState([]);
   const [points, setPoints] = useState([]);
   const [datasetpoints, setDatasetPoints] = useState([]);
+  const [mapLayerOptions, setMapLayerOptions] = useState(null);
+  const [enabledInheritedLayerIds, setEnabledInheritedLayerIds] = useState([]);
+  const [includeDirectMapLayer, setIncludeDirectMapLayer] = useState(true);
+  const [descendantMapDepth, setDescendantMapDepth] = useState(5);
+  const [inheritedMapLayers, setInheritedMapLayers] = useState([]);
+  const [loadingInheritedMap, setLoadingInheritedMap] = useState(false);
+  const [mapLayerError, setMapLayerError] = useState("");
   const [fdrop, setfdrop] = useState(["CONTAINS"]);
   const [orderedProperties, setOrderedProperties] = useState([]);
   const [firstDropdownValue, setFirstDropdownValue] = useState("");
@@ -229,6 +269,13 @@ export default function Tableclick({ cmid, database, tabval }) {
     setMapt([]);
     setPoints([]);
     setDatasetPoints([]);
+    setMapLayerOptions(null);
+    setEnabledInheritedLayerIds([]);
+    setIncludeDirectMapLayer(true);
+    setDescendantMapDepth(5);
+    setInheritedMapLayers([]);
+    setLoadingInheritedMap(false);
+    setMapLayerError("");
     setbadsources([]);
     setsources([]);
     setOpen(false);
@@ -359,6 +406,7 @@ export default function Tableclick({ cmid, database, tabval }) {
     const infoUrl = `${baseUrl}/info/${database}/${cmid}`;
     const categoryUrl = `${baseUrl}/category/${database}/${cmid}`;
     const geometryUrl = `${baseUrl}/exploreGeometry/${database}/${cmid}`;
+    const mapOptionsUrl = `${baseUrl}/databases/${encodeURIComponent(database)}/nodes/${encodeURIComponent(cmid)}/map-layer-options`;
 
     clearNodeData();
 
@@ -421,59 +469,74 @@ export default function Tableclick({ cmid, database, tabval }) {
 
     const loadBackground = async () => {
       try {
-        const [categoryRes, geometryRes] = await Promise.all([
-          fetch(categoryUrl, { signal }),
-          fetch(geometryUrl, { signal })
-        ]);
-        if (!categoryRes.ok) {
-          throw new Error(`Category request failed with status ${categoryRes.status}`);
-        }
-        if (!geometryRes.ok) {
-          throw new Error(`Geometry request failed with status ${geometryRes.status}`);
-        }
-        const [categoryData, geometryData] = await Promise.all([
-          categoryRes.json(),
-          geometryRes.json()
+        const [categoryResult, geometryResult, mapOptionsResult] = await Promise.allSettled([
+          fetch(categoryUrl, { signal }).then(async (res) => {
+            if (!res.ok) {
+              throw new Error(`Category request failed with status ${res.status}`);
+            }
+            return res.json();
+          }),
+          fetch(geometryUrl, { signal }).then(async (res) => {
+            if (!res.ok) {
+              throw new Error(`Geometry request failed with status ${res.status}`);
+            }
+            return res.json();
+          }),
+          fetch(mapOptionsUrl, { signal }).then(async (res) => {
+            if (!res.ok) {
+              throw new Error(`Map layer options request failed with status ${res.status}`);
+            }
+            return res.json();
+          }),
         ]);
         if (!isLatestRequest()) return;
-        // --- Process Category Data ---
-        const safeSamples = Array.isArray(categoryData?.samples) ? categoryData.samples : [];
-        const safeCategories = Array.isArray(categoryData?.categories) ? categoryData.categories : [];
-        const safeChildCategories = Array.isArray(categoryData?.childcategories) ? categoryData.childcategories : [];
-        setUsert(safeSamples);
-        setCategories(safeCategories);
 
-        // Safety check for child categories
-        const children = safeChildCategories;
-        setChildCategories(children);
+        if (categoryResult.status === "fulfilled") {
+          const categoryData = categoryResult.value;
+          const safeSamples = Array.isArray(categoryData?.samples) ? categoryData.samples : [];
+          const safeCategories = Array.isArray(categoryData?.categories) ? categoryData.categories : [];
+          const safeChildCategories = Array.isArray(categoryData?.childcategories) ? categoryData.childcategories : [];
+          setUsert(safeSamples);
+          setCategories(safeCategories);
+          setChildCategories(safeChildCategories);
+          setfdrop(Array.isArray(categoryData?.relnames) ? categoryData.relnames : []);
+        } else if (categoryResult.reason?.name !== "AbortError") {
+          console.error("Error fetching category data:", categoryResult.reason);
+          setUsert([]);
+          setCategories([]);
+          setChildCategories([]);
+          setfdrop([]);
+        }
 
-        setfdrop(categoryData.relnames);
+        if (geometryResult.status === "fulfilled") {
+          const geometryData = geometryResult.value;
+          setMapt(geometryData.polygons || []);
+          setPoints(Array.isArray(geometryData.points) ? geometryData.points : []);
+          setDatasetPoints(Array.isArray(geometryData.datasetpoints) ? geometryData.datasetpoints : []);
+          setbadsources(Array.isArray(geometryData.badsources) ? geometryData.badsources : []);
+          setOpen(Boolean(geometryData.badsources?.length));
+          setsources(buildMapSources(geometryData, true));
+        } else if (geometryResult.reason?.name !== "AbortError") {
+          console.error("Error fetching geometry data:", geometryResult.reason);
+          setMapt([]);
+          setPoints([]);
+          setDatasetPoints([]);
+          setbadsources([]);
+          setsources([]);
+          setOpen(false);
+        }
 
-        // --- Process Geometry Data ---
-        setMapt(geometryData.polygons);
-        setPoints(geometryData.points);
-        setDatasetPoints(geometryData.datasetpoints);
-        setbadsources(geometryData.badsources);
-        setOpen(Boolean(geometryData.badsources?.length));
-
-        // --- Process Sources (Dependent on Geometry) ---
-        const maptFeatures = geometryData.polygons?.features?.length
-          ? geometryData.polygons.features
-          : geometryData.polygons || [];
-
-        const pointsToUse =
-          geometryData.datasetpoints && geometryData.datasetpoints.length > 0
-            ? geometryData.datasetpoints
-            : geometryData.points || [];
-
-        const uniqueSources = [
-          ...new Set([
-            ...pointsToUse.map((point) => point.source),
-            ...maptFeatures.map((f) => f.source),
-          ]),
-        ];
-
-        setsources(uniqueSources);
+        if (mapOptionsResult.status === "fulfilled") {
+          const options = mapOptionsResult.value;
+          setMapLayerOptions(options);
+          const defaultDepth = Number(options?.limits?.defaultDepth);
+          if (Number.isFinite(defaultDepth)) {
+            setDescendantMapDepth(defaultDepth);
+          }
+        } else if (mapOptionsResult.reason?.name !== "AbortError") {
+          console.error("Error fetching map layer options:", mapOptionsResult.reason);
+          setMapLayerOptions(null);
+        }
       } catch (err) {
         if (err?.name === "AbortError") return;
         console.error("Error fetching background data:", err);
@@ -501,6 +564,77 @@ export default function Tableclick({ cmid, database, tabval }) {
       controller.abort();
     };
   }, [cmid, database, clearNodeData, stayOnDeletedPage]);
+
+  useEffect(() => {
+    if (!cmid || !database || enabledInheritedLayerIds.length === 0) {
+      setInheritedMapLayers([]);
+      setLoadingInheritedMap(false);
+      setMapLayerError("");
+      return undefined;
+    }
+
+    const controller = new AbortController();
+    const { signal } = controller;
+    const selectedRelatedRelations = enabledInheritedLayerIds
+      .filter((id) => id.startsWith("related:"))
+      .map((id) => id.split(":")[1])
+      .filter(Boolean);
+    const includeDescendants = enabledInheritedLayerIds.some((id) => id.startsWith("descendants:"));
+    const requestedLayers = [
+      selectedRelatedRelations.length > 0 ? "related" : null,
+      includeDescendants ? "descendants" : null,
+    ].filter(Boolean);
+
+    if (requestedLayers.length === 0) {
+      setInheritedMapLayers([]);
+      setLoadingInheritedMap(false);
+      setMapLayerError("");
+      return undefined;
+    }
+
+    const params = new URLSearchParams({
+      layers: requestedLayers.join(","),
+      maxDepth: String(descendantMapDepth),
+    });
+    if (selectedRelatedRelations.length > 0) {
+      params.set("relations", selectedRelatedRelations.join(","));
+    }
+
+    const inheritedGeometryUrl =
+      `${apiBaseUrl()}/databases/${encodeURIComponent(database)}/nodes/${encodeURIComponent(cmid)}/explore-geometry?${params.toString()}`;
+
+    setLoadingInheritedMap(true);
+    setMapLayerError("");
+
+    fetch(inheritedGeometryUrl, { signal })
+      .then(async (res) => {
+        if (!res.ok) {
+          throw new Error(`Inherited geometry request failed with status ${res.status}`);
+        }
+        return res.json();
+      })
+      .then((geometryData) => {
+        const loadedLayers = Array.isArray(geometryData?.maplayers)
+          ? geometryData.maplayers.filter((layer) => layer.id !== "direct")
+          : [];
+        setInheritedMapLayers(loadedLayers);
+      })
+      .catch((err) => {
+        if (err?.name === "AbortError") return;
+        console.error("Error fetching inherited map layers:", err);
+        setInheritedMapLayers([]);
+        setMapLayerError("Inherited map layers could not be loaded.");
+      })
+      .finally(() => {
+        if (!signal.aborted) {
+          setLoadingInheritedMap(false);
+        }
+      });
+
+    return () => {
+      controller.abort();
+    };
+  }, [cmid, database, enabledInheritedLayerIds, descendantMapDepth]);
 
   const tooltipContent = (
     <div style={{ maxWidth: '400px' }}>
@@ -1303,13 +1437,25 @@ export default function Tableclick({ cmid, database, tabval }) {
   const showMergingTemplateTab = isStackNode || isMergingTemplateNode;
   const showDatasetHeaderTools = cmid.startsWith("SD") || cmid.startsWith("AD");
   const hasNetworkTab = orderOfProperties.some((prop) => fdrop.includes(prop));
-  const hasPolygonData = Array.isArray(mapt)
-    ? mapt.length > 0
-    : Array.isArray(mapt?.features)
-      ? mapt.features.length > 0
-      : Boolean(mapt && Object.keys(mapt).length > 0);
+  const hasPolygonData = hasMapPolygons(mapt);
+  const availableInheritedMapLayers = getAvailableInheritedMapLayers(mapLayerOptions);
+  const hasInheritedMapOptions = availableInheritedMapLayers.length > 0;
+  const directCategoryLayer = {
+    id: "direct",
+    label: "Direct locations",
+    mode: "direct",
+    points,
+    polygons: mapt,
+    sources,
+  };
+  const categoryMapLayers = [
+    includeDirectMapLayer && (hasPolygonData || (Array.isArray(points) && points.length > 0))
+      ? directCategoryLayer
+      : null,
+    ...inheritedMapLayers,
+  ].filter((layer) => layer && ((Array.isArray(layer.points) && layer.points.length > 0) || hasMapPolygons(layer.polygons)));
   const hasDatasetMapTab = hasPolygonData || (Array.isArray(datasetpoints) && datasetpoints.length > 0);
-  const hasCategoryMapTab = hasPolygonData || (Array.isArray(points) && points.length > 0);
+  const hasCategoryMapTab = hasPolygonData || (Array.isArray(points) && points.length > 0) || hasInheritedMapOptions;
   const hasDatasetCategoriesTab = (Array.isArray(categories) && categories.length > 0) || (Array.isArray(childcategories) && childcategories.length > 0);
   const hasCategoryDatasetsTab = Array.isArray(usert) && usert.length > 0;
   const hasCategoryTimespanData = Array.isArray(usert) && usert.some((entry) => {
@@ -1408,6 +1554,86 @@ export default function Tableclick({ cmid, database, tabval }) {
   const handleDatasetCheckbox = () => {
     setRememberChoice((prev) => !prev);
   };
+
+  const handleInheritedLayerToggle = (layerId) => {
+    setEnabledInheritedLayerIds((prev) =>
+      prev.includes(layerId)
+        ? prev.filter((id) => id !== layerId)
+        : [...prev, layerId]
+    );
+  };
+
+  const handleDescendantDepthChange = (event) => {
+    const nextDepth = Number(event.target.value);
+    if (Number.isFinite(nextDepth)) {
+      setDescendantMapDepth(nextDepth);
+    }
+  };
+
+  const renderCategoryMapControls = () => {
+    const hasDirectCategoryData = hasPolygonData || (Array.isArray(points) && points.length > 0);
+    const maxDepth = Number(mapLayerOptions?.limits?.maxDepth) || 8;
+    const descendantSelected = enabledInheritedLayerIds.some((id) => id.startsWith("descendants:"));
+
+    if (!hasDirectCategoryData && availableInheritedMapLayers.length === 0) {
+      return null;
+    }
+
+    return (
+      <Box
+        sx={{
+          display: "flex",
+          flexWrap: "wrap",
+          alignItems: "center",
+          gap: 1.5,
+          marginBottom: 1.5,
+        }}
+      >
+        {hasDirectCategoryData && (
+          <FormControlLabel
+            control={
+              <Checkbox
+                size="small"
+                checked={includeDirectMapLayer}
+                onChange={(event) => setIncludeDirectMapLayer(event.target.checked)}
+              />
+            }
+            label="Direct locations"
+          />
+        )}
+        {availableInheritedMapLayers.map((layer) => (
+          <FormControlLabel
+            key={layer.id}
+            control={
+              <Checkbox
+                size="small"
+                checked={enabledInheritedLayerIds.includes(layer.id)}
+                onChange={() => handleInheritedLayerToggle(layer.id)}
+              />
+            }
+            label={`${layer.label} (${Number(layer.pointCount || 0) + Number(layer.polygonCount || 0)})`}
+          />
+        ))}
+        {descendantSelected && (
+          <FormControl size="small" sx={{ minWidth: 150 }}>
+            <NativeSelect
+              value={descendantMapDepth}
+              onChange={handleDescendantDepthChange}
+              input={<BootstrapInput />}
+              inputProps={{ "aria-label": "Descendant depth" }}
+            >
+              {Array.from({ length: maxDepth }, (_, index) => index + 1).map((depth) => (
+                <option key={depth} value={depth}>
+                  Depth {depth}
+                </option>
+              ))}
+            </NativeSelect>
+          </FormControl>
+        )}
+      </Box>
+    );
+  };
+
   if (loadingInfo || navigationLoading) {
     return (
       <Box
@@ -1788,7 +2014,7 @@ export default function Tableclick({ cmid, database, tabval }) {
                     }}
                   >
                     {loadingBackground ? null : (
-                      mapt.length !== 0 || datasetpoints.length !== 0 ? (
+                      hasPolygonData || datasetpoints.length !== 0 ? (
                         <MapComponent points={datasetpoints} mapt={mapt} sources={sources} />
                       ) : (
                         <p>No map available for this dataset.</p>
@@ -2003,6 +2229,13 @@ export default function Tableclick({ cmid, database, tabval }) {
               )}
               {hasCategoryMapTab && (
                 <CustomTabPanel value={value} index={"map"}>
+                  {(loadingBackground || loadingInheritedMap) && <LinearProgress sx={{ marginBottom: 2 }} />}
+                  {renderCategoryMapControls()}
+                  {mapLayerError && (
+                    <Alert severity="warning" sx={{ marginBottom: 2 }}>
+                      {mapLayerError}
+                    </Alert>
+                  )}
                   <div
                     style={{
                       position: "relative",
@@ -2012,10 +2245,10 @@ export default function Tableclick({ cmid, database, tabval }) {
                       height: "60vh",
                     }}
                   >
-                    {mapt.length !== 0 || points.length !== 0 ? (
-                      <MapComponent points={points} mapt={mapt} sources={sources} />
+                    {categoryMapLayers.length > 0 ? (
+                      <MapComponent points={points} mapt={mapt} sources={sources} layers={categoryMapLayers} />
                     ) : (
-                      <p>No map available for this category.</p>
+                      <p>No map layer selected.</p>
                     )}
                     <Dialog open={open} onClose={handleClose}>
                       <DialogTitle>Alert</DialogTitle>

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import L from "leaflet";
 import {
   CircleMarker,
@@ -14,56 +14,168 @@ import "@changey/react-leaflet-markercluster/dist/styles.min.css";
 
 import DeckGL from "@deck.gl/react";
 import { ScatterplotLayer } from "@deck.gl/layers";
-import { Map } from 'react-map-gl';
+import { Map } from "react-map-gl";
 import maplibregl from "maplibre-gl";
 
 import Legend from "./Legend";
 
-const LeafletMap = ({ points, mapt, sources, sourceColorMap, stringToColor }) => {
-  const mapRef = useRef();
+const DIRECT_LAYER = "direct";
 
-  function SetViewToDataBounds({ points, polygons }) {
+const polygonFeatureCount = (polygons) => {
+  if (!polygons) return 0;
+  if (Array.isArray(polygons)) return polygons.length;
+  if (Array.isArray(polygons.features)) return polygons.features.length;
+  return polygons.type ? 1 : 0;
+};
+
+const getPolygonFeatures = (polygons) => {
+  if (!polygons) return [];
+  if (Array.isArray(polygons)) return polygons;
+  if (Array.isArray(polygons.features)) return polygons.features;
+  return polygons.type ? [polygons] : [];
+};
+
+const getFeatureSource = (feature) =>
+  feature?.properties?.source || feature?.source || feature?.geometry?.source || "Unknown";
+
+const normalizeLayers = ({ points = [], mapt = [], sources = [], layers }) => {
+  if (Array.isArray(layers) && layers.length > 0) {
+    return layers
+      .map((layer, index) => ({
+        id: layer.id || `layer-${index}`,
+        label: layer.label || layer.id || `Layer ${index + 1}`,
+        mode: layer.mode || DIRECT_LAYER,
+        relationship: layer.relationship,
+        points: Array.isArray(layer.points) ? layer.points : [],
+        polygons: layer.polygons || [],
+        sources: Array.isArray(layer.sources) ? layer.sources : [],
+      }))
+      .filter((layer) => layer.points.length > 0 || polygonFeatureCount(layer.polygons) > 0);
+  }
+
+  return [
+    {
+      id: DIRECT_LAYER,
+      label: "Direct locations",
+      mode: DIRECT_LAYER,
+      points: Array.isArray(points) ? points : [],
+      polygons: mapt || [],
+      sources: Array.isArray(sources) ? sources : [],
+    },
+  ].filter((layer) => layer.points.length > 0 || polygonFeatureCount(layer.polygons) > 0);
+};
+
+const isInherited = (featureOrPoint, layer) =>
+  Boolean(
+    featureOrPoint?.inherited ||
+    featureOrPoint?.properties?.inherited ||
+    featureOrPoint?.layerType === "inherited" ||
+    featureOrPoint?.properties?.layerType === "inherited" ||
+    layer?.mode !== DIRECT_LAYER
+  );
+
+const inheritedLabel = (item, layer) => {
+  const props = item?.properties || item || {};
+  const fromName = props.inheritedFromName || props.sourceNodeName;
+  const fromCmid = props.inheritedFromCMID || props.sourceNodeCMID;
+  const relationship = props.inheritanceRelationship || layer?.relationship;
+  if (!fromName && !fromCmid) return layer?.label || "Inherited locations";
+  const from = fromName && fromCmid ? `${fromName} (${fromCmid})` : fromName || fromCmid;
+  return relationship ? `Inherited from ${from} via ${relationship}` : `Inherited from ${from}`;
+};
+
+const pointPosition = (point) => {
+  if (Array.isArray(point?.cood) && point.cood.length === 2) return point.cood;
+  if (Array.isArray(point?.geometry) && point.geometry.length > 0) {
+    try {
+      return JSON.parse(point.geometry[0]).coordinates;
+    } catch (_error) {
+      return null;
+    }
+  }
+  return null;
+};
+
+const isValidPosition = (position) =>
+  Array.isArray(position) &&
+  position.length === 2 &&
+  !Number.isNaN(position[0]) &&
+  !Number.isNaN(position[1]) &&
+  position[1] >= -90 &&
+  position[1] <= 90 &&
+  position[0] >= -180 &&
+  position[0] <= 180;
+
+const LeafletMap = ({ layers, sourceColorMap, stringToColor }) => {
+  const mapRef = useRef();
+  const allPoints = useMemo(
+    () =>
+      layers.flatMap((layer) =>
+        layer.points.map((point) => ({
+          ...point,
+          layerId: layer.id,
+          layerLabel: layer.label,
+          layerMode: layer.mode,
+        }))
+      ),
+    [layers]
+  );
+
+  function SetViewToDataBounds({ mapLayers }) {
     const map = useMap();
 
     useEffect(() => {
-      let bounds = new L.LatLngBounds();
+      const bounds = new L.LatLngBounds();
 
-      if (polygons) {
-        const polygonBounds = L.geoJSON(polygons).getBounds();
-        bounds.extend(polygonBounds);
-      }
-      if (points && points.length > 0) {
-        points.forEach((point) => {
-          if (point.cood && point.cood.length === 2) {
-            bounds.extend(L.latLng(point.cood[1], point.cood[0]));
+      mapLayers.forEach((layer) => {
+        if (polygonFeatureCount(layer.polygons) > 0) {
+          try {
+            const polygonBounds = L.geoJSON(layer.polygons).getBounds();
+            if (polygonBounds.isValid()) bounds.extend(polygonBounds);
+          } catch (_error) {
+            // Ignore malformed features; point bounds can still position the map.
+          }
+        }
+
+        layer.points.forEach((point) => {
+          const position = pointPosition(point);
+          if (isValidPosition(position)) {
+            bounds.extend(L.latLng(position[1], position[0]));
           }
         });
-      }
+      });
+
       if (bounds.isValid()) {
         map.fitBounds(bounds, { maxZoom: 7 });
       }
-    }, [points, polygons, map]);
+    }, [mapLayers, map]);
 
     return null;
   }
 
-  const onEachFeature = (feature, layer) => {
-    layer.bindTooltip(`Source: ${feature.source}`, {
+  const bindFeatureTooltip = (layerMeta) => (feature, leafletLayer) => {
+    const source = getFeatureSource(feature);
+    const tooltip = isInherited(feature, layerMeta)
+      ? `${inheritedLabel(feature, layerMeta)}\nSource: ${source}`
+      : `Source: ${source}`;
+    leafletLayer.bindTooltip(tooltip, {
       permanent: false,
       direction: "top",
     });
   };
 
-  const getFeatureStyle = (feature) => {
-    const category = feature.geometry.source;
+  const getFeatureStyle = (layerMeta) => (feature) => {
+    const source = getFeatureSource(feature);
+    const inherited = isInherited(feature, layerMeta);
+    const color = sourceColorMap[source] || stringToColor(source);
 
     return {
-      fillColor: sourceColorMap[category] || "gray",
-      weight: 2,
-      opacity: 1,
-      color: "white",
-      dashArray: "0",
-      fillOpacity: 0.3,
+      fillColor: color,
+      weight: inherited ? 2 : 2,
+      opacity: inherited ? 0.8 : 1,
+      color: inherited ? color : "white",
+      dashArray: inherited ? "6 4" : "0",
+      fillOpacity: inherited ? 0.16 : 0.3,
     };
   };
 
@@ -75,85 +187,78 @@ const LeafletMap = ({ points, mapt, sources, sourceColorMap, stringToColor }) =>
       style={{ height: "100%" }}
       ref={mapRef}
     >
-      <SetViewToDataBounds points={points} polygons={mapt} />
-      <GeoJSON data={mapt} style={getFeatureStyle} onEachFeature={onEachFeature} />
       <TileLayer
         url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.webp"
         attribution='&copy; <a href="https://carto.com/">CARTO</a> contributors'
       />
-      {points.length !== 0 ? (
-        <MarkerClusterGroup>
-          {points
-            .filter(
-              (point) =>
-                Array.isArray(point.cood) &&
-                point.cood.length === 2 &&
-                !isNaN(point.cood[0]) &&
-                !isNaN(point.cood[1]) &&
-                point.cood[1] >= -90 &&
-                point.cood[1] <= 90 &&
-                point.cood[0] >= -180 &&
-                point.cood[0] <= 180
-            )
-            .map((point, index) => (
-              <CircleMarker
-                key={index}
-                center={[point.cood[1], point.cood[0]]} // swapped lat, lng correctly here
-                radius={10}
-                color={stringToColor(point.source)}
-                fillColor={stringToColor(point.source)}
-                fillOpacity={0.5}
-              >
-                <Tooltip>{point.source}</Tooltip>
-              </CircleMarker>
-            ))}
-        </MarkerClusterGroup>
-      ) : (
-        points
+      <SetViewToDataBounds mapLayers={layers} />
+      {layers.map((layer) =>
+        polygonFeatureCount(layer.polygons) > 0 ? (
+          <GeoJSON
+            key={`${layer.id}-${polygonFeatureCount(layer.polygons)}`}
+            data={layer.polygons}
+            style={getFeatureStyle(layer)}
+            onEachFeature={bindFeatureTooltip(layer)}
+          />
+        ) : null
       )}
+      {allPoints.length !== 0 ? (
+        <MarkerClusterGroup>
+          {allPoints
+            .map((point, index) => ({ point, index, position: pointPosition(point) }))
+            .filter(({ position }) => isValidPosition(position))
+            .map(({ point, index, position }) => {
+              const inherited = isInherited(point, { mode: point.layerMode });
+              const color = stringToColor(point.source);
+              return (
+                <CircleMarker
+                  key={`${point.layerId || DIRECT_LAYER}-${point.sourceNodeCMID || point.source || "point"}-${index}`}
+                  center={[position[1], position[0]]}
+                  radius={inherited ? 7 : 10}
+                  color={color}
+                  fillColor={color}
+                  fillOpacity={inherited ? 0.22 : 0.5}
+                  opacity={inherited ? 0.85 : 1}
+                  dashArray={inherited ? "4 3" : undefined}
+                >
+                  <Tooltip>
+                    {inherited
+                      ? `${inheritedLabel(point, { relationship: point.inheritanceRelationship })}\nSource: ${point.source}`
+                      : point.source}
+                  </Tooltip>
+                </CircleMarker>
+              );
+            })}
+        </MarkerClusterGroup>
+      ) : null}
       <Legend sources={Object.keys(sourceColorMap)} colors={Object.values(sourceColorMap)} />
     </MapContainer>
   );
 };
 
 const DeckGlMap = ({ points }) => {
+  const data = points
+    .map((point) => ({
+      position: pointPosition(point),
+      source: point.source,
+    }))
+    .filter((item) => isValidPosition(item.position));
 
-  const data = points.map((p) => {
-    let position = p.cood;
-    if (position == null && Array.isArray(p.geometry) && p.geometry.length > 0) {
-      const geom = JSON.parse(p.geometry[0]);
-      position = geom.coordinates;
-    }
-    return {
-      position,
-      source: p.source,
-    };
-  });
+  if (data.length === 0) {
+    return null;
+  }
 
-
-  const longitudes = data.map((d) => d.position[0]).filter((x) => typeof x === 'number');
-  const latitudes = data.map((d) => d.position[1]).filter((x) => typeof x === 'number');
+  const longitudes = data.map((d) => d.position[0]);
+  const latitudes = data.map((d) => d.position[1]);
 
   const minLng = Math.min(...longitudes);
   const maxLng = Math.max(...longitudes);
   const minLat = Math.min(...latitudes);
   const maxLat = Math.max(...latitudes);
 
-  // console.log("Min lng " +minLng)
-  // console.log("Max lng " +maxLng)
-  // console.log("Min lat " +minLat)
-  // console.log("Max lat " +maxLat)
-
-  const centerLng = (minLng + maxLng) / 2;
-  const centerLat = (minLat + maxLat) / 2;
-  // const padding = 0.1;
-
-  // console.log("Center lng " +centerLng)
-  // console.log("Center lat " +centerLat)
-
   const initialViewState = {
-    longitude: centerLng,
-    latitude: centerLat,
+    longitude: (minLng + maxLng) / 2,
+    latitude: (minLat + maxLat) / 2,
     zoom: 1,
     pitch: 0,
     bearing: 0,
@@ -174,7 +279,13 @@ const DeckGlMap = ({ points }) => {
   });
 
   return (
-    <DeckGL initialViewState={initialViewState} controller={true} layers={[scatterLayer]} getTooltip={({ object }) => object ? { text: `Entity: ${object.source}` } : null} style={{ width: "100%", height: "100%", overflow: 'hidden' }}>
+    <DeckGL
+      initialViewState={initialViewState}
+      controller={true}
+      layers={[scatterLayer]}
+      getTooltip={({ object }) => object ? { text: `Entity: ${object.source}` } : null}
+      style={{ width: "100%", height: "100%", overflow: "hidden" }}
+    >
       <Map
         mapLib={maplibregl}
         reuseMaps
@@ -184,40 +295,63 @@ const DeckGlMap = ({ points }) => {
   );
 };
 
-const MapComponent = ({ points, mapt, sources }) => {
-  // Color map and stringToColor utility for Leaflet mode
-  const stringToColor = (str) => {
+const MapComponent = ({ points = [], mapt = [], sources = [], layers = null }) => {
+  const renderLayers = useMemo(
+    () => normalizeLayers({ points, mapt, sources, layers }),
+    [points, mapt, sources, layers]
+  );
+
+  const allPoints = useMemo(
+    () => renderLayers.flatMap((layer) => layer.points),
+    [renderLayers]
+  );
+
+  const allSources = useMemo(() => {
+    const sourceSet = new Set();
+    renderLayers.forEach((layer) => {
+      layer.sources.forEach((source) => sourceSet.add(source));
+      layer.points.forEach((point) => {
+        if (point.source) sourceSet.add(point.source);
+      });
+      getPolygonFeatures(layer.polygons).forEach((feature) => {
+        sourceSet.add(getFeatureSource(feature));
+      });
+    });
+    return [...sourceSet].filter(Boolean);
+  }, [renderLayers]);
+
+  const stringToColor = (value) => {
+    const str = String(value || "Unknown");
     let hash = 0;
     for (let i = 0; i < str.length; i++) {
       hash = str.charCodeAt(i) + ((hash << 5) - hash);
     }
     let color = "#";
     for (let i = 0; i < 3; i++) {
-      const value = (hash >> (i * 8)) & 0xff;
-      color += ("00" + value.toString(16)).slice(-2);
+      const channel = (hash >> (i * 8)) & 0xff;
+      color += (`00${channel.toString(16)}`).slice(-2);
     }
     return color;
   };
 
-  // Build source-color map for Leaflet only
   const sourceColorMap = {};
-  if (points.length <= 300) {
-    sources.forEach((source) => {
-      if (!sourceColorMap[source]) {
-        sourceColorMap[source] = stringToColor(source);
-      }
-    });
+  allSources.forEach((source) => {
+    if (!sourceColorMap[source]) {
+      sourceColorMap[source] = stringToColor(source);
+    }
+  });
+
+  if (allPoints.length > 300) {
+    return <DeckGlMap points={allPoints} />;
   }
 
-  if (points.length > 300) {
-    // Large data: use deck.gl map without legend or colors
-    return <DeckGlMap points={points} />;
-  }
-
-  console.log(points)
-
-  // Small data: use Leaflet map with colors and legend
-  return <LeafletMap points={points} mapt={mapt} sources={sources} sourceColorMap={sourceColorMap} stringToColor={stringToColor} />;
+  return (
+    <LeafletMap
+      layers={renderLayers}
+      sourceColorMap={sourceColorMap}
+      stringToColor={stringToColor}
+    />
+  );
 };
 
 export default MapComponent;
