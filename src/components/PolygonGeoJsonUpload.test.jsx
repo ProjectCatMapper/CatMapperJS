@@ -28,7 +28,7 @@ describe('PolygonGeoJsonUpload', () => {
     container = document.createElement('div');
     document.body.appendChild(container);
     root = createRoot(container);
-    vi.mocked(api.preflightPolygonGeoJson).mockReset();
+    Object.values(api).forEach((mock) => vi.mocked(mock).mockReset());
     await act(async () => {
       root.render(<PolygonGeoJsonUpload database="archamap" cred="token" user="admin" />);
       await flush();
@@ -67,6 +67,82 @@ describe('PolygonGeoJsonUpload', () => {
     });
     expect(container.textContent).toContain('one existing USES tie in SocioMap.');
     expect(container.textContent).not.toContain('one existing USES tie in sociomap.');
+  });
+
+  it('shows a loading indicator while validating GeoJSON', async () => {
+    let resolvePreflight;
+    vi.mocked(api.preflightPolygonGeoJson).mockReturnValue(new Promise((resolve) => {
+      resolvePreflight = resolve;
+    }));
+    const input = container.querySelector('input[type="file"]');
+    Object.defineProperty(input, 'files', { configurable: true, value: [new File(['{}'], 'valid.geojson')] });
+    await act(async () => {
+      input.dispatchEvent(new Event('change', { bubbles: true }));
+      await flush();
+    });
+    const validate = [...container.querySelectorAll('button')].find((button) => button.textContent.includes('Validate'));
+    await act(async () => {
+      validate.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      await flush();
+    });
+
+    expect(container.querySelector('[aria-label="Validating GeoJSON"]')).not.toBeNull();
+    expect(validate.textContent).toContain('Validating GeoJSON...');
+    expect(validate.disabled).toBe(true);
+
+    await act(async () => {
+      resolvePreflight({
+        ok: true,
+        json: async () => ({ valid: true, featureCount: 1, coordinateCount: 5, newGeometryCount: 1, existingPolygonCount: 0 }),
+      });
+      await flush();
+    });
+    expect(container.querySelector('[aria-label="Validating GeoJSON"]')).toBeNull();
+  });
+
+  it('shows a loading indicator while queueing a GeoJSON upload', async () => {
+    vi.mocked(api.preflightPolygonGeoJson).mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        valid: true,
+        token: 'preflight-token',
+        featureCount: 1,
+        coordinateCount: 5,
+        newGeometryCount: 1,
+        existingPolygonCount: 0,
+      }),
+    });
+    let resolveApply;
+    vi.mocked(api.applyPolygonGeoJson).mockReturnValue(new Promise((resolve) => {
+      resolveApply = resolve;
+    }));
+    const input = container.querySelector('input[type="file"]');
+    Object.defineProperty(input, 'files', { configurable: true, value: [new File(['{}'], 'valid.geojson')] });
+    await act(async () => {
+      input.dispatchEvent(new Event('change', { bubbles: true }));
+      await flush();
+    });
+    const validate = [...container.querySelectorAll('button')].find((button) => button.textContent.includes('Validate'));
+    await act(async () => {
+      validate.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      await flush();
+    });
+    const apply = [...container.querySelectorAll('button')].find((button) => button.textContent.includes('Apply'));
+    await act(async () => {
+      apply.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      await flush();
+    });
+
+    expect(container.querySelector('[aria-label="Uploading GeoJSON"]')).not.toBeNull();
+    expect(apply.textContent).toContain('Uploading GeoJSON...');
+    expect(apply.disabled).toBe(true);
+
+    await act(async () => {
+      resolveApply({ ok: false, json: async () => ({ error: 'Unable to queue test upload.' }) });
+      await flush();
+    });
+    expect(container.querySelector('[aria-label="Uploading GeoJSON"]')).toBeNull();
+    expect(container.textContent).toContain('Unable to queue test upload.');
   });
 
   it('shows structured feature errors from preflight', async () => {

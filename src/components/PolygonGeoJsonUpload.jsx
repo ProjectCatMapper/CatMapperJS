@@ -4,6 +4,7 @@ import {
   Box,
   Button,
   Checkbox,
+  CircularProgress,
   FormControlLabel,
   LinearProgress,
   Paper,
@@ -42,6 +43,7 @@ const PolygonGeoJsonUpload = ({ database, cred, user }) => {
   const [errors, setErrors] = useState([]);
   const [message, setMessage] = useState('');
   const [busy, setBusy] = useState(false);
+  const [busyAction, setBusyAction] = useState(null);
   const [task, setTask] = useState(null);
   const [cursor, setCursor] = useState(0);
   const [events, setEvents] = useState([]);
@@ -81,6 +83,7 @@ const PolygonGeoJsonUpload = ({ database, cred, user }) => {
   const handlePreflight = async () => {
     if (!file) return;
     setBusy(true);
+    setBusyAction('validation');
     setErrors([]);
     setMessage('');
     setPreflight(null);
@@ -103,6 +106,7 @@ const PolygonGeoJsonUpload = ({ database, cred, user }) => {
       setMessage('Unable to run polygon preflight.');
     } finally {
       setBusy(false);
+      setBusyAction(null);
     }
   };
 
@@ -118,6 +122,8 @@ const PolygonGeoJsonUpload = ({ database, cred, user }) => {
         });
         const payload = await response.json().catch(() => ({}));
         if (!response.ok) {
+          setBusy(false);
+          setBusyAction(null);
           setMessage(payload.error || 'Unable to read polygon upload status.');
           return;
         }
@@ -131,11 +137,13 @@ const PolygonGeoJsonUpload = ({ database, cred, user }) => {
           pollTask(taskId, updatedCursor);
         } else {
           setBusy(false);
+          setBusyAction(null);
           setMessage(payload.message || payload.error || `Polygon upload ${status}.`);
           if (Array.isArray(payload.error_details)) setErrors(payload.error_details);
         }
       } catch (_error) {
         setBusy(false);
+        setBusyAction(null);
         setMessage('Unable to read polygon upload status.');
       }
     }, 500);
@@ -144,6 +152,7 @@ const PolygonGeoJsonUpload = ({ database, cred, user }) => {
   const handleApply = async () => {
     if (!preflight?.token) return;
     setBusy(true);
+    setBusyAction('upload');
     setErrors([]);
     setMessage('Queueing polygon upload...');
     try {
@@ -151,6 +160,7 @@ const PolygonGeoJsonUpload = ({ database, cred, user }) => {
       const payload = await response.json().catch(() => ({}));
       if (!response.ok) {
         setBusy(false);
+        setBusyAction(null);
         setErrors(Array.isArray(payload.error_details) ? payload.error_details : []);
         setMessage(payload.error || 'Unable to queue polygon upload.');
         return;
@@ -159,6 +169,7 @@ const PolygonGeoJsonUpload = ({ database, cred, user }) => {
       pollTask(payload.taskId, 0);
     } catch (_error) {
       setBusy(false);
+      setBusyAction(null);
       setMessage('Unable to queue polygon upload.');
     }
   };
@@ -204,11 +215,25 @@ const PolygonGeoJsonUpload = ({ database, cred, user }) => {
         />
       </Box>
       <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>
-        <Button variant="outlined" onClick={handlePreflight} disabled={!file || busy}>
-          Validate GeoJSON
+        <Button
+          variant="outlined"
+          onClick={handlePreflight}
+          disabled={!file || busy}
+          startIcon={busyAction === 'validation' ? (
+            <CircularProgress size={18} color="inherit" aria-label="Validating GeoJSON" />
+          ) : undefined}
+        >
+          {busyAction === 'validation' ? 'Validating GeoJSON...' : 'Validate GeoJSON'}
         </Button>
-        <Button variant="contained" onClick={handleApply} disabled={!preflight?.valid || busy}>
-          Apply Polygon Upload
+        <Button
+          variant="contained"
+          onClick={handleApply}
+          disabled={!preflight?.valid || busy}
+          startIcon={busyAction === 'upload' ? (
+            <CircularProgress size={18} color="inherit" aria-label="Uploading GeoJSON" />
+          ) : undefined}
+        >
+          {busyAction === 'upload' ? 'Uploading GeoJSON...' : 'Apply Polygon Upload'}
         </Button>
         {task?.taskId && !terminalStatuses.has(status) && (
           <Button variant="outlined" color="error" onClick={handleCancel}>Cancel</Button>
