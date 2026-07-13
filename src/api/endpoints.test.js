@@ -24,5 +24,8 @@ describe('API endpoint helpers', () => {
     expect(apiUrl(apiEndpoints.uploadInputNodes())).toBe(
       'https://api.catmapper.org/api/uploads/input-nodes'
     );
+    expect(apiUrl(apiEndpoints.polygonGeoJsonApply('token value'))).toBe(
+      'https://api.catmapper.org/api/uploads/geojson/polygons/token%20value/apply'
+    );
   });
 });

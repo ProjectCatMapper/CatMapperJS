@@ -5,6 +5,8 @@ import {
   getUploadInputNodesStatus,
   cancelUploadInputNodes,
   getUploadProperties,
+  preflightPolygonGeoJson,
+  applyPolygonGeoJson,
 } from './editUploadApi';
 
 describe('editUploadApi auth headers', () => {
@@ -98,5 +100,29 @@ describe('editUploadApi auth headers', () => {
     expect(url).toBe('http://api.test/api/databases/archamap/metadata/upload-properties');
     expect(options.method).toBe('GET');
     expect(options.headers.Authorization).toBe('Bearer token-upload');
+  });
+
+  test('polygon preflight sends multipart without overriding its content type', async () => {
+    const file = new File(['{}'], 'polygons.geojson', { type: 'application/geo+json' });
+    await preflightPolygonGeoJson({
+      cred: 'token-geo',
+      database: 'ArchaMap',
+      file,
+      replaceExisting: true,
+    });
+    const [url, options] = global.fetch.mock.calls[0];
+    expect(url).toBe('http://api.test/api/uploads/geojson/polygons/preflight');
+    expect(options.headers).toEqual({ Authorization: 'Bearer token-geo' });
+    expect(options.body).toBeInstanceOf(FormData);
+    expect(options.body.get('database')).toBe('archamap');
+    expect(options.body.get('replaceExisting')).toBe('true');
+  });
+
+  test('polygon apply posts to the preflight token resource', async () => {
+    await applyPolygonGeoJson({ cred: 'token-geo', token: 'abc 123' });
+    const [url, options] = global.fetch.mock.calls[0];
+    expect(url).toBe('http://api.test/api/uploads/geojson/polygons/abc%20123/apply');
+    expect(options.method).toBe('POST');
+    expect(options.headers.Authorization).toBe('Bearer token-geo');
   });
 });

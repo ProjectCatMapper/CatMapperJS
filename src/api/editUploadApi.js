@@ -51,3 +51,30 @@ export const getUploadProperties = ({ cred, database }) => {
     headers: authHeaders(cred),
   });
 };
+
+export const preflightPolygonGeoJson = ({ cred, database, file, replaceExisting = false }) => {
+  const body = new FormData();
+  body.append('database', String(database || '').toLowerCase());
+  body.append('replaceExisting', replaceExisting ? 'true' : 'false');
+  body.append('file', file);
+  return fetch(apiUrl(apiEndpoints.polygonGeoJsonPreflight()), {
+    method: 'POST',
+    headers: cred ? { Authorization: `Bearer ${cred}` } : {},
+    body,
+  });
+};
+
+export const applyPolygonGeoJson = ({ cred, token }) => {
+  return fetch(apiUrl(apiEndpoints.polygonGeoJsonApply(token)), {
+    method: 'POST',
+    headers: authHeaders(cred),
+    body: JSON.stringify({}),
+  });
+};
+
+export const discardPolygonGeoJson = ({ cred, token }) => {
+  return fetch(apiUrl(apiEndpoints.polygonGeoJsonDiscard(token)), {
+    method: 'DELETE',
+    headers: authHeaders(cred),
+  });
+};

@@ -26,6 +26,10 @@ vi.mock('./SavedCmidInsertPopover', () => ({
   default: () => React.createElement('div', { 'data-testid': 'saved-cmid-popover' }),
 }));
 
+vi.mock('./PolygonGeoJsonUpload', () => ({
+  default: () => React.createElement('div', { 'data-testid': 'polygon-geojson-upload' }),
+}));
+
 vi.mock('../api/editUploadApi', () => ({
   uploadInputNodes: vi.fn(),
   getWaitingUSESStatus: vi.fn(),

@@ -9,6 +9,7 @@ import { useAuth } from './AuthContext';
 import { Dialog, DialogContent, DialogActions, DialogContentText, DialogTitle } from '@mui/material';
 import { parseTabularFile } from '../utils/tabularUpload';
 import SavedCmidInsertPopover from './SavedCmidInsertPopover';
+import PolygonGeoJsonUpload from './PolygonGeoJsonUpload';
 import {
   uploadInputNodes,
   getWaitingUSESStatus,
@@ -1376,6 +1377,9 @@ const Edit = ({ database }) => {
 
   return (
     <Box sx={{ p: 4 }}>
+      {authLevel === 2 && (
+        <PolygonGeoJsonUpload database={database} cred={cred} user={user} />
+      )}
       <Box sx={{ mb: 3 }} style={{ marginBottom: "50px" }}>
         <h4 style={{ color: 'black', padding: "2px" }}>Download spreadsheet templates here for specific kinds of uploads (dataset nodes, category nodes, and adding and updating USES ties):</h4>
         <br />
