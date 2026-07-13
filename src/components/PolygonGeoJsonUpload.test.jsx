@@ -42,6 +42,8 @@ describe('PolygonGeoJsonUpload', () => {
   });
 
   it('requires a successful preflight before apply is enabled', async () => {
+    expect(container.textContent).toContain('one existing USES tie in ArchaMap.');
+    expect(container.textContent).not.toContain('one existing USES tie in archamap.');
     const buttons = [...container.querySelectorAll('button')];
     expect(buttons.find((button) => button.textContent.includes('Validate')).disabled).toBe(true);
     expect(buttons.find((button) => button.textContent.includes('Apply')).disabled).toBe(true);
@@ -56,6 +58,15 @@ describe('PolygonGeoJsonUpload', () => {
       await flush();
     });
     expect(buttons.find((button) => button.textContent.includes('Validate')).disabled).toBe(false);
+  });
+
+  it('uses the canonical SocioMap capitalization in its instructions', async () => {
+    await act(async () => {
+      root.render(<PolygonGeoJsonUpload database="sociomap" cred="token" user="admin" />);
+      await flush();
+    });
+    expect(container.textContent).toContain('one existing USES tie in SocioMap.');
+    expect(container.textContent).not.toContain('one existing USES tie in sociomap.');
   });
 
   it('shows structured feature errors from preflight', async () => {

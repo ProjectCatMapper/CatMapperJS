@@ -27,7 +27,15 @@ import {
 
 const terminalStatuses = new Set(['completed', 'failed', 'canceled']);
 
+const databaseDisplayName = (database) => {
+  const normalized = String(database || '').trim().toLowerCase();
+  if (normalized === 'archamap') return 'ArchaMap';
+  if (normalized === 'sociomap') return 'SocioMap';
+  return String(database || 'the selected database');
+};
+
 const PolygonGeoJsonUpload = ({ database, cred, user }) => {
+  const displayDatabase = databaseDisplayName(database);
   const [file, setFile] = useState(null);
   const [replaceExisting, setReplaceExisting] = useState(false);
   const [preflight, setPreflight] = useState(null);
@@ -171,7 +179,7 @@ const PolygonGeoJsonUpload = ({ database, cred, user }) => {
       </Typography>
       <Typography variant="body2" sx={{ mb: 2 }}>
         Upload a FeatureCollection containing Polygon or MultiPolygon geometry. Every feature must have
-        CMID, Key, and datasetID properties that identify one existing USES tie in {database}.
+        CMID, Key, and datasetID properties that identify one existing USES tie in {displayDatabase}.
       </Typography>
       <input
         aria-label="Polygon GeoJSON file"
