@@ -1,7 +1,7 @@
 import { apiBaseUrl } from '../api/endpoints';
 /* eslint-disable react-hooks/exhaustive-deps */
 import { useState, useEffect, useRef } from 'react'
-import { Box, Button, IconButton, FormControlLabel, Radio, RadioGroup, Checkbox, Typography, Divider, Select, TextField, MenuItem, InputLabel, FormControl, FormGroup, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TablePagination, Paper, Snackbar, Alert, LinearProgress } from '@mui/material';
+import { Box, Button, IconButton, FormControlLabel, Radio, RadioGroup, Checkbox, Typography, Divider, Select, TextField, MenuItem, InputLabel, FormControl, FormGroup, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TablePagination, Paper, Snackbar, Alert, LinearProgress, Tabs, Tab } from '@mui/material';
 import DatasetForm from './DatasetCreate';
 import Tooltip from '@mui/material/Tooltip';
 import InfoIcon from '@mui/icons-material/Info';
@@ -67,6 +67,7 @@ const Edit = ({ database }) => {
   const [openDialog, setOpenDialog] = useState(false);
   const [addNodeCmidWarningOpen, setAddNodeCmidWarningOpen] = useState(false);
   const [selectedOption, setSelectedOption] = useState('standard');
+  const [editUploadTab, setEditUploadTab] = useState('spreadsheet');
   const [advselectedOption, setadvSelectedOption] = useState('add_node');
   const [formData, setFormData] = useState(getInitialFormData);
   const [simpleDomainOptions, setSimpleDomainOptions] = useState([]);
@@ -99,6 +100,12 @@ const Edit = ({ database }) => {
   const [propertiesError, setPropertiesError] = useState('');
   const [availableNodeProperties, setAvailableNodeProperties] = useState([]);
   const [availableUsesProperties, setAvailableUsesProperties] = useState([]);
+
+  useEffect(() => {
+    if (authLevel !== 2 && editUploadTab !== 'spreadsheet') {
+      setEditUploadTab('spreadsheet');
+    }
+  }, [authLevel, editUploadTab]);
   const handleClose1 = () => {
     setOpenSnackbar(false); // Close the snackbar after user interaction
   };
@@ -1377,9 +1384,42 @@ const Edit = ({ database }) => {
 
   return (
     <Box sx={{ p: 4 }}>
-      {authLevel === 2 && (
-        <PolygonGeoJsonUpload database={database} cred={cred} user={user} />
-      )}
+      <Tabs
+        value={editUploadTab}
+        onChange={(_event, value) => setEditUploadTab(value)}
+        aria-label="Edit upload types"
+        sx={{ mb: 3, borderBottom: 1, borderColor: 'divider' }}
+      >
+        <Tab
+          value="spreadsheet"
+          label="Spreadsheet upload"
+          id="edit-upload-tab-spreadsheet"
+          aria-controls="edit-upload-panel-spreadsheet"
+        />
+        {authLevel === 2 && (
+          <Tab
+            value="geojson"
+            label="GeoJSON polygons"
+            id="edit-upload-tab-geojson"
+            aria-controls="edit-upload-panel-geojson"
+          />
+        )}
+      </Tabs>
+
+      {editUploadTab === 'geojson' && authLevel === 2 ? (
+        <Box
+          role="tabpanel"
+          id="edit-upload-panel-geojson"
+          aria-labelledby="edit-upload-tab-geojson"
+        >
+          <PolygonGeoJsonUpload database={database} cred={cred} user={user} />
+        </Box>
+      ) : (
+        <Box
+          role="tabpanel"
+          id="edit-upload-panel-spreadsheet"
+          aria-labelledby="edit-upload-tab-spreadsheet"
+        >
       <Box sx={{ mb: 3 }} style={{ marginBottom: "50px" }}>
         <h4 style={{ color: 'black', padding: "2px" }}>Download spreadsheet templates here for specific kinds of uploads (dataset nodes, category nodes, and adding and updating USES ties):</h4>
         <br />
@@ -2218,6 +2258,8 @@ const Edit = ({ database }) => {
           {waitingUsesNotice}
         </Alert>
       </Snackbar>
+        </Box>
+      )}
     </Box>
   );
 }

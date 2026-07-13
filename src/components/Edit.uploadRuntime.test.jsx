@@ -107,6 +107,39 @@ describe('Edit upload runtime', () => {
     vi.mocked(editUploadApi.getUploadProperties).mockReset();
   });
 
+  it('keeps GeoJSON upload in a separate admin tab', async () => {
+    authMock.authLevel = 2;
+    await renderEdit(root);
+
+    const spreadsheetTab = [...container.querySelectorAll('[role="tab"]')].find(
+      (tab) => tab.textContent?.trim() === 'Spreadsheet upload',
+    );
+    const geoJsonTab = [...container.querySelectorAll('[role="tab"]')].find(
+      (tab) => tab.textContent?.trim() === 'GeoJSON polygons',
+    );
+    expect(spreadsheetTab).toBeTruthy();
+    expect(geoJsonTab).toBeTruthy();
+    expect(container.querySelector('[data-testid="polygon-geojson-upload"]')).toBeNull();
+    expect(container.textContent).toContain('Choose file to import');
+
+    await act(async () => {
+      geoJsonTab.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      await flushPromises();
+    });
+
+    expect(container.querySelector('[data-testid="polygon-geojson-upload"]')).toBeTruthy();
+    expect(container.textContent).not.toContain('Choose file to import');
+  });
+
+  it('does not expose the GeoJSON tab to non-admin users', async () => {
+    authMock.authLevel = 1;
+    await renderEdit(root);
+    expect(container.textContent).toContain('Spreadsheet upload');
+    expect(container.textContent).not.toContain('GeoJSON polygons');
+    expect(container.querySelector('[data-testid="polygon-geojson-upload"]')).toBeNull();
+    authMock.authLevel = 2;
+  });
+
   afterEach(async () => {
     await act(async () => {
       root.unmount();
