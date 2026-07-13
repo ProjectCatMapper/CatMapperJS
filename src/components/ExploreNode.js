@@ -603,9 +603,11 @@ export default function Tableclick({ cmid, database, tabval }) {
       .map((id) => id.split(":")[1])
       .filter(Boolean);
     const includeDescendants = enabledInheritedLayerIds.some((id) => id.startsWith("descendants:"));
+    const includeUsesCategories = enabledInheritedLayerIds.some((id) => id.startsWith("uses:"));
     const requestedLayers = [
       selectedRelatedRelations.length > 0 ? "related" : null,
       includeDescendants ? "descendants" : null,
+      includeUsesCategories ? "uses" : null,
     ].filter(Boolean);
 
     if (requestedLayers.length === 0) {
@@ -1471,13 +1473,26 @@ export default function Tableclick({ cmid, database, tabval }) {
     polygons: mapt,
     sources,
   };
+  const hasDirectDatasetMapData = hasPolygonData || (Array.isArray(datasetpoints) && datasetpoints.length > 0);
+  const directDatasetLayer = {
+    id: "direct",
+    label: "Dataset USES locations",
+    mode: "direct",
+    points: datasetpoints,
+    polygons: mapt,
+    sources,
+  };
   const categoryMapLayers = [
     includeDirectMapLayer && (hasPolygonData || (Array.isArray(points) && points.length > 0))
       ? directCategoryLayer
       : null,
     ...inheritedMapLayers,
   ].filter((layer) => layer && ((Array.isArray(layer.points) && layer.points.length > 0) || hasMapPolygons(layer.polygons)));
-  const hasDatasetMapTab = hasPolygonData || (Array.isArray(datasetpoints) && datasetpoints.length > 0);
+  const datasetMapLayers = [
+    includeDirectMapLayer && hasDirectDatasetMapData ? directDatasetLayer : null,
+    ...inheritedMapLayers,
+  ].filter((layer) => layer && ((Array.isArray(layer.points) && layer.points.length > 0) || hasMapPolygons(layer.polygons)));
+  const hasDatasetMapTab = hasDirectDatasetMapData || hasInheritedMapOptions;
   const hasCategoryMapTab = hasPolygonData || (Array.isArray(points) && points.length > 0) || hasInheritedMapOptions;
   const hasDatasetCategoriesTab = (Array.isArray(categories) && categories.length > 0) || (Array.isArray(childcategories) && childcategories.length > 0);
   const hasCategoryDatasetsTab = Array.isArray(usert) && usert.length > 0;
@@ -1593,12 +1608,11 @@ export default function Tableclick({ cmid, database, tabval }) {
     }
   };
 
-  const renderCategoryMapControls = () => {
-    const hasDirectCategoryData = hasPolygonData || (Array.isArray(points) && points.length > 0);
+  const renderMapLayerControls = ({ hasDirectLayer, directLabel }) => {
     const maxDepth = Number(mapLayerOptions?.limits?.maxDepth) || 8;
     const descendantSelected = enabledInheritedLayerIds.some((id) => id.startsWith("descendants:"));
 
-    if (!hasDirectCategoryData && availableInheritedMapLayers.length === 0) {
+    if (!hasDirectLayer && availableInheritedMapLayers.length === 0) {
       return null;
     }
 
@@ -1612,7 +1626,7 @@ export default function Tableclick({ cmid, database, tabval }) {
           marginBottom: 1.5,
         }}
       >
-        {hasDirectCategoryData && (
+        {hasDirectLayer && (
           <FormControlLabel
             control={
               <Checkbox
@@ -1621,7 +1635,7 @@ export default function Tableclick({ cmid, database, tabval }) {
                 onChange={(event) => setIncludeDirectMapLayer(event.target.checked)}
               />
             }
-            label="Direct locations"
+            label={directLabel}
           />
         )}
         {availableInheritedMapLayers.map((layer) => (
@@ -1657,6 +1671,18 @@ export default function Tableclick({ cmid, database, tabval }) {
     );
   };
 
+  const renderCategoryMapControls = () =>
+    renderMapLayerControls({
+      hasDirectLayer: hasPolygonData || (Array.isArray(points) && points.length > 0),
+      directLabel: "Direct locations",
+    });
+
+  const renderDatasetMapControls = () =>
+    renderMapLayerControls({
+      hasDirectLayer: hasDirectDatasetMapData,
+      directLabel: "Dataset USES locations",
+    });
+
   const renderMapLimitNotice = () => {
     if (availableInheritedMapLayers.length === 0) return null;
 
@@ -1678,7 +1704,7 @@ export default function Tableclick({ cmid, database, tabval }) {
       <Alert severity={specificMessages.length > 0 ? "warning" : "info"} sx={{ marginBottom: 2 }}>
         <Box>
           <Typography variant="body2">
-            Inherited map layers are capped for performance: this view loads up to {formatNumber(limits.defaultNodeLimit || 250)} candidate nodes by default and up to {formatNumber(limits.defaultFeatureLimit || 2000)} map features. When the node cap is reached, deeper descendants can be omitted even if the selected depth includes them. Only nodes with direct point or polygon data are drawn.
+            Optional map layers are capped for performance: this view loads up to {formatNumber(limits.defaultNodeLimit || 250)} candidate nodes by default and up to {formatNumber(limits.defaultFeatureLimit || 2000)} map features. When the node cap is reached, additional categories or deeper descendants can be omitted even if they match the selected option. Only nodes with direct point or polygon data are drawn.
           </Typography>
           {specificMessages.map((message) => (
             <Typography key={message} variant="body2">
@@ -2064,7 +2090,14 @@ export default function Tableclick({ cmid, database, tabval }) {
               {hasDatasetMapTab && (
                 <CustomTabPanel value={value} index={"map"}>
                   {/* Show loading bar if background data is loading */}
-                  {loadingBackground && <LinearProgress sx={{ marginBottom: 2 }} />}
+                  {(loadingBackground || loadingInheritedMap) && <LinearProgress sx={{ marginBottom: 2 }} />}
+                  {renderDatasetMapControls()}
+                  {renderMapLimitNotice()}
+                  {mapLayerError && (
+                    <Alert severity="warning" sx={{ marginBottom: 2 }}>
+                      {mapLayerError}
+                    </Alert>
+                  )}
                   <div
                     style={{
                       position: "relative",
@@ -2075,10 +2108,10 @@ export default function Tableclick({ cmid, database, tabval }) {
                     }}
                   >
                     {loadingBackground ? null : (
-                      hasPolygonData || datasetpoints.length !== 0 ? (
-                        <MapComponent points={datasetpoints} mapt={mapt} sources={sources} />
+                      datasetMapLayers.length > 0 ? (
+                        <MapComponent points={datasetpoints} mapt={mapt} sources={sources} layers={datasetMapLayers} />
                       ) : (
-                        <p>No map available for this dataset.</p>
+                        <p>No map layer selected.</p>
                       )
                     )}
                     <Dialog open={open} onClose={handleClose}>
