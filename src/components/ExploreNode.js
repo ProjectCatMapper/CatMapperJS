@@ -1701,7 +1701,7 @@ export default function Tableclick({ cmid, database, tabval }) {
     const depthCountsText = getDepthCountsText(selectedDescendantLayer);
 
     return (
-      <Alert severity={specificMessages.length > 0 ? "warning" : "info"} sx={{ marginBottom: 2 }}>
+      <Alert severity={specificMessages.length > 0 ? "warning" : "info"} sx={{ marginTop: 2, marginBottom: 2 }}>
         <Box>
           <Typography variant="body2">
             Optional map layers are capped for performance: this view loads up to {formatNumber(limits.defaultNodeLimit || 250)} candidate nodes by default and up to {formatNumber(limits.defaultFeatureLimit || 2000)} map features. When the node cap is reached, additional categories or deeper descendants can be omitted even if they match the selected option. Only nodes with direct point or polygon data are drawn.
@@ -2092,7 +2092,6 @@ export default function Tableclick({ cmid, database, tabval }) {
                   {/* Show loading bar if background data is loading */}
                   {(loadingBackground || loadingInheritedMap) && <LinearProgress sx={{ marginBottom: 2 }} />}
                   {renderDatasetMapControls()}
-                  {renderMapLimitNotice()}
                   {mapLayerError && (
                     <Alert severity="warning" sx={{ marginBottom: 2 }}>
                       {mapLayerError}
@@ -2138,6 +2137,7 @@ export default function Tableclick({ cmid, database, tabval }) {
                       </DialogActions>
                     </Dialog>
                   </div>
+                  {renderMapLimitNotice()}
                 </CustomTabPanel>
               )}
 
@@ -2325,7 +2325,6 @@ export default function Tableclick({ cmid, database, tabval }) {
                 <CustomTabPanel value={value} index={"map"}>
                   {(loadingBackground || loadingInheritedMap) && <LinearProgress sx={{ marginBottom: 2 }} />}
                   {renderCategoryMapControls()}
-                  {renderMapLimitNotice()}
                   {mapLayerError && (
                     <Alert severity="warning" sx={{ marginBottom: 2 }}>
                       {mapLayerError}
@@ -2369,6 +2368,7 @@ export default function Tableclick({ cmid, database, tabval }) {
                       </DialogActions>
                     </Dialog>
                   </div>
+                  {renderMapLimitNotice()}
                 </CustomTabPanel>
               )}
               {hasCategoryTimespanTab && (
