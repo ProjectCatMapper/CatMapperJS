@@ -1609,7 +1609,7 @@ export default function Tableclick({ cmid, database, tabval }) {
   };
 
   const renderMapLayerControls = ({ hasDirectLayer, directLabel }) => {
-    const maxDepth = Number(mapLayerOptions?.limits?.maxDepth) || 8;
+    const maxDepth = Number(mapLayerOptions?.limits?.maxDepth) || 30;
     const descendantSelected = enabledInheritedLayerIds.some((id) => id.startsWith("descendants:"));
 
     if (!hasDirectLayer && availableInheritedMapLayers.length === 0) {
