@@ -1704,7 +1704,7 @@ export default function Tableclick({ cmid, database, tabval }) {
       <Alert severity={specificMessages.length > 0 ? "warning" : "info"} sx={{ marginTop: 2, marginBottom: 2 }}>
         <Box>
           <Typography variant="body2">
-            Optional map layers are capped for performance: this view loads up to {formatNumber(limits.defaultNodeLimit || 250)} candidate nodes, {formatNumber(limits.defaultPointLimit || 5000)} points, and {formatNumber(limits.defaultPolygonLimit || 2500)} polygons by default. When the node cap is reached, additional categories or deeper descendants can be omitted even if they match the selected option. Only nodes with direct point or polygon data are drawn.
+            Optional map layers are capped for performance: this view loads up to {formatNumber(limits.defaultNodeLimit || 5000)} candidate nodes, {formatNumber(limits.defaultPointLimit || 5000)} points, and {formatNumber(limits.defaultPolygonLimit || 2500)} polygons by default. When the node cap is reached, additional categories or deeper descendants can be omitted even if they match the selected option. Only nodes with direct point or polygon data are drawn.
           </Typography>
           {specificMessages.map((message) => (
             <Typography key={message} variant="body2">
