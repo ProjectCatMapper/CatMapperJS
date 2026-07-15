@@ -18,6 +18,11 @@ import { Map } from "react-map-gl";
 import maplibregl from "maplibre-gl";
 
 import Legend from "./Legend";
+import {
+  getPointTooltipLines,
+  inheritedMapLabel,
+  isInheritedMapItem,
+} from "./mapPointTooltip";
 
 const DIRECT_LAYER = "direct";
 
@@ -66,22 +71,10 @@ const normalizeLayers = ({ points = [], mapt = [], sources = [], layers }) => {
 };
 
 const isInherited = (featureOrPoint, layer) =>
-  Boolean(
-    featureOrPoint?.inherited ||
-    featureOrPoint?.properties?.inherited ||
-    featureOrPoint?.layerType === "inherited" ||
-    featureOrPoint?.properties?.layerType === "inherited" ||
-    layer?.mode !== DIRECT_LAYER
-  );
+  isInheritedMapItem(featureOrPoint, layer);
 
 const inheritedLabel = (item, layer) => {
-  const props = item?.properties || item || {};
-  const fromName = props.inheritedFromName || props.sourceNodeName;
-  const fromCmid = props.inheritedFromCMID || props.sourceNodeCMID;
-  const relationship = props.inheritanceRelationship || layer?.relationship;
-  if (!fromName && !fromCmid) return layer?.label || "Inherited locations";
-  const from = fromName && fromCmid ? `${fromName} (${fromCmid})` : fromName || fromCmid;
-  return relationship ? `Inherited from ${from} via ${relationship}` : `Inherited from ${from}`;
+  return inheritedMapLabel(item, layer);
 };
 
 const pointPosition = (point) => {
@@ -210,6 +203,10 @@ const LeafletMap = ({ layers, sourceColorMap, stringToColor }) => {
             .map(({ point, index, position }) => {
               const inherited = isInherited(point, { mode: point.layerMode });
               const color = stringToColor(point.source);
+              const tooltipLines = getPointTooltipLines(point, {
+                mode: point.layerMode,
+                relationship: point.inheritanceRelationship,
+              });
               return (
                 <CircleMarker
                   key={`${point.layerId || DIRECT_LAYER}-${point.sourceNodeCMID || point.source || "point"}-${index}`}
@@ -222,9 +219,7 @@ const LeafletMap = ({ layers, sourceColorMap, stringToColor }) => {
                   dashArray={inherited ? "4 3" : undefined}
                 >
                   <Tooltip>
-                    {inherited
-                      ? `${inheritedLabel(point, { relationship: point.inheritanceRelationship })}\nSource: ${point.source}`
-                      : point.source}
+                    {tooltipLines.map((line) => <div key={line}>{line}</div>)}
                   </Tooltip>
                 </CircleMarker>
               );
@@ -239,8 +234,8 @@ const LeafletMap = ({ layers, sourceColorMap, stringToColor }) => {
 const DeckGlMap = ({ points }) => {
   const data = points
     .map((point) => ({
+      ...point,
       position: pointPosition(point),
-      source: point.source,
     }))
     .filter((item) => isValidPosition(item.position));
 
@@ -283,7 +278,9 @@ const DeckGlMap = ({ points }) => {
       initialViewState={initialViewState}
       controller={true}
       layers={[scatterLayer]}
-      getTooltip={({ object }) => object ? { text: `Entity: ${object.source}` } : null}
+      getTooltip={({ object }) => object
+        ? { text: getPointTooltipLines(object).join("\n") }
+        : null}
       style={{ width: "100%", height: "100%", overflow: "hidden" }}
     >
       <Map
