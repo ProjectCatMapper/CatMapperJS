@@ -64,6 +64,10 @@ import {
 } from "./categoryInfoLayout";
 import { downloadJsonObject, fetchNodePageJson } from "../utils/nodePageJson";
 import { buildDatasetDownloadDomainOptions } from "../utils/datasetDownloadDomains";
+import {
+  getDescendantDepthLimit,
+  getInitialDescendantDepth,
+} from "../utils/mapDescendantDepth";
 
 import "./ExploreNode.css";
 
@@ -552,10 +556,7 @@ export default function Tableclick({ cmid, database, tabval }) {
         if (mapOptionsResult.status === "fulfilled") {
           const options = mapOptionsResult.value;
           setMapLayerOptions(options);
-          const defaultDepth = Number(options?.limits?.defaultDepth);
-          if (Number.isFinite(defaultDepth)) {
-            setDescendantMapDepth(defaultDepth);
-          }
+          setDescendantMapDepth(getInitialDescendantDepth(options?.limits));
         } else if (mapOptionsResult.reason?.name !== "AbortError") {
           console.error("Error fetching map layer options:", mapOptionsResult.reason);
           setMapLayerOptions(null);
@@ -1609,7 +1610,7 @@ export default function Tableclick({ cmid, database, tabval }) {
   };
 
   const renderMapLayerControls = ({ hasDirectLayer, directLabel }) => {
-    const maxDepth = Number(mapLayerOptions?.limits?.maxDepth) || 30;
+    const maxDepth = getDescendantDepthLimit(mapLayerOptions?.limits);
     const descendantSelected = enabledInheritedLayerIds.some((id) => id.startsWith("descendants:"));
 
     if (!hasDirectLayer && availableInheritedMapLayers.length === 0) {
