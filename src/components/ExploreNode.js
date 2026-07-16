@@ -68,6 +68,7 @@ import {
   getDescendantDepthLimit,
   getInitialDescendantDepth,
 } from "../utils/mapDescendantDepth";
+import { getMapLayerControlCount } from "../utils/mapLayerControlCount";
 
 import "./ExploreNode.css";
 
@@ -1649,7 +1650,11 @@ export default function Tableclick({ cmid, database, tabval }) {
                 onChange={() => handleInheritedLayerToggle(layer.id)}
               />
             }
-            label={`${layer.label} (${Number(layer.pointCount || 0) + Number(layer.polygonCount || 0)})`}
+            label={`${layer.label} (${getMapLayerControlCount(
+              layer,
+              inheritedMapLayers,
+              enabledInheritedLayerIds
+            )})`}
           />
         ))}
         {descendantSelected && (
