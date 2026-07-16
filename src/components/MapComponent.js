@@ -13,7 +13,7 @@ import "leaflet/dist/leaflet.css";
 import "@changey/react-leaflet-markercluster/dist/styles.min.css";
 
 import DeckGL from "@deck.gl/react";
-import { ScatterplotLayer } from "@deck.gl/layers";
+import { GeoJsonLayer, ScatterplotLayer } from "@deck.gl/layers";
 import { Map } from "react-map-gl";
 import maplibregl from "maplibre-gl";
 
@@ -23,6 +23,14 @@ import {
   inheritedMapLabel,
   isInheritedMapItem,
 } from "./mapPointTooltip";
+import {
+  buildDeckPolygonData,
+  getDeckPolygonLayerMeta,
+  getDeckPolygonTooltip,
+  getFeatureSource,
+  getPolygonFeatures,
+  hexToRgba,
+} from "./mapDeckLayers";
 
 const DIRECT_LAYER = "direct";
 
@@ -32,16 +40,6 @@ const polygonFeatureCount = (polygons) => {
   if (Array.isArray(polygons.features)) return polygons.features.length;
   return polygons.type ? 1 : 0;
 };
-
-const getPolygonFeatures = (polygons) => {
-  if (!polygons) return [];
-  if (Array.isArray(polygons)) return polygons;
-  if (Array.isArray(polygons.features)) return polygons.features;
-  return polygons.type ? [polygons] : [];
-};
-
-const getFeatureSource = (feature) =>
-  feature?.properties?.source || feature?.source || feature?.geometry?.source || "Unknown";
 
 const normalizeLayers = ({ points = [], mapt = [], sources = [], layers }) => {
   if (Array.isArray(layers) && layers.length > 0) {
@@ -231,7 +229,7 @@ const LeafletMap = ({ layers, sourceColorMap, stringToColor }) => {
   );
 };
 
-const DeckGlMap = ({ points }) => {
+const DeckGlMap = ({ points, layers, sourceColorMap, stringToColor }) => {
   const data = points
     .map((point) => ({
       ...point,
@@ -269,18 +267,52 @@ const DeckGlMap = ({ points }) => {
     radiusScale: 10,
     radiusMinPixels: 3,
     getPosition: (d) => d.position,
-    getFillColor: [0, 128, 255],
+    getFillColor: (point) => hexToRgba(
+      sourceColorMap[point.source] || stringToColor(point.source)
+    ),
     getRadius: 10,
   });
+
+  const polygonData = buildDeckPolygonData(layers);
+  const polygonLayer = polygonData.length > 0
+    ? new GeoJsonLayer({
+      id: "polygon-layer",
+      data: {
+        type: "FeatureCollection",
+        features: polygonData,
+      },
+      pickable: true,
+      stroked: true,
+      filled: true,
+      lineWidthMinPixels: 1,
+      getFillColor: (feature) => {
+        const source = getFeatureSource(feature);
+        const color = sourceColorMap[source] || stringToColor(source);
+        const inherited = isInherited(feature, getDeckPolygonLayerMeta(feature));
+        return hexToRgba(color, inherited ? 41 : 77);
+      },
+      getLineColor: (feature) => {
+        const source = getFeatureSource(feature);
+        const color = sourceColorMap[source] || stringToColor(source);
+        return hexToRgba(color, 230);
+      },
+      getLineWidth: 2,
+    })
+    : null;
 
   return (
     <DeckGL
       initialViewState={initialViewState}
       controller={true}
-      layers={[scatterLayer]}
-      getTooltip={({ object }) => object
-        ? { text: getPointTooltipLines(object).join("\n") }
-        : null}
+      layers={[polygonLayer, scatterLayer].filter(Boolean)}
+      getTooltip={({ object }) => {
+        if (!object) return null;
+        return {
+          text: object?.properties?.__mapLayerId
+            ? getDeckPolygonTooltip(object)
+            : getPointTooltipLines(object).join("\n"),
+        };
+      }}
       style={{ width: "100%", height: "100%", overflow: "hidden" }}
     >
       <Map
@@ -339,7 +371,14 @@ const MapComponent = ({ points = [], mapt = [], sources = [], layers = null }) =
   });
 
   if (allPoints.length > 300) {
-    return <DeckGlMap points={allPoints} />;
+    return (
+      <DeckGlMap
+        points={allPoints}
+        layers={renderLayers}
+        sourceColorMap={sourceColorMap}
+        stringToColor={stringToColor}
+      />
+    );
   }
 
   return (
