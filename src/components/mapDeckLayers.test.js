@@ -6,6 +6,8 @@ import {
   getDeckCoordinateBounds,
   getDeckPolygonPositions,
   getDeckPolygonTooltip,
+  getDeckStackOffsets,
+  groupDeckPointsByPosition,
   hexToRgba,
   shouldUseDeckGlMap,
 } from "./mapDeckLayers";
@@ -100,6 +102,30 @@ describe("high-volume map polygon layers", () => {
     expect(shouldUseDeckGlMap([{ mode: "descendants" }], 18)).toBe(true);
     expect(shouldUseDeckGlMap([{ mode: "direct" }], 18)).toBe(false);
     expect(shouldUseDeckGlMap([{ mode: "direct" }], 301)).toBe(true);
+  });
+
+  it("groups coincident DeckGL points while preserving every record", () => {
+    const groups = groupDeckPointsByPosition([
+      { id: "a", position: [-71.1234564, 42.1] },
+      { id: "b", position: [-71.12345649, 42.1] },
+      { id: "c", position: [-72, 43] },
+    ]);
+
+    expect(groups).toHaveLength(2);
+    expect(groups[0].points.map((point) => point.id)).toEqual(["a", "b"]);
+    expect(groups[0].__pointStack).toBe(true);
+    expect(groups[1].points).toHaveLength(1);
+  });
+
+  it("lays stack points out on expanding pixel-space rings", () => {
+    const offsets = getDeckStackOffsets(10);
+
+    expect(offsets).toHaveLength(10);
+    expect(offsets[0]).toEqual([0, -24]);
+    offsets.slice(0, 8).forEach(([x, y]) => {
+      expect(Math.hypot(x, y)).toBeCloseTo(24, 2);
+    });
+    expect(Math.hypot(...offsets[8])).toBeCloseTo(48, 2);
   });
 
   it("extracts polygon coordinates for polygon-only DeckGL bounds", () => {

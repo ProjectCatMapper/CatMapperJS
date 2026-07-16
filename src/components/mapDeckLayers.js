@@ -4,10 +4,59 @@ import {
 } from "./mapPointTooltip";
 
 export const DECK_POINT_RADIUS_MIN_PIXELS = 4.5;
+export const DECK_POINT_STACK_PRECISION = 6;
 
 export const shouldUseDeckGlMap = (layers, pointCount) =>
   Number(pointCount || 0) > 300 ||
   layers.some((layer) => layer.mode === "descendants");
+
+export const groupDeckPointsByPosition = (
+  points,
+  precision = DECK_POINT_STACK_PRECISION
+) => {
+  const groups = new Map();
+
+  points.forEach((point) => {
+    const [longitude, latitude] = point.position;
+    const key = `${longitude.toFixed(precision)},${latitude.toFixed(precision)}`;
+    const existing = groups.get(key);
+    if (existing) {
+      existing.points.push(point);
+    } else {
+      groups.set(key, {
+        id: key,
+        position: point.position,
+        points: [point],
+        __pointStack: true,
+      });
+    }
+  });
+
+  return [...groups.values()];
+};
+
+export const getDeckStackOffsets = (count, spacing = 24) => {
+  const offsets = [];
+  let remaining = Math.max(0, Number(count) || 0);
+  let ring = 1;
+
+  while (remaining > 0) {
+    const capacity = ring * 8;
+    const pointsOnRing = Math.min(remaining, capacity);
+    const radius = ring * spacing;
+    for (let index = 0; index < pointsOnRing; index += 1) {
+      const angle = (2 * Math.PI * index) / pointsOnRing - Math.PI / 2;
+      offsets.push([
+        Math.round(Math.cos(angle) * radius * 1000) / 1000,
+        Math.round(Math.sin(angle) * radius * 1000) / 1000,
+      ]);
+    }
+    remaining -= pointsOnRing;
+    ring += 1;
+  }
+
+  return offsets;
+};
 
 export const getPolygonFeatures = (polygons) => {
   if (!polygons) return [];

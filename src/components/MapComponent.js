@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import L from "leaflet";
 import {
   CircleMarker,
@@ -13,7 +13,7 @@ import "leaflet/dist/leaflet.css";
 import "@changey/react-leaflet-markercluster/dist/styles.min.css";
 
 import DeckGL from "@deck.gl/react";
-import { GeoJsonLayer, ScatterplotLayer } from "@deck.gl/layers";
+import { GeoJsonLayer, ScatterplotLayer, TextLayer } from "@deck.gl/layers";
 import { Map } from "react-map-gl/maplibre";
 
 import Legend from "./Legend";
@@ -29,8 +29,10 @@ import {
   getDeckPolygonPositions,
   getDeckPolygonLayerMeta,
   getDeckPolygonTooltip,
+  getDeckStackOffsets,
   getFeatureSource,
   getPolygonFeatures,
+  groupDeckPointsByPosition,
   hexToRgba,
   shouldUseDeckGlMap,
 } from "./mapDeckLayers";
@@ -99,6 +101,16 @@ const isValidPosition = (position) =>
   position[1] <= 90 &&
   position[0] >= -180 &&
   position[0] <= 180;
+
+const pointDisplayName = (point) =>
+  point?.CMName ||
+  point?.sourceNodeName ||
+  point?.inheritedFromName ||
+  point?.CMID ||
+  point?.sourceNodeCMID ||
+  "Unnamed point";
+
+const pointDisplayCmid = (point) => point?.CMID || point?.sourceNodeCMID || "";
 
 const LeafletMap = ({ layers, sourceColorMap, stringToColor }) => {
   const mapRef = useRef();
@@ -233,35 +245,72 @@ const LeafletMap = ({ layers, sourceColorMap, stringToColor }) => {
 };
 
 const DeckGlMap = ({ points, layers, sourceColorMap, stringToColor }) => {
-  const data = points
-    .map((point) => ({
+  const [activeStack, setActiveStack] = useState(null);
+  const data = useMemo(
+    () => points
+      .map((point) => ({
+        ...point,
+        position: pointPosition(point),
+      }))
+      .filter((item) => isValidPosition(item.position)),
+    [points]
+  );
+  const polygonData = useMemo(() => buildDeckPolygonData(layers), [layers]);
+  const pointGroups = useMemo(() => groupDeckPointsByPosition(data), [data]);
+  const singletonData = useMemo(
+    () => pointGroups.filter((group) => group.points.length === 1).map((group) => group.points[0]),
+    [pointGroups]
+  );
+  const stackData = useMemo(
+    () => pointGroups.filter((group) => group.points.length > 1),
+    [pointGroups]
+  );
+  const visibleStackData = activeStack
+    ? stackData.filter((group) => group.id !== activeStack.id)
+    : stackData;
+  const expandedData = useMemo(() => {
+    if (!activeStack) return [];
+    const offsets = getDeckStackOffsets(activeStack.points.length);
+    return activeStack.points.map((point, index) => ({
       ...point,
-      position: pointPosition(point),
-    }))
-    .filter((item) => isValidPosition(item.position));
-  const polygonData = buildDeckPolygonData(layers);
-  const positions = [
-    ...data.map((item) => item.position),
-    ...getDeckPolygonPositions(polygonData).filter(isValidPosition),
-  ];
+      position: activeStack.position,
+      pixelOffset: offsets[index],
+      __expandedStackPoint: true,
+    }));
+  }, [activeStack]);
+  const positions = useMemo(
+    () => [
+      ...data.map((item) => item.position),
+      ...getDeckPolygonPositions(polygonData).filter(isValidPosition),
+    ],
+    [data, polygonData]
+  );
+
+  useEffect(() => {
+    setActiveStack(null);
+  }, [points]);
+
+  const bounds = useMemo(() => getDeckCoordinateBounds(positions), [positions]);
+  const initialViewState = useMemo(
+    () => bounds
+      ? {
+        longitude: (bounds.minLongitude + bounds.maxLongitude) / 2,
+        latitude: (bounds.minLatitude + bounds.maxLatitude) / 2,
+        zoom: 1,
+        pitch: 0,
+        bearing: 0,
+      }
+      : null,
+    [bounds]
+  );
 
   if (positions.length === 0) {
     return null;
   }
 
-  const bounds = getDeckCoordinateBounds(positions);
-
-  const initialViewState = {
-    longitude: (bounds.minLongitude + bounds.maxLongitude) / 2,
-    latitude: (bounds.minLatitude + bounds.maxLatitude) / 2,
-    zoom: 1,
-    pitch: 0,
-    bearing: 0,
-  };
-
   const scatterLayer = new ScatterplotLayer({
     id: "scatter-layer",
-    data,
+    data: singletonData,
     pickable: true,
     opacity: 0.8,
     stroked: false,
@@ -274,6 +323,60 @@ const DeckGlMap = ({ points, layers, sourceColorMap, stringToColor }) => {
     ),
     getRadius: 10,
   });
+
+  const stackRingLayers = [0, 1, 2].map((ringIndex) => new ScatterplotLayer({
+    id: `point-stack-ring-${ringIndex}`,
+    data: visibleStackData,
+    pickable: true,
+    stroked: ringIndex === 0,
+    filled: true,
+    radiusUnits: "pixels",
+    lineWidthUnits: "pixels",
+    getPosition: (group) => group.position,
+    getRadius: 16 - ringIndex * 4,
+    getLineWidth: 2,
+    getLineColor: [255, 255, 255, 255],
+    getFillColor: (group) => {
+      const sources = [...new Set(group.points.map((point) => point.source || "Unknown"))];
+      const source = sources[ringIndex];
+      if (!source) return [0, 0, 0, 0];
+      return hexToRgba(sourceColorMap[source] || stringToColor(source), 235);
+    },
+  }));
+
+  const stackCountLayer = new TextLayer({
+    id: "point-stack-count",
+    data: visibleStackData,
+    pickable: true,
+    billboard: true,
+    getPosition: (group) => group.position,
+    getText: (group) => String(group.points.length),
+    getSize: 13,
+    getColor: [255, 255, 255, 255],
+    getTextAnchor: "middle",
+    getAlignmentBaseline: "center",
+    fontWeight: 700,
+  });
+
+  const expandedPointLayer = expandedData.length > 0
+    ? new TextLayer({
+      id: "expanded-stack-points",
+      data: expandedData,
+      pickable: true,
+      billboard: true,
+      characterSet: ["●"],
+      fontFamily: "Arial, sans-serif",
+      getPosition: (point) => point.position,
+      getPixelOffset: (point) => point.pixelOffset,
+      getText: "●",
+      getSize: 24,
+      getColor: (point) => hexToRgba(
+        sourceColorMap[point.source] || stringToColor(point.source)
+      ),
+      getTextAnchor: "middle",
+      getAlignmentBaseline: "center",
+    })
+    : null;
 
   const polygonLayer = polygonData.length > 0
     ? new GeoJsonLayer({
@@ -302,25 +405,101 @@ const DeckGlMap = ({ points, layers, sourceColorMap, stringToColor }) => {
     : null;
 
   return (
-    <DeckGL
-      initialViewState={initialViewState}
-      controller={true}
-      layers={[polygonLayer, scatterLayer].filter(Boolean)}
-      getTooltip={({ object }) => {
-        if (!object) return null;
-        return {
-          text: object?.properties?.__mapLayerId
-            ? getDeckPolygonTooltip(object)
-            : getPointTooltipLines(object).join("\n"),
-        };
-      }}
-      style={{ width: "100%", height: "100%", overflow: "hidden" }}
-    >
-      <Map
-        reuseMaps
-        mapStyle="https://basemaps.cartocdn.com/gl/positron-gl-style/style.json"
-      />
-    </DeckGL>
+    <div style={{ position: "relative", width: "100%", height: "100%" }}>
+      <DeckGL
+        initialViewState={initialViewState}
+        controller={true}
+        layers={[
+          polygonLayer,
+          scatterLayer,
+          ...stackRingLayers,
+          stackCountLayer,
+          expandedPointLayer,
+        ].filter(Boolean)}
+        onClick={({ object }) => {
+          if (object?.__pointStack) {
+            setActiveStack(object);
+          } else if (!object?.__expandedStackPoint) {
+            setActiveStack(null);
+          }
+        }}
+        getTooltip={({ object }) => {
+          if (!object) return null;
+          if (object.__pointStack) {
+            return { text: `${object.points.length} points at this location\nClick to identify all points` };
+          }
+          return {
+            text: object?.properties?.__mapLayerId
+              ? getDeckPolygonTooltip(object)
+              : getPointTooltipLines(object, {
+                mode: object.layerMode,
+                relationship: object.layerRelationship,
+              }).join("\n"),
+          };
+        }}
+        style={{ width: "100%", height: "100%", overflow: "hidden" }}
+      >
+        <Map
+          reuseMaps
+          mapStyle="https://basemaps.cartocdn.com/gl/positron-gl-style/style.json"
+        />
+      </DeckGL>
+      {activeStack && (
+        <div
+          role="dialog"
+          aria-label={`${activeStack.points.length} points at this location`}
+          style={{
+            position: "absolute",
+            top: 12,
+            right: 12,
+            zIndex: 2,
+            width: "min(360px, calc(100% - 24px))",
+            maxHeight: "calc(100% - 24px)",
+            overflow: "auto",
+            padding: 12,
+            borderRadius: 8,
+            background: "rgba(255, 255, 255, 0.97)",
+            boxShadow: "0 4px 18px rgba(0, 0, 0, 0.28)",
+            color: "#1f2937",
+          }}
+        >
+          <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
+            <strong>{activeStack.points.length} points at this location</strong>
+            <button
+              type="button"
+              aria-label="Close point list"
+              onClick={() => setActiveStack(null)}
+              style={{ border: 0, background: "transparent", cursor: "pointer", fontSize: 18 }}
+            >
+              ×
+            </button>
+          </div>
+          <div style={{ marginTop: 8 }}>
+            {activeStack.points.map((point, index) => {
+              const color = sourceColorMap[point.source] || stringToColor(point.source);
+              const cmid = pointDisplayCmid(point);
+              return (
+                <div
+                  key={`${point.layerId || DIRECT_LAYER}-${cmid || point.source || "point"}-${index}`}
+                  style={{ display: "flex", gap: 8, padding: "7px 0", borderTop: index ? "1px solid #e5e7eb" : 0 }}
+                >
+                  <span
+                    aria-hidden="true"
+                    style={{ width: 12, height: 12, marginTop: 4, borderRadius: "50%", flex: "0 0 auto", background: color }}
+                  />
+                  <div>
+                    <div style={{ fontWeight: 600 }}>{pointDisplayName(point)}</div>
+                    {cmid && <div>CMID: {cmid}</div>}
+                    {point.layerLabel && <div>Layer: {point.layerLabel}</div>}
+                    <div>Source: {point.source || "Unknown"}</div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
   );
 };
 
@@ -331,7 +510,15 @@ const MapComponent = ({ points = [], mapt = [], sources = [], layers = null }) =
   );
 
   const allPoints = useMemo(
-    () => renderLayers.flatMap((layer) => layer.points),
+    () => renderLayers.flatMap((layer) =>
+      layer.points.map((point) => ({
+        ...point,
+        layerId: layer.id,
+        layerLabel: layer.label,
+        layerMode: layer.mode,
+        layerRelationship: layer.relationship,
+      }))
+    ),
     [renderLayers]
   );
 
