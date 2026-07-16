@@ -18,16 +18,13 @@ describe("high-volume map polygon layers", () => {
           type: "FeatureCollection",
           features: [
             {
-              type: "Feature",
+              type: "MultiPolygon",
+              coordinates: [[[[0, 0], [1, 0], [1, 1], [0, 0]]]],
               properties: {
                 source: "Dataset A",
                 inheritedFromName: "District A",
                 inheritedFromCMID: "SM2",
                 inherited: true,
-              },
-              geometry: {
-                type: "Polygon",
-                coordinates: [[[0, 0], [1, 0], [1, 1], [0, 0]]],
               },
             },
           ],
@@ -36,6 +33,8 @@ describe("high-volume map polygon layers", () => {
     ]);
 
     expect(polygons).toHaveLength(1);
+    expect(polygons[0].type).toBe("Feature");
+    expect(polygons[0].geometry.type).toBe("MultiPolygon");
     expect(polygons[0].properties.__mapLayerMode).toBe("descendants");
     expect(getDeckPolygonTooltip(polygons[0])).toBe(
       "Inherited from District A (SM2) via CONTAINS\nSource: Dataset A"

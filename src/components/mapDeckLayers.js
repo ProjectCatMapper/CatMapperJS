@@ -15,16 +15,30 @@ export const getFeatureSource = (feature) =>
 
 export const buildDeckPolygonData = (layers) =>
   layers.flatMap((layer) =>
-    getPolygonFeatures(layer.polygons).map((feature) => ({
-      ...feature,
-      properties: {
-        ...feature.properties,
-        __mapLayerId: layer.id,
-        __mapLayerLabel: layer.label,
-        __mapLayerMode: layer.mode,
-        __mapLayerRelationship: layer.relationship,
-      },
-    }))
+    getPolygonFeatures(layer.polygons).map((polygon) => {
+      const feature = polygon.type === "Feature"
+        ? polygon
+        : {
+          type: "Feature",
+          geometry: {
+            type: polygon.type,
+            coordinates: polygon.coordinates,
+            ...(polygon.geometries ? { geometries: polygon.geometries } : {}),
+          },
+          properties: polygon.properties || {},
+        };
+
+      return {
+        ...feature,
+        properties: {
+          ...feature.properties,
+          __mapLayerId: layer.id,
+          __mapLayerLabel: layer.label,
+          __mapLayerMode: layer.mode,
+          __mapLayerRelationship: layer.relationship,
+        },
+      };
+    })
   );
 
 export const hexToRgba = (hex, alpha = 255) => {
