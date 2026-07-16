@@ -45,6 +45,49 @@ describe("high-volume map polygon layers", () => {
     );
   });
 
+  it("flattens nested feature collections into valid DeckGL features", () => {
+    const polygons = buildDeckPolygonData([
+      {
+        id: "descendants:CONTAINS",
+        label: "Descendant locations",
+        mode: "descendants",
+        relationship: "CONTAINS",
+        polygons: {
+          type: "FeatureCollection",
+          features: [
+            {
+              type: "FeatureCollection",
+              source: "GADM3.6",
+              features: [
+                {
+                  type: "Feature",
+                  geometry: {
+                    type: "MultiPolygon",
+                    coordinates: [[[[0, 0], [1, 0], [1, 1], [0, 0]]]],
+                  },
+                  properties: {
+                    inheritedFromName: "Florida",
+                    inheritedFromCMID: "SM1267",
+                    inherited: true,
+                  },
+                },
+              ],
+            },
+          ],
+        },
+      },
+    ]);
+
+    expect(polygons).toHaveLength(1);
+    expect(polygons[0].type).toBe("Feature");
+    expect(polygons[0].geometry.type).toBe("MultiPolygon");
+    expect(polygons[0].properties.source).toBe("GADM3.6");
+    expect(polygons[0].properties.__mapLayerMode).toBe("descendants");
+    expect(getDeckPolygonTooltip(polygons[0])).toBe(
+      "Inherited from Florida (SM1267) via CONTAINS\nSource: GADM3.6"
+    );
+  });
+
   it("converts source colors to DeckGL RGBA values", () => {
     expect(hexToRgba("#1234ab", 41)).toEqual([18, 52, 171, 41]);
   });

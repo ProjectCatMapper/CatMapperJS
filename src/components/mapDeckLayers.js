@@ -11,8 +11,21 @@ export const shouldUseDeckGlMap = (layers, pointCount) =>
 
 export const getPolygonFeatures = (polygons) => {
   if (!polygons) return [];
-  if (Array.isArray(polygons)) return polygons;
-  if (Array.isArray(polygons.features)) return polygons.features;
+  if (Array.isArray(polygons)) return polygons.flatMap(getPolygonFeatures);
+  if (Array.isArray(polygons.features)) {
+    const collectionProperties = {
+      ...(polygons.properties || {}),
+      ...(polygons.source ? { source: polygons.source } : {}),
+    };
+
+    return polygons.features.flatMap(getPolygonFeatures).map((feature) => ({
+      ...feature,
+      properties: {
+        ...collectionProperties,
+        ...(feature.properties || {}),
+      },
+    }));
+  }
   return polygons.type ? [polygons] : [];
 };
 
