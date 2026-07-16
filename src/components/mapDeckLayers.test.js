@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   buildDeckPolygonData,
   DECK_POINT_RADIUS_MIN_PIXELS,
+  getDeckCoordinateBounds,
   getDeckPolygonPositions,
   getDeckPolygonTooltip,
   hexToRgba,
@@ -68,5 +69,19 @@ describe("high-volume map polygon layers", () => {
         },
       },
     ])).toEqual([[1, 2], [3, 4], [1, 2]]);
+  });
+
+  it("calculates large coordinate bounds without spreading function arguments", () => {
+    const positions = Array.from(
+      { length: 100_000 },
+      (_, index) => [index % 360 - 180, index % 180 - 90]
+    );
+
+    expect(getDeckCoordinateBounds(positions)).toEqual({
+      minLongitude: -180,
+      maxLongitude: 179,
+      minLatitude: -90,
+      maxLatitude: 89,
+    });
   });
 });

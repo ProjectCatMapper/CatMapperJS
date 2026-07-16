@@ -14,8 +14,7 @@ import "@changey/react-leaflet-markercluster/dist/styles.min.css";
 
 import DeckGL from "@deck.gl/react";
 import { GeoJsonLayer, ScatterplotLayer } from "@deck.gl/layers";
-import { Map } from "react-map-gl";
-import maplibregl from "maplibre-gl";
+import { Map } from "react-map-gl/maplibre";
 
 import Legend from "./Legend";
 import {
@@ -26,6 +25,7 @@ import {
 import {
   buildDeckPolygonData,
   DECK_POINT_RADIUS_MIN_PIXELS,
+  getDeckCoordinateBounds,
   getDeckPolygonPositions,
   getDeckPolygonLayerMeta,
   getDeckPolygonTooltip,
@@ -249,17 +249,11 @@ const DeckGlMap = ({ points, layers, sourceColorMap, stringToColor }) => {
     return null;
   }
 
-  const longitudes = positions.map((position) => position[0]);
-  const latitudes = positions.map((position) => position[1]);
-
-  const minLng = Math.min(...longitudes);
-  const maxLng = Math.max(...longitudes);
-  const minLat = Math.min(...latitudes);
-  const maxLat = Math.max(...latitudes);
+  const bounds = getDeckCoordinateBounds(positions);
 
   const initialViewState = {
-    longitude: (minLng + maxLng) / 2,
-    latitude: (minLat + maxLat) / 2,
+    longitude: (bounds.minLongitude + bounds.maxLongitude) / 2,
+    latitude: (bounds.minLatitude + bounds.maxLatitude) / 2,
     zoom: 1,
     pitch: 0,
     bearing: 0,
@@ -323,7 +317,6 @@ const DeckGlMap = ({ points, layers, sourceColorMap, stringToColor }) => {
       style={{ width: "100%", height: "100%", overflow: "hidden" }}
     >
       <Map
-        mapLib={maplibregl}
         reuseMaps
         mapStyle="https://basemaps.cartocdn.com/gl/positron-gl-style/style.json"
       />

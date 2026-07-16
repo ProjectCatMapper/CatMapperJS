@@ -95,3 +95,20 @@ export const getDeckPolygonPositions = (features) => {
   });
   return positions;
 };
+
+export const getDeckCoordinateBounds = (positions) => {
+  if (!positions.length) return null;
+  let minLongitude = Infinity;
+  let maxLongitude = -Infinity;
+  let minLatitude = Infinity;
+  let maxLatitude = -Infinity;
+
+  positions.forEach(([longitude, latitude]) => {
+    minLongitude = Math.min(minLongitude, longitude);
+    maxLongitude = Math.max(maxLongitude, longitude);
+    minLatitude = Math.min(minLatitude, latitude);
+    maxLatitude = Math.max(maxLatitude, latitude);
+  });
+
+  return { minLongitude, maxLongitude, minLatitude, maxLatitude };
+};
