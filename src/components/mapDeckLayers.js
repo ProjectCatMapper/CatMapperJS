@@ -3,6 +3,8 @@ import {
   isInheritedMapItem,
 } from "./mapPointTooltip";
 
+export const DECK_POINT_RADIUS_MIN_PIXELS = 4.5;
+
 export const getPolygonFeatures = (polygons) => {
   if (!polygons) return [];
   if (Array.isArray(polygons)) return polygons;

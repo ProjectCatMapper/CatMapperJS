@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   buildDeckPolygonData,
+  DECK_POINT_RADIUS_MIN_PIXELS,
   getDeckPolygonTooltip,
   hexToRgba,
 } from "./mapDeckLayers";
@@ -43,5 +44,9 @@ describe("high-volume map polygon layers", () => {
 
   it("converts source colors to DeckGL RGBA values", () => {
     expect(hexToRgba("#1234ab", 41)).toEqual([18, 52, 171, 41]);
+  });
+
+  it("renders DeckGL points fifty percent larger than the original radius", () => {
+    expect(DECK_POINT_RADIUS_MIN_PIXELS).toBe(3 * 1.5);
   });
 });

@@ -25,6 +25,7 @@ import {
 } from "./mapPointTooltip";
 import {
   buildDeckPolygonData,
+  DECK_POINT_RADIUS_MIN_PIXELS,
   getDeckPolygonLayerMeta,
   getDeckPolygonTooltip,
   getFeatureSource,
@@ -265,7 +266,7 @@ const DeckGlMap = ({ points, layers, sourceColorMap, stringToColor }) => {
     stroked: false,
     filled: true,
     radiusScale: 10,
-    radiusMinPixels: 3,
+    radiusMinPixels: DECK_POINT_RADIUS_MIN_PIXELS,
     getPosition: (d) => d.position,
     getFillColor: (point) => hexToRgba(
       sourceColorMap[point.source] || stringToColor(point.source)
