@@ -3,8 +3,10 @@ import { describe, expect, it } from "vitest";
 import {
   buildDeckPolygonData,
   DECK_POINT_RADIUS_MIN_PIXELS,
+  getDeckPolygonPositions,
   getDeckPolygonTooltip,
   hexToRgba,
+  shouldUseDeckGlMap,
 } from "./mapDeckLayers";
 
 describe("high-volume map polygon layers", () => {
@@ -48,5 +50,23 @@ describe("high-volume map polygon layers", () => {
 
   it("renders DeckGL points fifty percent larger than the original radius", () => {
     expect(DECK_POINT_RADIUS_MIN_PIXELS).toBe(3 * 1.5);
+  });
+
+  it("uses DeckGL for descendant layers at every point count", () => {
+    expect(shouldUseDeckGlMap([{ mode: "descendants" }], 18)).toBe(true);
+    expect(shouldUseDeckGlMap([{ mode: "direct" }], 18)).toBe(false);
+    expect(shouldUseDeckGlMap([{ mode: "direct" }], 301)).toBe(true);
+  });
+
+  it("extracts polygon coordinates for polygon-only DeckGL bounds", () => {
+    expect(getDeckPolygonPositions([
+      {
+        type: "Feature",
+        geometry: {
+          type: "Polygon",
+          coordinates: [[[1, 2], [3, 4], [1, 2]]],
+        },
+      },
+    ])).toEqual([[1, 2], [3, 4], [1, 2]]);
   });
 });

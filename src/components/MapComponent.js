@@ -26,11 +26,13 @@ import {
 import {
   buildDeckPolygonData,
   DECK_POINT_RADIUS_MIN_PIXELS,
+  getDeckPolygonPositions,
   getDeckPolygonLayerMeta,
   getDeckPolygonTooltip,
   getFeatureSource,
   getPolygonFeatures,
   hexToRgba,
+  shouldUseDeckGlMap,
 } from "./mapDeckLayers";
 
 const DIRECT_LAYER = "direct";
@@ -237,13 +239,18 @@ const DeckGlMap = ({ points, layers, sourceColorMap, stringToColor }) => {
       position: pointPosition(point),
     }))
     .filter((item) => isValidPosition(item.position));
+  const polygonData = buildDeckPolygonData(layers);
+  const positions = [
+    ...data.map((item) => item.position),
+    ...getDeckPolygonPositions(polygonData).filter(isValidPosition),
+  ];
 
-  if (data.length === 0) {
+  if (positions.length === 0) {
     return null;
   }
 
-  const longitudes = data.map((d) => d.position[0]);
-  const latitudes = data.map((d) => d.position[1]);
+  const longitudes = positions.map((position) => position[0]);
+  const latitudes = positions.map((position) => position[1]);
 
   const minLng = Math.min(...longitudes);
   const maxLng = Math.max(...longitudes);
@@ -274,7 +281,6 @@ const DeckGlMap = ({ points, layers, sourceColorMap, stringToColor }) => {
     getRadius: 10,
   });
 
-  const polygonData = buildDeckPolygonData(layers);
   const polygonLayer = polygonData.length > 0
     ? new GeoJsonLayer({
       id: "polygon-layer",
@@ -371,7 +377,7 @@ const MapComponent = ({ points = [], mapt = [], sources = [], layers = null }) =
     }
   });
 
-  if (allPoints.length > 300) {
+  if (shouldUseDeckGlMap(renderLayers, allPoints.length)) {
     return (
       <DeckGlMap
         points={allPoints}

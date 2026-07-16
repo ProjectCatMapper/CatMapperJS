@@ -5,6 +5,10 @@ import {
 
 export const DECK_POINT_RADIUS_MIN_PIXELS = 4.5;
 
+export const shouldUseDeckGlMap = (layers, pointCount) =>
+  Number(pointCount || 0) > 300 ||
+  layers.some((layer) => layer.mode === "descendants");
+
 export const getPolygonFeatures = (polygons) => {
   if (!polygons) return [];
   if (Array.isArray(polygons)) return polygons;
@@ -67,4 +71,27 @@ export const getDeckPolygonTooltip = (feature) => {
   return isInheritedMapItem(feature, layer)
     ? `${inheritedMapLabel(feature, layer)}\nSource: ${source}`
     : `Source: ${source}`;
+};
+
+const collectCoordinatePairs = (coordinates, positions) => {
+  if (
+    Array.isArray(coordinates) &&
+    coordinates.length >= 2 &&
+    Number.isFinite(coordinates[0]) &&
+    Number.isFinite(coordinates[1])
+  ) {
+    positions.push([coordinates[0], coordinates[1]]);
+    return;
+  }
+  if (Array.isArray(coordinates)) {
+    coordinates.forEach((item) => collectCoordinatePairs(item, positions));
+  }
+};
+
+export const getDeckPolygonPositions = (features) => {
+  const positions = [];
+  features.forEach((feature) => {
+    collectCoordinatePairs(feature?.geometry?.coordinates, positions);
+  });
+  return positions;
 };
