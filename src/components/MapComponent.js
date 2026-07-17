@@ -12,10 +12,10 @@ import MarkerClusterGroup from "@changey/react-leaflet-markercluster";
 import "leaflet/dist/leaflet.css";
 import "@changey/react-leaflet-markercluster/dist/styles.min.css";
 
-import DeckGL from "@deck.gl/react";
+import DeckGL, { ZoomWidget } from "@deck.gl/react";
 import { GeoJsonLayer, ScatterplotLayer, TextLayer } from "@deck.gl/layers";
-import { Map, NavigationControl } from "react-map-gl/maplibre";
-import "maplibre-gl/dist/maplibre-gl.css";
+import { Map } from "react-map-gl/maplibre";
+import "@deck.gl/widgets/stylesheet.css";
 
 import Legend from "./Legend";
 import {
@@ -27,6 +27,7 @@ import {
   buildDeckPolygonData,
   DECK_POINT_RADIUS_MIN_PIXELS,
   DECK_POINT_STACK_RADII_PIXELS,
+  DECK_ZOOM_BUTTON_TRANSITION_MS,
   getDeckCoordinateBounds,
   getDeckFittedViewState,
   getDeckPolygonPositions,
@@ -448,13 +449,11 @@ const DeckGlMap = ({ points, layers, sourceColorMap, stringToColor }) => {
         <Map
           reuseMaps
           mapStyle="https://basemaps.cartocdn.com/gl/positron-gl-style/style.json"
-        >
-          <NavigationControl
-            position="top-right"
-            showCompass={false}
-            showZoom={true}
-          />
-        </Map>
+        />
+        <ZoomWidget
+          placement="top-right"
+          transitionDuration={DECK_ZOOM_BUTTON_TRANSITION_MS}
+        />
       </DeckGL>
       {activeStack && (
         <div

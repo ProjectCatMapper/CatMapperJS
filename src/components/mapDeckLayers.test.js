@@ -4,6 +4,7 @@ import {
   buildDeckPolygonData,
   DECK_POINT_RADIUS_MIN_PIXELS,
   DECK_POINT_STACK_RADII_PIXELS,
+  DECK_ZOOM_BUTTON_TRANSITION_MS,
   getDeckCoordinateBounds,
   getDeckFittedViewState,
   getDeckPolygonPositions,
@@ -105,6 +106,10 @@ describe("high-volume map polygon layers", () => {
       DECK_POINT_RADIUS_MIN_PIXELS + 0.5
     );
     expect(DECK_POINT_STACK_RADII_PIXELS).toEqual([5, 3.5, 2]);
+  });
+
+  it("keeps button zoom transitions responsive", () => {
+    expect(DECK_ZOOM_BUTTON_TRANSITION_MS).toBeLessThan(100);
   });
 
   it("uses DeckGL for descendant layers at every point count", () => {
