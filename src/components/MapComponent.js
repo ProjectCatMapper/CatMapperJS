@@ -12,8 +12,9 @@ import MarkerClusterGroup from "@changey/react-leaflet-markercluster";
 import "leaflet/dist/leaflet.css";
 import "@changey/react-leaflet-markercluster/dist/styles.min.css";
 
-import DeckGL, { ZoomWidget } from "@deck.gl/react";
+import DeckGL from "@deck.gl/react";
 import { GeoJsonLayer, ScatterplotLayer, TextLayer } from "@deck.gl/layers";
+import { ZoomWidget } from "@deck.gl/widgets";
 import { Map } from "react-map-gl/maplibre";
 import "@deck.gl/widgets/stylesheet.css";
 
@@ -252,6 +253,13 @@ const DeckGlMap = ({ points, layers, sourceColorMap, stringToColor }) => {
   const containerRef = useRef(null);
   const [activeStack, setActiveStack] = useState(null);
   const [mapSize, setMapSize] = useState({ width: 800, height: 500 });
+  const zoomWidgets = useMemo(
+    () => [new ZoomWidget({
+      placement: "top-right",
+      transitionDuration: DECK_ZOOM_BUTTON_TRANSITION_MS,
+    })],
+    []
+  );
   const data = useMemo(
     () => points
       .map((point) => ({
@@ -417,6 +425,7 @@ const DeckGlMap = ({ points, layers, sourceColorMap, stringToColor }) => {
       <DeckGL
         initialViewState={initialViewState}
         controller={true}
+        widgets={zoomWidgets}
         layers={[
           polygonLayer,
           scatterLayer,
@@ -449,10 +458,6 @@ const DeckGlMap = ({ points, layers, sourceColorMap, stringToColor }) => {
         <Map
           reuseMaps
           mapStyle="https://basemaps.cartocdn.com/gl/positron-gl-style/style.json"
-        />
-        <ZoomWidget
-          placement="top-right"
-          transitionDuration={DECK_ZOOM_BUTTON_TRANSITION_MS}
         />
       </DeckGL>
       {activeStack && (
