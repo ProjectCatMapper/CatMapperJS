@@ -1,3 +1,5 @@
+import { WebMercatorViewport } from "@deck.gl/core";
+
 import {
   inheritedMapLabel,
   isInheritedMapItem,
@@ -35,7 +37,7 @@ export const groupDeckPointsByPosition = (
   return [...groups.values()];
 };
 
-export const getDeckStackOffsets = (count, spacing = 24) => {
+export const getDeckStackOffsets = (count, spacing = 18) => {
   const offsets = [];
   let remaining = Math.max(0, Number(count) || 0);
   let ring = 1;
@@ -173,4 +175,33 @@ export const getDeckCoordinateBounds = (positions) => {
   });
 
   return { minLongitude, maxLongitude, minLatitude, maxLatitude };
+};
+
+export const getDeckFittedViewState = (bounds, width, height) => {
+  if (!bounds) return null;
+  const viewportWidth = Math.max(1, Number(width) || 1);
+  const viewportHeight = Math.max(1, Number(height) || 1);
+  const padding = Math.min(32, viewportWidth / 4, viewportHeight / 4);
+  const fitted = new WebMercatorViewport({
+    width: viewportWidth,
+    height: viewportHeight,
+  }).fitBounds(
+    [
+      [bounds.minLongitude, bounds.minLatitude],
+      [bounds.maxLongitude, bounds.maxLatitude],
+    ],
+    {
+      padding,
+      maxZoom: 7,
+      minExtent: 0.01,
+    }
+  );
+
+  return {
+    longitude: fitted.longitude,
+    latitude: fitted.latitude,
+    zoom: fitted.zoom,
+    pitch: 0,
+    bearing: 0,
+  };
 };

@@ -6,6 +6,7 @@
   "dependencies": {
     "@auth0/auth0-react": "^2.2.1",
     "@changey/react-leaflet-markercluster": "^4.0.0-rc1",
+    "@deck.gl/core": "^9.1.12",
     "@deck.gl/layers": "^9.1.12",
     "@deck.gl/react": "^9.1.12",
     "@emotion/react": "^11.11.1",

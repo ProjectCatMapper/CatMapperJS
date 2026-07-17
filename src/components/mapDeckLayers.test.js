@@ -4,6 +4,7 @@ import {
   buildDeckPolygonData,
   DECK_POINT_RADIUS_MIN_PIXELS,
   getDeckCoordinateBounds,
+  getDeckFittedViewState,
   getDeckPolygonPositions,
   getDeckPolygonTooltip,
   getDeckStackOffsets,
@@ -121,11 +122,11 @@ describe("high-volume map polygon layers", () => {
     const offsets = getDeckStackOffsets(10);
 
     expect(offsets).toHaveLength(10);
-    expect(offsets[0]).toEqual([0, -24]);
+    expect(offsets[0]).toEqual([0, -18]);
     offsets.slice(0, 8).forEach(([x, y]) => {
-      expect(Math.hypot(x, y)).toBeCloseTo(24, 2);
+      expect(Math.hypot(x, y)).toBeCloseTo(18, 2);
     });
-    expect(Math.hypot(...offsets[8])).toBeCloseTo(48, 2);
+    expect(Math.hypot(...offsets[8])).toBeCloseTo(36, 2);
   });
 
   it("extracts polygon coordinates for polygon-only DeckGL bounds", () => {
@@ -152,5 +153,19 @@ describe("high-volume map polygon layers", () => {
       minLatitude: -90,
       maxLatitude: 89,
     });
+  });
+
+  it("fits the DeckGL viewport to local data with a bounded zoom", () => {
+    const viewState = getDeckFittedViewState({
+      minLongitude: -72,
+      maxLongitude: -71,
+      minLatitude: 41,
+      maxLatitude: 42,
+    }, 1000, 600);
+
+    expect(viewState.longitude).toBeCloseTo(-71.5, 1);
+    expect(viewState.latitude).toBeCloseTo(41.5, 1);
+    expect(viewState.zoom).toBeGreaterThan(1);
+    expect(viewState.zoom).toBeLessThanOrEqual(7);
   });
 });

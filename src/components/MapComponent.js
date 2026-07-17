@@ -26,6 +26,7 @@ import {
   buildDeckPolygonData,
   DECK_POINT_RADIUS_MIN_PIXELS,
   getDeckCoordinateBounds,
+  getDeckFittedViewState,
   getDeckPolygonPositions,
   getDeckPolygonLayerMeta,
   getDeckPolygonTooltip,
@@ -245,7 +246,9 @@ const LeafletMap = ({ layers, sourceColorMap, stringToColor }) => {
 };
 
 const DeckGlMap = ({ points, layers, sourceColorMap, stringToColor }) => {
+  const containerRef = useRef(null);
   const [activeStack, setActiveStack] = useState(null);
+  const [mapSize, setMapSize] = useState({ width: 800, height: 500 });
   const data = useMemo(
     () => points
       .map((point) => ({
@@ -290,18 +293,32 @@ const DeckGlMap = ({ points, layers, sourceColorMap, stringToColor }) => {
     setActiveStack(null);
   }, [points]);
 
+  useEffect(() => {
+    const element = containerRef.current;
+    if (!element) return undefined;
+
+    const updateSize = () => {
+      const { width, height } = element.getBoundingClientRect();
+      if (width > 0 && height > 0) {
+        setMapSize((current) =>
+          current.width === width && current.height === height
+            ? current
+            : { width, height }
+        );
+      }
+    };
+
+    updateSize();
+    if (typeof ResizeObserver === "undefined") return undefined;
+    const observer = new ResizeObserver(updateSize);
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, []);
+
   const bounds = useMemo(() => getDeckCoordinateBounds(positions), [positions]);
   const initialViewState = useMemo(
-    () => bounds
-      ? {
-        longitude: (bounds.minLongitude + bounds.maxLongitude) / 2,
-        latitude: (bounds.minLatitude + bounds.maxLatitude) / 2,
-        zoom: 1,
-        pitch: 0,
-        bearing: 0,
-      }
-      : null,
-    [bounds]
+    () => getDeckFittedViewState(bounds, mapSize.width, mapSize.height),
+    [bounds, mapSize]
   );
 
   if (positions.length === 0) {
@@ -324,17 +341,20 @@ const DeckGlMap = ({ points, layers, sourceColorMap, stringToColor }) => {
     getRadius: 10,
   });
 
-  const stackRingLayers = [0, 1, 2].map((ringIndex) => new ScatterplotLayer({
+  const stackRadii = [9, 6, 4];
+  const stackRingLayers = stackRadii.map((radius, ringIndex) => new ScatterplotLayer({
     id: `point-stack-ring-${ringIndex}`,
     data: visibleStackData,
-    pickable: true,
+    pickable: ringIndex === 0,
+    autoHighlight: ringIndex === 0,
+    highlightColor: [255, 255, 255, 90],
     stroked: ringIndex === 0,
     filled: true,
     radiusUnits: "pixels",
     lineWidthUnits: "pixels",
     getPosition: (group) => group.position,
-    getRadius: 16 - ringIndex * 4,
-    getLineWidth: 2,
+    getRadius: radius,
+    getLineWidth: 1,
     getLineColor: [255, 255, 255, 255],
     getFillColor: (group) => {
       const sources = [...new Set(group.points.map((point) => point.source || "Unknown"))];
@@ -343,20 +363,6 @@ const DeckGlMap = ({ points, layers, sourceColorMap, stringToColor }) => {
       return hexToRgba(sourceColorMap[source] || stringToColor(source), 235);
     },
   }));
-
-  const stackCountLayer = new TextLayer({
-    id: "point-stack-count",
-    data: visibleStackData,
-    pickable: true,
-    billboard: true,
-    getPosition: (group) => group.position,
-    getText: (group) => String(group.points.length),
-    getSize: 13,
-    getColor: [255, 255, 255, 255],
-    getTextAnchor: "middle",
-    getAlignmentBaseline: "center",
-    fontWeight: 700,
-  });
 
   const expandedPointLayer = expandedData.length > 0
     ? new TextLayer({
@@ -369,7 +375,7 @@ const DeckGlMap = ({ points, layers, sourceColorMap, stringToColor }) => {
       getPosition: (point) => point.position,
       getPixelOffset: (point) => point.pixelOffset,
       getText: "●",
-      getSize: 24,
+      getSize: 16,
       getColor: (point) => hexToRgba(
         sourceColorMap[point.source] || stringToColor(point.source)
       ),
@@ -405,7 +411,7 @@ const DeckGlMap = ({ points, layers, sourceColorMap, stringToColor }) => {
     : null;
 
   return (
-    <div style={{ position: "relative", width: "100%", height: "100%" }}>
+    <div ref={containerRef} style={{ position: "relative", width: "100%", height: "100%" }}>
       <DeckGL
         initialViewState={initialViewState}
         controller={true}
@@ -413,7 +419,6 @@ const DeckGlMap = ({ points, layers, sourceColorMap, stringToColor }) => {
           polygonLayer,
           scatterLayer,
           ...stackRingLayers,
-          stackCountLayer,
           expandedPointLayer,
         ].filter(Boolean)}
         onClick={({ object }) => {
