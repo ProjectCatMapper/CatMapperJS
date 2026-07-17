@@ -6,6 +6,7 @@ import {
 } from "./mapPointTooltip";
 
 export const DECK_POINT_RADIUS_MIN_PIXELS = 4.5;
+export const DECK_POINT_STACK_RADII_PIXELS = [5, 3.5, 2];
 export const DECK_POINT_STACK_PRECISION = 6;
 
 export const shouldUseDeckGlMap = (layers, pointCount) =>

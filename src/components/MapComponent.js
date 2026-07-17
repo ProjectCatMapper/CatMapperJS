@@ -25,6 +25,7 @@ import {
 import {
   buildDeckPolygonData,
   DECK_POINT_RADIUS_MIN_PIXELS,
+  DECK_POINT_STACK_RADII_PIXELS,
   getDeckCoordinateBounds,
   getDeckFittedViewState,
   getDeckPolygonPositions,
@@ -341,8 +342,7 @@ const DeckGlMap = ({ points, layers, sourceColorMap, stringToColor }) => {
     getRadius: 10,
   });
 
-  const stackRadii = [9, 6, 4];
-  const stackRingLayers = stackRadii.map((radius, ringIndex) => new ScatterplotLayer({
+  const stackRingLayers = DECK_POINT_STACK_RADII_PIXELS.map((radius, ringIndex) => new ScatterplotLayer({
     id: `point-stack-ring-${ringIndex}`,
     data: visibleStackData,
     pickable: ringIndex === 0,

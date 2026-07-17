@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   buildDeckPolygonData,
   DECK_POINT_RADIUS_MIN_PIXELS,
+  DECK_POINT_STACK_RADII_PIXELS,
   getDeckCoordinateBounds,
   getDeckFittedViewState,
   getDeckPolygonPositions,
@@ -97,6 +98,13 @@ describe("high-volume map polygon layers", () => {
 
   it("renders DeckGL points fifty percent larger than the original radius", () => {
     expect(DECK_POINT_RADIUS_MIN_PIXELS).toBe(3 * 1.5);
+  });
+
+  it("keeps coincident point stacks close to the ordinary point size", () => {
+    expect(DECK_POINT_STACK_RADII_PIXELS[0]).toBeLessThanOrEqual(
+      DECK_POINT_RADIUS_MIN_PIXELS + 0.5
+    );
+    expect(DECK_POINT_STACK_RADII_PIXELS).toEqual([5, 3.5, 2]);
   });
 
   it("uses DeckGL for descendant layers at every point count", () => {
