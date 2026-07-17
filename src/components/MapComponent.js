@@ -14,9 +14,7 @@ import "@changey/react-leaflet-markercluster/dist/styles.min.css";
 
 import DeckGL from "@deck.gl/react";
 import { GeoJsonLayer, ScatterplotLayer, TextLayer } from "@deck.gl/layers";
-import { ZoomWidget } from "@deck.gl/widgets";
 import { Map } from "react-map-gl/maplibre";
-import "@deck.gl/widgets/stylesheet.css";
 
 import Legend from "./Legend";
 import {
@@ -28,13 +26,13 @@ import {
   buildDeckPolygonData,
   DECK_POINT_RADIUS_MIN_PIXELS,
   DECK_POINT_STACK_RADII_PIXELS,
-  DECK_ZOOM_BUTTON_TRANSITION_MS,
   getDeckCoordinateBounds,
   getDeckFittedViewState,
   getDeckPolygonPositions,
   getDeckPolygonLayerMeta,
   getDeckPolygonTooltip,
   getDeckStackOffsets,
+  getDeckZoomButtonViewState,
   getFeatureSource,
   getPolygonFeatures,
   groupDeckPointsByPosition,
@@ -251,15 +249,9 @@ const LeafletMap = ({ layers, sourceColorMap, stringToColor }) => {
 
 const DeckGlMap = ({ points, layers, sourceColorMap, stringToColor }) => {
   const containerRef = useRef(null);
+  const deckRef = useRef(null);
   const [activeStack, setActiveStack] = useState(null);
   const [mapSize, setMapSize] = useState({ width: 800, height: 500 });
-  const zoomWidgets = useMemo(
-    () => [new ZoomWidget({
-      placement: "top-right",
-      transitionDuration: DECK_ZOOM_BUTTON_TRANSITION_MS,
-    })],
-    []
-  );
   const data = useMemo(
     () => points
       .map((point) => ({
@@ -335,6 +327,18 @@ const DeckGlMap = ({ points, layers, sourceColorMap, stringToColor }) => {
   if (positions.length === 0) {
     return null;
   }
+
+  const handleZoomButtonClick = (zoomDelta) => {
+    const deck = deckRef.current?.deck;
+    const viewport = deck?.getViewports()?.[0];
+    const viewState = getDeckZoomButtonViewState(viewport, zoomDelta);
+    if (!deck || !viewState) return;
+    deck._onViewStateChange({
+      viewId: viewport.id,
+      viewState,
+      interactionState: {},
+    });
+  };
 
   const scatterLayer = new ScatterplotLayer({
     id: "scatter-layer",
@@ -423,9 +427,9 @@ const DeckGlMap = ({ points, layers, sourceColorMap, stringToColor }) => {
   return (
     <div ref={containerRef} style={{ position: "relative", width: "100%", height: "100%" }}>
       <DeckGL
+        ref={deckRef}
         initialViewState={initialViewState}
         controller={true}
-        widgets={zoomWidgets}
         layers={[
           polygonLayer,
           scatterLayer,
@@ -460,6 +464,49 @@ const DeckGlMap = ({ points, layers, sourceColorMap, stringToColor }) => {
           mapStyle="https://basemaps.cartocdn.com/gl/positron-gl-style/style.json"
         />
       </DeckGL>
+      <div
+        role="group"
+        aria-label="Map zoom controls"
+        style={{
+          position: "absolute",
+          top: 12,
+          right: 12,
+          zIndex: 3,
+          display: "flex",
+          flexDirection: "column",
+          overflow: "hidden",
+          borderRadius: 4,
+          boxShadow: "0 1px 4px rgba(0, 0, 0, 0.35)",
+        }}
+      >
+        {[
+          { label: "Zoom in", symbol: "+", delta: 1 },
+          { label: "Zoom out", symbol: "−", delta: -1 },
+        ].map(({ label, symbol, delta }, index) => (
+          <button
+            key={label}
+            type="button"
+            aria-label={label}
+            title={label}
+            onClick={() => handleZoomButtonClick(delta)}
+            style={{
+              width: 30,
+              height: 30,
+              padding: 0,
+              border: 0,
+              borderTop: index ? "1px solid #d1d5db" : 0,
+              background: "rgba(255, 255, 255, 0.96)",
+              color: "#374151",
+              cursor: "pointer",
+              fontSize: 22,
+              fontWeight: 600,
+              lineHeight: "30px",
+            }}
+          >
+            {symbol}
+          </button>
+        ))}
+      </div>
       {activeStack && (
         <div
           role="dialog"

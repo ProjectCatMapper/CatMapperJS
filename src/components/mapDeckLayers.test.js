@@ -10,6 +10,7 @@ import {
   getDeckPolygonPositions,
   getDeckPolygonTooltip,
   getDeckStackOffsets,
+  getDeckZoomButtonViewState,
   groupDeckPointsByPosition,
   hexToRgba,
   shouldUseDeckGlMap,
@@ -110,6 +111,15 @@ describe("high-volume map polygon layers", () => {
 
   it("keeps button zoom transitions responsive", () => {
     expect(DECK_ZOOM_BUTTON_TRANSITION_MS).toBeLessThan(100);
+    const viewState = getDeckZoomButtonViewState({
+      id: "default-view",
+      longitude: -112,
+      latitude: 34,
+      zoom: 4,
+    }, 1);
+
+    expect(viewState.zoom).toBe(5);
+    expect(viewState.transitionDuration).toBe(DECK_ZOOM_BUTTON_TRANSITION_MS);
   });
 
   it("uses DeckGL for descendant layers at every point count", () => {

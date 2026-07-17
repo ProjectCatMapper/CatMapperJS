@@ -9,7 +9,6 @@
     "@deck.gl/core": "^9.1.12",
     "@deck.gl/layers": "^9.1.12",
     "@deck.gl/react": "^9.1.12",
-    "@deck.gl/widgets": "9.1.12",
     "@emotion/react": "^11.11.1",
     "@emotion/styled": "^11.11.0",
     "@fontsource/source-sans-pro": "^5.0.8",
