@@ -14,7 +14,8 @@ import "@changey/react-leaflet-markercluster/dist/styles.min.css";
 
 import DeckGL from "@deck.gl/react";
 import { GeoJsonLayer, ScatterplotLayer, TextLayer } from "@deck.gl/layers";
-import { Map } from "react-map-gl/maplibre";
+import { Map, NavigationControl } from "react-map-gl/maplibre";
+import "maplibre-gl/dist/maplibre-gl.css";
 
 import Legend from "./Legend";
 import {
@@ -447,7 +448,13 @@ const DeckGlMap = ({ points, layers, sourceColorMap, stringToColor }) => {
         <Map
           reuseMaps
           mapStyle="https://basemaps.cartocdn.com/gl/positron-gl-style/style.json"
-        />
+        >
+          <NavigationControl
+            position="top-right"
+            showCompass={false}
+            showZoom={true}
+          />
+        </Map>
       </DeckGL>
       {activeStack && (
         <div
