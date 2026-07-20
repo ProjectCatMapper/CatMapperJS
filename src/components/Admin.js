@@ -116,6 +116,17 @@ const Select = ({ MenuProps, size = "small", sx, ...props }) => (
 );
 
 const OWNER_SCOPED_USES_EDITABLE_PROPERTIES = ["Key", "label", "Name"];
+const EXCLUDED_USES_ADD_EDIT_PROPERTIES = new Set(["log", "geopolygon"]);
+
+export const filterUsesPropertyOptions = (options, action) => (
+  action === "add" || action === "edit"
+    ? options.filter(
+      (option) => !EXCLUDED_USES_ADD_EDIT_PROPERTIES.has(
+        String(option || "").trim().toLowerCase()
+      )
+    )
+    : options
+);
 
 const ROUTINE_OPTIONS = [
   { key: "is_valid_json", label: "is_valid_json" },
@@ -1732,11 +1743,11 @@ const Admin = ({ database }) => {
                     if (formData.s1_1 === "edit" || formData.s1_1 === "delete") {
                       dropdown2Options = Object.keys(r);
                       if (formData.s1_1 === "edit") {
-                        dropdown2Options = dropdown2Options.filter(key => key !== "logID" && key !== "log");
+                        dropdown2Options = dropdown2Options.filter(key => key !== "logID");
                       }
 
                       if (formData.s1_1 === "delete") {
-                        dropdown2Options = dropdown2Options.filter(key => key !== "logID" && key !== "Key" && key !== "Name" && key !== "label" && key !== "log");
+                        dropdown2Options = dropdown2Options.filter(key => key !== "logID" && key !== "Key" && key !== "Name" && key !== "label");
                       }
                     } else {
                       const rKeys = Object.keys(r);
@@ -1744,6 +1755,10 @@ const Admin = ({ database }) => {
                         (prop) => !rKeys.includes(prop)
                       );
                     }
+                    dropdown2Options = filterUsesPropertyOptions(
+                      dropdown2Options,
+                      formData.s1_1
+                    );
                     dropdown2Options = visibleUsesPropertyOptions(dropdown2Options);
 
                     return (
