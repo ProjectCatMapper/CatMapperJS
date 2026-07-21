@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useState, useRef } from 'react';
 import { Network } from 'vis-network';
 import { useNavigate } from 'react-router-dom'
+import { getNetworkExplorerPropertyEntries } from '../utils/networkExplorerProperties';
 import './VisNet.css';
 
 export const buildNodeNetworkPath = (database, cmid) => `/${database}/${cmid}/network`;
@@ -130,7 +131,7 @@ const Neo4jVisualization = ({
 
     if (edge.type === 'USES') {
       const { from, to, color, id, ...rest } = edge;
-      const grouped = Object.entries(rest).reduce((acc, [key, value]) => {
+      const grouped = getNetworkExplorerPropertyEntries(rest).reduce((acc, [key, value]) => {
         if (key === 'Name' || key === 'Key') {
           acc.top.push(`${key}: ${value}`);
         } else if (key.toLowerCase().includes('log')) {

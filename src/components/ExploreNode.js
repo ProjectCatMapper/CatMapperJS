@@ -69,6 +69,7 @@ import {
   getInitialDescendantDepth,
 } from "../utils/mapDescendantDepth";
 import { getMapLayerControlCount } from "../utils/mapLayerControlCount";
+import { generateNetworkTooltipContent } from "../utils/networkExplorerProperties";
 
 import "./ExploreNode.css";
 
@@ -407,12 +408,6 @@ export default function Tableclick({ cmid, database, tabval }) {
       setadvdomainDrop(advoptions[0]);
     }
   }, [advoptions]);
-
-  const generateTooltipContent = (properties) => {
-    return Object.entries(properties)
-      .filter(([key, value]) => value != null && value !== "" && value !== "NULL" && value !== "null") // Skip null, undefined, or empty strings
-      .map(([key, value]) => `${key}: ${value}\n`);
-  };
 
   useEffect(() => {
     if (!cmid || !database) {
@@ -1197,7 +1192,7 @@ export default function Tableclick({ cmid, database, tabval }) {
           filterDomains: uniqueLabels(nodeData.labels || []),
           legendLabel: normalizedLegendLabel,
           CMID: nodeData.CMID,
-          tooltipcon: generateTooltipContent({
+          tooltipcon: generateNetworkTooltipContent({
             ...nodeData,
             legendLabel: normalizedLegendLabel
           }),
