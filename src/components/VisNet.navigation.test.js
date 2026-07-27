@@ -1,8 +1,17 @@
-import { buildNodeNetworkPath, navigateToNetworkNode } from './VisNet';
+import {
+  buildNodeNetworkPath,
+  getNetworkRootCmid,
+  navigateToNetworkNode,
+} from './VisNet';
 
 describe('VisNet navigation helpers', () => {
   test('buildNodeNetworkPath creates the expected route', () => {
     expect(buildNodeNetworkPath('sociomap', 'SM2')).toBe('/sociomap/SM2/network');
+  });
+
+  test('getNetworkRootCmid safely handles an empty graph during route changes', () => {
+    expect(getNetworkRootCmid([])).toBe('');
+    expect(getNetworkRootCmid([null, { CMID: 'SM2' }])).toBe('SM2');
   });
 
   test('navigateToNetworkNode navigates and signals loading for a different node', () => {

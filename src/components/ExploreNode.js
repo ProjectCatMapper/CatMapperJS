@@ -216,7 +216,7 @@ export default function Tableclick({ cmid, database, tabval }) {
   const [inheritedMapLayers, setInheritedMapLayers] = useState([]);
   const [loadingInheritedMap, setLoadingInheritedMap] = useState(false);
   const [mapLayerError, setMapLayerError] = useState("");
-  const [fdrop, setfdrop] = useState(["CONTAINS"]);
+  const [fdrop, setfdrop] = useState([]);
   const [orderedProperties, setOrderedProperties] = useState([]);
   const [firstDropdownValue, setFirstDropdownValue] = useState("");
   const [thirdDropdownValue, setThirdDropdownValue] = useState(["All"]);
@@ -279,13 +279,10 @@ export default function Tableclick({ cmid, database, tabval }) {
 
   const [open, setOpen] = useState(false);
   const [bookmarkNotice, setBookmarkNotice] = useState({ open: false, severity: "success", message: "" });
-  const [redirectPrompt, setRedirectPrompt] = useState({ open: false, from: "", to: "", database: "" });
   const [categoryInfoDialog, setCategoryInfoDialog] = useState({ open: false, key: "", value: "" });
   const historyLoggedRef = useRef("");
   const [mergeTemplateSummary, setMergeTemplateSummary] = useState(null);
   const [loadingMergeTemplateSummary, setLoadingMergeTemplateSummary] = useState(false);
-  const redirectNoticeStorageKey = "cmid_redirect_notice";
-  const stayOnDeletedPage = new URLSearchParams(location.search).get("stayDeleted") === "1";
 
   let limit = 500;
 
@@ -359,48 +356,6 @@ export default function Tableclick({ cmid, database, tabval }) {
     }).catch(() => { });
   }, [user, cred, database, cmid, rev]);
 
-  useEffect(() => {
-    try {
-      const raw = sessionStorage.getItem(redirectNoticeStorageKey);
-      if (!raw) return;
-      const parsed = JSON.parse(raw);
-      const targetDatabase = String(parsed?.database || "").toLowerCase();
-      const targetCmid = String(parsed?.to || "");
-      if (targetDatabase === String(database || "").toLowerCase() && targetCmid === String(cmid || "")) {
-        setRedirectPrompt({
-          open: true,
-          from: String(parsed?.from || ""),
-          to: String(parsed?.to || ""),
-          database: targetDatabase
-        });
-        sessionStorage.removeItem(redirectNoticeStorageKey);
-      }
-    } catch (_error) {
-      sessionStorage.removeItem(redirectNoticeStorageKey);
-    }
-  }, [cmid, database]);
-
-  useEffect(() => {
-    if (!stayOnDeletedPage) return;
-    setBookmarkNotice({
-      open: true,
-      severity: "info",
-      message: `Showing deleted CMID ${cmid}. Automatic redirect is paused for this page.`
-    });
-  }, [stayOnDeletedPage, cmid]);
-
-  const handleCloseRedirectPrompt = () => {
-    setRedirectPrompt((prev) => ({ ...prev, open: false }));
-  };
-
-  const handleStayOnDeletedPage = () => {
-    const sourceDatabase = String(redirectPrompt.database || database || "").toLowerCase();
-    const sourceCmid = String(redirectPrompt.from || "").trim();
-    setRedirectPrompt((prev) => ({ ...prev, open: false }));
-    if (!sourceDatabase || !sourceCmid) return;
-    navigate(`/${sourceDatabase}/${sourceCmid}?stayDeleted=1`, { replace: true });
-  };
-
   // eslint-disable-next-line react-hooks/exhaustive-deps
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
@@ -455,20 +410,6 @@ export default function Tableclick({ cmid, database, tabval }) {
         const redirectTarget = typeof infoData?.Merged_into_CMID === "string"
           ? infoData.Merged_into_CMID.trim()
           : "";
-
-        if (isDeletedNodeInfo && redirectTarget && redirectTarget !== cmid && !stayOnDeletedPage) {
-          sessionStorage.setItem(
-            redirectNoticeStorageKey,
-            JSON.stringify({
-              from: cmid,
-              to: redirectTarget,
-              database: String(database || "").toLowerCase()
-            })
-          );
-          setNavigationLoading(true);
-          navigate(`/${String(database || "").toLowerCase()}/${redirectTarget}`, { replace: true });
-          return;
-        }
 
         setrev(infoData);
         if (isDeletedNodeInfo && !redirectTarget) {
@@ -583,7 +524,7 @@ export default function Tableclick({ cmid, database, tabval }) {
     return () => {
       controller.abort();
     };
-  }, [cmid, database, clearNodeData, stayOnDeletedPage]);
+  }, [cmid, database, clearNodeData]);
 
   useEffect(() => {
     if (!cmid || !database || enabledInheritedLayerIds.length === 0) {
@@ -2409,23 +2350,6 @@ export default function Tableclick({ cmid, database, tabval }) {
           </DialogContent>
           <DialogActions>
             <Button onClick={closeCategoryInfoDialog}>Close</Button>
-          </DialogActions>
-        </Dialog>
-        <Dialog open={redirectPrompt.open} onClose={handleCloseRedirectPrompt}>
-          <DialogTitle>Deleted Node Redirected</DialogTitle>
-          <DialogContent>
-            <Typography variant="body2">
-              Redirected from deleted CMID {redirectPrompt.from} to {redirectPrompt.to} via IS relationship.
-            </Typography>
-            <Typography variant="body2" sx={{ mt: 1 }}>
-              You can close this message or stay on the deleted node page.
-            </Typography>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={handleCloseRedirectPrompt}>Close</Button>
-            <Button variant="contained" onClick={handleStayOnDeletedPage}>
-              Stay On Deleted Page
-            </Button>
           </DialogActions>
         </Dialog>
       </div >

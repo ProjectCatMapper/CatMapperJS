@@ -6,6 +6,10 @@ import './VisNet.css';
 
 export const buildNodeNetworkPath = (database, cmid) => `/${database}/${cmid}/network`;
 
+export const getNetworkRootCmid = (nodes = []) => (
+  Array.isArray(nodes) ? nodes.find(Boolean)?.CMID || '' : ''
+);
+
 export const navigateToNetworkNode = ({
   cmid,
   currentid,
@@ -26,15 +30,15 @@ const Neo4jVisualization = ({
   onNavigateStart,
 }) => {
   const navigate = useNavigate();
-  const visNodes = visData.nodes;
-  const visEdges = visData.edges;
+  const visNodes = Array.isArray(visData?.nodes) ? visData.nodes.filter(Boolean) : [];
+  const visEdges = Array.isArray(visData?.edges) ? visData.edges.filter(Boolean) : [];
   const nodes = useMemo(
     () => (visNodes.length > dropdownNodeLimit ? visNodes.slice(0, dropdownNodeLimit) : visNodes),
     [dropdownNodeLimit, visNodes]
   );
 
   const filteredMap = new Map();
-  const currentid = visNodes[0].CMID;
+  const currentid = getNetworkRootCmid(visNodes);
 
   visNodes.forEach((item) => {
     const legendLabel = item.legendLabel || (Array.isArray(item.domain) ? item.domain.join(':') : 'UNMAPPED');
