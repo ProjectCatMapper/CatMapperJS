@@ -312,6 +312,9 @@ describe('Admin change user password flow', () => {
       await flushPromises();
     });
 
+    expect(window.confirm).toHaveBeenCalledWith(
+      'Are you sure you want to delete node SM123 (Blocked Node)? This action cannot be undone.'
+    );
     expect(document.body.textContent).toContain('Admin Review Required');
     expect(document.body.textContent).toContain('SM123');
 

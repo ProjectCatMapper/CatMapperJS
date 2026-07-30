@@ -510,7 +510,7 @@ const Admin = ({ database }) => {
           ? `${nodeCmid} (${nodeName})`
           : nodeCmid;
         const confirmed = window.confirm(
-          `Are you sure you want to ${firstDropdownValue} of ${nodeLabel}? This action cannot be undone.`
+          `Are you sure you want to delete node ${nodeLabel}? This action cannot be undone.`
         );
         if (!confirmed) {
           return;
