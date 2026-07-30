@@ -1,8 +1,17 @@
+import React, { act } from 'react';
+import { createRoot } from 'react-dom/client';
+import { MemoryRouter } from 'react-router-dom';
+import { Network } from 'vis-network';
 import {
   buildNodeNetworkPath,
   getNetworkRootCmid,
   navigateToNetworkNode,
 } from './VisNet';
+import Neo4jVisualization from './VisNet';
+
+vi.mock('vis-network', () => ({
+  Network: vi.fn(),
+}));
 
 describe('VisNet navigation helpers', () => {
   test('buildNodeNetworkPath creates the expected route', () => {
@@ -63,5 +72,77 @@ describe('VisNet navigation helpers', () => {
     expect(didNavigate).toBe(false);
     expect(onNavigateStart).not.toHaveBeenCalled();
     expect(navigate).not.toHaveBeenCalled();
+  });
+});
+
+describe('VisNet layout lifecycle', () => {
+  let container;
+  let root;
+  let handlers;
+
+  beforeEach(() => {
+    vi.useFakeTimers();
+    handlers = {};
+    Network.mockImplementation(function MockNetwork() {
+      return {
+        destroy: vi.fn(),
+        on: vi.fn((event, handler) => {
+          handlers[event] = handler;
+        }),
+        once: vi.fn((event, handler) => {
+          handlers[event] = handler;
+        }),
+        setOptions: vi.fn(),
+      };
+    });
+    container = document.createElement('div');
+    document.body.appendChild(container);
+    root = createRoot(container);
+  });
+
+  afterEach(() => {
+    act(() => root.unmount());
+    container.remove();
+    vi.clearAllTimers();
+    vi.useRealTimers();
+    vi.clearAllMocks();
+  });
+
+  test('opening node details does not recreate and restabilize the network', () => {
+    const visData = {
+      nodes: [{
+        id: 1,
+        CMID: 'SM1',
+        CMName: 'Example',
+        domain: ['LANGUAGE'],
+        tooltipcon: ['CMID: SM1', 'CMName: Example'],
+      }],
+      edges: [],
+    };
+
+    act(() => {
+      root.render(
+        <MemoryRouter>
+          <Neo4jVisualization
+            visData={visData}
+            dropdownNodeLimit={500}
+            database="sociomap"
+          />
+        </MemoryRouter>
+      );
+    });
+
+    expect(Network).toHaveBeenCalledTimes(1);
+
+    act(() => {
+      handlers.click({
+        nodes: [1],
+        pointer: { DOM: { x: 100, y: 80 } },
+      });
+      vi.advanceTimersByTime(200);
+    });
+
+    expect(container.textContent).toContain('CMID: SM1');
+    expect(Network).toHaveBeenCalledTimes(1);
   });
 });

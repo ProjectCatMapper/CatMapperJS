@@ -30,15 +30,29 @@ const Neo4jVisualization = ({
   onNavigateStart,
 }) => {
   const navigate = useNavigate();
-  const visNodes = Array.isArray(visData?.nodes) ? visData.nodes.filter(Boolean) : [];
-  const visEdges = Array.isArray(visData?.edges) ? visData.edges.filter(Boolean) : [];
+  const visNodes = useMemo(
+    () => (Array.isArray(visData?.nodes) ? visData.nodes.filter(Boolean) : []),
+    [visData?.nodes]
+  );
+  const visEdges = useMemo(
+    () => (Array.isArray(visData?.edges) ? visData.edges.filter(Boolean) : []),
+    [visData?.edges]
+  );
+  const currentid = getNetworkRootCmid(visNodes);
   const nodes = useMemo(
-    () => (visNodes.length > dropdownNodeLimit ? visNodes.slice(0, dropdownNodeLimit) : visNodes),
-    [dropdownNodeLimit, visNodes]
+    () => {
+      const visibleNodes = visNodes.length > dropdownNodeLimit
+        ? visNodes.slice(0, dropdownNodeLimit)
+        : visNodes;
+      return visibleNodes.map((item) => ({
+        ...item,
+        shape: item.CMID === currentid ? 'triangle' : 'dot',
+      }));
+    },
+    [currentid, dropdownNodeLimit, visNodes]
   );
 
   const filteredMap = new Map();
-  const currentid = getNetworkRootCmid(visNodes);
 
   visNodes.forEach((item) => {
     const legendLabel = item.legendLabel || (Array.isArray(item.domain) ? item.domain.join(':') : 'UNMAPPED');
@@ -46,11 +60,6 @@ const Neo4jVisualization = ({
     const legendKey = `${legendLabel}::${legendColor}`;
     if (!filteredMap.has(legendKey)) {
       filteredMap.set(legendKey, { domain: legendLabel, color: legendColor });
-    }
-    if (item.CMID === currentid) {
-      item.shape = 'triangle';
-    } else {
-      item.shape = 'dot';
     }
   });
 
