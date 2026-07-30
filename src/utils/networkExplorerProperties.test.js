@@ -9,6 +9,7 @@ const ownershipMetadata = {
   ownerUserId: 'user-123',
   createdAt: '2026-07-21T12:00:00Z',
   contributionId: 'contribution_123',
+  modifiedByOtherUser: false,
 };
 
 describe('network explorer property visibility', () => {

@@ -2,6 +2,7 @@ const INTERNAL_OWNERSHIP_PROPERTIES = new Set([
   'createdat',
   'createdbyuserid',
   'contributionid',
+  'modifiedbyotheruser',
   'owneruserid',
 ]);
 
