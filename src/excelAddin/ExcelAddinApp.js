@@ -136,6 +136,14 @@ const CandidateCard = ({ candidate, index, selected, disabled, database, onSelec
   );
 };
 
+export const getAlternativeMatchState = (match) => {
+  if (!match) return 'none-selected';
+  if (Array.isArray(match.candidates) && match.candidates.length > 0) {
+    return match.selectedIndex >= 0 ? 'selected-match' : 'multiple-unselected';
+  }
+  return 'no-match';
+};
+
 const ExcelAddinApp = () => {
   const [officeReady, setOfficeReady] = useState(false);
   const [selection, setSelection] = useState(null);
@@ -570,6 +578,9 @@ const ExcelAddinApp = () => {
               <Typography variant="body2" fontWeight={600}>
                 Row {activeMatch.rowPosition + 1} · {activeMatch.candidates.length} option{activeMatch.candidates.length === 1 ? '' : 's'}
               </Typography>
+              {getAlternativeMatchState(activeMatch) === 'multiple-unselected' && (
+                <Alert severity="info">Choose one of the matching options for this row.</Alert>
+              )}
               {activeMatch.candidates.length ? activeMatch.candidates.map((candidate, index) => (
                 <CandidateCard
                   key={`${activeMatch.runId}-${activeMatch.rowId}-${index}`}
