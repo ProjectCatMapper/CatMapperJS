@@ -24,6 +24,15 @@ class FakeRange {
     this.columnCount = columnCount;
     this.isNullObject = isNullObject;
     this.load = noOpLoad;
+    Object.defineProperty(this, 'format', {
+      value: {
+        fill: {
+          set color(value) {
+            sheet.setFillRange(rowIndex, columnIndex, rowCount, columnCount, value);
+          },
+        },
+      },
+    });
   }
 
   get address() {
@@ -60,8 +69,9 @@ class FakeRange {
   }
 
   insert() {
-    for (const row of this.sheet.grid) {
-      row.splice(this.columnIndex, 0, ...Array(this.columnCount).fill(''));
+    for (let rowIndex = 0; rowIndex < this.sheet.grid.length; rowIndex += 1) {
+      this.sheet.grid[rowIndex].splice(this.columnIndex, 0, ...Array(this.columnCount).fill(''));
+      this.sheet.fills[rowIndex].splice(this.columnIndex, 0, ...Array(this.columnCount).fill(''));
     }
   }
 
@@ -95,6 +105,7 @@ class FakeSheet {
     this.name = name;
     this.id = id;
     this.grid = grid.map((row) => [...row]);
+    this.fills = grid.map((row) => row.map(() => ''));
     this.isNullObject = false;
     this.visibility = 'Visible';
     this.hasMergedCells = false;
@@ -107,6 +118,16 @@ class FakeSheet {
 
   getRangeByIndexes(row, column, rowCount, columnCount) {
     return new FakeRange(this, row, column, rowCount, columnCount);
+  }
+
+  setFillRange(rowIndex, columnIndex, rowCount, columnCount, color) {
+    for (let rowOffset = 0; rowOffset < rowCount; rowOffset += 1) {
+      const row = rowIndex + rowOffset;
+      while (this.fills.length <= row) this.fills.push([]);
+      for (let columnOffset = 0; columnOffset < columnCount; columnOffset += 1) {
+        this.fills[row][columnIndex + columnOffset] = color;
+      }
+    }
   }
 
   getRange(address) {
@@ -233,14 +254,19 @@ describe('workbookService pure helpers', () => {
   test('builds output values from first candidates and leaves no-match rows blank', () => {
     const plan = buildTranslationPlan({
       selection,
-      order: ['Term', 'CMuniqueRowID', 'CMName', 'CMID'],
+      order: ['Term', 'CMuniqueRowID', 'CMName', 'CMID', 'matching_Name', 'matchType_Name'],
       candidates: [
-        { CMuniqueRowID: 'r1', CMName: 'Yoruba', CMID: 'CM1' },
-        { CMuniqueRowID: 'r1', CMName: 'Yoruba alt', CMID: 'CM2' },
+        { CMuniqueRowID: 'r1', CMName: 'Yoruba', CMID: 'CM1', matching_Name: 'yoruba', matchType_Name: 'one-to-many' },
+        { CMuniqueRowID: 'r1', CMName: 'Yoruba alt', CMID: 'CM2', matching_Name: 'yoruba alt', matchType_Name: 'one-to-many' },
+        { CMuniqueRowID: 'r2', matchType_Name: 'none' },
       ],
     });
-    expect(plan.outputFields).toEqual(['CMName', 'CMID']);
-    expect(plan.data).toEqual([['Yoruba', 'CM1'], ['', '']]);
+    expect(plan.outputFields).toEqual(['CMName', 'CMID', 'matching_Name', 'matchType_Name']);
+    expect(plan.data).toEqual([
+      ['multiple', 'multiple', 'multiple', 'one-to-many'],
+      ['', '', '', 'none'],
+    ]);
+    expect(plan.rowFillColors).toEqual(['#F6AD94', '#FFFFCC']);
     expect(plan.candidatesByRow.r1).toHaveLength(2);
   });
 
@@ -305,14 +331,16 @@ describe('WorkbookService with mocked Office.js runtime', () => {
       selection,
       order: ['Term', 'CMuniqueRowID', 'CMName', 'CMID'],
       candidates: [
-        { CMuniqueRowID: 'r1', CMName: 'Yoruba', CMID: 'CM1' },
-        { CMuniqueRowID: 'r1', CMName: 'Yoruba alternate', CMID: 'CM2' },
-        { CMuniqueRowID: 'r2', CMName: 'Hausa', CMID: 'CM3' },
+        { CMuniqueRowID: 'r1', CMName: 'Yoruba', CMID: 'CM1', matchType_Name: 'one-to-many' },
+        { CMuniqueRowID: 'r1', CMName: 'Yoruba alternate', CMID: 'CM2', matchType_Name: 'one-to-many' },
+        { CMuniqueRowID: 'r2', CMName: 'Hausa', CMID: 'CM3', matchType_Name: 'fuzzy match' },
       ],
     });
 
     expect(excel.source.grid[0]).toEqual(['Term', 'CMName', 'CMID', 'Keep']);
-    expect(excel.source.grid[1]).toEqual(['Yoruba', 'Yoruba', 'CM1', 1]);
+    expect(excel.source.grid[1]).toEqual(['Yoruba', 'multiple', 'multiple', 1]);
+    expect(excel.source.fills[1].slice(1, 3)).toEqual(['#F6AD94', '#F6AD94']);
+    expect(excel.source.fills[2].slice(1, 3)).toEqual(['#F6C594', '#F6C594']);
     expect(persisted.candidatesByRow.r1).toHaveLength(2);
     expect(excel.sheetMap.get('_CatMapper_Addin').visibility).toBe('VeryHidden');
     expect(await service.loadPersistedRuns()).toHaveLength(1);
@@ -333,6 +361,7 @@ describe('WorkbookService with mocked Office.js runtime', () => {
         add: (index, _values, name) => {
           addedColumns.push({ index, name });
           excel.source.grid.forEach((row, rowIndex) => row.splice(index, 0, rowIndex === 0 ? name : ''));
+          excel.source.fills.forEach((row) => row.splice(index, 0, ''));
         },
       },
     });
@@ -374,6 +403,7 @@ describe('WorkbookService with mocked Office.js runtime', () => {
         add: (index, _values, name) => {
           addedColumns.push({ index, name });
           excel.source.grid.forEach((row, rowIndex) => row.splice(index, 0, rowIndex === 0 ? name : ''));
+          excel.source.fills.forEach((row) => row.splice(index, 0, ''));
         },
       },
     });

@@ -7,6 +7,15 @@ const METADATA_HEADERS = [
   'selectedIndex',
   'payloadJson',
 ];
+const MULTIPLE_MATCH_PLACEHOLDER = 'multiple';
+const MATCH_TYPE_FILL_COLORS = {
+  blank: '#FFFFFF',
+  'exact match': '#FFFFFF',
+  'fuzzy match': '#F6C594',
+  'one-to-many': '#F6AD94',
+  'many-to-one': '#e48dd9',
+  none: '#FFFFCC',
+};
 
 export class WorkbookValidationError extends Error {
   constructor(message, code = 'INVALID_SELECTION') {
@@ -178,6 +187,16 @@ const candidateRowId = (candidate) => String(
   candidate?.CMuniqueRowID ?? candidate?.rowId ?? candidate?.sourceRowId ?? '',
 );
 
+const matchTypeFillColor = (candidate) => {
+  const normalized = String(candidate?.matchType_Name ?? '').trim().toLowerCase();
+  if (!normalized) return MATCH_TYPE_FILL_COLORS.blank;
+  return MATCH_TYPE_FILL_COLORS[normalized] || MATCH_TYPE_FILL_COLORS.none;
+};
+
+const usesMultiplePlaceholder = (field) =>
+  /^(CMID|CMName|matchingName)(?:_|$)/i.test(String(field || '')) ||
+  /^matching(?:_|$)/i.test(String(field || ''));
+
 export const groupCandidatesForRun = (run = {}, rowIds = []) => {
   const groups = {};
   const supplied = run.candidatesByRow;
@@ -216,10 +235,21 @@ export const buildTranslationPlan = (run = {}, existingHeaders = []) => {
   const headers = createUniqueHeaders(outputFields, existingHeaders);
   const data = rowIds.map((rowId) => {
     const index = Number.isInteger(selectedIndices[rowId]) ? selectedIndices[rowId] : 0;
-    const candidate = candidatesByRow[rowId]?.[index] || {};
-    return outputFields.map((field) => toExcelValue(candidate[field]));
+    const candidates = candidatesByRow[rowId] || [];
+    const candidate = candidates[index] || {};
+    const hasMultipleMatches = candidates.length > 1;
+    return outputFields.map((field) =>
+      hasMultipleMatches && usesMultiplePlaceholder(field)
+        ? MULTIPLE_MATCH_PLACEHOLDER
+        : toExcelValue(candidate[field]));
   });
-  return { outputFields, headers, rowIds, candidatesByRow, selectedIndices, data };
+  const rowFillColors = rowIds.map((rowId) => {
+    const index = Number.isInteger(selectedIndices[rowId]) ? selectedIndices[rowId] : 0;
+    const candidates = candidatesByRow[rowId] || [];
+    const candidate = candidates[index] || {};
+    return matchTypeFillColor(candidate);
+  });
+  return { outputFields, headers, rowIds, candidatesByRow, selectedIndices, data, rowFillColors };
 };
 
 export const serializeRuns = (runs = []) => {
@@ -487,7 +517,18 @@ const addNamedRange = (context, name, range) => {
   });
 };
 
-const writeOutputValues = async (context, outputRange, headers, data) => {
+const applyRowFillColors = async (context, outputRange, rowFillColors = [], columnCount = 1) => {
+  if (!rowFillColors.length) return;
+  for (let rowIndex = 0; rowIndex < rowFillColors.length; rowIndex += 1) {
+    const color = rowFillColors[rowIndex];
+    if (!color) continue;
+    const rowRange = outputRange.getCell(rowIndex, 0).getResizedRange(0, columnCount - 1);
+    if (rowRange.format?.fill) rowRange.format.fill.color = color;
+  }
+  await context.sync();
+};
+
+const writeOutputValues = async (context, outputRange, headers, data, rowFillColors = []) => {
   const columnCount = headers.length;
   outputRange.getCell(0, 0).getResizedRange(0, columnCount - 1).values = [headers];
   await context.sync();
@@ -498,9 +539,15 @@ const writeOutputValues = async (context, outputRange, headers, data) => {
       .getResizedRange(chunk.length - 1, columnCount - 1).values = chunk;
     await context.sync();
   }
+  await applyRowFillColors(
+    context,
+    outputRange.getCell(1, 0).getResizedRange(data.length - 1, columnCount - 1),
+    rowFillColors,
+    columnCount,
+  );
 };
 
-const writeOutputData = async (context, outputRange, headers, data) => {
+const writeOutputData = async (context, outputRange, headers, data, rowFillColors = []) => {
   const columnCount = headers.length;
   const chunkSize = 2000;
   for (let offset = 0; offset < data.length; offset += chunkSize) {
@@ -509,6 +556,7 @@ const writeOutputData = async (context, outputRange, headers, data) => {
       .getResizedRange(chunk.length - 1, columnCount - 1).values = chunk;
     await context.sync();
   }
+  await applyRowFillColors(context, outputRange, rowFillColors, columnCount);
 };
 
 const insertOutputColumns = async (context, selection, plan) => {
@@ -545,9 +593,10 @@ const insertOutputColumns = async (context, selection, plan) => {
       outputRange.getCell(1, 0).getResizedRange(plan.data.length - 1, plan.outputFields.length - 1),
       plan.headers,
       plan.data,
+      plan.rowFillColors,
     );
   } else {
-    await writeOutputValues(context, outputRange, plan.headers, plan.data);
+    await writeOutputValues(context, outputRange, plan.headers, plan.data, plan.rowFillColors);
   }
   return { outputRange, insertedAsTableColumns };
 };
@@ -630,7 +679,7 @@ export class WorkbookService {
             plan.outputFields,
             existingHeaders.filter((header) => !priorHeaderSet.has(String(header))),
           );
-        await writeOutputValues(context, outputRange, headers, plan.data);
+        await writeOutputValues(context, outputRange, headers, plan.data, plan.rowFillColors);
         const persisted = {
           ...priorRun,
           outputFields: plan.outputFields,
