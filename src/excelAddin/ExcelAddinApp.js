@@ -12,6 +12,11 @@ import {
   Checkbox,
   CircularProgress,
   Divider,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
   FormControl,
   FormControlLabel,
   InputLabel,
@@ -134,9 +139,23 @@ const ExcelAddinApp = () => {
   const [warnings, setWarnings] = useState([]);
   const [activeMatch, setActiveMatch] = useState(null);
   const [savingChoice, setSavingChoice] = useState(false);
+  const [confirmation, setConfirmation] = useState(null);
   const abortRef = useRef(null);
+  const confirmationResolverRef = useRef(null);
 
   const columnOptions = selection?.availableColumns || [];
+
+  const requestConfirmation = useCallback((message) => new Promise((resolve) => {
+    confirmationResolverRef.current = resolve;
+    setConfirmation({ message });
+  }), []);
+
+  const resolveConfirmation = useCallback((confirmed) => {
+    const resolver = confirmationResolverRef.current;
+    confirmationResolverRef.current = null;
+    setConfirmation(null);
+    if (resolver) resolver(confirmed);
+  }, []);
 
   const flattenedDomains = useMemo(() => {
     const seen = new Set();
@@ -288,7 +307,7 @@ const ExcelAddinApp = () => {
       );
       let refreshRunId;
       if (priorRun) {
-        const refresh = globalThis.confirm(
+        const refresh = await requestConfirmation(
           'This source column already has a CatMapper translation block. Replace that block with the new results?'
         );
         if (!refresh) {
@@ -323,7 +342,7 @@ const ExcelAddinApp = () => {
         saved = await writeTranslationRun(runDefinition);
       } catch (writeError) {
         if (writeError?.code !== 'EXISTING_TRANSLATION' || !writeError.existingRunId) throw writeError;
-        const refresh = globalThis.confirm(
+        const refresh = await requestConfirmation(
           'Excel moved a previously translated block with this source column. Refresh that existing block?'
         );
         if (!refresh) {
@@ -539,6 +558,24 @@ const ExcelAddinApp = () => {
           CatMapper alternatives persist inside this workbook on a very-hidden metadata sheet.
         </Typography>
       </Stack>
+
+      <Dialog
+        open={Boolean(confirmation)}
+        onClose={() => resolveConfirmation(false)}
+        aria-labelledby="cm-confirm-title"
+        aria-describedby="cm-confirm-description"
+      >
+        <DialogTitle id="cm-confirm-title">Refresh existing results?</DialogTitle>
+        <DialogContent>
+          <DialogContentText id="cm-confirm-description">
+            {confirmation?.message}
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => resolveConfirmation(false)}>Keep unchanged</Button>
+          <Button variant="contained" onClick={() => resolveConfirmation(true)}>Refresh results</Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };
