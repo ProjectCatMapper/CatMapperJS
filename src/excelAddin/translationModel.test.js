@@ -233,6 +233,13 @@ describe('Excel add-in translation model', () => {
       expect(candidateOutputValues(row, outputFields.slice(0, 3)))
         .toEqual(['AM10', 'Zulu', 'zulu']);
     });
+
+    it('formats list-like country strings for candidate cards and Excel output values', () => {
+      const row = candidate({ CMcountry_Name: "['United States of America', 'Mexico']" });
+      expect(describeCandidate(row).country).toBe('United States of America; Mexico');
+      expect(candidateOutputValues(row, ['CMcountry_Name']))
+        .toEqual(['United States of America; Mexico']);
+    });
   });
 
   describe('headers and persisted metadata', () => {

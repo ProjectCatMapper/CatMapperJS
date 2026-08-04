@@ -36,11 +36,36 @@ export class ExistingTranslationError extends Error {
 
 const isBlank = (value) => value === null || value === undefined || String(value).trim() === '';
 
+const parseListLikeString = (value) => {
+  const text = String(value ?? '').trim();
+  if (!text.startsWith('[') || !text.endsWith(']')) return null;
+  try {
+    const parsed = JSON.parse(text);
+    return Array.isArray(parsed) ? parsed : null;
+  } catch (_error) {
+    const inner = text.slice(1, -1).trim();
+    if (!inner) return [];
+    const items = [];
+    const pattern = /(['"])(.*?)\1\s*(?:,|$)/g;
+    let match;
+    let consumed = '';
+    while ((match = pattern.exec(inner)) !== null) {
+      items.push(match[2]);
+      consumed += match[0];
+    }
+    return consumed.replace(/\s/g, '') === inner.replace(/\s/g, '') ? items : null;
+  }
+};
+
 const toExcelValue = (value) => {
   if (value === null || value === undefined) return '';
   if (typeof value === 'number' && !Number.isFinite(value)) return '';
   if (Array.isArray(value)) return value.map((item) => String(item ?? '')).join('; ');
   if (typeof value === 'object') return JSON.stringify(value);
+  if (typeof value === 'string') {
+    const list = parseListLikeString(value);
+    if (list) return list.map((item) => String(item ?? '')).join('; ');
+  }
   return value;
 };
 

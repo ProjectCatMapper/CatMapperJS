@@ -275,15 +275,23 @@ describe('workbookService pure helpers', () => {
   test('normalizes non-scalar API values for Excel cells', () => {
     const plan = buildTranslationPlan({
       selection: { ...selection, rowData: [selection.rowData[0]] },
-      order: ['Term', 'CMuniqueRowID', 'Countries', 'Metadata', 'Distance'],
+      order: ['Term', 'CMuniqueRowID', 'Countries', 'CountryText', 'SingleCountryText', 'Metadata', 'Distance'],
       candidates: [{
         CMuniqueRowID: 'r1',
         Countries: ['Ghana', 'Togo'],
+        CountryText: "['Mexico', 'United States of America']",
+        SingleCountryText: "['United States of America']",
         Metadata: { source: 'CatMapper' },
         Distance: Number.NaN,
       }],
     });
-    expect(plan.data[0]).toEqual(['Ghana; Togo', '{"source":"CatMapper"}', '']);
+    expect(plan.data[0]).toEqual([
+      'Ghana; Togo',
+      'Mexico; United States of America',
+      'United States of America',
+      '{"source":"CatMapper"}',
+      '',
+    ]);
   });
 
   test('metadata serialization round-trips long-form candidates and selections', () => {
@@ -334,7 +342,13 @@ describe('WorkbookService with mocked Office.js runtime', () => {
       order: ['Term', 'CMuniqueRowID', 'CMName', 'CMID'],
       candidates: [
         { CMuniqueRowID: 'r1', CMName: 'Yoruba', CMID: 'CM1', matchType_Name: 'one-to-many' },
-        { CMuniqueRowID: 'r1', CMName: 'Yoruba alternate', CMID: 'CM2', matchType_Name: 'one-to-many' },
+        {
+          CMuniqueRowID: 'r1',
+          CMName: 'Yoruba alternate',
+          CMID: 'CM2',
+          CMcountry_Name: "['Ghana', 'Togo']",
+          matchType_Name: 'one-to-many',
+        },
         { CMuniqueRowID: 'r2', CMName: 'Hausa', CMID: 'CM3', matchType_Name: 'fuzzy match' },
       ],
     });
@@ -351,6 +365,23 @@ describe('WorkbookService with mocked Office.js runtime', () => {
     expect(excel.source.grid[1]).toEqual(['Yoruba', 'Yoruba alternate', 'CM2', 1]);
     const reloaded = await service.loadPersistedRuns();
     expect(reloaded[0].selectedIndices.r1).toBe(1);
+  });
+
+  test('formats list-like country strings when a candidate choice is applied', async () => {
+    const excel = makeFakeExcel();
+    const service = new WorkbookService({ excel });
+    await service.writeTranslationRun({
+      runId: 'run-country',
+      selection,
+      order: ['Term', 'CMuniqueRowID', 'CMName', 'CMcountry_Name'],
+      candidates: [
+        { CMuniqueRowID: 'r1', CMName: 'Yoruba', CMcountry_Name: "['Nigeria']" },
+        { CMuniqueRowID: 'r2', CMName: 'Hausa', CMcountry_Name: "['Niger', 'Nigeria']" },
+      ],
+    });
+
+    expect(excel.source.grid[1]).toEqual(['Yoruba', 'Yoruba', 'Nigeria', 1]);
+    expect(excel.source.grid[2]).toEqual(['Hausa', 'Hausa', 'Niger; Nigeria', 2]);
   });
 
   test('adds generated fields as Excel table columns and preserves adjacent data', async () => {
