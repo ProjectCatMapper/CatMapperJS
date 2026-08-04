@@ -444,12 +444,12 @@ const ExcelAddinApp = () => {
   };
 
   const clearWorkbookTranslations = async () => {
+    setClearConfirmationOpen(false);
     setClearingTranslations(true);
     try {
       const result = await clearTranslations();
       setActiveMatch(null);
       setWarnings([]);
-      setClearConfirmationOpen(false);
       setNotice({
         severity: 'success',
         text: result.removedRuns
@@ -623,17 +623,19 @@ const ExcelAddinApp = () => {
         </Paper>
 
         <Divider />
-        <Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between">
+        <Stack spacing={1}>
           <Typography variant="caption" color="text.secondary">
             CatMapper alternatives persist inside this workbook on a very-hidden metadata sheet.
           </Typography>
           <Button
+            fullWidth
             size="small"
             color="error"
             variant="outlined"
             startIcon={clearingTranslations ? <CircularProgress size={14} color="inherit" /> : <DeleteOutlineIcon />}
             disabled={!officeReady || running || clearingTranslations}
             onClick={() => setClearConfirmationOpen(true)}
+            sx={{ whiteSpace: 'nowrap' }}
           >
             Clear translations
           </Button>

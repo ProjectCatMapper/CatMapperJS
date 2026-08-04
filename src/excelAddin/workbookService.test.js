@@ -349,15 +349,15 @@ describe('WorkbookService with mocked Office.js runtime', () => {
       selection,
       order: ['Term', 'CMuniqueRowID', 'CMName', 'CMID'],
       candidates: [
-        { CMuniqueRowID: 'r1', CMName: 'Yoruba', CMID: 'CM1', matchType_Name: 'one-to-many' },
+        { CMuniqueRowID: 'r1', CMName: 'Yoruba', CMID: 'CM1', matchType_Term: 'one-to-many' },
         {
           CMuniqueRowID: 'r1',
           CMName: 'Yoruba alternate',
           CMID: 'CM2',
           CMcountry_Name: "['Ghana', 'Togo']",
-          matchType_Name: 'fuzzy match',
+          matchType_Term: 'fuzzy match',
         },
-        { CMuniqueRowID: 'r2', CMName: 'Hausa', CMID: 'CM3', matchType_Name: 'fuzzy match' },
+        { CMuniqueRowID: 'r2', CMName: 'Hausa', CMID: 'CM3', matchType_Term: 'fuzzy match' },
       ],
     });
 
@@ -648,5 +648,45 @@ describe('WorkbookService with mocked Office.js runtime', () => {
       rowPosition: 0,
       selectedIndex: -1,
     });
+  });
+
+  test('uses the newest block when translation runs share a source cell', async () => {
+    const excel = makeFakeExcel();
+    const service = new WorkbookService({ excel });
+    await service.writeTranslationRun({
+      runId: 'old-run',
+      selection,
+      order: ['Term', 'CMuniqueRowID', 'CMName', 'CMID'],
+      candidates: [
+        { CMuniqueRowID: 'r1', CMName: 'Old match', CMID: 'CM1' },
+        { CMuniqueRowID: 'r2', CMName: 'Old second row', CMID: 'CM2' },
+      ],
+      createdAt: '2026-08-04T10:00:00.000Z',
+    });
+    await service.writeTranslationRun({
+      runId: 'new-run',
+      allowDuplicateSource: true,
+      selection,
+      order: ['Term', 'CMuniqueRowID', 'CMName', 'CMID'],
+      candidates: [
+        { CMuniqueRowID: 'r1', CMName: 'New match one', CMID: 'CM3' },
+        { CMuniqueRowID: 'r1', CMName: 'New match two', CMID: 'CM4' },
+        { CMuniqueRowID: 'r2', CMName: 'New second row', CMID: 'CM5' },
+      ],
+      selectedIndices: { r1: -1, r2: 0 },
+      createdAt: '2026-08-04T11:00:00.000Z',
+    });
+    const callback = vi.fn();
+    await service.subscribeToSelection(callback);
+    const [handler] = excel.handlers;
+
+    await handler({ worksheetId: 'sheet-1', address: 'Sheet1!A2' });
+
+    expect(callback.mock.calls[0][0]).toMatchObject({
+      runId: 'new-run',
+      rowId: 'r1',
+      selectedIndex: -1,
+    });
+    expect(callback.mock.calls[0][0].candidates).toHaveLength(2);
   });
 });

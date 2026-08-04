@@ -212,8 +212,17 @@ const candidateRowId = (candidate) => String(
   candidate?.CMuniqueRowID ?? candidate?.rowId ?? candidate?.sourceRowId ?? '',
 );
 
+const candidateField = (candidate, exactName, prefix) => {
+  if (!candidate || typeof candidate !== 'object') return undefined;
+  if (Object.prototype.hasOwnProperty.call(candidate, exactName)) return candidate[exactName];
+  const key = Object.keys(candidate).find((field) => field.startsWith(prefix));
+  return key ? candidate[key] : undefined;
+};
+
 const matchTypeFillColor = (candidate) => {
-  const normalized = String(candidate?.matchType_Name ?? '').trim().toLowerCase();
+  const normalized = String(candidateField(candidate, 'matchType_Name', 'matchType_') ?? '')
+    .trim()
+    .toLowerCase();
   if (!normalized) return MATCH_TYPE_FILL_COLORS.blank;
   return MATCH_TYPE_FILL_COLORS[normalized] || MATCH_TYPE_FILL_COLORS.none;
 };
@@ -676,6 +685,38 @@ const pointInsideRunDataRows = (point, source, rowCount) => point &&
   point.rowIndex > source.rowIndex &&
   point.rowIndex <= source.rowIndex + rowCount;
 
+const runRecency = (run) => {
+  const timestamp = Date.parse(run?.refreshedAt || run?.createdAt || '');
+  return Number.isFinite(timestamp) ? timestamp : 0;
+};
+
+const latestRun = (matches) => [...matches].sort((left, right) =>
+  runRecency(right.run) - runRecency(left.run))[0] || null;
+
+const horizontalRangeDistance = (point, range) => {
+  const first = range.columnIndex;
+  const last = range.columnIndex + range.columnCount - 1;
+  if (point.columnIndex < first) return first - point.columnIndex;
+  if (point.columnIndex > last) return point.columnIndex - last;
+  return 0;
+};
+
+const selectLoadedRun = (loaded, point) => {
+  if (!point) return null;
+  const outputMatches = loaded.filter(({ output }) => pointInsideRange(point, output));
+  if (outputMatches.length) return latestRun(outputMatches);
+
+  const sourceMatches = loaded.filter(({ source }) => pointInsideRange(point, source));
+  if (sourceMatches.length) return latestRun(sourceMatches);
+
+  return loaded
+    .filter(({ run, source }) => pointInsideRunDataRows(point, source, (run.rowIds || []).length))
+    .sort((left, right) => {
+      const distance = horizontalRangeDistance(point, left.output) - horizontalRangeDistance(point, right.output);
+      return distance || runRecency(right.run) - runRecency(left.run);
+    })[0] || null;
+};
+
 export class WorkbookService {
   constructor({ excel } = {}) {
     this.excel = excel || null;
@@ -907,11 +948,7 @@ export class WorkbookService {
             loaded.push({ run, source, output });
           }
           const point = parseCellAddress(event.address);
-          const match = loaded.find(({ source, output }) =>
-            pointInsideRange(point, source) || pointInsideRange(point, output)
-          ) || loaded.find(({ run, source }) =>
-            pointInsideRunDataRows(point, source, (run.rowIds || []).length)
-          );
+          const match = selectLoadedRun(loaded, point);
           if (!match || !point || point.rowIndex === match.source.rowIndex) return null;
           const rowPosition = point.rowIndex - match.source.rowIndex - 1;
           const rowId = match.run.rowIds?.[rowPosition];
