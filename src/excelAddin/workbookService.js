@@ -807,10 +807,12 @@ export class WorkbookService {
         );
       }
       const candidate = candidates[candidateIndex];
-      outputRange.getCell(rowPosition + 1, 0)
-        .getResizedRange(0, run.outputFields.length - 1).values = [
-          run.outputFields.map((field) => toExcelValue(candidate[field])),
-        ];
+      const rowRange = outputRange.getCell(rowPosition + 1, 0)
+        .getResizedRange(0, run.outputFields.length - 1);
+      rowRange.values = [
+        run.outputFields.map((field) => toExcelValue(candidate[field])),
+      ];
+      if (rowRange.format?.fill) rowRange.format.fill.color = matchTypeFillColor(candidate);
       run.selectedIndices = { ...(run.selectedIndices || {}), [String(rowId)]: candidateIndex };
       await writeRunsInContext(context, runs);
       await context.sync();
@@ -855,7 +857,9 @@ export class WorkbookService {
             rowId,
             rowPosition,
             candidates: match.run.candidatesByRow?.[rowId] || [],
-            selectedIndex: Number(match.run.selectedIndices?.[rowId] || 0),
+            selectedIndex: Number.isInteger(match.run.selectedIndices?.[rowId])
+              ? match.run.selectedIndices[rowId]
+              : 0,
           };
         });
         callback(result);

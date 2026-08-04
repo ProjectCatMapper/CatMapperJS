@@ -347,7 +347,7 @@ describe('WorkbookService with mocked Office.js runtime', () => {
           CMName: 'Yoruba alternate',
           CMID: 'CM2',
           CMcountry_Name: "['Ghana', 'Togo']",
-          matchType_Name: 'one-to-many',
+          matchType_Name: 'fuzzy match',
         },
         { CMuniqueRowID: 'r2', CMName: 'Hausa', CMID: 'CM3', matchType_Name: 'fuzzy match' },
       ],
@@ -363,6 +363,7 @@ describe('WorkbookService with mocked Office.js runtime', () => {
 
     await service.applyCandidateChoice('run-1', 'r1', 1);
     expect(excel.source.grid[1]).toEqual(['Yoruba', 'Yoruba alternate', 'CM2', 1]);
+    expect(excel.source.fills[1].slice(1, 3)).toEqual(['#F6C594', '#F6C594']);
     const reloaded = await service.loadPersistedRuns();
     expect(reloaded[0].selectedIndices.r1).toBe(1);
   });
@@ -587,5 +588,33 @@ describe('WorkbookService with mocked Office.js runtime', () => {
     });
     expect(callback.mock.calls[0][0].candidates).toHaveLength(2);
     expect(callback.mock.calls[1][0]).toBeNull();
+  });
+
+  test('preserves unresolved row selection state when a worksheet row is selected', async () => {
+    const excel = makeFakeExcel();
+    const service = new WorkbookService({ excel });
+    await service.writeTranslationRun({
+      runId: 'run-1',
+      selection,
+      order: ['Term', 'CMuniqueRowID', 'CMName', 'CMID'],
+      candidates: [
+        { CMuniqueRowID: 'r1', CMName: 'Yoruba', CMID: 'CM1' },
+        { CMuniqueRowID: 'r1', CMName: 'Yoruba alternate', CMID: 'CM2' },
+        { CMuniqueRowID: 'r2', CMName: 'Hausa', CMID: 'CM3' },
+      ],
+      selectedIndices: { r1: -1, r2: 0 },
+    });
+    const callback = vi.fn();
+    await service.subscribeToSelection(callback);
+    const [handler] = excel.handlers;
+
+    await handler({ worksheetId: 'sheet-1', address: 'Sheet1!D2' });
+
+    expect(callback.mock.calls[0][0]).toMatchObject({
+      runId: 'run-1',
+      rowId: 'r1',
+      rowPosition: 0,
+      selectedIndex: -1,
+    });
   });
 });
