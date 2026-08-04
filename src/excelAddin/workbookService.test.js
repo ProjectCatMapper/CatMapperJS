@@ -260,6 +260,7 @@ describe('workbookService pure helpers', () => {
         { CMuniqueRowID: 'r1', CMName: 'Yoruba alt', CMID: 'CM2', matching_Name: 'yoruba alt', matchType_Name: 'one-to-many' },
         { CMuniqueRowID: 'r2', matchType_Name: 'none' },
       ],
+      selectedIndices: { r1: -1 },
     });
     expect(plan.outputFields).toEqual(['CMName', 'CMID', 'matching_Name', 'matchType_Name']);
     expect(plan.data).toEqual([
@@ -267,6 +268,7 @@ describe('workbookService pure helpers', () => {
       ['', '', '', 'none'],
     ]);
     expect(plan.rowFillColors).toEqual(['#F6AD94', '#FFFFCC']);
+    expect(plan.selectedIndices.r1).toBe(-1);
     expect(plan.candidatesByRow.r1).toHaveLength(2);
   });
 

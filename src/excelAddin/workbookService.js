@@ -197,6 +197,11 @@ const usesMultiplePlaceholder = (field) =>
   /^(CMID|CMName|matchingName)(?:_|$)/i.test(String(field || '')) ||
   /^matching(?:_|$)/i.test(String(field || ''));
 
+const worksheetCandidateIndex = (selectedIndex, candidates) =>
+  Number.isInteger(selectedIndex) && selectedIndex >= 0 && selectedIndex < candidates.length
+    ? selectedIndex
+    : 0;
+
 export const groupCandidatesForRun = (run = {}, rowIds = []) => {
   const groups = {};
   const supplied = run.candidatesByRow;
@@ -234,8 +239,8 @@ export const buildTranslationPlan = (run = {}, existingHeaders = []) => {
   const selectedIndices = { ...(run.selectedIndices || {}) };
   const headers = createUniqueHeaders(outputFields, existingHeaders);
   const data = rowIds.map((rowId) => {
-    const index = Number.isInteger(selectedIndices[rowId]) ? selectedIndices[rowId] : 0;
     const candidates = candidatesByRow[rowId] || [];
+    const index = worksheetCandidateIndex(selectedIndices[rowId], candidates);
     const candidate = candidates[index] || {};
     const hasMultipleMatches = candidates.length > 1;
     return outputFields.map((field) =>
@@ -244,8 +249,8 @@ export const buildTranslationPlan = (run = {}, existingHeaders = []) => {
         : toExcelValue(candidate[field]));
   });
   const rowFillColors = rowIds.map((rowId) => {
-    const index = Number.isInteger(selectedIndices[rowId]) ? selectedIndices[rowId] : 0;
     const candidates = candidatesByRow[rowId] || [];
+    const index = worksheetCandidateIndex(selectedIndices[rowId], candidates);
     const candidate = candidates[index] || {};
     return matchTypeFillColor(candidate);
   });

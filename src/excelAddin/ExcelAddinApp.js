@@ -107,10 +107,10 @@ const CandidateCard = ({ candidate, index, selected, disabled, onSelect }) => {
           <Button
             size="small"
             variant={selected ? 'contained' : 'outlined'}
-            disabled={disabled || selected}
+            disabled={disabled}
             onClick={() => onSelect(index)}
           >
-            {selected ? 'Selected' : 'Use this match'}
+            Use this match
           </Button>
         </CardActions>
       )}
@@ -327,7 +327,9 @@ const ExcelAddinApp = () => {
         outputFields,
         rowIds: groups.map((group) => group.rowId),
         candidatesByRow: toCandidateMap(groups),
-        selectedIndices: Object.fromEntries(groups.map((group) => [group.rowId, 0])),
+        selectedIndices: Object.fromEntries(
+          groups.map((group) => [group.rowId, group.candidates.length > 1 ? -1 : 0])
+        ),
         configuration: {
           database,
           property,
