@@ -85,6 +85,13 @@ class FakeRange {
     }
   }
 
+  delete() {
+    for (let rowIndex = 0; rowIndex < this.sheet.grid.length; rowIndex += 1) {
+      this.sheet.grid[rowIndex].splice(this.columnIndex, this.columnCount);
+      this.sheet.fills[rowIndex].splice(this.columnIndex, this.columnCount);
+    }
+  }
+
   getCell(rowOffset, columnOffset) {
     return new FakeRange(this.sheet, this.rowIndex + rowOffset, this.columnIndex + columnOffset, 1, 1);
   }
@@ -156,6 +163,7 @@ const makeFakeExcel = (sourceGrid = [['Term', 'Keep'], ['Yoruba', 1], ['Hausa', 
     getItemOrNullObject: (name) => sheetMap.get(name) || { isNullObject: true, load: noOpLoad },
     add: (name) => {
       const sheet = new FakeSheet(name);
+      sheet.delete = () => sheetMap.delete(name);
       sheetMap.set(name, sheet);
       return sheet;
     },
@@ -366,6 +374,30 @@ describe('WorkbookService with mocked Office.js runtime', () => {
     expect(excel.source.fills[1].slice(1, 3)).toEqual(['#F6C594', '#F6C594']);
     const reloaded = await service.loadPersistedRuns();
     expect(reloaded[0].selectedIndices.r1).toBe(1);
+  });
+
+  test('clears generated translation columns, named ranges, and hidden metadata', async () => {
+    const excel = makeFakeExcel();
+    const service = new WorkbookService({ excel });
+    await service.writeTranslationRun({
+      runId: 'run-clear',
+      selection,
+      order: ['Term', 'CMuniqueRowID', 'CMName', 'CMID'],
+      candidates: [
+        { CMuniqueRowID: 'r1', CMName: 'Yoruba', CMID: 'CM1' },
+        { CMuniqueRowID: 'r2', CMName: 'Hausa', CMID: 'CM2' },
+      ],
+    });
+
+    const result = await service.clearTranslations();
+
+    expect(result).toEqual({ removedRuns: 1, removedBlocks: 1 });
+    expect(excel.source.grid[0]).toEqual(['Term', 'Keep']);
+    expect(excel.source.grid[1]).toEqual(['Yoruba', 1]);
+    expect(excel.source.grid[2]).toEqual(['Hausa', 2]);
+    expect(excel.sheetMap.has('_CatMapper_Addin')).toBe(false);
+    expect(excel.nameMap.size).toBe(0);
+    expect(await service.loadPersistedRuns()).toEqual([]);
   });
 
   test('formats list-like country strings when a candidate choice is applied', async () => {

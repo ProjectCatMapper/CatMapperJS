@@ -30,11 +30,13 @@ import {
   Typography,
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import TranslateIcon from '@mui/icons-material/Translate';
 import {
   applyCandidateChoice,
   captureSelectedColumn,
+  clearTranslations,
   disposeSubscriptions,
   loadPersistedRuns,
   subscribeToSelection,
@@ -166,6 +168,8 @@ const ExcelAddinApp = () => {
   const [activeMatch, setActiveMatch] = useState(null);
   const [savingChoice, setSavingChoice] = useState(false);
   const [confirmation, setConfirmation] = useState(null);
+  const [clearConfirmationOpen, setClearConfirmationOpen] = useState(false);
+  const [clearingTranslations, setClearingTranslations] = useState(false);
   const abortRef = useRef(null);
   const confirmationResolverRef = useRef(null);
 
@@ -439,6 +443,26 @@ const ExcelAddinApp = () => {
     }
   };
 
+  const clearWorkbookTranslations = async () => {
+    setClearingTranslations(true);
+    try {
+      const result = await clearTranslations();
+      setActiveMatch(null);
+      setWarnings([]);
+      setClearConfirmationOpen(false);
+      setNotice({
+        severity: 'success',
+        text: result.removedRuns
+          ? `Removed ${result.removedRuns} CatMapper translation block${result.removedRuns === 1 ? '' : 's'} and the hidden metadata worksheet.`
+          : 'No CatMapper translation blocks were found in this workbook.',
+      });
+    } catch (error) {
+      setNotice({ severity: 'error', text: formatError(error) });
+    } finally {
+      setClearingTranslations(false);
+    }
+  };
+
   return (
     <Box className="cm-addin-shell">
       <Box className="cm-addin-header">
@@ -599,9 +623,21 @@ const ExcelAddinApp = () => {
         </Paper>
 
         <Divider />
-        <Typography variant="caption" color="text.secondary">
-          CatMapper alternatives persist inside this workbook on a very-hidden metadata sheet.
-        </Typography>
+        <Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between">
+          <Typography variant="caption" color="text.secondary">
+            CatMapper alternatives persist inside this workbook on a very-hidden metadata sheet.
+          </Typography>
+          <Button
+            size="small"
+            color="error"
+            variant="outlined"
+            startIcon={clearingTranslations ? <CircularProgress size={14} color="inherit" /> : <DeleteOutlineIcon />}
+            disabled={!officeReady || running || clearingTranslations}
+            onClick={() => setClearConfirmationOpen(true)}
+          >
+            Clear translations
+          </Button>
+        </Stack>
       </Stack>
 
       <Dialog
@@ -620,6 +656,31 @@ const ExcelAddinApp = () => {
           <Button onClick={() => resolveBlockChoice('cancel')}>Keep unchanged</Button>
           <Button onClick={() => resolveBlockChoice('new')}>Create new block</Button>
           <Button variant="contained" onClick={() => resolveBlockChoice('refresh')}>Refresh results</Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={clearConfirmationOpen}
+        onClose={() => !clearingTranslations && setClearConfirmationOpen(false)}
+        aria-labelledby="cm-clear-title"
+        aria-describedby="cm-clear-description"
+      >
+        <DialogTitle id="cm-clear-title">Clear CatMapper translations?</DialogTitle>
+        <DialogContent>
+          <DialogContentText id="cm-clear-description">
+            This removes all CatMapper-created translation columns, saved alternatives, named ranges, and the hidden metadata worksheet from this workbook.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button disabled={clearingTranslations} onClick={() => setClearConfirmationOpen(false)}>Cancel</Button>
+          <Button
+            color="error"
+            variant="contained"
+            disabled={clearingTranslations}
+            onClick={clearWorkbookTranslations}
+          >
+            Clear translations
+          </Button>
         </DialogActions>
       </Dialog>
     </Box>

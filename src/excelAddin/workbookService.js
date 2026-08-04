@@ -547,6 +547,34 @@ const addNamedRange = (context, name, range) => {
   });
 };
 
+const deleteNamedRange = async (context, name) => {
+  if (!name) return false;
+  const item = context.workbook.names.getItemOrNullObject(name);
+  item.load('isNullObject');
+  await context.sync();
+  if (item.isNullObject) return false;
+  item.delete();
+  return true;
+};
+
+const deleteGeneratedOutputRange = async (context, run) => {
+  const outputRange = await loadNamedRange(context, run.outputRangeName);
+  if (!outputRange) return false;
+  const direction = globalThis.Excel?.DeleteShiftDirection?.left || 'Left';
+  const sheet = context.workbook.worksheets.getItem(run.worksheetName);
+  const first = columnNumberToName(outputRange.columnIndex);
+  const last = columnNumberToName(outputRange.columnIndex + outputRange.columnCount - 1);
+  const target = run.insertedAsTableColumns
+    ? outputRange
+    : sheet.getRange(`${first}:${last}`);
+  if (typeof target.delete !== 'function') {
+    target.clear(globalThis.Excel?.ClearApplyTo?.all || 'All');
+    return true;
+  }
+  target.delete(direction);
+  return true;
+};
+
 const applyRowFillColors = async (context, outputRange, rowFillColors = [], columnCount = 1) => {
   if (!rowFillColors.length) return;
   for (let rowIndex = 0; rowIndex < rowFillColors.length; rowIndex += 1) {
@@ -785,6 +813,43 @@ export class WorkbookService {
     return this.runtime.run((context) => readRunsInContext(context));
   }
 
+  async clearTranslations() {
+    return this.runtime.run(async (context) => {
+      const runs = await readRunsInContext(context, { allowMetadataRecovery: true });
+      const runsWithPosition = [];
+      for (const run of runs) {
+        const outputRange = await loadNamedRange(context, run.outputRangeName);
+        runsWithPosition.push({
+          run,
+          columnIndex: outputRange?.columnIndex ?? -1,
+        });
+      }
+      runsWithPosition.sort((left, right) => {
+        const sheetDifference = String(left.run.worksheetName || '').localeCompare(String(right.run.worksheetName || ''));
+        if (sheetDifference) return sheetDifference;
+        return right.columnIndex - left.columnIndex;
+      });
+      let removedBlocks = 0;
+      for (const { run } of runsWithPosition) {
+        if (await deleteGeneratedOutputRange(context, run)) removedBlocks += 1;
+        await deleteNamedRange(context, run.outputRangeName);
+        await deleteNamedRange(context, run.sourceRangeName);
+      }
+
+      const metadataSheet = await getMetadataSheet(context, false);
+      if (metadataSheet && typeof metadataSheet.delete === 'function') {
+        metadataSheet.delete();
+      } else if (metadataSheet) {
+        const used = metadataSheet.getUsedRangeOrNullObject();
+        used.load('isNullObject');
+        await context.sync();
+        if (!used.isNullObject) used.clear(globalThis.Excel?.ClearApplyTo?.all || 'All');
+      }
+      await context.sync();
+      return { removedRuns: runs.length, removedBlocks };
+    });
+  }
+
   async applyCandidateChoice(runId, rowId, candidateIndex) {
     return this.runtime.run(async (context) => {
       const runs = await readRunsInContext(context);
@@ -901,6 +966,7 @@ const defaultService = new WorkbookService();
 export const captureSelectedColumn = () => defaultService.captureSelectedColumn();
 export const writeTranslationRun = (run) => defaultService.writeTranslationRun(run);
 export const loadPersistedRuns = () => defaultService.loadPersistedRuns();
+export const clearTranslations = () => defaultService.clearTranslations();
 export const applyCandidateChoice = (runId, rowId, candidateIndex) =>
   defaultService.applyCandidateChoice(runId, rowId, candidateIndex);
 export const subscribeToSelection = (callback) => defaultService.subscribeToSelection(callback);
