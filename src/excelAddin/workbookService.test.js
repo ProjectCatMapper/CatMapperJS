@@ -676,11 +676,16 @@ describe('WorkbookService with mocked Office.js runtime', () => {
 
     expect(callback.mock.calls[0][0]).toMatchObject({
       runId: 'numeric-row-run',
-      rowId: 0,
+      rowId: '0',
       rowPosition: 0,
       selectedIndex: -1,
     });
     expect(callback.mock.calls[0][0].candidates).toHaveLength(2);
+
+    await service.applyCandidateChoice('numeric-row-run', 0, 1);
+
+    expect(excel.source.grid[1]).toEqual(['Yoruba', 'First alternate', 'CM2', 1]);
+    expect((await service.loadPersistedRuns())[0].selectedIndices['0']).toBe(1);
   });
 
   test('uses the newest block when translation runs share a source cell', async () => {

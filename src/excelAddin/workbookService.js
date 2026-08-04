@@ -327,7 +327,12 @@ export const deserializeRuns = (values = []) => {
           'DAMAGED_METADATA',
         );
       }
-      runs.set(runId, { ...payload, runId, candidatesByRow: payload.candidatesByRow || {} });
+      runs.set(runId, {
+        ...payload,
+        runId,
+        rowIds: Array.isArray(payload.rowIds) ? payload.rowIds.map(String) : payload.rowIds,
+        candidatesByRow: payload.candidatesByRow || {},
+      });
       return;
     }
     if (recordType !== 'CANDIDATE') return;
@@ -896,7 +901,8 @@ export class WorkbookService {
       const runs = await readRunsInContext(context);
       const run = runs.find((item) => item.runId === String(runId));
       if (!run) throw new Error(`CatMapper translation run ${runId} was not found.`);
-      const rowPosition = (run.rowIds || []).indexOf(String(rowId));
+      const rowPosition = (run.rowIds || []).findIndex((candidateRowId) =>
+        String(candidateRowId) === String(rowId));
       if (rowPosition < 0) throw new Error(`Source row ${rowId} was not found in run ${runId}.`);
       const candidates = run.candidatesByRow?.[String(rowId)] || [];
       if (!Number.isInteger(candidateIndex) || candidateIndex < 0 || candidateIndex >= candidates.length) {
