@@ -533,6 +533,36 @@ describe('WorkbookService with mocked Office.js runtime', () => {
     expect((await service.loadPersistedRuns())[0].candidatesByRow.r1[0].CMID).toBe('NEW1');
   });
 
+  test('recreates a translated block when its generated columns were manually deleted', async () => {
+    const excel = makeFakeExcel();
+    const service = new WorkbookService({ excel });
+    await service.writeTranslationRun({
+      runId: 'run-1', selection,
+      order: ['Term', 'CMuniqueRowID', 'CMName', 'CMID'],
+      candidates: [
+        { CMuniqueRowID: 'r1', CMName: 'Old Yoruba', CMID: 'OLD1' },
+        { CMuniqueRowID: 'r2', CMName: 'Old Hausa', CMID: 'OLD2' },
+      ],
+    });
+    excel.source.getRange('B:C').delete();
+    expect(excel.source.grid[0]).toEqual(['Term', 'Keep']);
+
+    const refreshed = await service.writeTranslationRun({
+      refreshRunId: 'run-1', selection,
+      order: ['Term', 'CMuniqueRowID', 'CMName', 'CMID'],
+      candidates: [
+        { CMuniqueRowID: 'r1', CMName: 'New Yoruba', CMID: 'NEW1' },
+        { CMuniqueRowID: 'r2', CMName: 'New Hausa', CMID: 'NEW2' },
+      ],
+    });
+
+    expect(excel.source.grid[0]).toEqual(['Term', 'CMName', 'CMID', 'Keep']);
+    expect(excel.source.grid[1]).toEqual(['Yoruba', 'New Yoruba', 'NEW1', 1]);
+    expect(excel.source.grid[2]).toEqual(['Hausa', 'New Hausa', 'NEW2', 2]);
+    expect(refreshed.runId).toBe('run-1');
+    expect((await service.loadPersistedRuns())[0].worksheetHeaders).toEqual(['CMName', 'CMID']);
+  });
+
   test('can create a separate block for an already translated source column when requested', async () => {
     const excel = makeFakeExcel();
     const service = new WorkbookService({ excel });

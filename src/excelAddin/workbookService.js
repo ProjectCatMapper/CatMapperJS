@@ -434,10 +434,28 @@ const loadNamedRange = async (context, name) => {
   item.load('isNullObject');
   await context.sync();
   if (item.isNullObject) return null;
-  const range = item.getRange();
-  range.load(['address', 'rowIndex', 'columnIndex', 'rowCount', 'columnCount']);
+  try {
+    const range = item.getRange();
+    range.load(['address', 'rowIndex', 'columnIndex', 'rowCount', 'columnCount']);
+    await context.sync();
+    return range;
+  } catch (error) {
+    const message = String(error?.message || '');
+    if (['InvalidReference', 'InvalidArgument', 'ItemNotFound'].includes(error?.code) || /reference/i.test(message)) {
+      return null;
+    }
+    throw error;
+  }
+};
+
+const outputBlockIsPresent = async (context, outputRange, run) => {
+  const expectedHeaders = (run.worksheetHeaders || []).map((header) => String(header));
+  if (!outputRange || !expectedHeaders.length || outputRange.columnCount !== expectedHeaders.length) return false;
+  const headerRange = outputRange.getCell(0, 0).getResizedRange(0, outputRange.columnCount - 1);
+  headerRange.load('values');
   await context.sync();
-  return range;
+  const currentHeaders = (headerRange.values?.[0] || []).map((header) => String(header));
+  return expectedHeaders.every((header, index) => currentHeaders[index] === header);
 };
 
 const getSelectionSnapshot = async (context) => {
@@ -759,16 +777,40 @@ export class WorkbookService {
           throw new Error(`The CatMapper translation block ${refreshRunId} is no longer available to refresh.`);
         }
         const priorRun = existingRuns[priorIndex];
-        const plan = buildTranslationPlan(run, []);
+        let plan = buildTranslationPlan(run, []);
+        const outputRange = await loadNamedRange(context, priorRun.outputRangeName);
+        const sourceRange = await loadNamedRange(context, priorRun.sourceRangeName);
+        if (!sourceRange) {
+          throw new Error('The translated source column metadata is missing. Create a new translation block.');
+        }
+        if (!(await outputBlockIsPresent(context, outputRange, priorRun))) {
+          const existingHeaders = await loadExistingHeaders(context, run.selection);
+          plan = buildTranslationPlan(run, existingHeaders);
+          const inserted = await insertOutputColumns(context, run.selection, plan);
+          await addNamedRange(context, priorRun.outputRangeName, inserted.outputRange);
+          const persisted = {
+            ...priorRun,
+            worksheetId: run.selection.worksheetId,
+            worksheetName: run.selection.worksheetName,
+            sourceAddress: sourceRange.address,
+            outputFields: plan.outputFields,
+            worksheetHeaders: plan.headers,
+            rowIds: plan.rowIds,
+            selectedIndices: plan.selectedIndices,
+            candidatesByRow: plan.candidatesByRow,
+            configuration: run.configuration || run.config || {},
+            insertedAsTableColumns: inserted.insertedAsTableColumns,
+            refreshedAt: new Date().toISOString(),
+          };
+          existingRuns[priorIndex] = persisted;
+          await writeRunsInContext(context, existingRuns);
+          await context.sync();
+          return persisted;
+        }
         if (plan.outputFields.length !== priorRun.outputFields?.length) {
           throw new Error(
             `Refresh returned ${plan.outputFields.length} output columns, but the existing block has ${priorRun.outputFields?.length || 0}. Create a new translation block instead.`,
           );
-        }
-        const outputRange = await loadNamedRange(context, priorRun.outputRangeName);
-        const sourceRange = await loadNamedRange(context, priorRun.sourceRangeName);
-        if (!outputRange || !sourceRange) {
-          throw new Error('The translated column metadata is missing. Create a new translation block.');
         }
         if (outputRange.rowCount !== plan.data.length + 1 || outputRange.columnCount !== plan.outputFields.length) {
           throw new Error('The translated block size changed in Excel. Create a new translation block instead of refreshing it.');
