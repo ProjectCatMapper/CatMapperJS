@@ -47,6 +47,7 @@ import {
   deriveOutputFields,
   describeCandidate,
   groupCandidatesByRow,
+  isMatchedCandidate,
   normalizeSelectionMatrix,
 } from './translationModel';
 import {
@@ -99,6 +100,20 @@ const databasePath = (database, cmid = '') => {
 const nodeUrl = (database, cmid) =>
   `https://catmapper.org/${databasePath(database, cmid)}/${encodeURIComponent(String(cmid || ''))}`;
 
+export const exploreUrl = (database) =>
+  `https://catmapper.org/${databasePath(database)}/explore`;
+
+export const explorePrompt = (hasCandidates) => hasCandidates
+  ? 'If none of these proposed matches are correct, try a more in-depth search on the '
+  : 'For a more in-depth search, try the ';
+
+const databaseName = (database) => databasePath(database) === 'sociomap' ? 'SocioMap' : 'ArchaMap';
+
+const selectableCandidateEntries = (match) =>
+  (Array.isArray(match?.candidates) ? match.candidates : [])
+    .map((candidate, index) => ({ candidate, index }))
+    .filter(({ candidate }) => isMatchedCandidate(candidate));
+
 const CandidateCard = ({ candidate, index, selected, disabled, database, onSelect }) => {
   const summary = describeCandidate(candidate);
   const hasMatch = Boolean(summary.cmid || summary.name);
@@ -140,7 +155,7 @@ const CandidateCard = ({ candidate, index, selected, disabled, database, onSelec
 
 export const getAlternativeMatchState = (match) => {
   if (!match) return 'none-selected';
-  if (Array.isArray(match.candidates) && match.candidates.length > 0) {
+  if (selectableCandidateEntries(match).length > 0) {
     return match.selectedIndex >= 0 ? 'selected-match' : 'multiple-unselected';
   }
   return 'no-match';
@@ -174,6 +189,8 @@ const ExcelAddinApp = () => {
   const confirmationResolverRef = useRef(null);
 
   const columnOptions = selection?.availableColumns || [];
+  const activeCandidateEntries = selectableCandidateEntries(activeMatch);
+  const hasActiveCandidates = activeCandidateEntries.length > 0;
 
   const requestBlockChoice = useCallback((message) => new Promise((resolve) => {
     confirmationResolverRef.current = resolve;
@@ -600,12 +617,12 @@ const ExcelAddinApp = () => {
           {activeMatch ? (
             <Stack spacing={1}>
               <Typography variant="body2" fontWeight={600}>
-                Row {activeMatch.rowPosition + 1} · {activeMatch.candidates.length} option{activeMatch.candidates.length === 1 ? '' : 's'}
+                Row {activeMatch.rowPosition + 1} · {activeCandidateEntries.length} option{activeCandidateEntries.length === 1 ? '' : 's'}
               </Typography>
               {getAlternativeMatchState(activeMatch) === 'multiple-unselected' && (
                 <Alert severity="info">Choose one of the matching options for this row.</Alert>
               )}
-              {activeMatch.candidates.length ? activeMatch.candidates.map((candidate, index) => (
+              {hasActiveCandidates ? activeCandidateEntries.map(({ candidate, index }) => (
                 <CandidateCard
                   key={`${activeMatch.runId}-${activeMatch.rowId}-${index}`}
                   candidate={candidate}
@@ -616,6 +633,17 @@ const ExcelAddinApp = () => {
                   onSelect={chooseCandidate}
                 />
               )) : <Alert severity="info">CatMapper returned no match for this row.</Alert>}
+              <Typography variant="body2" color="text.secondary" sx={{ pt: 0.5 }}>
+                {explorePrompt(hasActiveCandidates)}
+                <Link
+                  href={exploreUrl(database)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {databaseName(database)} Explore page
+                </Link>
+                .
+              </Typography>
             </Stack>
           ) : (
             <Typography variant="body2">No translated row is selected.</Typography>
