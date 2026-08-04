@@ -680,7 +680,7 @@ describe('WorkbookService with mocked Office.js runtime', () => {
     });
   });
 
-  test('loads alternatives for the first data row when its persisted row ID is numeric zero', async () => {
+  test('loads alternatives when Excel coerces the first persisted row ID to numeric zero', async () => {
     const excel = makeFakeExcel();
     const service = new WorkbookService({ excel });
     await service.writeTranslationRun({
@@ -698,6 +698,9 @@ describe('WorkbookService with mocked Office.js runtime', () => {
     const metadata = excel.sheetMap.get('_CatMapper_Addin');
     const runPayload = JSON.parse(metadata.grid[1][5]);
     metadata.grid[1][5] = JSON.stringify({ ...runPayload, rowIds: [0, 1] });
+    metadata.grid
+      .filter((row) => row[0] === 'CANDIDATE' && row[2] === '0')
+      .forEach((row) => { row[2] = 0; });
     const callback = vi.fn();
     await service.subscribeToSelection(callback);
     const [handler] = excel.handlers;

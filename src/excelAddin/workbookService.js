@@ -345,7 +345,7 @@ export const deserializeRuns = (values = []) => {
     }
     if (!runs.has(runId)) runs.set(runId, { runId, candidatesByRow: {}, selectedIndices: {} });
     const run = runs.get(runId);
-    const rowId = String(rawRowId || '');
+    const rowId = rawRowId === null || rawRowId === undefined ? '' : String(rawRowId);
     if (!run.candidatesByRow[rowId]) run.candidatesByRow[rowId] = [];
     run.candidatesByRow[rowId][Number(rawCandidateIndex || 0)] = payload;
     run.selectedIndices = run.selectedIndices || {};
