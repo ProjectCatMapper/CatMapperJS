@@ -1,5 +1,7 @@
 import { defineConfig, loadEnv, transformWithOxc } from 'vite';
 import react from '@vitejs/plugin-react';
+import basicSsl from '@vitejs/plugin-basic-ssl';
+import { resolve } from 'node:path';
 
 const jsAsJsxPlugin = () => ({
   name: 'catmapper-js-as-jsx',
@@ -25,10 +27,12 @@ const jsAsJsxPlugin = () => ({
   },
 });
 
-export default defineConfig(({ mode }) => {
+export default defineConfig(({ command, mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
+  const isExcelAddin = mode.startsWith('excel-addin');
+  const isExcelAddinDev = command === 'serve' && isExcelAddin;
   const defineEnv = {
-    'process.env.NODE_ENV': JSON.stringify(mode),
+    'process.env.NODE_ENV': JSON.stringify(command === 'build' ? 'production' : 'development'),
   };
 
   for (const [key, value] of Object.entries(env)) {
@@ -40,6 +44,7 @@ export default defineConfig(({ mode }) => {
   return {
     cacheDir: process.env.VITE_CACHE_DIR || '/tmp/catmapperjs-vite-cache',
     plugins: [
+      ...(isExcelAddinDev ? [basicSsl()] : []),
       jsAsJsxPlugin(),
       react({
         include: /\.(js|jsx|ts|tsx)$/,
@@ -49,8 +54,14 @@ export default defineConfig(({ mode }) => {
     define: defineEnv,
     resolve: {
       alias: [
-        { find: /^vis-data$/, replacement: 'vis-data/esnext/esm/vis-data.js' },
-        { find: /^vis-network$/, replacement: 'vis-network/esnext/esm/vis-network.js' },
+        {
+          find: /^vis-data$/,
+          replacement: resolve(process.cwd(), 'node_modules/vis-data/esnext/esm/vis-data.js'),
+        },
+        {
+          find: /^vis-network$/,
+          replacement: resolve(process.cwd(), 'node_modules/vis-network/esnext/esm/vis-network.js'),
+        },
       ],
       dedupe: [
         'react',
@@ -63,8 +74,19 @@ export default defineConfig(({ mode }) => {
     },
     server: {
       host: true,
-      port: 3000,
+      port: isExcelAddinDev ? 3001 : 3000,
       allowedHosts: ['dev.catmapper.org', 'catmapperjs-dev'],
+      ...(isExcelAddinDev
+        ? {
+            proxy: {
+              '/api': {
+                target: 'https://api.catmapper.org',
+                changeOrigin: true,
+                secure: true,
+              },
+            },
+          }
+        : {}),
     },
     preview: {
       host: true,
@@ -75,6 +97,10 @@ export default defineConfig(({ mode }) => {
       // remaining large chunks are lazy, route-local data/export modules.
       chunkSizeWarningLimit: 4000,
       rolldownOptions: {
+        input: {
+          main: resolve(process.cwd(), 'index.html'),
+          excelAddin: resolve(process.cwd(), 'excel-addin.html'),
+        },
         onwarn(warning, warn) {
           const warningText = String(warning?.message || '');
           const isLoadersChildProcessWarning =

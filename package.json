@@ -45,6 +45,8 @@
   "scripts": {
     "start": "vite --host --port 3000",
     "dev": "vite --host --port 3000",
+    "addin:dev": "vite --host --mode excel-addin",
+    "addin:validate": "office-addin-manifest validate manifest.xml && office-addin-manifest validate manifest.dev.xml",
     "start-backend": "cd api && env/bin/flask run --no-debugger",
     "build": "vite build",
     "preview": "vite preview --host --port 3000",
@@ -75,8 +77,10 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.58.2",
+    "@vitejs/plugin-basic-ssl": "^2.3.0",
     "@vitejs/plugin-react": "^6.0.4",
     "jsdom": "^28.1.0",
+    "office-addin-manifest": "^2.1.6",
     "vite": "^8.1.5",
     "vitest": "^4.1.10",
     "wait-on": "^9.0.10"

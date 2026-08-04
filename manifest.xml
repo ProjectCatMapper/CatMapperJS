@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<OfficeApp
+  xmlns="http://schemas.microsoft.com/office/appforoffice/1.1"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:bt="http://schemas.microsoft.com/office/officeappbasictypes/1.0"
+  xmlns:ov="http://schemas.microsoft.com/office/taskpaneappversionoverrides"
+  xsi:type="TaskPaneApp">
+  <Id>f413510e-c35a-4daf-929e-2e7af4bfed81</Id>
+  <Version>1.0.0.0</Version>
+  <ProviderName>CatMapper</ProviderName>
+  <DefaultLocale>en-US</DefaultLocale>
+  <DisplayName DefaultValue="CatMapper Translation" />
+  <Description DefaultValue="Translate a selected Excel column with the CatMapper API." />
+  <IconUrl DefaultValue="https://catmapper.org/icon-192.png" />
+  <HighResolutionIconUrl DefaultValue="https://catmapper.org/icon-512.png" />
+  <SupportUrl DefaultValue="https://catmapper.org/" />
+  <AppDomains>
+    <AppDomain>https://catmapper.org</AppDomain>
+  </AppDomains>
+  <Hosts>
+    <Host Name="Workbook" />
+  </Hosts>
+  <Requirements>
+    <Sets DefaultMinVersion="1.7">
+      <Set Name="ExcelApi" />
+    </Sets>
+  </Requirements>
+  <DefaultSettings>
+    <SourceLocation DefaultValue="https://catmapper.org/excel-addin.html" />
+  </DefaultSettings>
+  <Permissions>ReadWriteDocument</Permissions>
+  <VersionOverrides xmlns="http://schemas.microsoft.com/office/taskpaneappversionoverrides" xsi:type="VersionOverridesV1_0">
+    <Requirements>
+      <bt:Sets DefaultMinVersion="1.7">
+        <bt:Set Name="ExcelApi" />
+      </bt:Sets>
+    </Requirements>
+    <Hosts>
+      <Host xsi:type="Workbook">
+        <DesktopFormFactor>
+          <FunctionFile resid="Commands.Url" />
+          <ExtensionPoint xsi:type="PrimaryCommandSurface">
+            <OfficeTab id="TabHome">
+              <Group id="CatMapper.Group">
+                <Label resid="Group.Label" />
+                <Icon>
+                  <bt:Image size="16" resid="Icon.16" />
+                  <bt:Image size="32" resid="Icon.32" />
+                  <bt:Image size="80" resid="Icon.80" />
+                </Icon>
+                <Control xsi:type="Button" id="CatMapper.TranslateSelection">
+                  <Label resid="Button.Label" />
+                  <Supertip>
+                    <Title resid="Button.Label" />
+                    <Description resid="Button.Description" />
+                  </Supertip>
+                  <Icon>
+                    <bt:Image size="16" resid="Icon.16" />
+                    <bt:Image size="32" resid="Icon.32" />
+                    <bt:Image size="80" resid="Icon.80" />
+                  </Icon>
+                  <Action xsi:type="ShowTaskpane">
+                    <TaskpaneId>CatMapper.Translation.Taskpane</TaskpaneId>
+                    <SourceLocation resid="Taskpane.Url" />
+                  </Action>
+                </Control>
+              </Group>
+            </OfficeTab>
+          </ExtensionPoint>
+        </DesktopFormFactor>
+      </Host>
+    </Hosts>
+    <Resources>
+      <bt:Images>
+        <bt:Image id="Icon.16" DefaultValue="https://catmapper.org/icon-192.png" />
+        <bt:Image id="Icon.32" DefaultValue="https://catmapper.org/icon-192.png" />
+        <bt:Image id="Icon.80" DefaultValue="https://catmapper.org/icon-192.png" />
+      </bt:Images>
+      <bt:Urls>
+        <bt:Url id="Commands.Url" DefaultValue="https://catmapper.org/excel-addin.html" />
+        <bt:Url id="Taskpane.Url" DefaultValue="https://catmapper.org/excel-addin.html" />
+      </bt:Urls>
+      <bt:ShortStrings>
+        <bt:String id="Group.Label" DefaultValue="CatMapper" />
+        <bt:String id="Button.Label" DefaultValue="Translate Selection" />
+      </bt:ShortStrings>
+      <bt:LongStrings>
+        <bt:String id="Button.Description" DefaultValue="Translate the selected headed column with CatMapper." />
+      </bt:LongStrings>
+    </Resources>
+  </VersionOverrides>
+</OfficeApp>

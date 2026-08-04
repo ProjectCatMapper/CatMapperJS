@@ -1,0 +1,42 @@
+html,
+body,
+#excel-addin-root {
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  background: #f5f7f6;
+}
+
+.cm-addin-shell {
+  box-sizing: border-box;
+  margin: 0 auto;
+  max-width: 720px;
+  min-width: 260px;
+  padding: 16px;
+}
+
+.cm-addin-header {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.cm-addin-logo {
+  border-radius: 8px;
+  height: 42px;
+  width: 42px;
+}
+
+.cm-candidate-card[aria-current='true'] {
+  border-color: #126b55;
+  box-shadow: 0 0 0 1px #126b55;
+}
+
+@media (max-width: 380px) {
+  .cm-addin-shell {
+    padding: 10px;
+  }
+}
