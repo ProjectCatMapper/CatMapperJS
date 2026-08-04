@@ -500,9 +500,21 @@ const writeOutputValues = async (context, outputRange, headers, data) => {
   }
 };
 
+const writeOutputData = async (context, outputRange, headers, data) => {
+  const columnCount = headers.length;
+  const chunkSize = 2000;
+  for (let offset = 0; offset < data.length; offset += chunkSize) {
+    const chunk = data.slice(offset, offset + chunkSize);
+    outputRange.getCell(offset, 0)
+      .getResizedRange(chunk.length - 1, columnCount - 1).values = chunk;
+    await context.sync();
+  }
+};
+
 const insertOutputColumns = async (context, selection, plan) => {
   const sheet = context.workbook.worksheets.getItem(selection.worksheetName);
   const insertAt = selection.columnIndex + 1;
+  const outputRowIndex = Number(selection.table?.rowIndex ?? selection.rowIndex);
   let insertedAsTableColumns = false;
   if (selection.table) {
     const table = sheet.tables.getItemOrNullObject(selection.table.name || selection.table.id);
@@ -521,12 +533,22 @@ const insertOutputColumns = async (context, selection, plan) => {
     sheet.getRange(`${first}:${last}`).insert(globalThis.Excel?.InsertShiftDirection?.right || 'Right');
   }
   const outputRange = sheet.getRangeByIndexes(
-    selection.rowIndex,
+    outputRowIndex,
     insertAt,
     selection.rowCount,
     plan.outputFields.length,
   );
-  await writeOutputValues(context, outputRange, plan.headers, plan.data);
+  if (insertedAsTableColumns) {
+    await context.sync();
+    await writeOutputData(
+      context,
+      outputRange.getCell(1, 0).getResizedRange(plan.data.length - 1, plan.outputFields.length - 1),
+      plan.headers,
+      plan.data,
+    );
+  } else {
+    await writeOutputValues(context, outputRange, plan.headers, plan.data);
+  }
   return { outputRange, insertedAsTableColumns };
 };
 

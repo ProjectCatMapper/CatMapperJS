@@ -332,7 +332,7 @@ describe('WorkbookService with mocked Office.js runtime', () => {
       columns: {
         add: (index, _values, name) => {
           addedColumns.push({ index, name });
-          excel.source.grid.forEach((row) => row.splice(index, 0, ''));
+          excel.source.grid.forEach((row, rowIndex) => row.splice(index, 0, rowIndex === 0 ? name : ''));
         },
       },
     });
@@ -357,6 +357,54 @@ describe('WorkbookService with mocked Office.js runtime', () => {
     expect(excel.source.grid[0]).toEqual(['Term', 'CMName', 'CMID', 'Keep']);
     expect(excel.source.grid[1]).toEqual(['Yoruba', 'Yoruba', 'CM1', 1]);
     expect(persisted.insertedAsTableColumns).toBe(true);
+  });
+
+  test('keeps table-created output headers on the table header row', async () => {
+    const excel = makeFakeExcel([
+      ['Term', 'Keep'],
+      ['Yoruba', 1],
+      ['Hausa', 2],
+      ['Igbo', 3],
+    ]);
+    const addedColumns = [];
+    excel.source.tables.getItemOrNullObject = () => ({
+      isNullObject: false,
+      load: noOpLoad,
+      columns: {
+        add: (index, _values, name) => {
+          addedColumns.push({ index, name });
+          excel.source.grid.forEach((row, rowIndex) => row.splice(index, 0, rowIndex === 0 ? name : ''));
+        },
+      },
+    });
+    const service = new WorkbookService({ excel });
+    await service.writeTranslationRun({
+      runId: 'table-body-selection',
+      selection: {
+        ...selection,
+        rowIndex: 1,
+        rowCount: 3,
+        values: [['Term'], ['Yoruba'], ['Hausa']],
+        rowData: [
+          { rowId: 'r1', relativeRowIndex: 0, worksheetRowIndex: 1, value: 'Yoruba' },
+          { rowId: 'r2', relativeRowIndex: 1, worksheetRowIndex: 2, value: 'Hausa' },
+        ],
+        table: { id: 'table-1', name: 'Terms', rowIndex: 0, sourceColumnIndex: 0 },
+      },
+      order: ['Term', 'CMuniqueRowID', 'CMName', 'CMID'],
+      candidates: [
+        { CMuniqueRowID: 'r1', CMName: 'Yoruba', CMID: 'CM1' },
+        { CMuniqueRowID: 'r2', CMName: 'Hausa', CMID: 'CM2' },
+      ],
+    });
+
+    expect(addedColumns).toEqual([
+      { index: 1, name: 'CMName' },
+      { index: 2, name: 'CMID' },
+    ]);
+    expect(excel.source.grid[0]).toEqual(['Term', 'CMName', 'CMID', 'Keep']);
+    expect(excel.source.grid[1]).toEqual(['Yoruba', 'Yoruba', 'CM1', 1]);
+    expect(excel.source.grid[2]).toEqual(['Hausa', 'Hausa', 'CM2', 2]);
   });
 
   test('refreshes a tracked output block in place and replaces persisted candidates', async () => {
