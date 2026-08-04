@@ -644,6 +644,10 @@ const pointInsideRange = (point, range) => point &&
   point.rowIndex >= range.rowIndex && point.rowIndex < range.rowIndex + range.rowCount &&
   point.columnIndex >= range.columnIndex && point.columnIndex < range.columnIndex + range.columnCount;
 
+const pointInsideRunDataRows = (point, source, rowCount) => point &&
+  point.rowIndex > source.rowIndex &&
+  point.rowIndex <= source.rowIndex + rowCount;
+
 export class WorkbookService {
   constructor({ excel } = {}) {
     this.excel = excel || null;
@@ -836,7 +840,11 @@ export class WorkbookService {
             loaded.push({ run, source, output });
           }
           const point = parseCellAddress(event.address);
-          const match = loaded.find(({ source, output }) => pointInsideRange(point, source) || pointInsideRange(point, output));
+          const match = loaded.find(({ source, output }) =>
+            pointInsideRange(point, source) || pointInsideRange(point, output)
+          ) || loaded.find(({ run, source }) =>
+            pointInsideRunDataRows(point, source, (run.rowIds || []).length)
+          );
           if (!match || !point || point.rowIndex === match.source.rowIndex) return null;
           const rowPosition = point.rowIndex - match.source.rowIndex - 1;
           const rowId = match.run.rowIds?.[rowPosition];

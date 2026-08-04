@@ -557,4 +557,35 @@ describe('WorkbookService with mocked Office.js runtime', () => {
     await unsubscribe();
     expect(excel.handlers.size).toBe(0);
   });
+
+  test('loads alternatives when any worksheet cell in a translated row is selected', async () => {
+    const excel = makeFakeExcel();
+    const service = new WorkbookService({ excel });
+    await service.writeTranslationRun({
+      runId: 'run-1',
+      selection,
+      order: ['Term', 'CMuniqueRowID', 'CMName', 'CMID'],
+      candidates: [
+        { CMuniqueRowID: 'r1', CMName: 'Yoruba', CMID: 'CM1' },
+        { CMuniqueRowID: 'r1', CMName: 'Yoruba alternate', CMID: 'CM2' },
+        { CMuniqueRowID: 'r2', CMName: 'Hausa', CMID: 'CM3' },
+      ],
+      configuration: { database: 'SocioMap' },
+    });
+    const callback = vi.fn();
+    await service.subscribeToSelection(callback);
+    const [handler] = excel.handlers;
+
+    await handler({ worksheetId: 'sheet-1', address: 'Sheet1!D2' });
+    await handler({ worksheetId: 'sheet-1', address: 'Sheet1!D1' });
+
+    expect(callback.mock.calls[0][0]).toMatchObject({
+      runId: 'run-1',
+      rowId: 'r1',
+      rowPosition: 0,
+      selectedIndex: 0,
+    });
+    expect(callback.mock.calls[0][0].candidates).toHaveLength(2);
+    expect(callback.mock.calls[1][0]).toBeNull();
+  });
 });

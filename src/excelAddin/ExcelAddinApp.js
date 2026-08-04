@@ -20,6 +20,7 @@ import {
   FormControl,
   FormControlLabel,
   InputLabel,
+  Link,
   LinearProgress,
   MenuItem,
   Paper,
@@ -86,7 +87,17 @@ const toCandidateMap = (groups) => Object.fromEntries(groups.map((group) => [
     : (group.noMatchRow ? [group.noMatchRow] : []),
 ]));
 
-const CandidateCard = ({ candidate, index, selected, disabled, onSelect }) => {
+const databasePath = (database, cmid = '') => {
+  const normalized = String(database || '').trim().toLowerCase();
+  if (normalized === 'sociomap' || String(cmid).startsWith('SM')) return 'sociomap';
+  if (normalized === 'archamap' || String(cmid).startsWith('AM')) return 'archamap';
+  return normalized || 'archamap';
+};
+
+const nodeUrl = (database, cmid) =>
+  `https://catmapper.org/${databasePath(database, cmid)}/${encodeURIComponent(String(cmid || ''))}`;
+
+const CandidateCard = ({ candidate, index, selected, disabled, database, onSelect }) => {
   const summary = describeCandidate(candidate);
   const hasMatch = Boolean(summary.cmid || summary.name);
   return (
@@ -95,7 +106,14 @@ const CandidateCard = ({ candidate, index, selected, disabled, onSelect }) => {
         <Typography variant="subtitle1" fontWeight={700}>
           {hasMatch ? (summary.name || summary.cmid) : 'No match'}
         </Typography>
-        {summary.cmid && <Typography variant="body2">CMID: {summary.cmid}</Typography>}
+        {summary.cmid && (
+          <Typography variant="body2">
+            CMID:{' '}
+            <Link href={nodeUrl(database, summary.cmid)} target="_blank" rel="noopener noreferrer">
+              {summary.cmid}
+            </Link>
+          </Typography>
+        )}
         {summary.domain && <Typography variant="body2">Domain: {summary.domain}</Typography>}
         {summary.matchedTerm && <Typography variant="body2">Matched: {summary.matchedTerm}</Typography>}
         {summary.distance !== '' && <Typography variant="body2">Distance: {summary.distance}</Typography>}
@@ -559,6 +577,7 @@ const ExcelAddinApp = () => {
                   index={index}
                   selected={activeMatch.selectedIndex === index}
                   disabled={savingChoice}
+                  database={activeMatch.run?.configuration?.database}
                   onSelect={chooseCandidate}
                 />
               )) : <Alert severity="info">CatMapper returned no match for this row.</Alert>}
