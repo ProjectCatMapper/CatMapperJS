@@ -52,6 +52,11 @@ export default defineConfig(({ command, mode }) => {
     ],
     envPrefix: ['VITE_', 'REACT_APP_'],
     define: defineEnv,
+    optimizeDeps: {
+      rolldownOptions: {
+        moduleTypes: { '.js': 'jsx' },
+      },
+    },
     resolve: {
       alias: [
         {
