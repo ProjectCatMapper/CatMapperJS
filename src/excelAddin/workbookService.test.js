@@ -650,6 +650,39 @@ describe('WorkbookService with mocked Office.js runtime', () => {
     });
   });
 
+  test('loads alternatives for the first data row when its persisted row ID is numeric zero', async () => {
+    const excel = makeFakeExcel();
+    const service = new WorkbookService({ excel });
+    await service.writeTranslationRun({
+      runId: 'numeric-row-run',
+      selection,
+      order: ['Term', 'CMuniqueRowID', 'CMName', 'CMID'],
+      candidates: [
+        { CMuniqueRowID: 0, CMName: 'First match', CMID: 'CM1' },
+        { CMuniqueRowID: 0, CMName: 'First alternate', CMID: 'CM2' },
+        { CMuniqueRowID: 1, CMName: 'Second row', CMID: 'CM3' },
+      ],
+      rowIds: [0, 1],
+      selectedIndices: { 0: -1, 1: 0 },
+    });
+    const metadata = excel.sheetMap.get('_CatMapper_Addin');
+    const runPayload = JSON.parse(metadata.grid[1][5]);
+    metadata.grid[1][5] = JSON.stringify({ ...runPayload, rowIds: [0, 1] });
+    const callback = vi.fn();
+    await service.subscribeToSelection(callback);
+    const [handler] = excel.handlers;
+
+    await handler({ worksheetId: 'sheet-1', address: 'Sheet1!D2' });
+
+    expect(callback.mock.calls[0][0]).toMatchObject({
+      runId: 'numeric-row-run',
+      rowId: 0,
+      rowPosition: 0,
+      selectedIndex: -1,
+    });
+    expect(callback.mock.calls[0][0].candidates).toHaveLength(2);
+  });
+
   test('uses the newest block when translation runs share a source cell', async () => {
     const excel = makeFakeExcel();
     const service = new WorkbookService({ excel });

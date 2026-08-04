@@ -952,7 +952,7 @@ export class WorkbookService {
           if (!match || !point || point.rowIndex === match.source.rowIndex) return null;
           const rowPosition = point.rowIndex - match.source.rowIndex - 1;
           const rowId = match.run.rowIds?.[rowPosition];
-          if (!rowId) return null;
+          if (rowId === undefined || rowId === null || rowId === '') return null;
           return {
             run: match.run,
             runId: match.run.runId,
