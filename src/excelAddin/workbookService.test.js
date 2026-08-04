@@ -467,6 +467,40 @@ describe('WorkbookService with mocked Office.js runtime', () => {
     expect((await service.loadPersistedRuns())[0].candidatesByRow.r1[0].CMID).toBe('NEW1');
   });
 
+  test('can create a separate block for an already translated source column when requested', async () => {
+    const excel = makeFakeExcel();
+    const service = new WorkbookService({ excel });
+    await service.writeTranslationRun({
+      runId: 'run-1', selection,
+      order: ['Term', 'CMuniqueRowID', 'CMName'],
+      candidates: [
+        { CMuniqueRowID: 'r1', CMName: 'Old Yoruba' },
+        { CMuniqueRowID: 'r2', CMName: 'Old Hausa' },
+      ],
+    });
+
+    await expect(service.writeTranslationRun({
+      runId: 'run-2', selection,
+      order: ['Term', 'CMuniqueRowID', 'CMName'],
+      candidates: [{ CMuniqueRowID: 'r1', CMName: 'Blocked Yoruba' }],
+    })).rejects.toMatchObject({ code: 'EXISTING_TRANSLATION', existingRunId: 'run-1' });
+
+    await service.writeTranslationRun({
+      runId: 'run-2',
+      allowDuplicateSource: true,
+      selection,
+      order: ['Term', 'CMuniqueRowID', 'CMName'],
+      candidates: [
+        { CMuniqueRowID: 'r1', CMName: 'New Yoruba' },
+        { CMuniqueRowID: 'r2', CMName: 'New Hausa' },
+      ],
+    });
+
+    expect(excel.source.grid[0]).toEqual(['Term', 'CMName (2)', 'CMName', 'Keep']);
+    expect(excel.source.grid[1]).toEqual(['Yoruba', 'New Yoruba', 'Old Yoruba', 1]);
+    expect(await service.loadPersistedRuns()).toHaveLength(2);
+  });
+
   test('rejects refresh when the API output column count changed', async () => {
     const excel = makeFakeExcel();
     const service = new WorkbookService({ excel });

@@ -699,13 +699,15 @@ export class WorkbookService {
 
       const duplicateId = existingRuns.find((item) => item.runId === runId);
       if (duplicateId) throw new ExistingTranslationError(duplicateId.runId);
-      for (const existing of existingRuns) {
-        if (existing.worksheetName !== run.selection.worksheetName) continue;
-        const existingSource = await loadNamedRange(context, existing.sourceRangeName);
-        if (existingSource &&
-          existingSource.rowIndex === run.selection.rowIndex &&
-          existingSource.columnIndex === run.selection.columnIndex) {
-          throw new ExistingTranslationError(existing.runId);
+      if (!run.allowDuplicateSource) {
+        for (const existing of existingRuns) {
+          if (existing.worksheetName !== run.selection.worksheetName) continue;
+          const existingSource = await loadNamedRange(context, existing.sourceRangeName);
+          if (existingSource &&
+            existingSource.rowIndex === run.selection.rowIndex &&
+            existingSource.columnIndex === run.selection.columnIndex) {
+            throw new ExistingTranslationError(existing.runId);
+          }
         }
       }
       const existingHeaders = await loadExistingHeaders(context, run.selection);

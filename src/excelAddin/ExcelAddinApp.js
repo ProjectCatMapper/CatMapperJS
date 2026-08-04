@@ -145,16 +145,16 @@ const ExcelAddinApp = () => {
 
   const columnOptions = selection?.availableColumns || [];
 
-  const requestConfirmation = useCallback((message) => new Promise((resolve) => {
+  const requestBlockChoice = useCallback((message) => new Promise((resolve) => {
     confirmationResolverRef.current = resolve;
     setConfirmation({ message });
   }), []);
 
-  const resolveConfirmation = useCallback((confirmed) => {
+  const resolveBlockChoice = useCallback((choice) => {
     const resolver = confirmationResolverRef.current;
     confirmationResolverRef.current = null;
     setConfirmation(null);
-    if (resolver) resolver(confirmed);
+    if (resolver) resolver(choice);
   }, []);
 
   const flattenedDomains = useMemo(() => {
@@ -306,20 +306,23 @@ const ExcelAddinApp = () => {
         item.worksheetName === selection.worksheetName && item.sourceAddress === selection.address
       );
       let refreshRunId;
+      let allowDuplicateSource = false;
       if (priorRun) {
-        const refresh = await requestConfirmation(
-          'This source column already has a CatMapper translation block. Replace that block with the new results?'
+        const choice = await requestBlockChoice(
+          'This source column already has a CatMapper translation block. Refresh it with the new results, or create a separate new block next to the source column?'
         );
-        if (!refresh) {
+        if (choice === 'cancel') {
           setNotice({ severity: 'info', text: 'Translation completed, but worksheet output was not changed.' });
           return;
         }
-        refreshRunId = priorRun.runId;
+        if (choice === 'refresh') refreshRunId = priorRun.runId;
+        if (choice === 'new') allowDuplicateSource = true;
       }
 
       const runDefinition = {
         runId: refreshRunId || newRunId(),
         refreshRunId,
+        allowDuplicateSource,
         selection,
         outputFields,
         rowIds: groups.map((group) => group.rowId),
@@ -342,19 +345,29 @@ const ExcelAddinApp = () => {
         saved = await writeTranslationRun(runDefinition);
       } catch (writeError) {
         if (writeError?.code !== 'EXISTING_TRANSLATION' || !writeError.existingRunId) throw writeError;
-        const refresh = await requestConfirmation(
-          'Excel moved a previously translated block with this source column. Refresh that existing block?'
+        const choice = await requestBlockChoice(
+          'Excel found a previously translated block for this source column. Refresh it with the new results, or create a separate new block next to the source column?'
         );
-        if (!refresh) {
+        if (choice === 'cancel') {
           setNotice({ severity: 'info', text: 'Translation completed, but worksheet output was not changed.' });
           return;
         }
-        refreshRunId = writeError.existingRunId;
-        saved = await writeTranslationRun({
-          ...runDefinition,
-          runId: refreshRunId,
-          refreshRunId,
-        });
+        if (choice === 'refresh') {
+          refreshRunId = writeError.existingRunId;
+          saved = await writeTranslationRun({
+            ...runDefinition,
+            runId: refreshRunId,
+            refreshRunId,
+            allowDuplicateSource: false,
+          });
+        } else {
+          refreshRunId = '';
+          saved = await writeTranslationRun({
+            ...runDefinition,
+            refreshRunId: '',
+            allowDuplicateSource: true,
+          });
+        }
       }
 
       setWarnings(Array.isArray(result.warnings) ? result.warnings : []);
@@ -561,19 +574,20 @@ const ExcelAddinApp = () => {
 
       <Dialog
         open={Boolean(confirmation)}
-        onClose={() => resolveConfirmation(false)}
+        onClose={() => resolveBlockChoice('cancel')}
         aria-labelledby="cm-confirm-title"
         aria-describedby="cm-confirm-description"
       >
-        <DialogTitle id="cm-confirm-title">Refresh existing results?</DialogTitle>
+        <DialogTitle id="cm-confirm-title">Existing translation block found</DialogTitle>
         <DialogContent>
           <DialogContentText id="cm-confirm-description">
             {confirmation?.message}
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => resolveConfirmation(false)}>Keep unchanged</Button>
-          <Button variant="contained" onClick={() => resolveConfirmation(true)}>Refresh results</Button>
+          <Button onClick={() => resolveBlockChoice('cancel')}>Keep unchanged</Button>
+          <Button onClick={() => resolveBlockChoice('new')}>Create new block</Button>
+          <Button variant="contained" onClick={() => resolveBlockChoice('refresh')}>Refresh results</Button>
         </DialogActions>
       </Dialog>
     </Box>
