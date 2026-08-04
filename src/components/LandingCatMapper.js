@@ -13,9 +13,9 @@ const CatHome = () => {
         </div>
 
         <div className="content">
-          <h1 id='catmapperhome'>Bringing Data Together.</h1>
+          <h1 id='catmapperhome'>Bringing Data Together</h1>
           <p id='catmapperhome'>
-            CatMapper organizes dynamic and complex category systems commonly used by scientists and policymakers, including ethnicities, languages, religions, political districts, political parties, and technologies. Each of these systems includes thousands of categories encoded in diverse, dynamic and incompatible ways across a growing corpus of thousands of datasets.
+            CatMapper's mission is to empower researchers to connect and integrate complex data across diverse classification systems, transforming fragmented datasets into connected knowledge that accelerates scientific discovery, collaboration, and reproducible research.
           </p>
           <div>
             <Link to='/sociomap' className='btn' id='catmapperhome'>SocioMap</Link>
