@@ -1,6 +1,5 @@
 import { apiBaseUrl } from '../api/endpoints';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import domainOptions from "./SearchSelectDropdown";
 import { Select, MenuItem } from '@mui/material';
 import { loadTranslateState, saveTranslateState } from '../utils/translateSessionStore';
 import Button from '@mui/material/Button';
@@ -20,6 +19,7 @@ import { parseTabularFile } from '../utils/tabularUpload';
 import TranslateMatchReview from './TranslateMatchReview';
 import { useAuth } from './AuthContext';
 import { addReviewIds, getMatchTypePercentages, stripReviewFields } from '../utils/translateReview';
+import { getTranslatePropertyOptions } from '../utils/translatePropertyOptions';
 import { DataGrid } from '@mui/x-data-grid';
 
 const getTooltipContent = (nm) => {
@@ -41,7 +41,6 @@ const getTooltipContent = (nm) => {
   return tooltipTexts[nm];
 };
 
-const fallbackOptions = ["Name", "Key", "CatMapper ID (CMID)"];
 const EXCEL_CELL_CHAR_LIMIT = 32767;
 
 const sanitizeRowsForExcelExport = (rows, limit = EXCEL_CELL_CHAR_LIMIT) => {
@@ -80,7 +79,9 @@ function TranslateComponent({ database }) {
   const [thirdDropdownValue, setthirdDropdownValue] = useState(() => s.thirdDropdownValue ?? [""]);
   const [fourthDropdownValue, setfourthDropdownValue] = useState(() => s.fourthDropdownValue ?? [""]);
   const [fifthDropdownValue, setfifthDropdownValue] = useState(() => s.fifthDropdownValue ?? [""]);
-  const [svalues, setsvalues] = useState(["Name", "SocioMapID"]);
+  const [svalues, setsvalues] = useState(() =>
+    getTranslatePropertyOptions(s.firstDropdownValue ?? "ANY DOMAIN")
+  );
   const [columns, setColumns] = useState(() => s.columns ?? []);
   const [reviewRows, setReviewRows] = useState(() => s.reviewRows ?? []);
   const [previewRows, setPreviewRows] = useState(() => s.previewRows ?? []);
@@ -627,7 +628,9 @@ function TranslateComponent({ database }) {
 
 
   useEffect(() => {
-    setsvalues(domainOptions[firstDropdownValue] || fallbackOptions);
+    const options = getTranslatePropertyOptions(firstDropdownValue);
+    setsvalues(options);
+    setsecondDropdownValue((current) => options.includes(current) ? current : options[0]);
   }, [firstDropdownValue]);
 
   const [categories, setCategories] = useState([]);
