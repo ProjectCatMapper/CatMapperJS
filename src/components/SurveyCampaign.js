@@ -1,4 +1,5 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import CloseIcon from "@mui/icons-material/Close";
 import {
   Alert,
   Box,
@@ -9,7 +10,7 @@ import {
   DialogTitle,
   FormControl,
   FormControlLabel,
-  FormLabel,
+  IconButton,
   Link,
   Radio,
   RadioGroup,
@@ -17,6 +18,7 @@ import {
   Typography,
 } from "@mui/material";
 import ReactGA from "react-ga4";
+import { useLocation } from "react-router-dom";
 import { apiUrl } from "../api/endpoints";
 import {
   COOKIE_CONSENT_CHANGED_EVENT,
@@ -48,8 +50,12 @@ const trackSurveyEvent = (eventName, parameters) => {
 
 const SurveyCampaign = () => {
   const config = useMemo(() => getSurveyCampaignConfig(), []);
+  const location = useLocation();
+  const initialPathRef = useRef(location.pathname);
   const [consent, setConsent] = useState(() => getCookieConsent());
   const [open, setOpen] = useState(false);
+  const [userInteracted, setUserInteracted] = useState(false);
+  const [routeChanged, setRouteChanged] = useState(false);
   const [choice, setChoice] = useState("");
   const [otherText, setOtherText] = useState("");
   const [error, setError] = useState("");
@@ -62,19 +68,43 @@ const SurveyCampaign = () => {
   }, []);
 
   useEffect(() => {
+    if (location.pathname !== initialPathRef.current) {
+      setRouteChanged(true);
+    }
+  }, [location.pathname]);
+
+  useEffect(() => {
+    if (!consent) return undefined;
+    const handleInteraction = () => setUserInteracted(true);
+    document.addEventListener("pointerdown", handleInteraction, { once: true });
+    document.addEventListener("keydown", handleInteraction, { once: true });
+    return () => {
+      document.removeEventListener("pointerdown", handleInteraction);
+      document.removeEventListener("keydown", handleInteraction);
+    };
+  }, [consent]);
+
+  const showSurvey = useCallback(() => {
+    setSurveyCampaignStatus(config.campaignId, "shown");
+    setOpen(true);
+    trackSurveyEvent("survey_impression", { campaign_id: config.campaignId });
+  }, [config.campaignId]);
+
+  useEffect(() => {
     if (!consent || !isSurveyCampaignEligible({
       config,
       randomValue: getSurveyCampaignBucket(config.campaignId),
     })) return undefined;
 
-    const timer = window.setTimeout(() => {
-      setSurveyCampaignStatus(config.campaignId, "shown");
-      setOpen(true);
-      trackSurveyEvent("survey_impression", { campaign_id: config.campaignId });
-    }, config.delayMs);
+    if (userInteracted || routeChanged) {
+      showSurvey();
+      return undefined;
+    }
+
+    const timer = window.setTimeout(showSurvey, config.delayMs);
 
     return () => window.clearTimeout(timer);
-  }, [config, consent]);
+  }, [config, consent, routeChanged, showSurvey, userInteracted]);
 
   const handleClose = useCallback(() => {
     setSurveyCampaignStatus(config.campaignId, "dismissed");
@@ -129,17 +159,30 @@ const SurveyCampaign = () => {
       open={open}
       onClose={handleClose}
       aria-labelledby="user-purpose-survey-title"
-      maxWidth="sm"
+      maxWidth="xs"
       fullWidth
+      PaperProps={{ sx: { m: 2 } }}
     >
-      <DialogTitle id="user-purpose-survey-title">Help us learn about our users</DialogTitle>
-      <DialogContent dividers>
-        <Typography paragraph>
-          Thanks! Did you come to this site for:
+      <DialogTitle
+        id="user-purpose-survey-title"
+        sx={{ position: "relative", px: 2, py: 1.25, pr: 7, fontSize: "1.15rem", fontWeight: 700, lineHeight: 1.25 }}
+      >
+        Help us learn about our users. Thanks!
+        <IconButton
+          aria-label="Close survey"
+          onClick={handleClose}
+          disabled={submitting}
+          sx={{ position: "absolute", right: 6, top: 4, width: 44, height: 44 }}
+        >
+          <CloseIcon sx={{ fontSize: 30 }} />
+        </IconButton>
+      </DialogTitle>
+      <DialogContent dividers sx={{ px: 2, py: 1.25 }}>
+        <Typography variant="body2" sx={{ mb: 0.5 }}>
+          Did you come to this site for:
         </Typography>
         <FormControl component="fieldset" fullWidth>
-          <FormLabel component="legend">Select one answer</FormLabel>
-          <RadioGroup value={choice} onChange={(event) => {
+          <RadioGroup aria-label="Select one answer" value={choice} onChange={(event) => {
             setChoice(event.target.value);
             setError("");
           }}>
@@ -147,8 +190,10 @@ const SurveyCampaign = () => {
               <FormControlLabel
                 key={option.value}
                 value={option.value}
-                control={<Radio />}
+                control={<Radio size="small" sx={{ p: 0.5 }} />}
                 label={option.label}
+                componentsProps={{ typography: { variant: "body2" } }}
+                sx={{ m: 0, minHeight: 30 }}
               />
             ))}
           </RadioGroup>
@@ -159,8 +204,8 @@ const SurveyCampaign = () => {
             autoFocus
             fullWidth
             multiline
-            minRows={3}
-            margin="normal"
+            minRows={2}
+            margin="dense"
             label="Please specify"
             value={otherText}
             onChange={(event) => setOtherText(event.target.value)}
@@ -169,18 +214,18 @@ const SurveyCampaign = () => {
           />
         )}
 
-        {error && <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>}
+        {error && <Alert severity="error" sx={{ mt: 1, py: 0 }}>{error}</Alert>}
 
-        <Box sx={{ mt: 2 }}>
-          <Typography variant="body2" color="text.secondary">
-            Further questions or comments? Email{" "}
+        <Box sx={{ mt: 1 }}>
+          <Typography variant="caption" color="text.secondary">
+            Further comments/questions? Email{" "}
             <Link href="mailto:admin@catmapper.org">admin@catmapper.org</Link>.
           </Typography>
         </Box>
       </DialogContent>
-      <DialogActions>
-        <Button onClick={handleClose} disabled={submitting}>Close</Button>
-        <Button onClick={handleSubmit} variant="contained" disabled={submitting}>
+      <DialogActions sx={{ px: 2, py: 1 }}>
+        <Button size="small" onClick={handleClose} disabled={submitting}>Close</Button>
+        <Button size="small" onClick={handleSubmit} variant="contained" disabled={submitting}>
           {submitting ? "Submitting…" : "Submit"}
         </Button>
       </DialogActions>

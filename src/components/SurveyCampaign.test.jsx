@@ -1,6 +1,7 @@
 import React from 'react';
 import { act } from 'react';
 import { createRoot } from 'react-dom/client';
+import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const analytics = vi.hoisted(() => ({ event: vi.fn() }));
@@ -47,7 +48,7 @@ describe('SurveyCampaign', () => {
   const renderSurvey = async (consent) => {
     localStorage.setItem('cookieConsent', consent);
     await act(async () => {
-      root.render(<SurveyCampaign />);
+      root.render(<MemoryRouter><SurveyCampaign /></MemoryRouter>);
       await flushPromises();
     });
     await act(async () => {
@@ -59,9 +60,11 @@ describe('SurveyCampaign', () => {
   it('shows the requested choices, contact email, and 1000-character limit', async () => {
     await renderSurvey('rejected');
 
-    expect(document.body.textContent).toContain('Help us learn about our users');
+    expect(document.body.textContent).toContain('Help us learn about our users. Thanks!');
     expect(document.body.textContent).toContain('Tools for bringing data together');
+    expect(document.body.textContent).toContain('Further comments/questions?');
     expect(document.querySelector('a[href="mailto:admin@catmapper.org"]')).toBeTruthy();
+    expect(document.querySelector('button[aria-label="Close survey"]')).toBeTruthy();
 
     await act(async () => {
       document.querySelector('input[value="other"]').click();
@@ -99,5 +102,26 @@ describe('SurveyCampaign', () => {
     expect(analytics.event).toHaveBeenCalledWith('survey_impression', {
       campaign_id: 'test-campaign',
     });
+  });
+
+  it('waits 20 seconds or opens after a user interaction', async () => {
+    process.env.REACT_APP_SURVEY_DELAY_MS = '20000';
+    localStorage.setItem('cookieConsent', 'rejected');
+    await act(async () => {
+      root.render(<MemoryRouter><SurveyCampaign /></MemoryRouter>);
+      await flushPromises();
+    });
+
+    await act(async () => {
+      vi.advanceTimersByTime(19999);
+      await flushPromises();
+    });
+    expect(document.querySelector('[role="dialog"]')).toBeNull();
+
+    await act(async () => {
+      document.body.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+      await flushPromises();
+    });
+    expect(document.querySelector('[role="dialog"]')).toBeTruthy();
   });
 });

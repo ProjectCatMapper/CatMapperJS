@@ -41,7 +41,7 @@ export const getSurveyCampaignConfig = ({
     ),
     delayMs: asDelay(
       env.REACT_APP_SURVEY_DELAY_MS || env.VITE_SURVEY_DELAY_MS,
-      isDev ? 1000 : 20000
+      20000
     ),
   };
 };

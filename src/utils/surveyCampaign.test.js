@@ -15,7 +15,7 @@ describe('survey campaign eligibility', () => {
 
     expect(config.campaignId).toBe('user-purpose-dev');
     expect(config.samplePercent).toBe(100);
-    expect(config.delayMs).toBe(1000);
+    expect(config.delayMs).toBe(20000);
     expect(isSurveyCampaignEligible({ config, randomValue: 0.999 })).toBe(true);
   });
 
