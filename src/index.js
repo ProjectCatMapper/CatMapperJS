@@ -21,7 +21,6 @@ const initAnalytics = () => {
 
     // User accepted: initialize and track page view.
     ReactGA.initialize(GA_ID);
-    ReactGA.send({ hitType: "pageview", page: window.location.pathname + window.location.search });
   } else {
     // User declined or hasn't decided: Disable tracking
     if (GA_ID) {

@@ -7,6 +7,7 @@ import DatabaseRoute from './components/DatabaseRoute';
 
 import ReactGA from 'react-ga4';
 import CookieBanner from './components/CookieBanner';
+import SurveyCampaign from './components/SurveyCampaign';
 import { isCookieConsentAccepted } from './utils/cookieConsent';
 import { DEFAULT_DATABASE } from './utils/database';
 
@@ -54,6 +55,35 @@ const usePageTracking = () => {
   }, [location]);
 };
 
+const useOutboundLinkTracking = () => {
+  useEffect(() => {
+    const handleClick = (event) => {
+      if (!isCookieConsentAccepted() || !GA_ID) return;
+      const anchor = event.target.closest?.('a[href]');
+      if (!anchor) return;
+
+      let destination;
+      try {
+        destination = new URL(anchor.href, window.location.href);
+      } catch (error) {
+        return;
+      }
+      if (!['http:', 'https:'].includes(destination.protocol) || destination.origin === window.location.origin) {
+        return;
+      }
+
+      ReactGA.event('click', {
+        link_domain: destination.hostname,
+        link_url: `${destination.origin}${destination.pathname}`,
+        outbound: true,
+      });
+    };
+
+    document.addEventListener('click', handleClick);
+    return () => document.removeEventListener('click', handleClick);
+  }, []);
+};
+
 const RouteFallback = () => (
   <Box
     data-testid="route-loading"
@@ -87,10 +117,12 @@ const App = () => {
   //   };
   // }, []);
   usePageTracking();
+  useOutboundLinkTracking();
 
   return (
     <>
       <CookieBanner />
+      <SurveyCampaign />
       <Suspense fallback={<RouteFallback />}>
         <Routes>
           <Route path='/' element={<Catmapper />} />

@@ -4,8 +4,13 @@ import { Link as RouterLink } from 'react-router-dom';
 import image from "../assets/catmapperWhite_small.webp";
 import packageJson from '../../package.json';
 import './FooterLinks.css';
+import { clearCookieConsent } from '../utils/cookieConsent';
 
 const FooterLinks = () => {
+    const handleCookieSettings = () => {
+        clearCookieConsent();
+        window.location.reload();
+    };
     const navLinks = [
         { name: "About", path: "/about" },
         { name: "People", path: "/people" },
@@ -40,6 +45,14 @@ const FooterLinks = () => {
                             {link.name}
                         </Link>
                     ))}
+                    <Link
+                        component="button"
+                        type="button"
+                        onClick={handleCookieSettings}
+                        className="footer-links-nav-item"
+                    >
+                        Cookie settings
+                    </Link>
                 </Box>
             </Box>
         </>

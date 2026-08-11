@@ -14,7 +14,12 @@ vi.mock('./components/CookieBanner', () => ({
   default: () => React.createElement('div', { 'data-testid': 'cookie-banner' }),
 }));
 
+vi.mock('./components/SurveyCampaign', () => ({
+  default: () => React.createElement('div', { 'data-testid': 'survey-campaign' }),
+}));
+
 vi.mock('./utils/cookieConsent', () => ({
+  getCookieConsent: () => 'rejected',
   isCookieConsentAccepted: () => false,
 }));
 
