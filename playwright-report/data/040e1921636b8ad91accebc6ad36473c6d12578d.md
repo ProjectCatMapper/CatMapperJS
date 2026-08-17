@@ -1,0 +1,123 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e3]:
+  - generic [ref=e4]:
+    - link "CatMapper logo" [ref=e6] [cursor=pointer]:
+      - /url: /
+      - img "CatMapper logo" [ref=e7]
+    - link "archamap logo" [ref=e9] [cursor=pointer]:
+      - /url: /archamap
+      - img "archamap logo" [ref=e10]
+    - list [ref=e12]:
+      - listitem [ref=e13]:
+        - link "Home" [ref=e14] [cursor=pointer]:
+          - /url: /archamap
+      - listitem [ref=e15]:
+        - link "Explore" [ref=e16] [cursor=pointer]:
+          - /url: /archamap/explore
+      - listitem [ref=e17]:
+        - link "Translate" [ref=e18] [cursor=pointer]:
+          - /url: /archamap/translate
+      - listitem [ref=e19]:
+        - link "Merge" [ref=e20] [cursor=pointer]:
+          - /url: /archamap/merge
+      - listitem [ref=e21]:
+        - generic [ref=e22]: Edit ▼
+      - listitem [ref=e23]:
+        - link "Help" [ref=e24] [cursor=pointer]:
+          - /url: https://help.catmapper.org/
+      - link "Profile" [ref=e25] [cursor=pointer]:
+        - /url: /archamap/profile
+        - button "Profile" [ref=e26]: Profile
+      - button "Logout" [ref=e27] [cursor=pointer]: Logout
+  - generic [ref=e28]:
+    - generic [ref=e30]:
+      - button "Collapse translate sidebar" [ref=e32] [cursor=pointer]:
+        - img [ref=e33]
+      - generic [ref=e35]:
+        - paragraph [ref=e36]: Choose spreadsheet to match
+        - button "Upload a spreadsheet of category names for an automated proposal of matches to CatMapper categories\". See <https://catmapper.org/help/> for more information." [ref=e37] [cursor=pointer]:
+          - img [ref=e39]
+      - button "Choose File" [ref=e41]
+      - generic [ref=e42]:
+        - paragraph [ref=e43]: Select category domain
+        - button [ref=e44] [cursor=pointer]:
+          - img [ref=e46]
+      - generic [ref=e48]:
+        - combobox [ref=e49] [cursor=pointer]: CERAMIC
+        - textbox: CERAMIC
+        - img
+        - group:
+          - generic: First Dropdown
+      - generic [ref=e50]:
+        - paragraph [ref=e51]: CatMapper Property to Search
+        - button "Usually this will be Name. This allows advanced users to mach by other category properties in CatMapper, such as CatMapper ID or Key." [ref=e52] [cursor=pointer]:
+          - img [ref=e54]
+      - generic [ref=e56]:
+        - combobox [ref=e57] [cursor=pointer]: Name
+        - textbox: Name
+        - img
+        - group:
+          - generic: Second Dropdown
+      - generic [ref=e58]:
+        - generic [ref=e59]:
+          - checkbox "Advanced Options" [ref=e60]
+          - text: Advanced Options
+        - button "Enable additional data filters and settings" [ref=e61] [cursor=pointer]:
+          - img [ref=e63]
+      - button "Search" [ref=e65] [cursor=pointer]: Search
+      - generic [ref=e66]:
+        - table "Match statistics" [ref=e68]:
+          - rowgroup [ref=e69]:
+            - row "Type Count" [ref=e70]:
+              - columnheader "Type" [ref=e71]
+              - columnheader "Count" [ref=e72]
+          - rowgroup [ref=e73]:
+            - row "Total matches 0.00%" [ref=e74]:
+              - cell "Total matches" [ref=e75]
+              - cell "0.00%" [ref=e76]
+            - row "exact match 0%" [ref=e77]:
+              - cell "exact match" [ref=e78]
+              - cell "0%" [ref=e79]
+            - row "fuzzy match 0%" [ref=e80]:
+              - cell "fuzzy match" [ref=e81]
+              - cell "0%" [ref=e82]
+            - row "one-to-many 0%" [ref=e83]:
+              - cell "one-to-many" [ref=e84]
+              - cell "0%" [ref=e85]
+            - row "many-to-one 0%" [ref=e86]:
+              - cell "many-to-one" [ref=e87]
+              - cell "0%" [ref=e88]
+            - row "No matches 100.00%" [ref=e89]:
+              - cell "No matches" [ref=e90]
+              - cell "100.00%" [ref=e91]
+        - button "Match statistics" [ref=e92] [cursor=pointer]:
+          - img [ref=e93]
+      - button "Download proposed matches" [disabled]
+    - generic [ref=e96]:
+      - separator [ref=e97]
+      - generic [ref=e98]:
+        - generic [ref=e99]:
+          - img "CatMapper Logo" [ref=e100]
+          - generic [ref=e101]: CatMapper v2026.7.30-917
+        - generic [ref=e102]:
+          - link "About" [ref=e103] [cursor=pointer]:
+            - /url: /about
+          - link "People" [ref=e104] [cursor=pointer]:
+            - /url: /people
+          - link "News" [ref=e105] [cursor=pointer]:
+            - /url: /news
+          - link "Funding" [ref=e106] [cursor=pointer]:
+            - /url: /funding
+          - link "Citation" [ref=e107] [cursor=pointer]:
+            - /url: /citation
+          - link "Terms" [ref=e108] [cursor=pointer]:
+            - /url: /terms
+          - link "Privacy" [ref=e109] [cursor=pointer]:
+            - /url: /privacy
+          - link "Contact" [ref=e110] [cursor=pointer]:
+            - /url: /contact
+          - link "Download" [ref=e111] [cursor=pointer]:
+            - /url: /download
+```

@@ -105,14 +105,15 @@ test.describe('Translate page state persistence across navigation', () => {
     });
 
     // The column-select dropdown should appear after parsing
-    await expect(page.locator('div[role="combobox"]').first()).toBeVisible();
+    const matchColumn = page.getByRole('combobox', { name: 'Spreadsheet column to match' });
+    await expect(matchColumn).toBeVisible();
 
     // 3. Pick the "species" column as the match column
-    await page.locator('div[role="combobox"]').first().click();
+    await matchColumn.click();
     await page.getByRole('option', { name: 'species', exact: true }).click();
 
     // Confirm the selection took effect (the dropdown now shows "species")
-    await expect(page.locator('div[role="combobox"]').first()).toContainText('species');
+    await expect(matchColumn).toContainText('species');
 
     // 4. Navigate away to a different page (the database home)
     await page.goto(`${BASE_URL}/archamap`, { waitUntil: 'domcontentloaded' });
@@ -121,8 +122,9 @@ test.describe('Translate page state persistence across navigation', () => {
     await page.goto(`${BASE_URL}/archamap/translate`, { waitUntil: 'domcontentloaded' });
 
     // 6. The column-select dropdown should still be present and show "species"
-    await expect(page.locator('div[role="combobox"]').first()).toBeVisible();
-    await expect(page.locator('div[role="combobox"]').first()).toContainText('species');
+    const restoredMatchColumn = page.getByRole('combobox', { name: 'Spreadsheet column to match' });
+    await expect(restoredMatchColumn).toBeVisible();
+    await expect(restoredMatchColumn).toContainText('species');
   });
 
   test('restores review results (match rows) after navigating away and back', async ({ page }) => {
@@ -211,8 +213,9 @@ test.describe('Translate page state persistence across navigation', () => {
     });
 
     // 3. Select the match column
-    await expect(page.locator('div[role="combobox"]').first()).toBeVisible();
-    await page.locator('div[role="combobox"]').first().click();
+    const matchColumn = page.getByRole('combobox', { name: 'Spreadsheet column to match' });
+    await expect(matchColumn).toBeVisible();
+    await matchColumn.click();
     await page.getByRole('option', { name: 'species', exact: true }).click();
 
     // 4. Run the search

@@ -9,6 +9,23 @@ function makeTextFile(name, contents) {
 }
 
 describe('tabularUpload', () => {
+  it('accepts a small two-column CSV when delimiter detection uses comma fallback', async () => {
+    const parsed = await parseTabularFile(
+      makeTextFile('small.csv', 'source_name,source_key\nAlpha,K1\n')
+    );
+
+    expect(parsed.headers).toEqual(['source_name', 'source_key']);
+    expect(parsed.records).toEqual([
+      { source_name: 'Alpha', source_key: 'K1' },
+    ]);
+  });
+
+  it('still rejects fatal CSV syntax errors', async () => {
+    await expect(parseTabularFile(
+      makeTextFile('broken.csv', 'source_name,source_key\n"Alpha,K1\n')
+    )).rejects.toThrow('Unable to parse the uploaded file.');
+  });
+
   it('drops columns that are entirely empty and warns about them', async () => {
     const file = makeTextFile(
       'example.csv',

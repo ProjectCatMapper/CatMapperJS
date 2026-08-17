@@ -99,6 +99,10 @@ const DynamicPropertiesForm = () => {
   }), [cred]);
 
   useEffect(() => {
+    setSuccessMessage(null);
+  }, [cmid, database, isListView]);
+
+  useEffect(() => {
     if (authLevel !== 2) {
       setError("Not authorized to edit metadata.");
       setLoading(false);
@@ -108,7 +112,6 @@ const DynamicPropertiesForm = () => {
     const load = async () => {
       setLoading(true);
       setError(null);
-      setSuccessMessage(null);
       try {
         if (isListView) {
           const response = await fetch(`${apiBaseUrl()}/admin/metadata/nodes`, {

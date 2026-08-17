@@ -79,6 +79,13 @@ describe('translateSessionStore', () => {
     expect(written).toEqual({ x: 1 });
   });
 
+  it('flushes pending state on pagehide before a full-page navigation', () => {
+    save('archamap', { zeroDropdownValue: 'species' });
+    window.dispatchEvent(new Event('pagehide'));
+    const written = JSON.parse(storageMock.setItem.mock.calls.at(-1)[1]);
+    expect(written).toEqual({ zeroDropdownValue: 'species' });
+  });
+
   it('debounces rapid successive saves (only one sessionStorage write)', () => {
     save('archamap', { x: 1 });
     save('archamap', { x: 2 });

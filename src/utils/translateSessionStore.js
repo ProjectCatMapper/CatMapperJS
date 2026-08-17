@@ -19,6 +19,28 @@ const inMemoryCache = {};
 
 /** @type {Record<string, ReturnType<typeof setTimeout>>} */
 const debounceTimers = {};
+const pendingStates = {};
+
+function flushKey(key) {
+  if (!key || pendingStates[key] === undefined) return;
+  if (debounceTimers[key]) {
+    clearTimeout(debounceTimers[key]);
+    delete debounceTimers[key];
+  }
+  const state = pendingStates[key];
+  delete pendingStates[key];
+  try {
+    sessionStorage.setItem(key, JSON.stringify(state));
+  } catch (_e) {
+    // Quota exceeded or storage unavailable – in-memory store is sufficient.
+  }
+}
+
+if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
+  window.addEventListener('pagehide', () => {
+    Object.keys(pendingStates).forEach(flushKey);
+  });
+}
 
 /**
  * Load persisted translate state for the given database.
@@ -62,19 +84,21 @@ export function saveTranslateState(database, state) {
   const key = STORAGE_KEY_PREFIX + database;
 
   inMemoryCache[key] = state;
+  pendingStates[key] = state;
 
   if (debounceTimers[key]) {
     clearTimeout(debounceTimers[key]);
   }
 
   debounceTimers[key] = setTimeout(() => {
-    delete debounceTimers[key];
-    try {
-      sessionStorage.setItem(key, JSON.stringify(state));
-    } catch (_e) {
-      // Quota exceeded or storage unavailable – in-memory store is sufficient
-    }
+    flushKey(key);
   }, DEBOUNCE_MS);
+}
+
+/** Flush a pending debounced write before a full-page navigation or reload. */
+export function flushTranslateState(database) {
+  if (!database) return;
+  flushKey(STORAGE_KEY_PREFIX + database);
 }
 
 /**
@@ -89,6 +113,7 @@ export function clearTranslateState(database) {
   const key = STORAGE_KEY_PREFIX + database;
 
   delete inMemoryCache[key];
+  delete pendingStates[key];
 
   if (debounceTimers[key]) {
     clearTimeout(debounceTimers[key]);

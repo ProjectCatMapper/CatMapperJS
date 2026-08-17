@@ -789,6 +789,7 @@ function TranslateComponent({ database }) {
               </Box>
               <Select
                 label="Zero Dropdown"
+                inputProps={{ 'aria-label': 'Spreadsheet column to match' }}
                 style={{ height: 40 }}
                 value={zeroDropdownValue}
                 sx={{ m: 1, width: "12vw" }}

@@ -125,6 +125,17 @@ export default defineConfig(({ command, mode }) => {
       setupFiles: './vitest.setup.js',
       include: ['src/**/*.test.{js,jsx,ts,tsx}'],
       exclude: ['tests/**', 'node_modules/**'],
+      coverage: {
+        provider: 'v8',
+        all: true,
+        include: ['src/**/*.{js,jsx,ts,tsx}'],
+        exclude: [
+          'src/**/*.test.{js,jsx,ts,tsx}',
+          'src/data/**',
+          'src/**/infodata.json',
+        ],
+        reporter: ['text', 'html', 'json-summary'],
+      },
     },
   };
 });

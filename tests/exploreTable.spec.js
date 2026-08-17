@@ -10,7 +10,7 @@ test('Explore table renders buttons correctly', async ({ page }) => {
         localStorage.setItem('cookie-consent', 'false');
     });
 
-    await page.route('**/profile/bookmarks/add', async (route) => {
+    await page.route('**/users/bookmarks', async (route) => {
         await route.fulfill({
             status: 200,
             contentType: 'application/json',

@@ -2,8 +2,10 @@ import { test, expect } from '@playwright/test';
 
 const BASE_URL = process.env.E2E_BASE_URL || 'http://localhost:3000';
 
-const selectByIndex = async (page, index, optionName) => {
-  await page.locator('div[role="combobox"]').nth(index).click();
+const selectOption = async (page, accessibleName, optionName) => {
+  const combobox = page.getByRole('combobox', { name: accessibleName });
+  await expect(combobox).toBeVisible();
+  await combobox.press('ArrowDown');
   await page.getByRole('option', { name: optionName, exact: true }).click();
 };
 
@@ -105,11 +107,8 @@ test.describe('Edit simple upload', () => {
 
     await page.locator('input[name="datasetID"]').fill('AD1');
 
-    // Combobox order here:
-    // 0=template download, 1=rows-per-page, 2=domain, 3=subdomain,
-    // 4=cmName, 5=categoryNames, 6=altNames, 7=cmid, 8=key
-    await selectByIndex(page, 4, 'source_name');
-    await selectByIndex(page, 8, 'source_key');
+    await selectOption(page, /CMName/i, 'source_name');
+    await selectOption(page, /Key/i, 'source_key');
 
     await page.getByRole('button', { name: /^UPLOAD$/ }).click();
 

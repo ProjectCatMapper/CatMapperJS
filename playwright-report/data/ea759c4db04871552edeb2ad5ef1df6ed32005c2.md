@@ -1,0 +1,75 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e2]:
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - link "CatMapper logo" [ref=e6] [cursor=pointer]:
+        - /url: /
+        - img "CatMapper logo" [ref=e7]
+      - link "sociomap logo" [ref=e9] [cursor=pointer]:
+        - /url: /sociomap
+        - img "sociomap logo" [ref=e10]
+      - list [ref=e12]:
+        - listitem [ref=e13]:
+          - link "Home" [ref=e14] [cursor=pointer]:
+            - /url: /sociomap
+        - listitem [ref=e15]:
+          - link "Explore" [ref=e16] [cursor=pointer]:
+            - /url: /sociomap/explore
+        - listitem [ref=e17]:
+          - link "Translate" [ref=e18] [cursor=pointer]:
+            - /url: /sociomap/translate
+        - listitem [ref=e19]:
+          - link "Merge" [ref=e20] [cursor=pointer]:
+            - /url: /sociomap/merge
+        - listitem [ref=e21]:
+          - link "Help" [ref=e22] [cursor=pointer]:
+            - /url: https://help.catmapper.org/
+        - link "Login" [ref=e23] [cursor=pointer]:
+          - /url: /sociomap/login
+          - button "Login" [ref=e24]: Login
+    - generic [ref=e25]:
+      - alert [ref=e26]:
+        - img [ref=e28]
+        - generic [ref=e30]: Your session has expired. Please log in again.
+      - generic [ref=e31]:
+        - generic: Username
+        - generic [ref=e32]:
+          - textbox "Username" [ref=e33]
+          - group:
+            - generic: Username
+      - generic [ref=e34]:
+        - generic: Password
+        - generic [ref=e35]:
+          - textbox "Password" [ref=e36]
+          - group:
+            - generic: Password
+      - button "Login" [ref=e37] [cursor=pointer]: Login
+      - button "Forgot Password?" [ref=e38] [cursor=pointer]: Forgot Password?
+      - button "Register" [ref=e39] [cursor=pointer]: Register
+  - separator [ref=e40]
+  - generic [ref=e41]:
+    - generic [ref=e42]:
+      - img "CatMapper Logo" [ref=e43]
+      - generic [ref=e44]: CatMapper v2026.7.30-917
+    - generic [ref=e45]:
+      - link "About" [ref=e46] [cursor=pointer]:
+        - /url: /about
+      - link "People" [ref=e47] [cursor=pointer]:
+        - /url: /people
+      - link "News" [ref=e48] [cursor=pointer]:
+        - /url: /news
+      - link "Funding" [ref=e49] [cursor=pointer]:
+        - /url: /funding
+      - link "Citation" [ref=e50] [cursor=pointer]:
+        - /url: /citation
+      - link "Terms" [ref=e51] [cursor=pointer]:
+        - /url: /terms
+      - link "Privacy" [ref=e52] [cursor=pointer]:
+        - /url: /privacy
+      - link "Contact" [ref=e53] [cursor=pointer]:
+        - /url: /contact
+      - link "Download" [ref=e54] [cursor=pointer]:
+        - /url: /download
+```

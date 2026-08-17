@@ -1543,15 +1543,15 @@ const Edit = ({ database }) => {
         <Box sx={{ mt: 3 }}>
           <Box sx={{ mb: 2 }}>
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <InputLabel id="domain-label" style={{ color: "black " }}>
+              <InputLabel id="simple-domain-label" style={{ color: "black " }}>
                 Select the <strong>domain</strong> for this upload:
               </InputLabel>
               <SimpleFieldInfoButton helpText="Used when assigning category labels. If Subdomain is selected, Subdomain becomes the upload label; otherwise Domain is used." />
             </Box>
             <br />
             <Select
-              labelId="domain-label"
-              id="domain"
+              labelId="simple-domain-label"
+              id="simple-cm-name-column"
               name="domain"
               value={formData.domain}
               onChange={handleSimpleDomainChange}
@@ -1593,7 +1593,7 @@ const Edit = ({ database }) => {
           <br />
           <Box sx={{ mb: 2 }}>
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <InputLabel id="domain-label" style={{ color: "black " }}>
+              <InputLabel id="simple-dataset-cmid-label" style={{ color: "black " }}>
                 Enter the <strong>Dataset CMID</strong>:
               </InputLabel>
               <SimpleFieldInfoButton helpText="Mapped to datasetID for every uploaded row. Must be a dataset CMID such as SD... or AD...." />
@@ -1625,15 +1625,15 @@ const Edit = ({ database }) => {
           <br />
           <Box sx={{ mb: 2 }}>
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <InputLabel id="domain-label" style={{ color: "black " }}>
+              <InputLabel id="simple-cm-name-column-label" style={{ color: "black " }}>
                 Select the column for <strong>CMName</strong>:
               </InputLabel>
               <SimpleFieldInfoButton helpText="This column is mapped to CMName in the upload payload. It identifies the category/node name used during node creation or updates." />
             </Box>
             <br />
             <Select
-              labelId="domain-label"
-              id="domain"
+              labelId="simple-cm-name-column-label"
+              id="simple-cm-name-column"
               name="cmNameColumn"
               value={formData.cmNameColumn}
               onChange={handleChange}
@@ -1650,15 +1650,15 @@ const Edit = ({ database }) => {
           <br />
           <Box sx={{ mb: 2 }}>
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <InputLabel id="domain-label" style={{ color: "black " }}>
+              <InputLabel id="simple-category-name-column-label" style={{ color: "black " }}>
                 Select the column for <strong>category names</strong>:
               </InputLabel>
               <SimpleFieldInfoButton helpText="Mapped to Name in the upload payload. If left blank, Name is auto-filled from the selected CMName column." />
             </Box>
             <br />
             <Select
-              labelId="domain-label"
-              id="domain"
+              labelId="simple-category-name-column-label"
+              id="simple-category-name-column"
               name="categoryNamesColumn"
               value={formData.categoryNamesColumn}
               onChange={handleChange}
@@ -1675,7 +1675,7 @@ const Edit = ({ database }) => {
           <br />
           <Box sx={{ mb: 2 }}>
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <InputLabel id="domain-label" style={{ color: "black " }}>
+              <InputLabel id="simple-alt-name-columns-label" style={{ color: "black " }}>
                 Select column(s) for <strong>alternate category names</strong>:
               </InputLabel>
               <SimpleFieldInfoButton helpText="Selected columns are combined into one altNames value per row and joined with semicolons during upload." />
@@ -1683,8 +1683,8 @@ const Edit = ({ database }) => {
             <br />
             <Select
               multiple
-              labelId="domain-label"
-              id="domain"
+              labelId="simple-alt-name-columns-label"
+              id="simple-alt-name-columns"
               name="alternateCategoryNamesColumns"
               value={formData.alternateCategoryNamesColumns}
               onChange={handleSimpleAltNamesColumnsChange}
@@ -1702,15 +1702,15 @@ const Edit = ({ database }) => {
           <br />
           <Box sx={{ mb: 2 }}>
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <InputLabel id="domain-label" style={{ color: "black " }}>
+              <InputLabel id="simple-cmid-column-label" style={{ color: "black " }}>
                 Select the column for <strong>CMID</strong> (optional):
               </InputLabel>
               <SimpleFieldInfoButton helpText="Mapped to CMID. Leave blank to create new categories; provide a CMID column to target existing categories." />
             </Box>
             <br />
             <Select
-              labelId="domain-label"
-              id="domain"
+              labelId="simple-cmid-column-label"
+              id="simple-cmid-column"
               name="cmidColumn"
               value={formData.cmidColumn}
               onChange={handleChange}
@@ -1727,15 +1727,15 @@ const Edit = ({ database }) => {
           <br />
           <Box sx={{ mb: 2 }}>
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <InputLabel id="domain-label" style={{ color: "black " }}>
+              <InputLabel id="simple-key-columns-label" style={{ color: "black " }}>
                 Select column(s) for <strong>Key</strong>:
               </InputLabel>
               <SimpleFieldInfoButton helpText="Selected key columns are converted into Key expressions. Non-empty values are joined with && (for example var1 == x && var2 == y). If one selected key column is blank for a row, only the non-empty key part is used." />
             </Box>
             <br />
             <Select
-              labelId="domain-label"
-              id="domain"
+              labelId="simple-key-columns-label"
+              id="simple-key-columns"
               name="keyColumn"
               multiple
               value={

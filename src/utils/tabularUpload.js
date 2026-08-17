@@ -141,7 +141,15 @@ async function parseDelimitedRows(file, extension) {
     skipEmptyLines: false,
   });
 
-  if (Array.isArray(result.errors) && result.errors.length > 0) {
+  // Papa Parse reports UndetectableDelimiter when a small but otherwise valid
+  // CSV does not provide enough rows to score delimiter candidates reliably.
+  // It still falls back to a comma and returns the parsed data. Treat only
+  // actual parse errors as fatal so one-row and two-column uploads remain
+  // valid inputs.
+  const fatalErrors = Array.isArray(result.errors)
+    ? result.errors.filter((error) => error?.code !== 'UndetectableDelimiter')
+    : [];
+  if (fatalErrors.length > 0) {
     throw new Error('Unable to parse the uploaded file.');
   }
 

@@ -101,6 +101,16 @@ test.describe('Admin metadata manager', () => {
       });
     });
 
+    await page.route('**/admin_add_edit_delete_nodeproperties?**', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          r1: ['description', 'color', 'displayName'],
+        }),
+      });
+    });
+
     await page.route('**/admin/saveMetadata', async (route) => {
       const payload = route.request().postDataJSON();
       const hasExpectedNode = Array.isArray(payload?.updates)
