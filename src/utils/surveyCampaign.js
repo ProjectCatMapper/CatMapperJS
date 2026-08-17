@@ -20,27 +20,41 @@ const asDate = (value) => {
 };
 
 export const getSurveyCampaignConfig = ({
-  env = process.env,
+  env,
   hostname = window.location.hostname,
 } = {}) => {
+  const runtimeEnv = env || {
+    REACT_APP_SURVEY_CAMPAIGN_ID: process.env.REACT_APP_SURVEY_CAMPAIGN_ID,
+    VITE_SURVEY_CAMPAIGN_ID: process.env.VITE_SURVEY_CAMPAIGN_ID,
+    REACT_APP_SURVEY_START_AT: process.env.REACT_APP_SURVEY_START_AT,
+    VITE_SURVEY_START_AT: process.env.VITE_SURVEY_START_AT,
+    REACT_APP_SURVEY_END_AT: process.env.REACT_APP_SURVEY_END_AT,
+    VITE_SURVEY_END_AT: process.env.VITE_SURVEY_END_AT,
+    REACT_APP_SURVEY_FULL_SAMPLE_UNTIL: process.env.REACT_APP_SURVEY_FULL_SAMPLE_UNTIL,
+    VITE_SURVEY_FULL_SAMPLE_UNTIL: process.env.VITE_SURVEY_FULL_SAMPLE_UNTIL,
+    REACT_APP_SURVEY_SAMPLE_PERCENT: process.env.REACT_APP_SURVEY_SAMPLE_PERCENT,
+    VITE_SURVEY_SAMPLE_PERCENT: process.env.VITE_SURVEY_SAMPLE_PERCENT,
+    REACT_APP_SURVEY_DELAY_MS: process.env.REACT_APP_SURVEY_DELAY_MS,
+    VITE_SURVEY_DELAY_MS: process.env.VITE_SURVEY_DELAY_MS,
+  };
   const isDev = hostname === DEV_HOSTNAME;
-  const campaignId = env.REACT_APP_SURVEY_CAMPAIGN_ID
-    || env.VITE_SURVEY_CAMPAIGN_ID
+  const campaignId = runtimeEnv.REACT_APP_SURVEY_CAMPAIGN_ID
+    || runtimeEnv.VITE_SURVEY_CAMPAIGN_ID
     || (isDev ? "user-purpose-dev" : "");
 
   return {
     campaignId,
-    startAt: asDate(env.REACT_APP_SURVEY_START_AT || env.VITE_SURVEY_START_AT),
-    endAt: asDate(env.REACT_APP_SURVEY_END_AT || env.VITE_SURVEY_END_AT),
+    startAt: asDate(runtimeEnv.REACT_APP_SURVEY_START_AT || runtimeEnv.VITE_SURVEY_START_AT),
+    endAt: asDate(runtimeEnv.REACT_APP_SURVEY_END_AT || runtimeEnv.VITE_SURVEY_END_AT),
     fullSampleUntil: asDate(
-      env.REACT_APP_SURVEY_FULL_SAMPLE_UNTIL || env.VITE_SURVEY_FULL_SAMPLE_UNTIL
+      runtimeEnv.REACT_APP_SURVEY_FULL_SAMPLE_UNTIL || runtimeEnv.VITE_SURVEY_FULL_SAMPLE_UNTIL
     ),
     samplePercent: asPercent(
-      env.REACT_APP_SURVEY_SAMPLE_PERCENT || env.VITE_SURVEY_SAMPLE_PERCENT,
+      runtimeEnv.REACT_APP_SURVEY_SAMPLE_PERCENT || runtimeEnv.VITE_SURVEY_SAMPLE_PERCENT,
       isDev ? 100 : 0
     ),
     delayMs: asDelay(
-      env.REACT_APP_SURVEY_DELAY_MS || env.VITE_SURVEY_DELAY_MS,
+      runtimeEnv.REACT_APP_SURVEY_DELAY_MS || runtimeEnv.VITE_SURVEY_DELAY_MS,
       20000
     ),
   };
