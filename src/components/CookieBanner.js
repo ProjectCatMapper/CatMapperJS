@@ -59,9 +59,8 @@ const CookieBanner = () => {
                 backdropFilter: 'blur(4px)',
             }}>
                 <Typography variant="body2" sx={{ color: 'text.primary' }}>
-                    CatMapper uses cookies and browser storage to improve your mapping experience. By clicking
-                    "Accept," you allow optional first-party analytics, including a time-stamped trail of internal
-                    URLs (with query strings), and Google Analytics. You can decline without this tracking.
+                    CatMapper uses optional analytics to understand how visitors move through the site. You can
+                    accept or decline at any time.
                 </Typography>
                 <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
                     <Button size="small" color="inherit" onClick={handleDecline}>
