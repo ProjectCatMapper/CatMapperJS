@@ -8,7 +8,8 @@ import DatabaseRoute from './components/DatabaseRoute';
 import ReactGA from 'react-ga4';
 import CookieBanner from './components/CookieBanner';
 import SurveyCampaign from './components/SurveyCampaign';
-import { isCookieConsentAccepted } from './utils/cookieConsent';
+import { COOKIE_CONSENT_CHANGED_EVENT, isCookieConsentAccepted } from './utils/cookieConsent';
+import { clearNavigationTrail, recordNavigationTrailEvent } from './utils/navigationTrail';
 import { DEFAULT_DATABASE } from './utils/database';
 
 const DynamicPropertiesForm = lazy(() => import('./components/EditMetadata'));
@@ -53,6 +54,22 @@ const usePageTracking = () => {
       ReactGA.send({ hitType: "pageview", page: location.pathname });
     }
   }, [location]);
+};
+
+const useFirstPartyNavigationTrail = () => {
+  const location = useLocation();
+
+  useEffect(() => {
+    recordNavigationTrailEvent();
+  }, [location]);
+
+  useEffect(() => {
+    const handleConsentChange = (event) => {
+      if (event.detail !== 'accepted') clearNavigationTrail();
+    };
+    window.addEventListener(COOKIE_CONSENT_CHANGED_EVENT, handleConsentChange);
+    return () => window.removeEventListener(COOKIE_CONSENT_CHANGED_EVENT, handleConsentChange);
+  }, []);
 };
 
 const useOutboundLinkTracking = () => {
@@ -117,6 +134,7 @@ const App = () => {
   //   };
   // }, []);
   usePageTracking();
+  useFirstPartyNavigationTrail();
   useOutboundLinkTracking();
 
   return (

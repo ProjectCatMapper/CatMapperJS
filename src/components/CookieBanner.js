@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Snackbar, Button, Typography, Box } from '@mui/material';
 import { getCookieConsent, setCookieConsent } from '../utils/cookieConsent';
+import { clearNavigationTrail } from '../utils/navigationTrail';
 
 // Replace with your actual Measurement ID
 const GA_MEASUREMENT_ID = process.env.REACT_APP_GOOGLE_ANALYTICS_ID;
@@ -26,6 +27,7 @@ const CookieBanner = () => {
     };
 
     const handleDecline = () => {
+        clearNavigationTrail();
         setCookieConsent('rejected');
         if (GA_MEASUREMENT_ID) {
             window[`ga-disable-${GA_MEASUREMENT_ID}`] = true;
@@ -57,8 +59,9 @@ const CookieBanner = () => {
                 backdropFilter: 'blur(4px)',
             }}>
                 <Typography variant="body2" sx={{ color: 'text.primary' }}>
-                    CatMapper uses cookies to improve your mapping experience and analyze our traffic.
-                    By clicking "Accept," you agree to our use of cookies.
+                    CatMapper uses cookies and browser storage to improve your mapping experience. By clicking
+                    "Accept," you allow optional first-party analytics, including a time-stamped trail of internal
+                    URLs (with query strings), and Google Analytics. You can decline without this tracking.
                 </Typography>
                 <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
                     <Button size="small" color="inherit" onClick={handleDecline}>

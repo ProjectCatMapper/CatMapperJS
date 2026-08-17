@@ -14,7 +14,7 @@ const Privacy = () => {
         </Typography>
 
         <Typography variant="body2" color="text.secondary" paragraph>
-          Effective date: August 11, 2026
+          Effective date: August 17, 2026
         </Typography>
 
         <Box sx={{ mb: 3 }}>
@@ -30,7 +30,7 @@ const Privacy = () => {
             We collect information you provide directly, such as account details for registered users and metadata you submit through CatMapper tools.
           </Typography>
           <Typography variant="body1" paragraph>
-            We also collect limited technical usage information (for example, page views and basic browser/session data) to improve reliability and usability.
+            With optional analytics consent, we collect limited technical usage information to improve reliability and usability. This includes a random, first-party session identifier and a time-stamped sequence of the full internal URLs you visit, including query strings. We do not add IP addresses, account identifiers, or optional survey comments to this navigation trail.
           </Typography>
           <Typography variant="body1" paragraph>
             We may invite visitors to answer a short survey about why they came to CatMapper. Survey answers are voluntary. Optional written comments are limited to 1,000 characters and are stored separately from analytics data.
@@ -50,10 +50,10 @@ const Privacy = () => {
             CatMapper uses cookies and browser storage for core application functions, including authentication state and user preferences.
           </Typography>
           <Typography variant="body1" paragraph>
-            Optional analytics are only enabled when consent is granted through the cookie banner.
+            Optional analytics are only enabled when consent is granted through the cookie banner. Existing consent is renewed when this analytics purpose changes.
           </Typography>
           <Typography variant="body1" paragraph>
-            With analytics consent, we use Google Analytics to understand page-to-page journeys, survey response categories, and links followed to other websites. We do not send optional survey comments to Google Analytics, and Google Analytics does not make individual IP addresses available to CatMapper.
+            With analytics consent, CatMapper stores the first-party internal navigation trail described above to understand page-to-page journeys. We also use Google Analytics to understand aggregate traffic, survey response categories, and links followed to other websites. We do not send optional survey comments to Google Analytics, and Google Analytics does not make individual IP addresses available to CatMapper.
           </Typography>
         </Box>
 
@@ -70,7 +70,7 @@ const Privacy = () => {
             We use reasonable administrative and technical safeguards to protect data. Data is retained only as long as needed for operational, research, legal, and security purposes.
           </Typography>
           <Typography variant="body1" paragraph>
-            Optional written survey comments are retained for up to 180 days. Aggregated survey and analytics results may be retained longer when they no longer identify an individual visitor.
+            Optional written survey comments are retained for up to 180 days. First-party navigation trails are retained for up to 30 days. Aggregated survey and analytics results may be retained longer when they no longer identify an individual visitor.
           </Typography>
         </Box>
 
@@ -80,7 +80,7 @@ const Privacy = () => {
             You may request updates or deletion of your account information where applicable. For privacy-related requests, contact us at <Link href="mailto:support@catmapper.org">support@catmapper.org</Link>.
           </Typography>
           <Typography variant="body1" paragraph>
-            You can withdraw or change analytics consent at any time using the Cookie settings link in the site footer. Declining analytics prevents CatMapper from collecting an analytics journey or outbound-link trail.
+            You can withdraw or change analytics consent at any time using the Cookie settings link in the site footer. Declining analytics prevents CatMapper from collecting an analytics journey or outbound-link trail. Withdrawing consent deletes the first-party navigation trail associated with the current browser session.
           </Typography>
         </Box>
 

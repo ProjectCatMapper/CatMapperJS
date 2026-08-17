@@ -5,9 +5,11 @@ import image from "../assets/catmapperWhite_small.webp";
 import packageJson from '../../package.json';
 import './FooterLinks.css';
 import { clearCookieConsent } from '../utils/cookieConsent';
+import { clearNavigationTrail } from '../utils/navigationTrail';
 
 const FooterLinks = () => {
     const handleCookieSettings = () => {
+        clearNavigationTrail();
         clearCookieConsent();
         window.location.reload();
     };

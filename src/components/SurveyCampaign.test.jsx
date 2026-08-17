@@ -3,6 +3,7 @@ import { act } from 'react';
 import { createRoot } from 'react-dom/client';
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { setCookieConsent } from '../utils/cookieConsent';
 
 const analytics = vi.hoisted(() => ({ event: vi.fn() }));
 
@@ -46,7 +47,7 @@ describe('SurveyCampaign', () => {
   });
 
   const renderSurvey = async (consent) => {
-    localStorage.setItem('cookieConsent', consent);
+    setCookieConsent(consent);
     await act(async () => {
       root.render(<MemoryRouter><SurveyCampaign /></MemoryRouter>);
       await flushPromises();
@@ -106,7 +107,7 @@ describe('SurveyCampaign', () => {
 
   it('waits 20 seconds or opens after a user interaction', async () => {
     process.env.REACT_APP_SURVEY_DELAY_MS = '20000';
-    localStorage.setItem('cookieConsent', 'rejected');
+    setCookieConsent('rejected');
     await act(async () => {
       root.render(<MemoryRouter><SurveyCampaign /></MemoryRouter>);
       await flushPromises();
