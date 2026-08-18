@@ -19,6 +19,7 @@ vi.mock('./components/SurveyCampaign', () => ({
 }));
 
 vi.mock('./utils/cookieConsent', () => ({
+  COOKIE_CONSENT_CHANGED_EVENT: 'catmapper:cookie-consent-changed',
   getCookieConsent: () => 'rejected',
   isCookieConsentAccepted: () => false,
 }));
