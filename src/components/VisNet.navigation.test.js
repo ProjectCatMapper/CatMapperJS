@@ -145,4 +145,45 @@ describe('VisNet layout lifecycle', () => {
     expect(container.textContent).toContain('CMID: SM1');
     expect(Network).toHaveBeenCalledTimes(1);
   });
+
+  test('never renders internal ownership metadata from a prebuilt tooltip', () => {
+    const visData = {
+      nodes: [{
+        id: 1,
+        CMID: 'SM1',
+        CMName: 'Example',
+        domain: ['LANGUAGE'],
+        tooltipcon: [
+          'CMID: SM1',
+          'ownerUserId: user-123',
+          'modifiedByOtherUser: false',
+        ],
+      }],
+      edges: [],
+    };
+
+    act(() => {
+      root.render(
+        <MemoryRouter>
+          <Neo4jVisualization
+            visData={visData}
+            dropdownNodeLimit={500}
+            database="sociomap"
+          />
+        </MemoryRouter>
+      );
+    });
+
+    act(() => {
+      handlers.click({
+        nodes: [1],
+        pointer: { DOM: { x: 100, y: 80 } },
+      });
+      vi.advanceTimersByTime(200);
+    });
+
+    expect(container.textContent).toContain('CMID: SM1');
+    expect(container.textContent).not.toContain('ownerUserId');
+    expect(container.textContent).not.toContain('modifiedByOtherUser');
+  });
 });

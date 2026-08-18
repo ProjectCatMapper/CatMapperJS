@@ -1,6 +1,7 @@
 import {
   generateNetworkTooltipContent,
   getNetworkExplorerPropertyEntries,
+  filterNetworkExplorerTooltipLines,
   isNetworkExplorerPropertyVisible,
   isNetworkExplorerTooltipLineVisible,
 } from './networkExplorerProperties';
@@ -45,5 +46,12 @@ describe('network explorer property visibility', () => {
     'MODIFIEDBYOTHERUSER: false',
   ])('hides internal metadata tooltip line %s', (line) => {
     expect(isNetworkExplorerTooltipLineVisible(line)).toBe(false);
+  });
+
+  test('filters every internal property from prebuilt tooltip lines', () => {
+    expect(filterNetworkExplorerTooltipLines([
+      'CMID: SM1',
+      ...Object.keys(ownershipMetadata).map((property) => ` ${property.toUpperCase()} : hidden`),
+    ])).toEqual(['CMID: SM1']);
   });
 });

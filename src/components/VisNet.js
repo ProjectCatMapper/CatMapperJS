@@ -2,8 +2,8 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useState, useRef } fr
 import { Network } from 'vis-network';
 import { useNavigate } from 'react-router-dom'
 import {
+  filterNetworkExplorerTooltipLines,
   getNetworkExplorerPropertyEntries,
-  isNetworkExplorerTooltipLineVisible,
 } from '../utils/networkExplorerProperties';
 import './VisNet.css';
 
@@ -100,7 +100,7 @@ const Neo4jVisualization = ({
       'normnames',
     ]);
 
-    let details = (node.tooltipcon || []).filter(
+    let details = filterNetworkExplorerTooltipLines(node.tooltipcon).filter(
       item => item !== 'SocioMapID' && item !== 'SocioMapName'
     );
     const cmItems = details.filter(item => ['cmid', 'cmname'].includes(getFieldKey(item)));
@@ -110,7 +110,6 @@ const Neo4jVisualization = ({
     details = details.filter((item) => {
       const key = getFieldKey(item);
       if (excludedNodeFields.has(key)) return false;
-      if (!isNetworkExplorerTooltipLineVisible(item)) return false;
       return !key.includes('log');
     });
 
@@ -163,7 +162,7 @@ const Neo4jVisualization = ({
 
     if (edge.type === 'MERGING') {
       const { from, to, color, id, ...rest } = edge;
-      const lines = Object.entries(rest)
+      const lines = getNetworkExplorerPropertyEntries(rest)
         .filter(([key, value]) => {
           if (key.toLowerCase().includes('log')) return false;
           if (value === null || value === undefined) return false;

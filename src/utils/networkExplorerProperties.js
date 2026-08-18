@@ -15,6 +15,9 @@ export const getNetworkExplorerPropertyEntries = (properties = {}) =>
 export const isNetworkExplorerTooltipLineVisible = (line) =>
   isNetworkExplorerPropertyVisible(String(line || '').split(':', 1)[0]);
 
+export const filterNetworkExplorerTooltipLines = (lines = []) =>
+  (Array.isArray(lines) ? lines : []).filter(isNetworkExplorerTooltipLineVisible);
+
 export const generateNetworkTooltipContent = (properties = {}) =>
   getNetworkExplorerPropertyEntries(properties)
     .filter(([, value]) => value != null && value !== '' && value !== 'NULL' && value !== 'null')
