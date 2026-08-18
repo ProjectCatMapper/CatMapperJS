@@ -1,7 +1,10 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useState, useRef } from 'react';
 import { Network } from 'vis-network';
 import { useNavigate } from 'react-router-dom'
-import { getNetworkExplorerPropertyEntries } from '../utils/networkExplorerProperties';
+import {
+  getNetworkExplorerPropertyEntries,
+  isNetworkExplorerTooltipLineVisible,
+} from '../utils/networkExplorerProperties';
 import './VisNet.css';
 
 export const buildNodeNetworkPath = (database, cmid) => `/${database}/${cmid}/network`;
@@ -107,6 +110,7 @@ const Neo4jVisualization = ({
     details = details.filter((item) => {
       const key = getFieldKey(item);
       if (excludedNodeFields.has(key)) return false;
+      if (!isNetworkExplorerTooltipLineVisible(item)) return false;
       return !key.includes('log');
     });
 

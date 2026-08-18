@@ -2,6 +2,7 @@ import {
   generateNetworkTooltipContent,
   getNetworkExplorerPropertyEntries,
   isNetworkExplorerPropertyVisible,
+  isNetworkExplorerTooltipLineVisible,
 } from './networkExplorerProperties';
 
 const ownershipMetadata = {
@@ -37,5 +38,12 @@ describe('network explorer property visibility', () => {
       Name: ['Example'],
       Key: ['1'],
     });
+  });
+
+  test.each([
+    ' ownerUserId: user-123',
+    'MODIFIEDBYOTHERUSER: false',
+  ])('hides internal metadata tooltip line %s', (line) => {
+    expect(isNetworkExplorerTooltipLineVisible(line)).toBe(false);
   });
 });
