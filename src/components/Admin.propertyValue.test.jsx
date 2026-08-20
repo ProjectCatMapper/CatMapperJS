@@ -17,11 +17,13 @@ describe('formatAdminPropertyValue', () => {
 });
 
 describe('filterUsesPropertyOptions', () => {
-  it('excludes log and geoPolygon from USES add and edit property options', () => {
+  it('excludes internal fields from USES add and edit property options', () => {
     const options = [
       'Name',
       'log',
       'geoPolygon',
+      'modifiedByOtherUser',
+      'ownerUserId',
       'populationEstimate',
     ];
 
@@ -35,12 +37,14 @@ describe('filterUsesPropertyOptions', () => {
     expect(filterUsesPropertyOptions([
       ' LOG ',
       'GEOPOLYGON',
+      ' modifiedbyotheruser ',
+      'OWNERUSERID',
       'district',
     ], 'edit')).toEqual(['district']);
   });
 
-  it('keeps log and geoPolygon available for deletion', () => {
-    const options = ['log', 'geoPolygon', 'district'];
+  it('keeps excluded fields available for deletion', () => {
+    const options = ['log', 'geoPolygon', 'modifiedByOtherUser', 'ownerUserId', 'district'];
 
     expect(filterUsesPropertyOptions(options, 'delete')).toEqual(options);
   });

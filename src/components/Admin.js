@@ -116,7 +116,12 @@ const Select = ({ MenuProps, size = "small", sx, ...props }) => (
 );
 
 const OWNER_SCOPED_USES_EDITABLE_PROPERTIES = ["Key", "label", "Name"];
-const EXCLUDED_USES_ADD_EDIT_PROPERTIES = new Set(["log", "geopolygon"]);
+const EXCLUDED_USES_ADD_EDIT_PROPERTIES = new Set([
+  "geopolygon",
+  "log",
+  "modifiedbyotheruser",
+  "owneruserid",
+]);
 
 export const filterUsesPropertyOptions = (options, action) => (
   action === "add" || action === "edit"
