@@ -280,6 +280,7 @@ export default function Tableclick({ cmid, database, tabval }) {
   const [open, setOpen] = useState(false);
   const [bookmarkNotice, setBookmarkNotice] = useState({ open: false, severity: "success", message: "" });
   const [categoryInfoDialog, setCategoryInfoDialog] = useState({ open: false, key: "", value: "" });
+  const [showAllUsesComments, setShowAllUsesComments] = useState(false);
   const historyLoggedRef = useRef("");
   const [mergeTemplateSummary, setMergeTemplateSummary] = useState(null);
   const [loadingMergeTemplateSummary, setLoadingMergeTemplateSummary] = useState(false);
@@ -1391,6 +1392,13 @@ export default function Tableclick({ cmid, database, tabval }) {
   const deletedRedirectTarget = typeof rev?.Merged_into_CMID === "string" ? rev.Merged_into_CMID.trim() : "";
   const hasDeletedRedirect = Boolean(deletedRedirectTarget && deletedRedirectTarget !== cmid);
   const categoryInfoSections = useMemo(() => buildCategoryInfoSections(rev), [rev]);
+  const usesComments = useMemo(
+    () => (Array.isArray(rev?.UsesComments) ? rev.UsesComments : [])
+      .map((comment) => String(comment ?? '').trim())
+      .filter(Boolean),
+    [rev]
+  );
+  const hasLongUsesComments = usesComments.some((comment) => comment.split(/\r?\n/).length > 3);
   const closeCategoryInfoDialog = useCallback(() => {
     setCategoryInfoDialog({ open: false, key: "", value: "" });
   }, []);
@@ -1908,6 +1916,29 @@ export default function Tableclick({ cmid, database, tabval }) {
                 </Alert>
               )}
               <Box id="content" className="category-info-grid">
+                {usesComments.length > 0 && (
+                  <Box className="category-info-uses-comments" aria-label="Comments from USES ties">
+                    <Typography className="category-info-uses-comments-title" component="h2">
+                      Comments from USES ties
+                    </Typography>
+                    <Box className={hasLongUsesComments && !showAllUsesComments ? "category-info-uses-comments-collapsed" : ""}>
+                      {usesComments.map((comment, index) => (
+                        <Typography key={`${comment}-${index}`} component="p" className="category-info-uses-comment">
+                          {comment}
+                        </Typography>
+                      ))}
+                    </Box>
+                    {hasLongUsesComments && (
+                      <Button
+                        size="small"
+                        onClick={() => setShowAllUsesComments((expanded) => !expanded)}
+                        aria-label={showAllUsesComments ? "Hide USES tie comments" : "Show all USES tie comments"}
+                      >
+                        {showAllUsesComments ? "Show fewer comments" : "Show all comments"}
+                      </Button>
+                    )}
+                  </Box>
+                )}
                 {categoryInfoSections.primary.length > 0 ||
                   categoryInfoSections.compact.length > 0 ||
                   categoryInfoSections.detail.length > 0 ||
