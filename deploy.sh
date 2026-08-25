@@ -187,12 +187,12 @@ if [ -n "$(run_as_deploy_user git status --porcelain)" ]; then
 fi
 
 if [ "$SKIP_VERSION" = false ]; then
-  # 2. Generate and store the version string
-  NEW_VERSION=$(date +%Y.%m.%d-%H%M)
-
-  # 3. Update the package.json version
-  run_node_cmd_as_deploy_user npm version "$NEW_VERSION" --no-git-tag-version
-  echo "🔢 Version updated to $NEW_VERSION"
+  NEW_VERSION="$(run_node_cmd_as_deploy_user node -p "require('./package.json').version")"
+  if [ -z "$NEW_VERSION" ]; then
+    echo "❌ Error: package.json has no committed version. Install the repository Git hooks and commit again."
+    exit 1
+  fi
+  echo "🔢 Deploying committed version $NEW_VERSION"
 else
   echo "⏩ Skipping version update and Git tagging..."
 fi
@@ -229,12 +229,13 @@ rsync -av --delete --exclude '/media/' --chmod=Du=rwx,Dg=rwx,Do=rx,Fu=rw,Fg=rw,F
 if [ "$SKIP_VERSION" = false ]; then
   echo "🏷️ Tagging version v$NEW_VERSION in Git..."
 
-  # Commit the package.json change
-  run_as_deploy_user git add package.json package-lock.json
-  run_as_deploy_user git commit -m "Build: $NEW_VERSION"
-
-  # Create the annotated tag
-  run_as_deploy_user git tag -a "v$NEW_VERSION" -m "Deployment on $(date)"
+  # Create the annotated tag on the existing versioned commit.
+  if ! run_as_deploy_user git rev-parse "v$NEW_VERSION" >/dev/null 2>&1; then
+    run_as_deploy_user git tag -a "v$NEW_VERSION" -m "Deployment on $(date)"
+  elif [ "$(run_as_deploy_user git rev-list -n 1 "v$NEW_VERSION")" != "$(run_as_deploy_user git rev-parse HEAD)" ]; then
+    echo "❌ Error: v$NEW_VERSION already points to another commit."
+    exit 1
+  fi
 
   # Push the commit and the tag to your remote
   run_as_deploy_user git push origin "$CURRENT_BRANCH"

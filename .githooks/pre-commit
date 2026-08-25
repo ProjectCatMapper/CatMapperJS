@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+version="$(date +%Y.%-m.%-d-%H%M%S)"
+npm version "$version" --no-git-tag-version --allow-same-version >/dev/null
+git add package.json package-lock.json
