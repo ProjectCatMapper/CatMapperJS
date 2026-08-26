@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   filterUsesPropertyOptions,
   formatAdminPropertyValue,
+  formatChangeReviewProposal,
 } from './Admin';
 
 describe('formatAdminPropertyValue', () => {
@@ -13,6 +14,21 @@ describe('formatAdminPropertyValue', () => {
   it('formats object list items by their display label', () => {
     expect(formatAdminPropertyValue([{ label: 'Focus A' }, { CMID: 'SM461550' }]))
       .toBe('Focus A || SM461550');
+  });
+});
+
+describe('formatChangeReviewProposal', () => {
+  it('summarizes a USES edit with old and proposed values', () => {
+    expect(formatChangeReviewProposal({
+      action: 'add/edit/delete USES property',
+      input: {
+        s1_1: 'edit',
+        s1_3: 'New label',
+        s1_4: [[{ CMID: 'SM1' }, { label: 'Old label' }, { CMID: 'SD1' }]],
+        s1_7: '1',
+        s1_8: 'label',
+      },
+    })).toBe('edit USES label: Old label → New label on SD1');
   });
 });
 

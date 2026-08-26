@@ -35,13 +35,6 @@ const setInputValue = (input, value) => {
   input.dispatchEvent(new Event('change', { bubbles: true }));
 };
 
-const setTextareaValue = (textarea, value) => {
-  const setter = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(textarea), 'value')?.set;
-  setter?.call(textarea, value);
-  textarea.dispatchEvent(new Event('input', { bubbles: true }));
-  textarea.dispatchEvent(new Event('change', { bubbles: true }));
-};
-
 describe('Admin change user password flow', () => {
   let container;
   let root;
@@ -238,7 +231,7 @@ describe('Admin change user password flow', () => {
     expect(document.body.textContent).not.toContain('create new user');
   });
 
-  it('alerts registered users when no USES ties are eligible', async () => {
+  it('does not show the removed USES eligibility notification', async () => {
     authMock.authLevel = 1;
     global.fetch = vi.fn(() =>
       Promise.resolve({
@@ -267,33 +260,32 @@ describe('Admin change user password flow', () => {
       await flushPromises();
     });
 
-    expect(window.alert).toHaveBeenCalledWith('No USES ties are eligible for modification for this CMID.');
+    expect(window.alert).not.toHaveBeenCalledWith('No USES ties are eligible for modification for this CMID.');
   });
 
-  it('opens admin review request dialog for blocked registered user node deletion', async () => {
+  it('offers approval email after a blocked change is submitted for review', async () => {
     authMock.authLevel = 1;
     window.confirm = vi.fn(() => true);
     global.fetch = vi.fn((url) => {
       if (String(url).includes('/admin/edit')) {
         return Promise.resolve({
-          ok: false,
+          ok: true,
           headers: { get: () => 'application/json' },
           json: async () => ({
-            error: 'User is not authorized to merge or delete SM123; the CMID is referenced in other USES ties: rel-1',
-            requiresAdminReview: true,
+            message: 'Your changes have been submitted for review.',
+            submittedForReview: true,
             review: {
-              cmid: 'SM123',
-              reasonCode: 'cmid_referenced_elsewhere',
-              details: { references: ['rel-1'] },
+              requestId: 'change-123',
+              targetCmid: 'SM123',
             },
           }),
         });
       }
-      if (String(url).includes('/admin/node-removal-review-request')) {
+      if (String(url).includes('/admin/change-reviews/change-123/notification')) {
         return Promise.resolve({
           ok: true,
           headers: { get: () => 'application/json' },
-          json: async () => ({ message: 'Admin review request sent.' }),
+          json: async () => ({ message: 'Approval email preference saved.', notifyRequester: true }),
         });
       }
       return Promise.resolve({
@@ -359,17 +351,11 @@ describe('Admin change user password flow', () => {
     expect(window.confirm).toHaveBeenCalledWith(
       'Are you sure you want to delete node SM123 (Blocked Node)? This action cannot be undone.'
     );
-    expect(document.body.textContent).toContain('Admin Review Required');
-    expect(document.body.textContent).toContain('SM123');
-
-    const reasonInput = document.body.querySelector('textarea');
-    await act(async () => {
-      setTextareaValue(reasonInput, 'Please merge the duplicate I created by mistake.');
-      await flushPromises();
-    });
+    expect(document.body.textContent).toContain('Changes submitted for review');
+    expect(document.body.textContent).toContain('Would you like to be emailed at the address on file');
 
     const sendButton = Array.from(document.body.querySelectorAll('button')).find(
-      (node) => node.textContent?.trim() === 'Send Request'
+      (node) => node.textContent?.trim() === 'Yes, email me'
     );
 
     await act(async () => {
@@ -379,12 +365,11 @@ describe('Admin change user password flow', () => {
     });
 
     expect(global.fetch).toHaveBeenCalledWith(
-      expect.stringContaining('/admin/node-removal-review-request'),
+      expect.stringContaining('/admin/change-reviews/change-123/notification'),
       expect.objectContaining({
-        method: 'POST',
-        body: expect.stringContaining('Please merge the duplicate I created by mistake.'),
+        method: 'PATCH',
+        body: expect.stringContaining('"notifyRequester":true'),
       })
     );
-    expect(window.alert).toHaveBeenCalledWith('Admin review request sent.');
   });
 });

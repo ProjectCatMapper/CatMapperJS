@@ -26,7 +26,8 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  Paper
+  Paper,
+  Switch
 } from "@mui/material";
 import { useAuth } from './AuthContext';
 import { DataGrid, GridToolbar } from '@mui/x-data-grid';
@@ -115,7 +116,6 @@ const Select = ({ MenuProps, size = "small", sx, ...props }) => (
   />
 );
 
-const OWNER_SCOPED_USES_EDITABLE_PROPERTIES = ["Key", "label", "Name"];
 const EXCLUDED_USES_ADD_EDIT_PROPERTIES = new Set([
   "geopolygon",
   "log",
@@ -185,6 +185,41 @@ export const formatAdminPropertyValue = (value) => {
   }
 
   return String(value);
+};
+
+export const formatChangeReviewProposal = (review) => {
+  const input = review?.input || {};
+  const operation = String(input.s1_1 || "change").trim();
+  const newValue = formatAdminPropertyValue(input.s1_3);
+  if (review?.action === "add/edit/delete node property") {
+    const property = String(input.s1_7 || "property");
+    return `${operation} node ${property}${operation === "delete" ? "" : `: ${newValue}`}`;
+  }
+  if (review?.action === "add/edit/delete USES property") {
+    const selectedIndex = Number(input.s1_7) - 1;
+    const relation = Array.isArray(input.s1_4) ? input.s1_4[selectedIndex] : null;
+    const relationshipProps = Array.isArray(relation) ? relation[1] || {} : {};
+    const dataset = Array.isArray(relation) ? relation[2] || {} : {};
+    const property = String(input.s1_8 || "property");
+    const oldValue = formatAdminPropertyValue(relationshipProps[property]);
+    const change = operation === "delete"
+      ? `${property}: ${oldValue}`
+      : `${property}: ${oldValue || "(empty)"} → ${newValue}`;
+    return `${operation} USES ${change}${dataset.CMID ? ` on ${dataset.CMID}` : ""}`;
+  }
+  if (review?.action === "merge nodes") {
+    return `merge ${input.s1_3 || "discard node"} into ${input.s1_2 || "keep node"}`;
+  }
+  if (review?.action === "delete node") {
+    return `delete node ${input.s1_2 || review?.targetCmid || ""}`.trim();
+  }
+  if (review?.action === "delete USES relation") {
+    return `delete selected USES relation for ${input.s1_2 || review?.targetCmid || ""}`.trim();
+  }
+  if (review?.action === "move USES tie") {
+    return `move selected USES tie from ${input.s1_2 || ""} to ${input.s1_3 || ""}`.trim();
+  }
+  return review?.action || "Proposed change";
 };
 
 const formatRoutineCellValue = (value) => {
@@ -328,9 +363,11 @@ const Admin = ({ database }) => {
   const [datasetID, setDatasetID] = useState('')
   const [mergeConfirmOpen, setMergeConfirmOpen] = useState(false);
   const [mergePreview, setMergePreview] = useState({ keep: null, discard: null });
-  const [adminReviewOpen, setAdminReviewOpen] = useState(false);
-  const [adminReviewRequest, setAdminReviewRequest] = useState(null);
-  const [adminReviewReason, setAdminReviewReason] = useState("");
+  const [submittedReviewOpen, setSubmittedReviewOpen] = useState(false);
+  const [submittedReview, setSubmittedReview] = useState(null);
+  const [pendingChangeReviews, setPendingChangeReviews] = useState([]);
+  const [changeReviewEmailEnabled, setChangeReviewEmailEnabled] = useState(true);
+  const [changeReviewEmailDeliveryEnabled, setChangeReviewEmailDeliveryEnabled] = useState(false);
   const [passwordConfirmOpen, setPasswordConfirmOpen] = useState(false);
   const [passwordConfirmTarget, setPasswordConfirmTarget] = useState(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -390,7 +427,7 @@ const Admin = ({ database }) => {
     },
     {
       label: "User Options",
-      keys: ["lookup/edit users", "create new user", "change user password", "approve new users"],
+      keys: ["review proposed changes", "lookup/edit users", "create new user", "change user password", "approve new users"],
     },
     {
       label: "Database Checks",
@@ -410,86 +447,111 @@ const Admin = ({ database }) => {
   const selectedDuplicateTripletRows = routineDataRows.filter((row) => (
     selectedDuplicateTripletIds.includes(row.id)
   ));
-  const visiblePropertyOptions = (options) => (
-    isGlobalAdmin
-      ? options
-      : options.filter((option) => {
-        const normalized = String(option || "").trim().toLowerCase();
-        return normalized !== "log" && normalized !== "logid";
-      })
-  );
-  const visibleUsesPropertyOptions = (options) => (
-    isGlobalAdmin
-      ? options
-      : options.filter((option) => (
-        OWNER_SCOPED_USES_EDITABLE_PROPERTIES
-          .map((prop) => prop.toLowerCase())
-          .includes(String(option || "").trim().toLowerCase())
-      ))
-  );
+  const visiblePropertyOptions = (options) => options;
+  const visibleUsesPropertyOptions = (options) => options;
 
-  const buildNodeRemovalReviewRequest = (cleanedData, reviewResponse) => {
-    const targetCmid = firstDropdownValue === "merge nodes"
-      ? cleanedData.s1_3
-      : cleanedData.s1_2;
-    const keepCmid = firstDropdownValue === "merge nodes" ? cleanedData.s1_2 : "";
-
-    return {
-      action: firstDropdownValue,
-      database,
-      input: cleanedData,
-      targetCmid,
-      keepCmid,
-      review: reviewResponse?.review || null,
-      error: reviewResponse?.error || "This action needs admin review.",
-    };
-  };
-
-  const openNodeRemovalReviewDialog = (requestData) => {
-    setAdminReviewRequest(requestData);
-    setAdminReviewReason("");
-    setAdminReviewOpen(true);
-  };
-
-  const submitNodeRemovalReviewRequest = async () => {
-    const reason = adminReviewReason.trim();
-    if (!reason) {
-      alert("Please enter a reason for admin review.");
-      return;
+  const loadChangeReviews = async ({ showLoading = false } = {}) => {
+    if (!isGlobalAdmin) return;
+    try {
+      if (showLoading) setLoading(true);
+      const response = await fetch(
+        `${apiBaseUrl()}/admin/change-reviews?database=${encodeURIComponent(database)}&status=pending`,
+        { headers: { ...(cred ? { Authorization: `Bearer ${cred}` } : {}) } }
+      );
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "Unable to load proposed changes.");
+      setPendingChangeReviews(Array.isArray(result.reviews) ? result.reviews : []);
+    } catch (error) {
+      if (showLoading) alert(error.message || "Unable to load proposed changes.");
+    } finally {
+      if (showLoading) setLoading(false);
     }
+  };
 
+  const loadChangeReviewPreference = async () => {
+    if (!isGlobalAdmin) return;
+    try {
+      const response = await fetch(`${apiBaseUrl()}/admin/change-review-preferences`, {
+        headers: { ...(cred ? { Authorization: `Bearer ${cred}` } : {}) },
+      });
+      const result = await response.json();
+      if (response.ok) {
+        setChangeReviewEmailEnabled(result[String(database || "").toLowerCase()] !== false);
+        setChangeReviewEmailDeliveryEnabled(result.deliveryEnabled === true);
+      }
+    } catch (error) {
+      console.error("Unable to load change-review email preference:", error);
+    }
+  };
+
+  const updateChangeReviewPreference = async (enabled) => {
+    try {
+      setChangeReviewEmailEnabled(enabled);
+      const response = await fetch(`${apiBaseUrl()}/admin/change-review-preferences`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          ...(cred ? { Authorization: `Bearer ${cred}` } : {}),
+        },
+        body: JSON.stringify({ database, enabled }),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "Unable to save email preference.");
+    } catch (error) {
+      setChangeReviewEmailEnabled(!enabled);
+      alert(error.message || "Unable to save email preference.");
+    }
+  };
+
+  const decideChangeReview = async (requestId, decision) => {
+    const verb = decision === "approve" ? "approve and apply" : "reject";
+    if (!window.confirm(`Are you sure you want to ${verb} this proposed change?`)) return;
     try {
       setLoading(true);
-      const response = await fetch(`${apiBaseUrl()}/admin/node-removal-review-request`, {
+      const response = await fetch(`${apiBaseUrl()}/admin/change-reviews/${encodeURIComponent(requestId)}/decision`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           ...(cred ? { Authorization: `Bearer ${cred}` } : {}),
         },
-        body: JSON.stringify({
-          database: adminReviewRequest?.database || database,
-          fun: adminReviewRequest?.action,
-          input: adminReviewRequest?.input,
-          reason,
-        }),
+        body: JSON.stringify({ decision }),
       });
-      const contentType = response.headers.get("content-type") || "";
-      const result = contentType.includes("application/json")
-        ? await response.json()
-        : await response.text();
-
-      if (!response.ok) {
-        alert(typeof result === "string" ? result : result.error || "Admin review request failed.");
-        return;
-      }
-
-      alert(result.message || "Admin review request sent.");
-      setAdminReviewOpen(false);
-      setAdminReviewRequest(null);
-      setAdminReviewReason("");
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "Unable to decide proposed change.");
+      alert(result.message);
+      await loadChangeReviews();
     } catch (error) {
-      console.error("Error requesting admin review:", error);
-      alert("Admin review request failed.");
+      alert(error.message || "Unable to decide proposed change.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const saveRequesterApprovalNotification = async (notifyRequester) => {
+    const requestId = submittedReview?.requestId;
+    if (!requestId) {
+      setSubmittedReviewOpen(false);
+      return;
+    }
+    try {
+      setLoading(true);
+      const response = await fetch(
+        `${apiBaseUrl()}/admin/change-reviews/${encodeURIComponent(requestId)}/notification`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            ...(cred ? { Authorization: `Bearer ${cred}` } : {}),
+          },
+          body: JSON.stringify({ notifyRequester }),
+        }
+      );
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "Unable to save your email preference.");
+      setSubmittedReviewOpen(false);
+      setSubmittedReview(null);
+    } catch (error) {
+      alert(error.message || "Unable to save your email preference.");
     } finally {
       setLoading(false);
     }
@@ -566,15 +628,12 @@ const Admin = ({ database }) => {
       const result = contentType.includes("application/json")
         ? await response.json()
         : await response.text();
+      if (response.ok && result?.submittedForReview) {
+        setSubmittedReview(result.review || null);
+        setSubmittedReviewOpen(true);
+        return;
+      }
       if (!response.ok) {
-        if (
-          firstDropdownValue === "merge nodes" || firstDropdownValue === "delete node"
-        ) {
-          if (result?.requiresAdminReview) {
-            openNodeRemovalReviewDialog(buildNodeRemovalReviewRequest(cleanedData, result));
-            return;
-          }
-        }
         alert(typeof result === "string" ? result : result.error || "Action failed");
       } else {
         alert("Action completed");
@@ -608,7 +667,7 @@ const Admin = ({ database }) => {
         s1_3: formData.s1_3.trim(),
       };
 
-      await fetch(`${apiBaseUrl()}/admin/edit`, {
+      const response = await fetch(`${apiBaseUrl()}/admin/edit`, {
         //const response = await fetch("http://127.0.0.1:5001/admin/edit", {
         method: "POST",
         headers: {
@@ -624,7 +683,18 @@ const Admin = ({ database }) => {
         }),
       });
 
-      alert("Action completed");
+      const contentType = response.headers.get("content-type") || "";
+      const result = contentType.includes("application/json")
+        ? await response.json()
+        : await response.text();
+      if (!response.ok) {
+        alert(typeof result === "string" ? result : result.error || "Action failed");
+      } else if (result?.submittedForReview) {
+        setSubmittedReview(result.review || null);
+        setSubmittedReviewOpen(true);
+      } else {
+        alert("Action completed");
+      }
 
     } catch (error) {
       console.error("Error submitting form:", error);
@@ -1580,10 +1650,6 @@ const Admin = ({ database }) => {
             return;
           }
 
-          if (isUsesMode && Array.isArray(data.r) && data.r.length === 0) {
-            alert("No USES ties are eligible for modification for this CMID.");
-          }
-
           setDropdown1Options(data.r);
           setFormData(prevFormData => ({
             ...prevFormData,
@@ -1618,6 +1684,21 @@ const Admin = ({ database }) => {
   useEffect(() => {
     if (firstDropdownValue === "lookup/edit users") {
       loadUserStatusSummary();
+    }
+  }, [firstDropdownValue]);
+
+  useEffect(() => {
+    if (isGlobalAdmin) {
+      loadChangeReviews();
+      loadChangeReviewPreference();
+    } else {
+      setPendingChangeReviews([]);
+    }
+  }, [database, cred, isGlobalAdmin]);
+
+  useEffect(() => {
+    if (firstDropdownValue === "review proposed changes") {
+      loadChangeReviews({ showLoading: true });
     }
   }, [firstDropdownValue]);
 
@@ -1708,7 +1789,9 @@ const Admin = ({ database }) => {
                               sx={{ borderRadius: 1, mx: 1, mb: 0, py: 0.05, pl: 2.25, minHeight: 22 }}
                             >
                               <ListItemText
-                                primary={routineOptionByKey[key]?.label || key}
+                                primary={key === "review proposed changes"
+                                  ? `review proposed changes (${pendingChangeReviews.length})`
+                                  : routineOptionByKey[key]?.label || key}
                                 sx={{ my: 0 }}
                                 primaryTypographyProps={{ fontSize: "0.88rem", lineHeight: 1.12 }}
                               />
@@ -1732,6 +1815,13 @@ const Admin = ({ database }) => {
         </Box>
 
         <Box sx={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", pr: { md: 1 } }}>
+          {isGlobalAdmin && pendingChangeReviews.length > 0 && (
+            <Box sx={{ p: 1.25, mb: 1, border: "1px solid #d9a400", bgcolor: "#fff8df", borderRadius: 1 }}>
+              <Typography>
+                {pendingChangeReviews.length} proposed {pendingChangeReviews.length === 1 ? "change is" : "changes are"} waiting for review in {database}.
+              </Typography>
+            </Box>
+          )}
           <Box sx={{ mb: 2 }}>
             <Typography sx={{ mt: 1, fontWeight: 600 }}>
               Selected option: {routineOptionByKey[firstDropdownValue]?.label || firstDropdownValue}
@@ -3117,6 +3207,101 @@ const Admin = ({ database }) => {
               )}
             </Box>
           )}
+          {firstDropdownValue === "review proposed changes" && (
+            <Box sx={{ ml: 1, width: "100%", maxWidth: 1100 }}>
+              <Typography variant="h6" sx={{ mb: 1 }}>
+                Proposed changes for {database}
+              </Typography>
+              <Typography sx={{ mb: 2 }}>
+                Review the submitted values, then approve to apply the change with current validation checks or reject it.
+              </Typography>
+              <FormControlLabel
+                control={(
+                  <Switch
+                    checked={changeReviewEmailEnabled}
+                    onChange={(event) => updateChangeReviewPreference(event.target.checked)}
+                  />
+                )}
+                label={`Email me about new ${database} review requests`}
+              />
+              {!changeReviewEmailDeliveryEnabled && (
+                <Typography variant="body2" sx={{ color: "text.secondary", mb: 1 }}>
+                  Review-email delivery is currently paused system-wide. This preference will apply when delivery is enabled.
+                </Typography>
+              )}
+              <Box sx={{ mt: 1, mb: 2 }}>
+                <Button variant="outlined" onClick={() => loadChangeReviews({ showLoading: true })}>
+                  Refresh queue
+                </Button>
+              </Box>
+              {pendingChangeReviews.length === 0 ? (
+                <Typography>No proposed changes are waiting for review.</Typography>
+              ) : (
+                <TableContainer component={Paper}>
+                  <Table size="small">
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>Submitted</TableCell>
+                        <TableCell>User</TableCell>
+                        <TableCell>Action</TableCell>
+                        <TableCell>Target</TableCell>
+                        <TableCell>Proposed input</TableCell>
+                        <TableCell>Decision</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {pendingChangeReviews.map((review) => (
+                        <TableRow key={review.requestId}>
+                          <TableCell>{review.submittedAt}</TableCell>
+                          <TableCell>{review.submitterName || review.submittedBy}</TableCell>
+                          <TableCell>{review.action}</TableCell>
+                          <TableCell>{review.targetCmid}</TableCell>
+                          <TableCell sx={{ maxWidth: 360, whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
+                            <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                              {formatChangeReviewProposal(review)}
+                            </Typography>
+                            <Typography variant="caption" component="pre" sx={{ mt: 1, whiteSpace: "pre-wrap" }}>
+                              {JSON.stringify(review.input, null, 2)}
+                            </Typography>
+                            {review.authorizationReason && (
+                              <Typography variant="caption" component="div" sx={{ mt: 1, color: "text.secondary" }}>
+                                Gate result: {review.authorizationReason}
+                              </Typography>
+                            )}
+                            {review.lastError && (
+                              <Typography variant="caption" component="div" sx={{ mt: 1, color: "error.main" }}>
+                                Last apply error: {review.lastError}
+                              </Typography>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
+                              <Button
+                                size="small"
+                                color="success"
+                                variant="contained"
+                                onClick={() => decideChangeReview(review.requestId, "approve")}
+                              >
+                                Approve
+                              </Button>
+                              <Button
+                                size="small"
+                                color="error"
+                                variant="outlined"
+                                onClick={() => decideChangeReview(review.requestId, "reject")}
+                              >
+                                Reject
+                              </Button>
+                            </Box>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              )}
+            </Box>
+          )}
           {firstDropdownValue === "approve new users" && (
             <div>
               <Typography variant="p">Check for new users and approve them:</Typography>
@@ -3248,51 +3433,29 @@ const Admin = ({ database }) => {
         </DialogActions>
       </Dialog>
 
-      <Dialog
-        open={adminReviewOpen}
-        onClose={() => setAdminReviewOpen(false)}
-        fullWidth
-        maxWidth="sm"
-      >
-        <DialogTitle>Admin Review Required</DialogTitle>
+      <Dialog open={submittedReviewOpen} onClose={() => saveRequesterApprovalNotification(false)}>
+        <DialogTitle>Changes submitted for review</DialogTitle>
         <DialogContent>
-          <Typography component="div" sx={{ mb: 2, color: "text.primary" }}>
-            This action needs admin review because the CMID is used elsewhere in the database.
+          <Typography component="div" sx={{ mb: 1.5, color: "text.primary" }}>
+            Your changes have been submitted for review.
           </Typography>
           <Typography component="div" sx={{ color: "text.primary" }}>
-            <strong>Action:</strong> {adminReviewRequest?.action}
+            Would you like to be emailed at the address on file when the changes have been approved?
           </Typography>
-          <Typography component="div" sx={{ color: "text.primary" }}>
-            <strong>Target CMID:</strong> {adminReviewRequest?.targetCmid}
-          </Typography>
-          {adminReviewRequest?.keepCmid && (
-            <Typography component="div" sx={{ color: "text.primary" }}>
-              <strong>Keep CMID:</strong> {adminReviewRequest.keepCmid}
+          {submittedReview?.requestId && (
+            <Typography variant="caption" component="div" sx={{ mt: 2, color: "text.secondary" }}>
+              Request {submittedReview.requestId}
             </Typography>
           )}
-          {adminReviewRequest?.error && (
-            <Typography component="div" sx={{ mt: 1.5, color: "text.secondary" }}>
-              {adminReviewRequest.error}
-            </Typography>
-          )}
-          <TextField
-            label="Reason for admin review"
-            value={adminReviewReason}
-            onChange={(event) => setAdminReviewReason(event.target.value)}
-            fullWidth
-            multiline
-            minRows={4}
-            sx={{ mt: 2 }}
-          />
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setAdminReviewOpen(false)}>Cancel</Button>
+          <Button onClick={() => saveRequesterApprovalNotification(false)}>No thanks</Button>
           <Button
             color="success"
             variant="contained"
-            onClick={submitNodeRemovalReviewRequest}
+            onClick={() => saveRequesterApprovalNotification(true)}
           >
-            Send Request
+            Yes, email me
           </Button>
         </DialogActions>
       </Dialog>
