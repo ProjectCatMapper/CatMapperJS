@@ -155,6 +155,50 @@ describe('Admin change user password flow', () => {
     expect(document.body.textContent).toContain('ada');
   });
 
+  it('submits the create-new-user form through the admin creation endpoint', async () => {
+    global.fetch = vi.fn(() => Promise.resolve({
+      ok: true,
+      json: async () => ({ message: 'User created', user: { userid: '43' } }),
+    }));
+    await act(async () => {
+      root.render(React.createElement(MemoryRouter, { initialEntries: ['/sociomap/admin'] }, React.createElement(Admin, { database: 'sociomap' })));
+      await flushPromises();
+    });
+
+    const userOptionsLabel = Array.from(container.querySelectorAll('*')).find((node) => node.textContent?.trim().toLowerCase() === 'user options');
+    await act(async () => {
+      (userOptionsLabel.closest('button') || userOptionsLabel).dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      await flushPromises();
+    });
+    const createLabel = Array.from(container.querySelectorAll('*')).find((node) => node.textContent?.trim().toLowerCase() === 'create new user');
+    await act(async () => {
+      (createLabel.closest('button') || createLabel).dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      await flushPromises();
+    });
+
+    const values = { s1_2: 'grace', s1_3: 'Grace', s1_4: 'Hopper', s1_5: 'grace@example.org', s1_6: 'new-secret' };
+    await act(async () => {
+      Object.entries(values).forEach(([name, value]) => setInputValue(container.querySelector(`input[name="${name}"]`), value));
+      const roleSelect = container.querySelector('input[name="s1_7"]');
+      setInputValue(roleSelect, 'user');
+      await flushPromises();
+    });
+    expect(container.querySelector('input[name="s1_6"]').getAttribute('type')).toBe('password');
+    const submitButton = Array.from(container.querySelectorAll('button')).find((button) => button.textContent?.trim() === 'Submit New User');
+    expect(submitButton).toBeTruthy();
+    await act(async () => {
+      submitButton.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining('/admin/users/create'), expect.objectContaining({
+      method: 'POST',
+      body: expect.stringContaining('grace@example.org'),
+    }));
+    expect(window.alert).toHaveBeenCalledWith('User created');
+  });
+
   it('shows only owner-scoped edit tools for registered users', async () => {
     authMock.authLevel = 1;
 

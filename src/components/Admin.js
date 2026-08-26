@@ -965,6 +965,52 @@ const Admin = ({ database }) => {
     }
   };
 
+  const createAdminUser = async () => {
+    const payload = {
+      username: formData.s1_2.trim(),
+      first: formData.s1_3.trim(),
+      last: formData.s1_4.trim(),
+      email: formData.s1_5.trim(),
+      password: formData.s1_6,
+      role: formData.s1_7,
+      database,
+    };
+    const missing = Object.entries(payload)
+      .filter(([, value]) => !value)
+      .map(([field]) => field);
+    if (missing.length > 0) {
+      alert(`Complete all required fields: ${missing.join(", ")}.`);
+      return;
+    }
+    if (payload.password.length < 6) {
+      alert("Password must be at least 6 characters.");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const response = await fetch(`${apiBaseUrl()}/admin/users/create`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(cred ? { Authorization: `Bearer ${cred}` } : {}),
+        },
+        body: JSON.stringify(payload),
+      });
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result?.error || "Unable to create user.");
+      }
+      setFormData(INITIAL_FORM_STATE);
+      loadUserStatusSummary();
+      alert(result?.message || "User created.");
+    } catch (error) {
+      alert(error?.message || "Unable to create user.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const closePasswordConfirmDialog = () => {
     setPasswordConfirmOpen(false);
     setPasswordConfirmTarget(null);
@@ -2737,12 +2783,26 @@ const Admin = ({ database }) => {
                 password   </InputLabel>
               <TextField
                 name="s1_6"
+                type="password"
                 value={formData.s1_6}
                 onChange={updateFormFieldValue}
                 sx={{ width: 300, height: 40, mb: 3, mt: 0 }}
                 variant="outlined"
                 margin="normal"
               />
+              <Box sx={{ mt: 1 }}>
+                <Button
+                  variant="contained"
+                  sx={{
+                    backgroundColor: "black",
+                    color: "white",
+                    "&:hover": { backgroundColor: "green" },
+                  }}
+                  onClick={createAdminUser}
+                >
+                  Submit New User
+                </Button>
+              </Box>
             </Box>
           )
           }
