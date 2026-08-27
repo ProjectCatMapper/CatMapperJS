@@ -34,6 +34,10 @@ const dedupeStringList = (values) => {
 };
 
 const normalizeEntryValue = (normalizedKey, value) => {
+  if (normalizedKey === "usescomments") {
+    return normalizeUsesComments(value).join("\n");
+  }
+
   if (normalizedKey !== "location") return value;
 
   if (Array.isArray(value)) {
@@ -57,12 +61,6 @@ export const normalizeUsesComments = (comments) =>
   (Array.isArray(comments) ? comments : [])
     .map((comment) => String(comment ?? "").trim())
     .filter(Boolean);
-
-export const getUsesCommentLineCount = (comments) =>
-  normalizeUsesComments(comments).reduce(
-    (lineCount, comment) => lineCount + comment.split(/\r?\n/).length,
-    0
-  );
 
 const buildOrderMap = (values) => new Map(values.map((value, index) => [value, index]));
 
@@ -125,6 +123,7 @@ const toDisplayKey = (key, normalized) => {
   if (normalized === "cmname") return "CatMapper Name";
   if (normalized === "cmid") return "CatMapper ID";
   if (normalized === "domains") return "Domain";
+  if (normalized === "usescomments") return "COMMENTS";
   return String(key).replace(/_/g, " ");
 };
 
@@ -155,7 +154,7 @@ const toSectionEntry = (entry, section) => ({
 
 export function buildCategoryInfoSections(rev) {
   if (!rev || typeof rev !== "object") {
-    return { primary: [], compact: [], detail: [], stats: [] };
+    return { primary: [], compact: [], detail: [], stats: [], comments: [] };
   }
 
   const filteredEntries = Object.entries(rev)
@@ -188,8 +187,14 @@ export function buildCategoryInfoSections(rev) {
   const compact = [];
   const detail = [];
   const stats = [];
+  const comments = [];
 
   remaining.forEach((entry) => {
+    if (entry.normalized === "usescomments") {
+      comments.push(toSectionEntry(entry, "comments"));
+      return;
+    }
+
     if (STATS_SET.has(entry.normalized)) {
       stats.push(toSectionEntry(entry, "stats"));
       return;
@@ -213,5 +218,6 @@ export function buildCategoryInfoSections(rev) {
     compact: sortEntriesByPreferredOrder(compact, COMPACT_ORDER),
     detail: sortedDetail,
     stats: sortEntriesByPreferredOrder(stats, STATS_ORDER),
+    comments,
   };
 }

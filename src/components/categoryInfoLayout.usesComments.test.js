@@ -1,8 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
 import {
-  getUsesCommentLineCount,
+  buildCategoryInfoSections,
   normalizeUsesComments,
 } from "./categoryInfoLayout";
 
@@ -24,21 +22,22 @@ describe("USES tie comment display contract", () => {
     ]);
   });
 
-  it("counts separate and embedded comment lines for the three-line preview", () => {
-    expect(getUsesCommentLineCount(["First", "Second", "Third"])).toBe(3);
-    expect(getUsesCommentLineCount(["First", "Second\nThird", "Fourth"])).toBe(4);
-  });
+  it("puts one COMMENTS entry in its own final header section", () => {
+    const sections = buildCategoryInfoSections({
+      CMName: "Example",
+      UsesComments: ["First comment", "Second comment"],
+      direct_Children: 2,
+    });
 
-  it("renders Comments after the header metadata without the old duplicate box title", () => {
-    const source = readFileSync(
-      resolve(process.cwd(), "src/components/ExploreNode.js"),
-      "utf8"
-    );
-    const metadataPosition = source.indexOf('className="category-info-grid-inner"');
-    const commentsPosition = source.indexOf('aria-label="Comments"');
-
-    expect(metadataPosition).toBeGreaterThan(-1);
-    expect(commentsPosition).toBeGreaterThan(metadataPosition);
-    expect(source).not.toContain("Comments from USES ties");
+    expect(sections.detail).toEqual([]);
+    expect(sections.stats.map((entry) => entry.displayKey)).toEqual([
+      "direct Children",
+    ]);
+    expect(sections.comments).toHaveLength(1);
+    expect(sections.comments[0]).toMatchObject({
+      displayKey: "COMMENTS",
+      normalized: "usescomments",
+      plainValue: "First comment\nSecond comment",
+    });
   });
 });

@@ -153,25 +153,7 @@ h1,h4,p,a{
   padding: 4px 0 2px;
 }
 
-.category-info-uses-comments {
-  margin: 0.6rem 0 0;
-  padding: 0;
-}
-
-.category-info-uses-comments-title {
-  margin-bottom: 0.35rem;
-  font-weight: 700;
-}
-
-.category-info-uses-comments-collapsed {
-  max-height: 4.5em;
-  overflow: hidden;
-  position: relative;
-}
-
-.category-info-uses-comment {
-  margin: 0 0 0.35rem;
-  line-height: 1.5;
+.category-info-item-usescomments .category-info-value {
   white-space: pre-wrap;
 }
 

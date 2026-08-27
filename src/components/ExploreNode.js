@@ -61,8 +61,6 @@ import {
   CATEGORY_INFO_PREVIEW_LIMITS,
   getCategoryInfoPlainValue,
   getCategoryInfoPreview,
-  getUsesCommentLineCount,
-  normalizeUsesComments,
 } from "./categoryInfoLayout";
 import { downloadJsonObject, fetchNodePageJson } from "../utils/nodePageJson";
 import { buildDatasetDownloadDomainOptions } from "../utils/datasetDownloadDomains";
@@ -282,7 +280,6 @@ export default function Tableclick({ cmid, database, tabval }) {
   const [open, setOpen] = useState(false);
   const [bookmarkNotice, setBookmarkNotice] = useState({ open: false, severity: "success", message: "" });
   const [categoryInfoDialog, setCategoryInfoDialog] = useState({ open: false, key: "", value: "" });
-  const [showAllUsesComments, setShowAllUsesComments] = useState(false);
   const historyLoggedRef = useRef("");
   const [mergeTemplateSummary, setMergeTemplateSummary] = useState(null);
   const [loadingMergeTemplateSummary, setLoadingMergeTemplateSummary] = useState(false);
@@ -1394,11 +1391,6 @@ export default function Tableclick({ cmid, database, tabval }) {
   const deletedRedirectTarget = typeof rev?.Merged_into_CMID === "string" ? rev.Merged_into_CMID.trim() : "";
   const hasDeletedRedirect = Boolean(deletedRedirectTarget && deletedRedirectTarget !== cmid);
   const categoryInfoSections = useMemo(() => buildCategoryInfoSections(rev), [rev]);
-  const usesComments = useMemo(
-    () => normalizeUsesComments(rev?.UsesComments),
-    [rev]
-  );
-  const hasLongUsesComments = getUsesCommentLineCount(usesComments) > 3;
   const closeCategoryInfoDialog = useCallback(() => {
     setCategoryInfoDialog({ open: false, key: "", value: "" });
   }, []);
@@ -1919,7 +1911,8 @@ export default function Tableclick({ cmid, database, tabval }) {
                 {categoryInfoSections.primary.length > 0 ||
                   categoryInfoSections.compact.length > 0 ||
                   categoryInfoSections.detail.length > 0 ||
-                  categoryInfoSections.stats.length > 0 ? (
+                  categoryInfoSections.stats.length > 0 ||
+                  categoryInfoSections.comments.length > 0 ? (
                   <Box className="category-info-grid-inner">
                     {categoryInfoSections.primary.length > 0 && (
                       <Box className="category-info-section category-info-section-primary">
@@ -1941,32 +1934,14 @@ export default function Tableclick({ cmid, database, tabval }) {
                         {categoryInfoSections.stats.map((entry) => renderCategoryInfoEntry(entry, "stats"))}
                       </Box>
                     )}
+                    {categoryInfoSections.comments.length > 0 && (
+                      <Box className="category-info-section category-info-section-comments">
+                        {categoryInfoSections.comments.map((entry) => renderCategoryInfoEntry(entry, "detail"))}
+                      </Box>
+                    )}
                   </Box>
                 ) : (
                   <Typography sx={{ color: "black", fontSize: "1rem", p: 1 }}>No data</Typography>
-                )}
-                {usesComments.length > 0 && (
-                  <Box className="category-info-uses-comments" aria-label="Comments">
-                    <Typography className="category-info-uses-comments-title" component="h2">
-                      Comments
-                    </Typography>
-                    <Box className={hasLongUsesComments && !showAllUsesComments ? "category-info-uses-comments-collapsed" : ""}>
-                      {usesComments.map((comment, index) => (
-                        <Typography key={`${comment}-${index}`} component="p" className="category-info-uses-comment">
-                          {comment}
-                        </Typography>
-                      ))}
-                    </Box>
-                    {hasLongUsesComments && (
-                      <Button
-                        size="small"
-                        onClick={() => setShowAllUsesComments((expanded) => !expanded)}
-                        aria-label={showAllUsesComments ? "Hide comments" : "Show all comments"}
-                      >
-                        {showAllUsesComments ? "Show fewer comments" : "Show all comments"}
-                      </Button>
-                    )}
-                  </Box>
                 )}
               </Box>
             </Box>
