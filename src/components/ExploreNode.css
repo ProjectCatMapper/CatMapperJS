@@ -154,10 +154,8 @@ h1,h4,p,a{
 }
 
 .category-info-uses-comments {
-  margin: 0 0 0.75rem;
-  padding: 0.65rem 0.8rem;
-  border: 1px solid rgba(0, 0, 0, 0.25);
-  background: rgba(255, 255, 255, 0.72);
+  margin: 0.6rem 0 0;
+  padding: 0;
 }
 
 .category-info-uses-comments-title {

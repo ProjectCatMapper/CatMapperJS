@@ -53,6 +53,17 @@ export const CATEGORY_INFO_PREVIEW_LIMITS = {
   detail: 240,
 };
 
+export const normalizeUsesComments = (comments) =>
+  (Array.isArray(comments) ? comments : [])
+    .map((comment) => String(comment ?? "").trim())
+    .filter(Boolean);
+
+export const getUsesCommentLineCount = (comments) =>
+  normalizeUsesComments(comments).reduce(
+    (lineCount, comment) => lineCount + comment.split(/\r?\n/).length,
+    0
+  );
+
 const buildOrderMap = (values) => new Map(values.map((value, index) => [value, index]));
 
 const normalizeKey = (key) =>

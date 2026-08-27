@@ -61,6 +61,8 @@ import {
   CATEGORY_INFO_PREVIEW_LIMITS,
   getCategoryInfoPlainValue,
   getCategoryInfoPreview,
+  getUsesCommentLineCount,
+  normalizeUsesComments,
 } from "./categoryInfoLayout";
 import { downloadJsonObject, fetchNodePageJson } from "../utils/nodePageJson";
 import { buildDatasetDownloadDomainOptions } from "../utils/datasetDownloadDomains";
@@ -1393,12 +1395,10 @@ export default function Tableclick({ cmid, database, tabval }) {
   const hasDeletedRedirect = Boolean(deletedRedirectTarget && deletedRedirectTarget !== cmid);
   const categoryInfoSections = useMemo(() => buildCategoryInfoSections(rev), [rev]);
   const usesComments = useMemo(
-    () => (Array.isArray(rev?.UsesComments) ? rev.UsesComments : [])
-      .map((comment) => String(comment ?? '').trim())
-      .filter(Boolean),
+    () => normalizeUsesComments(rev?.UsesComments),
     [rev]
   );
-  const hasLongUsesComments = usesComments.some((comment) => comment.split(/\r?\n/).length > 3);
+  const hasLongUsesComments = getUsesCommentLineCount(usesComments) > 3;
   const closeCategoryInfoDialog = useCallback(() => {
     setCategoryInfoDialog({ open: false, key: "", value: "" });
   }, []);
@@ -1916,29 +1916,6 @@ export default function Tableclick({ cmid, database, tabval }) {
                 </Alert>
               )}
               <Box id="content" className="category-info-grid">
-                {usesComments.length > 0 && (
-                  <Box className="category-info-uses-comments" aria-label="Comments from USES ties">
-                    <Typography className="category-info-uses-comments-title" component="h2">
-                      Comments from USES ties
-                    </Typography>
-                    <Box className={hasLongUsesComments && !showAllUsesComments ? "category-info-uses-comments-collapsed" : ""}>
-                      {usesComments.map((comment, index) => (
-                        <Typography key={`${comment}-${index}`} component="p" className="category-info-uses-comment">
-                          {comment}
-                        </Typography>
-                      ))}
-                    </Box>
-                    {hasLongUsesComments && (
-                      <Button
-                        size="small"
-                        onClick={() => setShowAllUsesComments((expanded) => !expanded)}
-                        aria-label={showAllUsesComments ? "Hide USES tie comments" : "Show all USES tie comments"}
-                      >
-                        {showAllUsesComments ? "Show fewer comments" : "Show all comments"}
-                      </Button>
-                    )}
-                  </Box>
-                )}
                 {categoryInfoSections.primary.length > 0 ||
                   categoryInfoSections.compact.length > 0 ||
                   categoryInfoSections.detail.length > 0 ||
@@ -1967,6 +1944,29 @@ export default function Tableclick({ cmid, database, tabval }) {
                   </Box>
                 ) : (
                   <Typography sx={{ color: "black", fontSize: "1rem", p: 1 }}>No data</Typography>
+                )}
+                {usesComments.length > 0 && (
+                  <Box className="category-info-uses-comments" aria-label="Comments">
+                    <Typography className="category-info-uses-comments-title" component="h2">
+                      Comments
+                    </Typography>
+                    <Box className={hasLongUsesComments && !showAllUsesComments ? "category-info-uses-comments-collapsed" : ""}>
+                      {usesComments.map((comment, index) => (
+                        <Typography key={`${comment}-${index}`} component="p" className="category-info-uses-comment">
+                          {comment}
+                        </Typography>
+                      ))}
+                    </Box>
+                    {hasLongUsesComments && (
+                      <Button
+                        size="small"
+                        onClick={() => setShowAllUsesComments((expanded) => !expanded)}
+                        aria-label={showAllUsesComments ? "Hide comments" : "Show all comments"}
+                      >
+                        {showAllUsesComments ? "Show fewer comments" : "Show all comments"}
+                      </Button>
+                    )}
+                  </Box>
                 )}
               </Box>
             </Box>
