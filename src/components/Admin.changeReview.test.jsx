@@ -37,11 +37,16 @@ describe('Admin proposed change review', () => {
     root = createRoot(container);
     window.alert = vi.fn();
     window.confirm = vi.fn(() => true);
-    global.fetch = vi.fn((url) => {
+    global.fetch = vi.fn((url, options = {}) => {
       if (String(url).includes('/decision')) {
+        const decision = JSON.parse(options.body || '{}').decision;
         return Promise.resolve({
           ok: true,
-          json: async () => ({ message: 'Change approved and applied.' }),
+          json: async () => ({
+            message: decision === 'reject'
+              ? 'Change rejected and requester notified.'
+              : 'Change approved and applied.',
+          }),
         });
       }
       if (String(url).includes('/change-review-preferences')) {
@@ -112,6 +117,9 @@ describe('Admin proposed change review', () => {
     expect(document.body.textContent).toContain('review-user');
     expect(document.body.textContent).toContain('SM123');
     expect(document.body.textContent).toContain('New name');
+    expect(document.body.textContent).toContain('Node CMID');
+    expect(document.body.textContent).toContain('Proposed value');
+    expect(document.body.textContent).not.toContain('"s1_1"');
     expect(document.body.textContent).toContain('Review-email delivery is currently paused system-wide.');
 
     const approveButton = Array.from(container.querySelectorAll('button')).find(
@@ -129,5 +137,41 @@ describe('Admin proposed change review', () => {
       expect.objectContaining({ method: 'POST', body: expect.stringContaining('"decision":"approve"') })
     );
     expect(window.alert).toHaveBeenCalledWith('Change approved and applied.');
+
+    const rejectButton = Array.from(container.querySelectorAll('button')).find(
+      (button) => button.textContent?.trim() === 'Reject'
+    );
+    await act(async () => {
+      rejectButton.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      await flushPromises();
+    });
+
+    expect(document.body.textContent).toContain('Reject proposed change');
+    expect(document.body.textContent).toContain('The requester will be emailed');
+    const comment = document.body.querySelector('textarea');
+    await act(async () => {
+      const setter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value').set;
+      setter.call(comment, 'Please provide a source.');
+      comment.dispatchEvent(new Event('input', { bubbles: true }));
+      await flushPromises();
+    });
+
+    const confirmRejection = Array.from(document.body.querySelectorAll('button')).find(
+      (button) => button.textContent?.trim() === 'Confirm rejection'
+    );
+    await act(async () => {
+      confirmRejection.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/admin/change-reviews/change-123/decision'),
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({ decision: 'reject', note: 'Please provide a source.' }),
+      })
+    );
+    expect(window.alert).toHaveBeenCalledWith('Change rejected and requester notified.');
   });
 });

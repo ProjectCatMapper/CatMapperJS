@@ -172,7 +172,9 @@ export const formatAdminPropertyValue = (value) => {
           return "";
         }
         if (typeof item === "object") {
-          return item.label ?? item.CMName ?? item.CMID ?? JSON.stringify(item);
+          return item.label ?? item.CMName ?? item.CMID ?? Object.entries(item)
+            .map(([key, itemValue]) => `${key}: ${formatAdminPropertyValue(itemValue)}`)
+            .join(", ");
         }
         return String(item);
       })
@@ -181,10 +183,93 @@ export const formatAdminPropertyValue = (value) => {
   }
 
   if (typeof value === "object") {
-    return JSON.stringify(value);
+    return Object.entries(value)
+      .map(([key, itemValue]) => `${key}: ${formatAdminPropertyValue(itemValue)}`)
+      .join(", ");
   }
 
   return String(value);
+};
+
+const parseStoredRelation = (value) => {
+  if (Array.isArray(value)) return value;
+  if (typeof value !== "string" || !value.trim()) return [];
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+};
+
+const selectedStoredRelation = (input) => {
+  if (Array.isArray(input?.s1_4)) {
+    const selectedIndex = Number(input.s1_7) - 1;
+    return Array.isArray(input.s1_4[selectedIndex]) ? input.s1_4[selectedIndex] : [];
+  }
+  return parseStoredRelation(input?.s1_7);
+};
+
+const reviewDetail = (label, value) => ({
+  label,
+  value: formatAdminPropertyValue(value) || "Not provided",
+});
+
+export const getChangeReviewDetails = (review) => {
+  const input = review?.input || {};
+  const action = review?.action || "Proposed change";
+  const operation = String(input.s1_1 || "change").trim();
+  const details = [reviewDetail("Change type", action)];
+
+  if (action === "add/edit/delete node property") {
+    details.push(
+      reviewDetail("Operation", operation),
+      reviewDetail("Node CMID", input.s1_2 || review?.targetCmid),
+      reviewDetail("Property", input.s1_7),
+    );
+    if (operation !== "delete") details.push(reviewDetail("Proposed value", input.s1_3));
+    return details;
+  }
+
+  if (action === "add/edit/delete USES property" || action === "add/edit/delete CATEGORY MERGING property") {
+    const [source = {}, relationship = {}, target = {}] = selectedStoredRelation(input);
+    const property = input.s1_8;
+    details.push(
+      reviewDetail("Operation", operation),
+      reviewDetail("Category", `${source.CMID || input.s1_2 || ""}${source.CMName ? ` — ${source.CMName}` : ""}`),
+      reviewDetail(action.includes("USES") ? "Dataset" : "Related category", `${target.CMID || ""}${target.CMName ? ` — ${target.CMName}` : ""}`),
+      reviewDetail("Relationship key", relationship.Key),
+      reviewDetail("Property", property),
+      reviewDetail("Current value", relationship[property]),
+    );
+    if (operation !== "delete") details.push(reviewDetail("Proposed value", input.s1_3));
+    return details;
+  }
+
+  if (action === "merge nodes") {
+    return [...details, reviewDetail("Keep node", input.s1_2), reviewDetail("Merge and remove node", input.s1_3)];
+  }
+
+  if (action === "delete node") {
+    return [...details, reviewDetail("Node CMID", input.s1_2 || review?.targetCmid), reviewDetail("Node name", input.s1_7)];
+  }
+
+  if (["delete USES relation", "delete CATEGORY MERGING relation", "move USES tie", "move CATEGORY MERGING tie"].includes(action)) {
+    const [source = {}, relationship = {}, target = {}] = selectedStoredRelation(input);
+    details.push(
+      reviewDetail("Source", `${source.CMID || input.s1_2 || ""}${source.CMName ? ` — ${source.CMName}` : ""}`),
+      reviewDetail(action.includes("USES") ? "Dataset" : "Related category", `${target.CMID || ""}${target.CMName ? ` — ${target.CMName}` : ""}`),
+      reviewDetail("Relationship key", relationship.Key),
+    );
+    if (action.startsWith("move")) details.push(reviewDetail("Move to CMID", input.s1_3));
+    return details;
+  }
+
+  return [
+    ...details,
+    reviewDetail("Target CMID", review?.targetCmid || input.s1_2),
+    reviewDetail("Requested value", input.s1_3),
+  ];
 };
 
 export const formatChangeReviewProposal = (review) => {
@@ -366,6 +451,8 @@ const Admin = ({ database }) => {
   const [submittedReviewOpen, setSubmittedReviewOpen] = useState(false);
   const [submittedReview, setSubmittedReview] = useState(null);
   const [pendingChangeReviews, setPendingChangeReviews] = useState([]);
+  const [rejectReview, setRejectReview] = useState(null);
+  const [rejectComment, setRejectComment] = useState("");
   const [changeReviewEmailEnabled, setChangeReviewEmailEnabled] = useState(true);
   const [changeReviewEmailDeliveryEnabled, setChangeReviewEmailDeliveryEnabled] = useState(false);
   const [passwordConfirmOpen, setPasswordConfirmOpen] = useState(false);
@@ -503,9 +590,11 @@ const Admin = ({ database }) => {
     }
   };
 
-  const decideChangeReview = async (requestId, decision) => {
-    const verb = decision === "approve" ? "approve and apply" : "reject";
-    if (!window.confirm(`Are you sure you want to ${verb} this proposed change?`)) return;
+  const decideChangeReview = async (requestId, decision, note = "") => {
+    if (
+      decision === "approve"
+      && !window.confirm("Are you sure you want to approve and apply this proposed change?")
+    ) return;
     try {
       setLoading(true);
       const response = await fetch(`${apiBaseUrl()}/admin/change-reviews/${encodeURIComponent(requestId)}/decision`, {
@@ -514,11 +603,13 @@ const Admin = ({ database }) => {
           "Content-Type": "application/json",
           ...(cred ? { Authorization: `Bearer ${cred}` } : {}),
         },
-        body: JSON.stringify({ decision }),
+        body: JSON.stringify({ decision, note }),
       });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || "Unable to decide proposed change.");
       alert(result.message);
+      setRejectReview(null);
+      setRejectComment("");
       await loadChangeReviews();
     } catch (error) {
       alert(error.message || "Unable to decide proposed change.");
@@ -1820,6 +1911,14 @@ const Admin = ({ database }) => {
               <Typography>
                 {pendingChangeReviews.length} proposed {pendingChangeReviews.length === 1 ? "change is" : "changes are"} waiting for review in {database}.
               </Typography>
+              <Button
+                variant="contained"
+                color="warning"
+                sx={{ mt: 1 }}
+                onClick={() => setFirstDropdownValue("review proposed changes")}
+              >
+                Review and decide changes
+              </Button>
             </Box>
           )}
           <Box sx={{ mb: 2 }}>
@@ -3245,8 +3344,8 @@ const Admin = ({ database }) => {
                         <TableCell>User</TableCell>
                         <TableCell>Action</TableCell>
                         <TableCell>Target</TableCell>
-                        <TableCell>Proposed input</TableCell>
-                        <TableCell>Decision</TableCell>
+                        <TableCell>Change details</TableCell>
+                        <TableCell>Approve or reject</TableCell>
                       </TableRow>
                     </TableHead>
                     <TableBody>
@@ -3260,9 +3359,18 @@ const Admin = ({ database }) => {
                             <Typography variant="body2" sx={{ fontWeight: 600 }}>
                               {formatChangeReviewProposal(review)}
                             </Typography>
-                            <Typography variant="caption" component="pre" sx={{ mt: 1, whiteSpace: "pre-wrap" }}>
-                              {JSON.stringify(review.input, null, 2)}
-                            </Typography>
+                            <Box component="dl" sx={{ display: "grid", gridTemplateColumns: "max-content 1fr", columnGap: 1.5, rowGap: 0.5, m: 0, mt: 1 }}>
+                              {getChangeReviewDetails(review).map((detail) => (
+                                <Box key={detail.label} sx={{ display: "contents" }}>
+                                  <Typography component="dt" variant="caption" sx={{ fontWeight: 700 }}>
+                                    {detail.label}
+                                  </Typography>
+                                  <Typography component="dd" variant="caption" sx={{ m: 0 }}>
+                                    {detail.value}
+                                  </Typography>
+                                </Box>
+                              ))}
+                            </Box>
                             {review.authorizationReason && (
                               <Typography variant="caption" component="div" sx={{ mt: 1, color: "text.secondary" }}>
                                 Gate result: {review.authorizationReason}
@@ -3288,7 +3396,10 @@ const Admin = ({ database }) => {
                                 size="small"
                                 color="error"
                                 variant="outlined"
-                                onClick={() => decideChangeReview(review.requestId, "reject")}
+                                onClick={() => {
+                                  setRejectReview(review);
+                                  setRejectComment("");
+                                }}
                               >
                                 Reject
                               </Button>
@@ -3456,6 +3567,51 @@ const Admin = ({ database }) => {
             onClick={() => saveRequesterApprovalNotification(true)}
           >
             Yes, email me
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={Boolean(rejectReview)}
+        onClose={() => {
+          setRejectReview(null);
+          setRejectComment("");
+        }}
+        fullWidth
+        maxWidth="sm"
+      >
+        <DialogTitle>Reject proposed change</DialogTitle>
+        <DialogContent>
+          <Typography sx={{ mb: 2 }}>
+            The requester will be emailed that this change was rejected. You may include a comment explaining the decision.
+          </Typography>
+          <TextField
+            autoFocus
+            fullWidth
+            multiline
+            minRows={3}
+            label="Comment to requester (optional)"
+            value={rejectComment}
+            onChange={(event) => setRejectComment(event.target.value)}
+            inputProps={{ maxLength: 2000 }}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => {
+              setRejectReview(null);
+              setRejectComment("");
+            }}
+          >
+            Cancel
+          </Button>
+          <Button
+            color="error"
+            variant="contained"
+            disabled={loading}
+            onClick={() => decideChangeReview(rejectReview.requestId, "reject", rejectComment.trim())}
+          >
+            Confirm rejection
           </Button>
         </DialogActions>
       </Dialog>

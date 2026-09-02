@@ -3,6 +3,7 @@ import {
   filterUsesPropertyOptions,
   formatAdminPropertyValue,
   formatChangeReviewProposal,
+  getChangeReviewDetails,
 } from './Admin';
 
 describe('formatAdminPropertyValue', () => {
@@ -29,6 +30,55 @@ describe('formatChangeReviewProposal', () => {
         s1_8: 'label',
       },
     })).toBe('edit USES label: Old label → New label on SD1');
+  });
+});
+
+describe('getChangeReviewDetails', () => {
+  it('turns a USES payload into labeled reviewer fields without raw JSON', () => {
+    const details = getChangeReviewDetails({
+      action: 'add/edit/delete USES property',
+      targetCmid: 'SM1',
+      input: {
+        s1_1: 'edit',
+        s1_3: 'New label',
+        s1_4: [[
+          { CMID: 'SM1', CMName: 'Category one' },
+          { Key: 'uses-1', label: 'Old label' },
+          { CMID: 'SD1', CMName: 'Dataset one' },
+        ]],
+        s1_7: '1',
+        s1_8: 'label',
+      },
+    });
+
+    expect(details).toEqual(expect.arrayContaining([
+      { label: 'Category', value: 'SM1 — Category one' },
+      { label: 'Dataset', value: 'SD1 — Dataset one' },
+      { label: 'Relationship key', value: 'uses-1' },
+      { label: 'Current value', value: 'Old label' },
+      { label: 'Proposed value', value: 'New label' },
+    ]));
+    expect(JSON.stringify(details)).not.toContain('s1_');
+  });
+
+  it('parses a stored relation selection into readable deletion fields', () => {
+    const details = getChangeReviewDetails({
+      action: 'delete USES relation',
+      input: {
+        s1_2: 'SM1',
+        s1_7: JSON.stringify([
+          { CMID: 'SM1', CMName: 'Category one' },
+          { Key: 'uses-1' },
+          { CMID: 'SD1', CMName: 'Dataset one' },
+        ]),
+      },
+    });
+
+    expect(details).toEqual(expect.arrayContaining([
+      { label: 'Source', value: 'SM1 — Category one' },
+      { label: 'Dataset', value: 'SD1 — Dataset one' },
+      { label: 'Relationship key', value: 'uses-1' },
+    ]));
   });
 });
 
