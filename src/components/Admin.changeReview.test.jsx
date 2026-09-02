@@ -42,10 +42,12 @@ describe('Admin proposed change review', () => {
         const decision = JSON.parse(options.body || '{}').decision;
         return Promise.resolve({
           ok: true,
+          status: decision === 'approve' ? 202 : 200,
           json: async () => ({
             message: decision === 'reject'
               ? 'Change rejected and requester notified.'
-              : 'Change approved and applied.',
+              : 'Approval started. The change is being finalized.',
+            queued: decision === 'approve',
           }),
         });
       }
@@ -136,7 +138,8 @@ describe('Admin proposed change review', () => {
       expect.stringContaining('/admin/change-reviews/change-123/decision'),
       expect.objectContaining({ method: 'POST', body: expect.stringContaining('"decision":"approve"') })
     );
-    expect(window.alert).toHaveBeenCalledWith('Change approved and applied.');
+    expect(document.body.textContent).toContain('Approval started. The change is being finalized.');
+    expect(window.alert).not.toHaveBeenCalledWith('Approval started. The change is being finalized.');
 
     const rejectButton = Array.from(container.querySelectorAll('button')).find(
       (button) => button.textContent?.trim() === 'Reject'

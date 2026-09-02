@@ -451,6 +451,8 @@ const Admin = ({ database }) => {
   const [submittedReviewOpen, setSubmittedReviewOpen] = useState(false);
   const [submittedReview, setSubmittedReview] = useState(null);
   const [pendingChangeReviews, setPendingChangeReviews] = useState([]);
+  const [changeReviewDecisionInFlight, setChangeReviewDecisionInFlight] = useState("");
+  const [changeReviewNotice, setChangeReviewNotice] = useState("");
   const [rejectReview, setRejectReview] = useState(null);
   const [rejectComment, setRejectComment] = useState("");
   const [changeReviewEmailEnabled, setChangeReviewEmailEnabled] = useState(true);
@@ -534,6 +536,8 @@ const Admin = ({ database }) => {
   const selectedDuplicateTripletRows = routineDataRows.filter((row) => (
     selectedDuplicateTripletIds.includes(row.id)
   ));
+  const pendingReviewCount = pendingChangeReviews.filter((review) => review.status !== "processing").length;
+  const processingReviewCount = pendingChangeReviews.filter((review) => review.status === "processing").length;
   const visiblePropertyOptions = (options) => options;
   const visibleUsesPropertyOptions = (options) => options;
 
@@ -542,7 +546,7 @@ const Admin = ({ database }) => {
     try {
       if (showLoading) setLoading(true);
       const response = await fetch(
-        `${apiBaseUrl()}/admin/change-reviews?database=${encodeURIComponent(database)}&status=pending`,
+        `${apiBaseUrl()}/admin/change-reviews?database=${encodeURIComponent(database)}&status=open`,
         { headers: { ...(cred ? { Authorization: `Bearer ${cred}` } : {}) } }
       );
       const result = await response.json();
@@ -596,7 +600,7 @@ const Admin = ({ database }) => {
       && !window.confirm("Are you sure you want to approve and apply this proposed change?")
     ) return;
     try {
-      setLoading(true);
+      setChangeReviewDecisionInFlight(requestId);
       const response = await fetch(`${apiBaseUrl()}/admin/change-reviews/${encodeURIComponent(requestId)}/decision`, {
         method: "POST",
         headers: {
@@ -607,14 +611,18 @@ const Admin = ({ database }) => {
       });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || "Unable to decide proposed change.");
-      alert(result.message);
+      if (result.queued === true || response.status === 202) {
+        setChangeReviewNotice(result.message || "Approval started. The change is being finalized.");
+      } else {
+        alert(result.message);
+      }
       setRejectReview(null);
       setRejectComment("");
       await loadChangeReviews();
     } catch (error) {
       alert(error.message || "Unable to decide proposed change.");
     } finally {
-      setLoading(false);
+      setChangeReviewDecisionInFlight("");
     }
   };
 
@@ -1793,6 +1801,12 @@ const Admin = ({ database }) => {
     }
   }, [firstDropdownValue]);
 
+  useEffect(() => {
+    if (!isGlobalAdmin || processingReviewCount === 0) return undefined;
+    const intervalId = window.setInterval(() => loadChangeReviews(), 3000);
+    return () => window.clearInterval(intervalId);
+  }, [database, cred, isGlobalAdmin, processingReviewCount]);
+
   const selectedLookupUser = userLookupResults.find(
     (row) => String(row.userid) === String(selectedLookupUserId)
   );
@@ -1908,9 +1922,16 @@ const Admin = ({ database }) => {
         <Box sx={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", pr: { md: 1 } }}>
           {isGlobalAdmin && pendingChangeReviews.length > 0 && (
             <Box sx={{ p: 1.25, mb: 1, border: "1px solid #d9a400", bgcolor: "#fff8df", borderRadius: 1 }}>
-              <Typography>
-                {pendingChangeReviews.length} proposed {pendingChangeReviews.length === 1 ? "change is" : "changes are"} waiting for review in {database}.
-              </Typography>
+              {pendingReviewCount > 0 && (
+                <Typography>
+                  {pendingReviewCount} proposed {pendingReviewCount === 1 ? "change is" : "changes are"} waiting for review in {database}.
+                </Typography>
+              )}
+              {processingReviewCount > 0 && (
+                <Typography sx={{ mt: pendingReviewCount > 0 ? 0.5 : 0 }}>
+                  {processingReviewCount} approved {processingReviewCount === 1 ? "change is" : "changes are"} being finalized.
+                </Typography>
+              )}
               <Button
                 variant="contained"
                 color="warning"
@@ -3312,8 +3333,13 @@ const Admin = ({ database }) => {
                 Proposed changes for {database}
               </Typography>
               <Typography sx={{ mb: 2 }}>
-                Review the submitted values, then approve to apply the change with current validation checks or reject it.
+                Approvals start immediately and finish after the required integrity checks complete. Finalizing changes refresh automatically.
               </Typography>
+              {changeReviewNotice && (
+                <Typography role="status" sx={{ mb: 2, color: "success.dark", fontWeight: 600 }}>
+                  {changeReviewNotice}
+                </Typography>
+              )}
               <FormControlLabel
                 control={(
                   <Switch
@@ -3345,7 +3371,7 @@ const Admin = ({ database }) => {
                         <TableCell>Action</TableCell>
                         <TableCell>Target</TableCell>
                         <TableCell>Change details</TableCell>
-                        <TableCell>Approve or reject</TableCell>
+                        <TableCell>Review status</TableCell>
                       </TableRow>
                     </TableHead>
                     <TableBody>
@@ -3383,27 +3409,36 @@ const Admin = ({ database }) => {
                             )}
                           </TableCell>
                           <TableCell>
-                            <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
-                              <Button
-                                size="small"
-                                color="success"
-                                variant="contained"
-                                onClick={() => decideChangeReview(review.requestId, "approve")}
-                              >
-                                Approve
-                              </Button>
-                              <Button
-                                size="small"
-                                color="error"
-                                variant="outlined"
-                                onClick={() => {
-                                  setRejectReview(review);
-                                  setRejectComment("");
-                                }}
-                              >
-                                Reject
-                              </Button>
-                            </Box>
+                            {review.status === "processing" ? (
+                              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                                <CircularProgress size={18} />
+                                <Typography variant="body2">Finalizing integrity checks…</Typography>
+                              </Box>
+                            ) : (
+                              <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
+                                <Button
+                                  size="small"
+                                  color="success"
+                                  variant="contained"
+                                  disabled={changeReviewDecisionInFlight === review.requestId}
+                                  onClick={() => decideChangeReview(review.requestId, "approve")}
+                                >
+                                  {changeReviewDecisionInFlight === review.requestId ? "Starting…" : "Approve"}
+                                </Button>
+                                <Button
+                                  size="small"
+                                  color="error"
+                                  variant="outlined"
+                                  disabled={changeReviewDecisionInFlight === review.requestId}
+                                  onClick={() => {
+                                    setRejectReview(review);
+                                    setRejectComment("");
+                                  }}
+                                >
+                                  Reject
+                                </Button>
+                              </Box>
+                            )}
                           </TableCell>
                         </TableRow>
                       ))}
