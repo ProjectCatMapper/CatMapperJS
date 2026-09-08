@@ -7,25 +7,25 @@ import {
 describe("USES tie comment display contract", () => {
   it("keeps only non-empty comments from the API payload", () => {
     const comments = normalizeUsesComments([
-      "First comment",
+      "SD11: First comment",
       "",
       "  ",
       null,
-      "Second comment",
-      "Second comment",
+      "AD941: Second comment",
+      "AD941: Second comment",
     ]);
 
     expect(comments).toEqual([
-      "First comment",
-      "Second comment",
-      "Second comment",
+      "SD11: First comment",
+      "AD941: Second comment",
+      "AD941: Second comment",
     ]);
   });
 
   it("puts one COMMENTS entry in its own final header section", () => {
     const sections = buildCategoryInfoSections({
       CMName: "Example",
-      UsesComments: ["First comment", "Second comment"],
+      UsesComments: ["SD11: First comment", "AD941: Second comment"],
       direct_Children: 2,
     });
 
@@ -37,7 +37,7 @@ describe("USES tie comment display contract", () => {
     expect(sections.comments[0]).toMatchObject({
       displayKey: "COMMENTS",
       normalized: "usescomments",
-      plainValue: "First comment\nSecond comment",
+      plainValue: "SD11: First comment\nAD941: Second comment",
     });
   });
 });
