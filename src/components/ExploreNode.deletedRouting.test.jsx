@@ -138,6 +138,8 @@ describe('deleted node routing', () => {
 
     expect(container.querySelector('[data-testid="location-probe"]')?.textContent)
       .toBe('/sociomap/SM20483');
+    expect(container.querySelector('.category-info-header-title')?.textContent)
+      .toBe('DELETED Node Info');
     expect(container.textContent).toContain('CatMapper ID: SM20483');
     expect(container.textContent).toContain('Domain: DELETED');
     expect(container.textContent).toContain('This deleted node is linked to active CMID SM496603.');
