@@ -109,9 +109,19 @@ describe('filterUsesPropertyOptions', () => {
     ], 'edit')).toEqual(['district']);
   });
 
-  it('keeps excluded fields available for deletion', () => {
-    const options = ['log', 'geoPolygon', 'modifiedByOtherUser', 'ownerUserId', 'district'];
+  it('excludes internal USES fields from deletion', () => {
+    const options = [
+      'log',
+      'logID',
+      'geoPolygon',
+      'modifiedByOtherUser',
+      'ownerUserId',
+      'createdByUserId',
+      'createdAt',
+      'contributionId',
+      'district',
+    ];
 
-    expect(filterUsesPropertyOptions(options, 'delete')).toEqual(options);
+    expect(filterUsesPropertyOptions(options, 'delete')).toEqual(['district']);
   });
 });

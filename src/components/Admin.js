@@ -117,14 +117,18 @@ const Select = ({ MenuProps, size = "small", sx, ...props }) => (
 );
 
 const EXCLUDED_USES_ADD_EDIT_PROPERTIES = new Set([
+  "createdat",
+  "createdbyuserid",
+  "contributionid",
   "geopolygon",
   "log",
+  "logid",
   "modifiedbyotheruser",
   "owneruserid",
 ]);
 
 export const filterUsesPropertyOptions = (options, action) => (
-  action === "add" || action === "edit"
+  action === "add" || action === "edit" || action === "delete"
     ? options.filter(
       (option) => !EXCLUDED_USES_ADD_EDIT_PROPERTIES.has(
         String(option || "").trim().toLowerCase()
