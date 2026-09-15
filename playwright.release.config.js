@@ -11,6 +11,7 @@ module.exports = defineConfig({
   reporter: [['list'], ['html', { outputFolder: process.env.PLAYWRIGHT_REPORT_DIR || 'playwright-report/release', open: 'never' }]],
   use: {
     baseURL: process.env.E2E_BASE_URL || 'https://dev.catmapper.org',
+    ...(process.env.RELEASE_STORAGE_STATE ? { storageState: process.env.RELEASE_STORAGE_STATE } : {}),
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
