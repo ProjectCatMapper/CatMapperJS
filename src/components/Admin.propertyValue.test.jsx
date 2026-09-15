@@ -124,4 +124,11 @@ describe('filterUsesPropertyOptions', () => {
 
     expect(filterUsesPropertyOptions(options, 'delete')).toEqual(['district']);
   });
+
+  it('hides owner metadata regardless of property or action casing', () => {
+    expect(filterUsesPropertyOptions(
+      ['ownerUserID', 'modifiedByOTherUser', 'Name'],
+      ' DELETE '
+    )).toEqual(['Name']);
+  });
 });

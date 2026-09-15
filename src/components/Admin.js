@@ -116,7 +116,9 @@ const Select = ({ MenuProps, size = "small", sx, ...props }) => (
   />
 );
 
-const EXCLUDED_USES_ADD_EDIT_PROPERTIES = new Set([
+const ADMIN_USES_PROPERTY_ACTIONS = new Set(["add", "edit", "delete"]);
+
+const EXCLUDED_ADMIN_USES_PROPERTIES = new Set([
   "createdat",
   "createdbyuserid",
   "contributionid",
@@ -128,9 +130,9 @@ const EXCLUDED_USES_ADD_EDIT_PROPERTIES = new Set([
 ]);
 
 export const filterUsesPropertyOptions = (options, action) => (
-  action === "add" || action === "edit" || action === "delete"
+  ADMIN_USES_PROPERTY_ACTIONS.has(String(action || "").trim().toLowerCase())
     ? options.filter(
-      (option) => !EXCLUDED_USES_ADD_EDIT_PROPERTIES.has(
+      (option) => !EXCLUDED_ADMIN_USES_PROPERTIES.has(
         String(option || "").trim().toLowerCase()
       )
     )
