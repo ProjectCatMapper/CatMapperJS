@@ -33,6 +33,8 @@ export default defineConfig(({ command, mode }) => {
   const isExcelAddinDev = command === 'serve' && isExcelAddin;
   const defineEnv = {
     'process.env.NODE_ENV': JSON.stringify(command === 'build' ? 'production' : 'development'),
+    'process.env.VITE_BUILD_REVISION': JSON.stringify(process.env.VITE_BUILD_REVISION || env.VITE_BUILD_REVISION || 'unknown'),
+    'process.env.VITE_BUILD_VERSION': JSON.stringify(process.env.VITE_BUILD_VERSION || env.VITE_BUILD_VERSION || 'unknown'),
   };
 
   for (const [key, value] of Object.entries(env)) {
