@@ -1,7 +1,6 @@
 import { test, expect } from '@playwright/test';
 
 test('owner metadata is absent from Admin USES edit/delete choices', async ({ page }) => {
-  test.skip(!process.env.RELEASE_STORAGE_STATE, 'RELEASE_STORAGE_STATE is required for authenticated release UI tests');
   await page.goto('/admin');
   await page.getByText('add/edit/delete USES property', { exact: true }).click();
   await page.getByLabel('delete', { exact: true }).check();

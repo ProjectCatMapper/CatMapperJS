@@ -1,5 +1,9 @@
 const { defineConfig, devices } = require('@playwright/test');
 
+if (!process.env.RELEASE_STORAGE_STATE) {
+  throw new Error('RELEASE_STORAGE_STATE must point to the secret-backed release test storage state');
+}
+
 module.exports = defineConfig({
   testDir: './tests/release',
   timeout: 60_000,
