@@ -1303,6 +1303,10 @@ const Edit = ({ database }) => {
         extraCols = extraCols.filter((col) => col !== 'label');
       }
 
+      if (['add_node', 'add_uses'].includes(advselectedOption)) {
+        extraCols = extraCols.filter((col) => col !== 'NewKey');
+      }
+
       setExtraColumns(extraCols);
       setSelectedExtraColumns(extraCols)
       setLinkContext(extraCols)
