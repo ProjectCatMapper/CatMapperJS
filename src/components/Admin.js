@@ -260,7 +260,7 @@ export const getChangeReviewDetails = (review) => {
     return [...details, reviewDetail("Node CMID", input.s1_2 || review?.targetCmid), reviewDetail("Node name", input.s1_7)];
   }
 
-  if (["delete USES relation", "delete CATEGORY MERGING relation", "move USES tie", "move CATEGORY MERGING tie"].includes(action)) {
+  if (["delete USES relation", "delete CATEGORY MERGING relation", "delete MERGING relation", "move USES tie", "move CATEGORY MERGING tie"].includes(action)) {
     const [source = {}, relationship = {}, target = {}] = selectedStoredRelation(input);
     details.push(
       reviewDetail("Source", `${source.CMID || input.s1_2 || ""}${source.CMName ? ` — ${source.CMName}` : ""}`),
@@ -516,6 +516,7 @@ const Admin = ({ database }) => {
         "delete node",
         "delete USES relation",
         "delete CATEGORY MERGING relation",
+        "delete MERGING relation",
         "create new domain",
         //"add foci",
       ],
@@ -705,6 +706,11 @@ const Admin = ({ database }) => {
         if (!confirmed) {
           return;
         }
+      }
+
+      if (firstDropdownValue === "delete MERGING relation") {
+        const tie = JSON.parse(formData.s1_7);
+        if (!window.confirm(`Are you sure you want to delete the MERGING tie ${tie[0].CMName} -> ${tie[2].CMName}? This action cannot be undone.`)) return;
       }
 
       const cleanedData = {
@@ -1719,6 +1725,7 @@ const Admin = ({ database }) => {
     const isCategoryMergingMode =
       firstDropdownValue === "add/edit/delete CATEGORY MERGING property" ||
       firstDropdownValue === "delete CATEGORY MERGING relation" ||
+      firstDropdownValue === "delete MERGING relation" ||
       firstDropdownValue === "move CATEGORY MERGING tie";
 
     if (!isUsesMode && !isCategoryMergingMode) {
@@ -1738,8 +1745,10 @@ const Admin = ({ database }) => {
     if (pattern.test(cmid)) {
       const fetchData = async () => {
         try {
-          const endpoint = isCategoryMergingMode
-            ? "/admin_add_edit_delete_category_merging_properties"
+          const endpoint = firstDropdownValue === "delete MERGING relation"
+            ? "/admin_delete_merging_ties"
+            : isCategoryMergingMode
+              ? "/admin_add_edit_delete_category_merging_properties"
             : "/admin_add_edit_delete_usesproperties";
           const res = await fetch(`${apiBaseUrl()}${endpoint}?CMID=` + cmid + "&database=" + database, {
             //const res = await fetch("http://127.0.0.1:5001/admin_add_edit_delete_usesproperties?CMID="+cmid+"&database="+database, {
@@ -2708,6 +2717,21 @@ const Admin = ({ database }) => {
             </Box>
           )
           }
+
+          {firstDropdownValue === "delete MERGING relation" && (
+            <Box sx={{ ml: 1 }}>
+              {renderCmidInput({ label: "CMID of dataset or stack", name: "s1_2", textFieldSx: { height: 40 } })}
+              {add_edit_delete_usesprops_Options.length > 0 && <>
+                <InputLabel style={{ color: "black" }}>Choose MERGING tie to delete</InputLabel>
+                <Select name="s1_7" sx={{ width: 360, height: 40, mb: 3 }} value={formData.s1_7 || ""} onChange={updateFormFieldValue}>
+                  {add_edit_delete_usesprops_Options.map(([n, r, d], index) => (
+                    <MenuItem key={index} value={JSON.stringify([n, r, d])}>{`${n.CMName} -> ${d.CMName}`}</MenuItem>
+                  ))}
+                </Select>
+              </>}
+              <Button variant="contained" onClick={submitAdminAction}>Submit</Button>
+            </Box>
+          )}
 
           {firstDropdownValue === "create new domain" && (
             <Box sx={{ ml: 1 }}>
