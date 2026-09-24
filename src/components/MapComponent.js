@@ -16,7 +16,6 @@ import DeckGL from "@deck.gl/react";
 import { GeoJsonLayer, ScatterplotLayer, TextLayer } from "@deck.gl/layers";
 import { Map } from "react-map-gl/maplibre";
 
-import Legend from "./Legend";
 import {
   getPointTooltipLines,
   inheritedMapLabel,
@@ -242,7 +241,6 @@ const LeafletMap = ({ layers, sourceColorMap, stringToColor }) => {
             })}
         </MarkerClusterGroup>
       ) : null}
-      <Legend sources={Object.keys(sourceColorMap)} colors={Object.values(sourceColorMap)} />
     </MapContainer>
   );
 };

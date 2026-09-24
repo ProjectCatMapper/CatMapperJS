@@ -29,4 +29,15 @@ describe("node info map point tooltips", () => {
       "Source: Dataset B",
     ]);
   });
+
+  test("always identifies the source represented by the dot", () => {
+    expect(getPointTooltipLines({
+      CMName: "District C",
+      CMID: "AM4",
+    })).toEqual([
+      "CMName: District C",
+      "CMID: AM4",
+      "Source: Unknown",
+    ]);
+  });
 });
