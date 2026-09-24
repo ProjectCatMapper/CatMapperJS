@@ -1345,6 +1345,8 @@ const Admin = ({ database }) => {
       </InputLabel>
       <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1.5 }}>
         <TextField
+          id={`input-${name}`}
+          inputProps={{ 'aria-labelledby': `label-${name}` }}
           name={name}
           value={formData[name]}
           onChange={updateFormFieldValue}
@@ -1996,6 +1998,7 @@ const Admin = ({ database }) => {
                     Choose USES tie to change
                   </InputLabel>
                   <Select
+                    labelId="api-results-label"
                     name="s1_7"
                     sx={{ width: 300, height: 40, mb: 3 }}
                     value={formData.s1_7 || ""}
@@ -2044,6 +2047,7 @@ const Admin = ({ database }) => {
                             Choose property to {formData.s1_1}
                           </InputLabel>
                           <Select
+                            labelId="dropdown2-label"
                             name="s1_8"
                             sx={{ width: 300, height: 40, mb: 3 }}
                             value={formData.s1_8 || ""}
