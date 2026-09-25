@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 
 test('owner metadata is absent from Admin USES edit/delete choices', async ({ page }) => {
   await page.goto('/sociomap/admin');
-  await page.getByText('add/edit/delete USES property', { exact: true }).click();
+  await expect(page.getByText('Selected option: add/edit/delete USES property')).toBeVisible();
   await page.getByLabel('CMID of Category').fill('SM241701');
   await expect(page.getByLabel('Choose USES tie to change')).toBeVisible();
   await page.getByLabel('Choose USES tie to change').click();
