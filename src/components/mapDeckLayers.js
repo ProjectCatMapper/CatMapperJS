@@ -7,7 +7,6 @@ import {
 
 export const DECK_POINT_RADIUS_MIN_PIXELS = 4.5;
 export const DECK_POINT_STACK_RADII_PIXELS = [5, 3.5, 2];
-export const DECK_POINT_STACK_PRECISION = 6;
 export const DECK_ZOOM_BUTTON_TRANSITION_MS = 75;
 
 export const getDeckZoomButtonViewState = (viewport, zoomDelta) => {
@@ -20,19 +19,18 @@ export const getDeckZoomButtonViewState = (viewport, zoomDelta) => {
   };
 };
 
-export const shouldUseDeckGlMap = (layers, pointCount) =>
-  Number(pointCount || 0) > 300 ||
-  layers.some((layer) => layer.mode === "descendants");
+// All map types use the children-map renderer. DeckGL keeps every point
+// visible at every zoom level and only groups points that share a location.
+export const shouldUseDeckGlMap = () => true;
 
 export const groupDeckPointsByPosition = (
-  points,
-  precision = DECK_POINT_STACK_PRECISION
+  points
 ) => {
   const groups = new Map();
 
   points.forEach((point) => {
     const [longitude, latitude] = point.position;
-    const key = `${longitude.toFixed(precision)},${latitude.toFixed(precision)}`;
+    const key = `${longitude},${latitude}`;
     const existing = groups.get(key);
     if (existing) {
       existing.points.push(point);

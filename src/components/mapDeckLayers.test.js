@@ -122,16 +122,16 @@ describe("high-volume map polygon layers", () => {
     expect(viewState.transitionDuration).toBe(DECK_ZOOM_BUTTON_TRANSITION_MS);
   });
 
-  it("uses DeckGL for descendant layers at every point count", () => {
+  it("uses DeckGL for every map type", () => {
     expect(shouldUseDeckGlMap([{ mode: "descendants" }], 18)).toBe(true);
-    expect(shouldUseDeckGlMap([{ mode: "direct" }], 18)).toBe(false);
+    expect(shouldUseDeckGlMap([{ mode: "direct" }], 18)).toBe(true);
     expect(shouldUseDeckGlMap([{ mode: "direct" }], 301)).toBe(true);
   });
 
   it("groups coincident DeckGL points while preserving every record", () => {
     const groups = groupDeckPointsByPosition([
       { id: "a", position: [-71.1234564, 42.1] },
-      { id: "b", position: [-71.12345649, 42.1] },
+      { id: "b", position: [-71.1234564, 42.1] },
       { id: "c", position: [-72, 43] },
     ]);
 
@@ -139,6 +139,15 @@ describe("high-volume map polygon layers", () => {
     expect(groups[0].points.map((point) => point.id)).toEqual(["a", "b"]);
     expect(groups[0].__pointStack).toBe(true);
     expect(groups[1].points).toHaveLength(1);
+  });
+
+  it("does not stack nearby but distinct coordinates", () => {
+    const groups = groupDeckPointsByPosition([
+      { id: "a", position: [-71.1234564, 42.1] },
+      { id: "b", position: [-71.12345649, 42.1] },
+    ]);
+
+    expect(groups).toHaveLength(2);
   });
 
   it("lays stack points out on expanding pixel-space rings", () => {

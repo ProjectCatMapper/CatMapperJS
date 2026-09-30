@@ -26,8 +26,6 @@ export const getPointTooltipLines = (point, layer = {}) => {
   if (isInheritedMapItem(point, layer)) {
     lines.push(inheritedMapLabel(point, layer));
   }
-  if (point?.source) {
-    lines.push(`Source: ${point.source}`);
-  }
+  lines.push(`Source: ${point?.source || "Unknown"}`);
   return lines;
 };

@@ -22,6 +22,15 @@ import { addReviewIds, getMatchTypePercentages, stripReviewFields } from '../uti
 import { getTranslatePropertyOptions } from '../utils/translatePropertyOptions';
 import { DataGrid } from '@mui/x-data-grid';
 
+export const getDatasetIdColumns = (columns, rows) => {
+  const datasetIdPattern = /^(?:AD|SD)\d+$/i;
+  return (Array.isArray(columns) ? columns : []).filter((column) =>
+    (Array.isArray(rows) ? rows : []).some((row) =>
+      datasetIdPattern.test(String(row?.[column] ?? '').trim())
+    )
+  );
+};
+
 const getTooltipContent = (nm) => {
   const tooltipTexts = {
     UPLOAD_INSTRUCTION: 'Upload a spreadsheet of category names for an automated proposal of matches to CatMapper categories". See <https://catmapper.org/help/> for more information.',
@@ -104,6 +113,10 @@ function TranslateComponent({ database }) {
   let query = "false"
 
   const [isUniqueRows, setUniqueRows] = useState(() => s.isUniqueRows ?? false);
+  const datasetIdColumns = useMemo(
+    () => getDatasetIdColumns(columns, jsonData),
+    [columns, jsonData]
+  );
 
   const handleUniqueRows = (event) => {
     setUniqueRows(event.target.checked);
@@ -293,7 +306,8 @@ function TranslateComponent({ database }) {
       });
 
       if (!response.ok) {
-        alert('Propose translate was not completed, please check your matching column for unusual characters and please contact the CatMapper team if the issue persists.');
+        const payload = await response.json().catch(() => ({}));
+        setError(payload?.error || `Propose translate could not start (HTTP ${response.status}).`);
         setLoading(false);
         setLoadingStage('');
         setLoadingPercent(0);
@@ -317,7 +331,7 @@ function TranslateComponent({ database }) {
         return;
       }
       console.error('Error sending POST request:', error);
-      setError('Unable to start translation.');
+      setError(`Unable to start propose translate: ${error?.message || 'unknown error'}`);
       setLoading(false);
       setLoadingStage('');
       setLoadingPercent(0);
@@ -898,7 +912,7 @@ function TranslateComponent({ database }) {
                     value={thirdDropdownValue}
                     sx={{ m: 1, width: "12vw" }}
                     onChange={(event) => setthirdDropdownValue(event.target.value)}>
-                    {columns.map((key) => (
+                    {datasetIdColumns.map((key) => (
                       <MenuItem key={key} value={key}>
                         {key}
                       </MenuItem>
