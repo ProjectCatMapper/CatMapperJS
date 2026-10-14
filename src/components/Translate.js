@@ -22,14 +22,19 @@ import { addReviewIds, getMatchTypePercentages, stripReviewFields } from '../uti
 import { getTranslatePropertyOptions } from '../utils/translatePropertyOptions';
 import { DataGrid } from '@mui/x-data-grid';
 
-export const getDatasetIdColumns = (columns, rows) => {
-  const datasetIdPattern = /^(?:AD|SD)\d+$/i;
+const getIdColumns = (columns, rows, idPattern) => {
   return (Array.isArray(columns) ? columns : []).filter((column) =>
     (Array.isArray(rows) ? rows : []).some((row) =>
-      datasetIdPattern.test(String(row?.[column] ?? '').trim())
+      idPattern.test(String(row?.[column] ?? '').trim())
     )
   );
 };
+
+export const getDatasetIdColumns = (columns, rows) =>
+  getIdColumns(columns, rows, /^(?:AD|SD)\d+$/i);
+
+export const getCategoryIdColumns = (columns, rows) =>
+  getIdColumns(columns, rows, /^(?:AM|SM)\d+$/i);
 
 const getTooltipContent = (nm) => {
   const tooltipTexts = {
@@ -115,6 +120,11 @@ function TranslateComponent({ database }) {
   const [isUniqueRows, setUniqueRows] = useState(() => s.isUniqueRows ?? false);
   const datasetIdColumns = useMemo(
     () => getDatasetIdColumns(columns, jsonData),
+    [columns, jsonData]
+  );
+
+  const categoryIdColumns = useMemo(
+    () => getCategoryIdColumns(columns, jsonData),
     [columns, jsonData]
   );
 
@@ -912,7 +922,7 @@ function TranslateComponent({ database }) {
                     value={thirdDropdownValue}
                     sx={{ m: 1, width: "12vw" }}
                     onChange={(event) => setthirdDropdownValue(event.target.value)}>
-                    {datasetIdColumns.map((key) => (
+                    {categoryIdColumns.map((key) => (
                       <MenuItem key={key} value={key}>
                         {key}
                       </MenuItem>
@@ -938,7 +948,7 @@ function TranslateComponent({ database }) {
                     value={fourthDropdownValue}
                     sx={{ m: 1, width: "12vw" }}
                     onChange={(event) => setfourthDropdownValue(event.target.value)}>
-                    {columns.map((key) => (
+                    {categoryIdColumns.map((key) => (
                       <MenuItem key={key} value={key}>
                         {key}
                       </MenuItem>
@@ -964,7 +974,7 @@ function TranslateComponent({ database }) {
                     value={fifthDropdownValue}
                     sx={{ m: 1, width: "12vw" }}
                     onChange={(event) => setfifthDropdownValue(event.target.value)}>
-                    {columns.map((key) => (
+                    {datasetIdColumns.map((key) => (
                       <MenuItem key={key} value={key}>
                         {key}
                       </MenuItem>
