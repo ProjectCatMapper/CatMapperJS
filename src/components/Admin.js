@@ -1732,10 +1732,13 @@ const Admin = ({ database }) => {
 
     if (!isUsesMode && !isCategoryMergingMode) {
       setDropdown1Options([]); // reset dropdown if not in this mode
+      setDropdown2Options([]);
       return;
     }
 
+    let cancelled = false;
     setDropdown1Options([])
+    setDropdown2Options([]);
     setFormData(prevFormData => ({
       ...prevFormData,
       s1_7: ""
@@ -1761,6 +1764,8 @@ const Admin = ({ database }) => {
           });
           const data = await res.json();
 
+          if (cancelled) return;
+
           if (data.error) {
             alert("An error occurred: " + data.error);
             return;
@@ -1769,11 +1774,13 @@ const Admin = ({ database }) => {
           setDropdown1Options(data.r);
           setFormData(prevFormData => ({
             ...prevFormData,
-            s1_4: data.r
+            s1_4: data.r,
+            s1_7: ""
           }));
           setDropdown2Options(data.r1)
 
         } catch (err) {
+          if (cancelled) return;
           setDropdown1Options([]); // reset on error
         }
       };
@@ -1781,6 +1788,9 @@ const Admin = ({ database }) => {
     } else {
       setDropdown1Options([]); // reset dropdown if input does not match
     }
+    return () => {
+      cancelled = true;
+    };
   }, [database, formData.s1_2, firstDropdownValue]);
 
   useEffect(() => {
