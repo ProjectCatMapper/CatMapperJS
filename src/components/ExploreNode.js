@@ -2321,7 +2321,7 @@ export default function Tableclick({ cmid, database, tabval }) {
                     }}
                   >
                     {categoryMapLayers.length > 0 ? (
-                      <MapComponent points={points} mapt={mapt} sources={sources} layers={categoryMapLayers} />
+                      <MapComponent points={points} mapt={mapt} sources={sources} layers={categoryMapLayers} domains={domainLabels} />
                     ) : (
                       <p>No map layer selected.</p>
                     )}
