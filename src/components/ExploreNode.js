@@ -1,4 +1,5 @@
 import { apiBaseUrl } from '../api/endpoints';
+import HeaderLocationValue from './HeaderLocationValue';
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 
@@ -1681,6 +1682,11 @@ export default function Tableclick({ cmid, database, tabval }) {
   };
   try {
     const renderCategoryInfoValue = (entry, previewText) => {
+      if (["location", "district"].includes(entry.normalized)) {
+        return <HeaderLocationValue text={entry.plainValue} onViewMore={() =>
+          setCategoryInfoDialog({ open: true, key: entry.displayKey, value: entry.plainValue })
+        } />;
+      }
       if (entry.normalized === "datasetlocation") {
         return (
           <a
@@ -1708,6 +1714,7 @@ export default function Tableclick({ cmid, database, tabval }) {
     const renderCategoryInfoEntry = (entry, sectionName) => {
       const disablePreviewForFullWrap =
         entry.normalized.includes("location") ||
+        entry.normalized === "district" ||
         entry.normalized === "citation" ||
         entry.normalized === "datasetcitation";
       const useInlineTextFlow = sectionName === "detail" || disablePreviewForFullWrap;
@@ -2321,7 +2328,7 @@ export default function Tableclick({ cmid, database, tabval }) {
                     }}
                   >
                     {categoryMapLayers.length > 0 ? (
-                      <MapComponent points={points} mapt={mapt} sources={sources} layers={categoryMapLayers} />
+                      <MapComponent points={points} mapt={mapt} sources={sources} layers={categoryMapLayers} domains={domainLabels} />
                     ) : (
                       <p>No map layer selected.</p>
                     )}

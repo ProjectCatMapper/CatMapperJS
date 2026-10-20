@@ -1,3 +1,5 @@
+import { Checkbox, FormControl, InputLabel, ListItemText, MenuItem, Select } from "@mui/material";
+import { filterMapDomains, getAvailableMapDomains } from "./mapDomainFilter";
 import { useEffect, useMemo, useRef, useState } from "react";
 import L from "leaflet";
 import {
@@ -564,11 +566,18 @@ const DeckGlMap = ({ points, layers, sourceColorMap, stringToColor }) => {
   );
 };
 
-const MapComponent = ({ points = [], mapt = [], sources = [], layers = null }) => {
-  const renderLayers = useMemo(
+const MapComponent = ({ points = [], mapt = [], sources = [], layers = null, domains = [] }) => {
+  const normalizedLayers = useMemo(
     () => normalizeLayers({ points, mapt, sources, layers }),
     [points, mapt, sources, layers]
   );
+
+  const availableDomains = getAvailableMapDomains(normalizedLayers, domains);
+  const [domainChoices, setDomainChoices] = useState({});
+  const selectedDomains = availableDomains.filter(
+    (domain) => domainChoices[domain] ?? domain !== "ADM0"
+  );
+  const renderLayers = filterMapDomains(normalizedLayers, selectedDomains, domains);
 
   const allPoints = useMemo(
     () => renderLayers.flatMap((layer) =>
@@ -618,23 +627,40 @@ const MapComponent = ({ points = [], mapt = [], sources = [], layers = null }) =
     }
   });
 
-  if (shouldUseDeckGlMap(renderLayers, allPoints.length)) {
-    return (
-      <DeckGlMap
-        points={allPoints}
-        layers={renderLayers}
-        sourceColorMap={sourceColorMap}
-        stringToColor={stringToColor}
-      />
-    );
-  }
-
   return (
-    <LeafletMap
-      layers={renderLayers}
-      sourceColorMap={sourceColorMap}
-      stringToColor={stringToColor}
-    />
+    <div style={{ height: "100%", display: "flex", flexDirection: "column" }}>
+      <FormControl size="small" sx={{ m: 1, minWidth: 200, maxWidth: 400 }}>
+        <InputLabel id="map-domains-label">Domains</InputLabel>
+        <Select
+          labelId="map-domains-label"
+          label="Domains"
+          multiple
+          value={selectedDomains}
+          renderValue={(selected) => selected.length ? selected.join(", ") : "No domains selected"}
+          onChange={({ target: { value } }) => {
+            const selected = typeof value === "string" ? value.split(",") : value;
+            setDomainChoices((current) => ({
+              ...current,
+              ...Object.fromEntries(availableDomains.map((domain) => [domain, selected.includes(domain)])),
+            }));
+          }}
+        >
+          {availableDomains.map((domain) => (
+            <MenuItem key={domain} value={domain}>
+              <Checkbox checked={selectedDomains.includes(domain)} />
+              <ListItemText primary={domain} />
+            </MenuItem>
+          ))}
+        </Select>
+      </FormControl>
+      <div style={{ flex: 1, minHeight: 0, position: "relative" }}>
+        {shouldUseDeckGlMap(renderLayers, allPoints.length) ? (
+          <DeckGlMap points={allPoints} layers={renderLayers} sourceColorMap={sourceColorMap} stringToColor={stringToColor} />
+        ) : (
+          <LeafletMap layers={renderLayers} sourceColorMap={sourceColorMap} stringToColor={stringToColor} />
+        )}
+      </div>
+    </div>
   );
 };
 

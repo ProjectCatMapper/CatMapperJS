@@ -1097,7 +1097,7 @@ const Edit = ({ database }) => {
   let allowedExtraColumns = ["descriptor", "Dataset", "log", "country", "dateEnd", "dateStart", "district", "eventDate", "eventType",
     "geoCoords", "Key", "NewKey", "label", "latitude", "longitude", "ignoreNames", "Name", "parent", "period", "parentContext", "propertyValues",
     "rawDate", "Rfunction", "Rtransform", "recordEnd", "recordStart", "sampleSize", "transform", "categoryType", "url", "variableDescription", "variable",
-    "yearEnd", "yearStart", "language", "populationEstimate", "religion", "geoPolygon", "glottocode", "FIPS", "ISO2", "ISO3", "ISONumeric", "comment",
+    "yearEnd", "yearStart", "language", "populationEstimate", "areakm2", "religion", "geoPolygon", "glottocode", "FIPS", "ISO2", "ISO3", "ISONumeric", "comment",
     "polity", "occupation", "culture", "yearPublished", "stackID", "stackTransform", "summaryStatistic", "datasetTransform"]
   let allowedDatasetColumns = []
 

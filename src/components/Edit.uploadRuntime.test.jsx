@@ -184,6 +184,26 @@ describe('Edit upload runtime', () => {
     expect(document.body.textContent.split(errorText).length - 1).toBe(1);
   });
 
+  it('includes areakm2 as an optional USES property in uploads', async () => {
+    parseTabularFileMock.mockResolvedValue({
+      headers: ['CMName', 'Name', 'Key', 'label', 'datasetID', 'areakm2'],
+      rows2d: [['Node A', 'Node A', 'Var == A', 'LANGUOID', 'AD1', '12.75']],
+      records: [{ CMName: 'Node A', Name: 'Node A', Key: 'Var == A',
+        label: 'LANGUOID', datasetID: 'AD1', areakm2: '12.75' }],
+    });
+    vi.mocked(editUploadApi.uploadInputNodes).mockResolvedValue({
+      ok: true, json: async () => ({ taskId: 'area-task', status: 'queued' }),
+    });
+    await renderEdit(root);
+    await uploadFile(container, 'area.csv');
+    const button = [...container.querySelectorAll('button')].find(
+      (item) => item.textContent?.trim() === 'UPLOAD',
+    );
+    await act(async () => { button.click(); await flushPromises(); });
+    expect(editUploadApi.uploadInputNodes).toHaveBeenCalledTimes(1);
+    expect(editUploadApi.uploadInputNodes.mock.calls[0][0].payload.optionalProperties).toContain('areakm2');
+  });
+
   it('keeps the upload progress dialog open with completion details until closed', async () => {
     vi.useFakeTimers();
 

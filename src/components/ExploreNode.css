@@ -282,6 +282,29 @@ h1,h4,p,a{
   overflow-wrap: anywhere;
 }
 
+.category-info-location-preview {
+  display: block;
+  min-width: 0;
+}
+
+.category-info-location-lines {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 5;
+  line-clamp: 5;
+  overflow: hidden;
+}
+
+.category-info-location-more {
+  background: none;
+  border: 0;
+  padding: 2px 0;
+  color: #0f56cf;
+  cursor: pointer;
+  font: inherit;
+  text-decoration: underline;
+}
+
 .category-info-primary-item .category-info-value {
   font-size: 1.08rem;
   font-weight: 500;
