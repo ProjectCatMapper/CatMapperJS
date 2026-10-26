@@ -1,5 +1,5 @@
 import { apiBaseUrl } from '../api/endpoints';
-import { getUsesEditError, updateUsesEditField } from '../utils/adminUsesEdit';
+import { getUsesEditError, updateUsesEditField, filterContextualEditProperties } from '../utils/adminUsesEdit';
 import { useEffect, useState } from "react";
 import {
   Box,
@@ -1661,6 +1661,7 @@ const Admin = ({ database }) => {
   const [nodePropsLookupComplete, setNodePropsLookupComplete] = useState(false);
   const [add_edit_delete_usesprops_Options, setDropdown1Options] = useState([]);
   const [add_edit_delete_usesprops_properties, setDropdown2Options] = useState([]);
+  const [allowedContextualEditProperties, setAllowedContextualEditProperties] = useState(null);
 
   useEffect(() => {
     if (firstDropdownValue !== "add/edit/delete node property" && firstDropdownValue !== "delete node") {
@@ -1791,6 +1792,7 @@ const Admin = ({ database }) => {
             s1_7: ""
           }));
           setDropdown2Options(data.r1)
+          setAllowedContextualEditProperties(data.allowedEditProperties ?? null);
 
         } catch (err) {
           if (cancelled) return;
@@ -2060,6 +2062,9 @@ const Admin = ({ database }) => {
                     dropdown2Options = filterUsesPropertyOptions(
                       dropdown2Options,
                       formData.s1_1
+                    );
+                    dropdown2Options = filterContextualEditProperties(
+                      dropdown2Options, formData.s1_1, allowedContextualEditProperties
                     );
                     dropdown2Options = visibleUsesPropertyOptions(dropdown2Options);
 

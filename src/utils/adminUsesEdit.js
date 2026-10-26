@@ -26,3 +26,8 @@ export function updateUsesEditField(form, name, value) {
   if (name === 's1_8') return { ...next, s1_3: '' };
   return next;
 }
+
+export function filterContextualEditProperties(options, operation, allowed) {
+  if (operation !== 'edit' || !Array.isArray(allowed)) return options;
+  return options.filter(property => allowed.includes(property));
+}
