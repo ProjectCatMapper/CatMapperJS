@@ -1415,7 +1415,7 @@ export default function Tableclick({ cmid, database, tabval }) {
   const hasDirectDatasetMapData = hasPolygonData || (Array.isArray(datasetpoints) && datasetpoints.length > 0);
   const directDatasetLayer = {
     id: "direct",
-    label: "Dataset USES locations",
+    label: "Category locations",
     mode: "direct",
     points: datasetpoints,
     polygons: mapt,
@@ -1623,7 +1623,7 @@ export default function Tableclick({ cmid, database, tabval }) {
   const renderDatasetMapControls = () =>
     renderMapLayerControls({
       hasDirectLayer: hasDirectDatasetMapData,
-      directLabel: "Dataset USES locations",
+      directLabel: "Category locations",
     });
 
   const renderMapLimitNotice = () => {
@@ -2096,7 +2096,7 @@ export default function Tableclick({ cmid, database, tabval }) {
                   >
                     {loadingBackground ? null : (
                       datasetMapLayers.length > 0 ? (
-                        <MapComponent points={datasetpoints} mapt={mapt} sources={sources} layers={datasetMapLayers} />
+                        <MapComponent points={datasetpoints} mapt={mapt} sources={sources} layers={datasetMapLayers} mapType="dataset" database={database} />
                       ) : (
                         <p>No map layer selected.</p>
                       )
@@ -2328,7 +2328,7 @@ export default function Tableclick({ cmid, database, tabval }) {
                     }}
                   >
                     {categoryMapLayers.length > 0 ? (
-                      <MapComponent points={points} mapt={mapt} sources={sources} layers={categoryMapLayers} domains={domainLabels} />
+                      <MapComponent points={points} mapt={mapt} sources={sources} layers={categoryMapLayers} domains={domainLabels} mapType="category" database={database} />
                     ) : (
                       <p>No map layer selected.</p>
                     )}
