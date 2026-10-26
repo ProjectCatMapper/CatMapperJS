@@ -86,6 +86,29 @@ describe('Admin proposed change review', () => {
     vi.restoreAllMocks();
   });
 
+  it('blocks an incomplete USES correction before sending an API request', async () => {
+    await act(async () => {
+      root.render(React.createElement(MemoryRouter, null, React.createElement(Admin, { database: 'sociomap' })));
+      await flushPromises();
+    });
+    const clickText = async text => {
+      const node = Array.from(container.querySelectorAll(text === 'submit' ? 'button' : '*')).find(
+        item => item.textContent?.trim().toLowerCase() === text
+      );
+      expect(node).toBeTruthy();
+      await act(async () => {
+        (node.closest('button') || node.closest('[role="button"]') || node)
+          .dispatchEvent(new MouseEvent('click', { bubbles: true }));
+        await flushPromises();
+      });
+    };
+    await clickText('edit options');
+    await clickText('add/edit/delete uses property');
+    await clickText('submit');
+    expect(window.alert).toHaveBeenCalledWith('Select a valid USES tie before submitting.');
+    expect(fetch.mock.calls.some(([url]) => String(url).endsWith('/admin/edit'))).toBe(false);
+  });
+
   it('shows the database queue and lets an admin approve a proposal', async () => {
     await act(async () => {
       root.render(

@@ -1,4 +1,5 @@
 import { apiBaseUrl } from '../api/endpoints';
+import { getUsesEditError, updateUsesEditField } from '../utils/adminUsesEdit';
 import { useEffect, useState } from "react";
 import {
   Box,
@@ -671,6 +672,13 @@ const Admin = ({ database }) => {
   };
 
   const submitAdminAction = async () => {
+    if (firstDropdownValue === "add/edit/delete USES property") {
+      const error = getUsesEditError(formData);
+      if (error) {
+        alert(error);
+        return;
+      }
+    }
     try {
       if (firstDropdownValue === "move USES tie") {
         closeAmbiguousTiesModal();
@@ -1402,10 +1410,12 @@ const Admin = ({ database }) => {
   // trims strings immediately for textboxes and leaves objects coming from Select intact, do not change this !!!
   const updateFormFieldValue = (e) => {
     const { name, value } = e.target;
-    setFormData(prevFormData => ({
-      ...prevFormData,
-      [name]: value
-    }));
+    setFormData(prevFormData => {
+      if (firstDropdownValue === "add/edit/delete USES property") {
+        return updateUsesEditField(prevFormData, name, value);
+      }
+      return { ...prevFormData, [name]: value };
+    });
   };
 
   const updateRoutineParam = (event) => {
@@ -1741,6 +1751,9 @@ const Admin = ({ database }) => {
     setDropdown2Options([]);
     setFormData(prevFormData => ({
       ...prevFormData,
+      ...(firstDropdownValue === "add/edit/delete USES property"
+        ? { s1_4: [], s1_8: "", s1_3: "" }
+        : {}),
       s1_7: ""
     }));
 
