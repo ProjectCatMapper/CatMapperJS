@@ -1,6 +1,8 @@
 import { Checkbox, FormControl, InputLabel, ListItemText, MenuItem, Select } from "@mui/material";
 import { filterMapDomains, getAvailableMapDomains } from "./mapDomainFilter";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { buildMapSourceColors, DATASET_POINT_COLOR, getMapNodePath, getMapSourceColor } from "./mapPresentation";
 import L from "leaflet";
 import {
   CircleMarker,
@@ -116,7 +118,7 @@ const pointDisplayName = (point) =>
 
 const pointDisplayCmid = (point) => point?.CMID || point?.sourceNodeCMID || "";
 
-const LeafletMap = ({ layers, sourceColorMap, stringToColor }) => {
+const LeafletMap = ({ layers, sourceColorMap, stringToColor, onNodeClick }) => {
   const mapRef = useRef();
   const allPoints = useMemo(
     () =>
@@ -172,6 +174,7 @@ const LeafletMap = ({ layers, sourceColorMap, stringToColor }) => {
       permanent: false,
       direction: "top",
     });
+    leafletLayer.on("click", () => onNodeClick(feature));
   };
 
   const getFeatureStyle = (layerMeta) => (feature) => {
@@ -231,9 +234,10 @@ const LeafletMap = ({ layers, sourceColorMap, stringToColor }) => {
                   radius={inherited ? 7 : 10}
                   color={color}
                   fillColor={color}
-                  fillOpacity={inherited ? 0.22 : 0.5}
+                  fillOpacity={1}
                   opacity={inherited ? 0.85 : 1}
                   dashArray={inherited ? "4 3" : undefined}
+                  eventHandlers={{ click: () => onNodeClick(point) }}
                 >
                   <Tooltip>
                     {tooltipLines.map((line) => <div key={line}>{line}</div>)}
@@ -247,7 +251,7 @@ const LeafletMap = ({ layers, sourceColorMap, stringToColor }) => {
   );
 };
 
-const DeckGlMap = ({ points, layers, sourceColorMap, stringToColor }) => {
+const DeckGlMap = ({ points, layers, sourceColorMap, stringToColor, onNodeClick, nodePath }) => {
   const containerRef = useRef(null);
   const deckRef = useRef(null);
   const [activeStack, setActiveStack] = useState(null);
@@ -344,7 +348,7 @@ const DeckGlMap = ({ points, layers, sourceColorMap, stringToColor }) => {
     id: "scatter-layer",
     data: singletonData,
     pickable: true,
-    opacity: 0.8,
+    opacity: 1,
     stroked: false,
     filled: true,
     radiusScale: 10,
@@ -374,7 +378,7 @@ const DeckGlMap = ({ points, layers, sourceColorMap, stringToColor }) => {
       const sources = [...new Set(group.points.map((point) => point.source || "Unknown"))];
       const source = sources[ringIndex];
       if (!source) return [0, 0, 0, 0];
-      return hexToRgba(sourceColorMap[source] || stringToColor(source), 235);
+      return hexToRgba(sourceColorMap[source] || stringToColor(source));
     },
   }));
 
@@ -439,10 +443,13 @@ const DeckGlMap = ({ points, layers, sourceColorMap, stringToColor }) => {
         onClick={({ object }) => {
           if (object?.__pointStack) {
             setActiveStack(object);
-          } else if (!object?.__expandedStackPoint) {
+          } else if (object) {
+            onNodeClick(object);
+          } else {
             setActiveStack(null);
           }
         }}
+        getCursor={({ isHovering }) => isHovering ? "pointer" : "grab"}
         getTooltip={({ object }) => {
           if (!object) return null;
           if (object.__pointStack) {
@@ -513,11 +520,11 @@ const DeckGlMap = ({ points, layers, sourceColorMap, stringToColor }) => {
           aria-label={`${activeStack.points.length} points at this location`}
           style={{
             position: "absolute",
-            top: 12,
+            top: 84,
             right: 12,
             zIndex: 2,
             width: "min(360px, calc(100% - 24px))",
-            maxHeight: "calc(100% - 24px)",
+            maxHeight: "calc(100% - 96px)",
             overflow: "auto",
             padding: 12,
             borderRadius: 8,
@@ -551,7 +558,11 @@ const DeckGlMap = ({ points, layers, sourceColorMap, stringToColor }) => {
                     style={{ width: 12, height: 12, marginTop: 4, borderRadius: "50%", flex: "0 0 auto", background: color }}
                   />
                   <div>
-                    <div style={{ fontWeight: 600 }}>{pointDisplayName(point)}</div>
+                    <div style={{ fontWeight: 600 }}>
+                      {nodePath(point)
+                        ? <Link to={nodePath(point)} style={{ color: "#1f5a99", textDecoration: "underline" }}>{pointDisplayName(point)}</Link>
+                        : pointDisplayName(point)}
+                    </div>
                     {cmid && <div>CMID: {cmid}</div>}
                     {point.layerLabel && <div>Layer: {point.layerLabel}</div>}
                     <div>Source: {point.source || "Unknown"}</div>
@@ -566,7 +577,13 @@ const DeckGlMap = ({ points, layers, sourceColorMap, stringToColor }) => {
   );
 };
 
-const MapComponent = ({ points = [], mapt = [], sources = [], layers = null, domains = [] }) => {
+const MapComponent = ({ points = [], mapt = [], sources = [], layers = null, domains = [], mapType = "category", database }) => {
+  const navigate = useNavigate();
+  const nodePath = (item) => getMapNodePath(database, item);
+  const onNodeClick = (item) => {
+    const path = nodePath(item);
+    if (path) navigate(path);
+  };
   const normalizedLayers = useMemo(
     () => normalizeLayers({ points, mapt, sources, layers }),
     [points, mapt, sources, layers]
@@ -592,40 +609,23 @@ const MapComponent = ({ points = [], mapt = [], sources = [], layers = null, dom
     [renderLayers]
   );
 
-  const allSources = useMemo(() => {
+  const collectSources = (mapLayers) => {
     const sourceSet = new Set();
-    renderLayers.forEach((layer) => {
-      layer.sources.forEach((source) => sourceSet.add(source));
+    mapLayers.forEach((layer) => {
       layer.points.forEach((point) => {
-        if (point.source) sourceSet.add(point.source);
+        sourceSet.add(point.source || "Unknown");
       });
       getPolygonFeatures(layer.polygons).forEach((feature) => {
         sourceSet.add(getFeatureSource(feature));
       });
     });
     return [...sourceSet].filter(Boolean);
-  }, [renderLayers]);
-
-  const stringToColor = (value) => {
-    const str = String(value || "Unknown");
-    let hash = 0;
-    for (let i = 0; i < str.length; i++) {
-      hash = str.charCodeAt(i) + ((hash << 5) - hash);
-    }
-    let color = "#";
-    for (let i = 0; i < 3; i++) {
-      const channel = (hash >> (i * 8)) & 0xff;
-      color += (`00${channel.toString(16)}`).slice(-2);
-    }
-    return color;
   };
-
-  const sourceColorMap = {};
-  allSources.forEach((source) => {
-    if (!sourceColorMap[source]) {
-      sourceColorMap[source] = stringToColor(source);
-    }
-  });
+  // Allocate from all layers so filtering domains does not change colors.
+  const sourceColorMap = buildMapSourceColors(collectSources(normalizedLayers), mapType !== "dataset");
+  const legendSources = collectSources(renderLayers);
+  const stringToColor = (source) => sourceColorMap[source || "Unknown"]
+    || (mapType === "dataset" ? DATASET_POINT_COLOR : getMapSourceColor(source));
 
   return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column" }}>
@@ -655,11 +655,24 @@ const MapComponent = ({ points = [], mapt = [], sources = [], layers = null, dom
       </FormControl>
       <div style={{ flex: 1, minHeight: 0, position: "relative" }}>
         {shouldUseDeckGlMap(renderLayers, allPoints.length) ? (
-          <DeckGlMap points={allPoints} layers={renderLayers} sourceColorMap={sourceColorMap} stringToColor={stringToColor} />
+          <DeckGlMap points={allPoints} layers={renderLayers} sourceColorMap={sourceColorMap} stringToColor={stringToColor} onNodeClick={onNodeClick} nodePath={nodePath} />
         ) : (
-          <LeafletMap layers={renderLayers} sourceColorMap={sourceColorMap} stringToColor={stringToColor} />
+          <LeafletMap layers={renderLayers} sourceColorMap={sourceColorMap} stringToColor={stringToColor} onNodeClick={onNodeClick} />
         )}
       </div>
+      {mapType === "category" && legendSources.length > 0 && (
+        <div role="group" aria-label="Map legend" style={{ padding: 8, maxHeight: 120, overflow: "auto" }}>
+          <strong>Datasets</strong>
+          <ul style={{ display: "flex", flexWrap: "wrap", gap: "6px 16px", listStyle: "none", margin: "6px 0 0", padding: 0 }}>
+            {legendSources.map((source) => (
+              <li key={source} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <span aria-hidden="true" style={{ width: 12, height: 12, borderRadius: "50%", background: stringToColor(source) }} />
+                {source}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 };
