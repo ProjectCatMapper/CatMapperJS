@@ -1,8 +1,9 @@
-// Keep map points legible against the light basemap. Every palette color has
-// at least 4.5:1 contrast against white; point fills must remain opaque.
+// Keep points bright while excluding pale colors: every palette color has
+// at least 3:1 contrast against white and the light basemap (#f1f5f9).
+// Point fills must remain opaque to preserve that visibility.
 export const MAP_POINT_COLORS = [
-  "#1f5a99", "#8a3d1c", "#327145", "#7b3f8c", "#a3293f",
-  "#006b73", "#615b18", "#704b38", "#4c566a",
+  "#2878d0", "#e06b1a", "#269e4a", "#9657cf", "#df3e4d",
+  "#009b91", "#b18400", "#cf4a9c", "#687e9a",
 ];
 export const DATASET_POINT_COLOR = MAP_POINT_COLORS[0];
 
