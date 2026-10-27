@@ -1,6 +1,6 @@
 {
   "name": "CatMapper",
-  "version": "2026.10.27-102508",
+  "version": "2026.10.27-150142",
   "private": true,
   "homepage": "/",
   "dependencies": {
@@ -81,14 +81,14 @@
     ]
   },
   "devDependencies": {
-    "@vitest/coverage-v8": "4.1.10",
     "@playwright/test": "^1.58.2",
     "@vitejs/plugin-basic-ssl": "^2.3.0",
-    "@vitejs/plugin-react": "^6.0.4",
+    "@vitejs/plugin-react": "^6.1.2",
+    "@vitest/coverage-v8": "5.0.5",
     "jsdom": "^28.1.0",
     "office-addin-manifest": "^2.1.6",
-    "vite": "^8.1.5",
-    "vitest": "^4.1.10",
+    "vite": "^8.3.5",
+    "vitest": "^5.0.5",
     "wait-on": "^9.0.10"
   },
   "overrides": {
