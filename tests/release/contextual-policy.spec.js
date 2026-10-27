@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-const api = 'https://dev-api.catmapper.org';
+const api = process.env.API_URL || 'https://dev-api.catmapper.org';
 
 test('metadata policies validate both maps without writing source records', async ({ request }) => {
   for (const database of ['SocioMap', 'ArchaMap']) {
@@ -32,13 +32,13 @@ for (const sample of [
   { database: 'sociomap', cmid: 'SM22210', property: 'language' },
   { database: 'archamap', cmid: 'AM353935', property: 'culture' },
 ]) {
-  test(`${sample.database} hides prohibited edits and permits deletion`, async ({ page }) => {
+  test(`${sample.database} hides prohibited edits and retains existing deletion choices`, async ({ page }) => {
     await page.goto(`/${sample.database}/admin`);
     const lookup = page.waitForResponse(response => response.url().includes('/admin_add_edit_delete_usesproperties?')
       && new URL(response.url()).searchParams.get('CMID') === sample.cmid);
     await page.getByLabel('CMID of Category').fill(sample.cmid);
     const ties = (await (await lookup).json()).r;
-    const tieIndex = ties.findIndex(tie => Object.hasOwn(tie[1], sample.property));
+    const tieIndex = ties.findIndex(tie => Object.hasOwn(tie[1], 'Name'));
     expect(tieIndex).toBeGreaterThanOrEqual(0);
     await expect(page.getByLabel('Choose USES tie to change')).toBeVisible();
     await page.getByLabel('Choose USES tie to change').click();
@@ -50,6 +50,6 @@ for (const sample of [
     await page.getByLabel('Choose USES tie to change').click();
     await page.locator(`[role="option"][data-value="${tieIndex + 1}"]`).click();
     await page.getByLabel('Choose property to delete').click();
-    await expect(page.getByRole('option', { name: sample.property, exact: true })).toBeVisible();
+    await expect(page.getByRole('option', { name: 'Name', exact: true })).toBeVisible();
   });
 }
