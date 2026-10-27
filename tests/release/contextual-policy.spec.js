@@ -29,21 +29,26 @@ test('metadata policies validate both maps without writing source records', asyn
 });
 
 for (const sample of [
-  { database: 'sociomap', cmid: 'SM22210', dataset: /Halaoui/, property: 'language' },
-  { database: 'archamap', cmid: 'AM23559', dataset: /./, property: 'culture' },
+  { database: 'sociomap', cmid: 'SM22210', property: 'language' },
+  { database: 'archamap', cmid: 'AM353935', property: 'culture' },
 ]) {
   test(`${sample.database} hides prohibited edits and permits deletion`, async ({ page }) => {
     await page.goto(`/${sample.database}/admin`);
+    const lookup = page.waitForResponse(response => response.url().includes('/admin_add_edit_delete_usesproperties?')
+      && new URL(response.url()).searchParams.get('CMID') === sample.cmid);
     await page.getByLabel('CMID of Category').fill(sample.cmid);
+    const ties = (await (await lookup).json()).r;
+    const tieIndex = ties.findIndex(tie => Object.hasOwn(tie[1], sample.property));
+    expect(tieIndex).toBeGreaterThanOrEqual(0);
     await expect(page.getByLabel('Choose USES tie to change')).toBeVisible();
     await page.getByLabel('Choose USES tie to change').click();
-    await page.getByRole('option').filter({ hasText: sample.dataset }).first().click();
+    await page.locator(`[role="option"][data-value="${tieIndex + 1}"]`).click();
     await page.getByLabel('Choose property to edit').click();
     await expect(page.getByRole('option', { name: sample.property, exact: true })).toHaveCount(0);
     await page.keyboard.press('Escape');
     await page.getByLabel('delete', { exact: true }).check();
     await page.getByLabel('Choose USES tie to change').click();
-    await page.getByRole('option').filter({ hasText: sample.dataset }).first().click();
+    await page.locator(`[role="option"][data-value="${tieIndex + 1}"]`).click();
     await page.getByLabel('Choose property to delete').click();
     await expect(page.getByRole('option', { name: sample.property, exact: true })).toBeVisible();
   });
