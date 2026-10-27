@@ -38,7 +38,7 @@ for (const sample of [
       && new URL(response.url()).searchParams.get('CMID') === sample.cmid);
     await page.getByLabel('CMID of Category').fill(sample.cmid);
     const ties = (await (await lookup).json()).r;
-    const tieIndex = ties.findIndex(tie => Object.hasOwn(tie[1], 'Name'));
+    const tieIndex = ties.findIndex(tie => Object.hasOwn(tie[1], 'country'));
     expect(tieIndex).toBeGreaterThanOrEqual(0);
     await expect(page.getByLabel('Choose USES tie to change')).toBeVisible();
     await page.getByLabel('Choose USES tie to change').click();
@@ -50,6 +50,6 @@ for (const sample of [
     await page.getByLabel('Choose USES tie to change').click();
     await page.locator(`[role="option"][data-value="${tieIndex + 1}"]`).click();
     await page.getByLabel('Choose property to delete').click();
-    await expect(page.getByRole('option', { name: 'Name', exact: true })).toBeVisible();
+    await expect(page.getByRole('option', { name: 'country', exact: true })).toBeVisible();
   });
 }
