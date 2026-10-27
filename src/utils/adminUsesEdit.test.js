@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getUsesEditError, updateUsesEditField } from './adminUsesEdit';
+import { getUsesEditError, updateUsesEditField, filterContextualEditProperties } from './adminUsesEdit';
 
 const form = () => ({
   s1_1: 'edit', s1_2: 'AM1', s1_3: 'Ware == Brown', s1_7: 1, s1_8: 'Key',
@@ -7,6 +7,13 @@ const form = () => ({
 });
 
 describe('USES correction target', () => {
+  it('hides prohibited edits while preserving their deletion', () => {
+    const options = ['Name', 'language', 'district'];
+    const allowed = ['Name', 'district'];
+    expect(filterContextualEditProperties(options, 'edit', allowed)).toEqual(allowed);
+    expect(filterContextualEditProperties(options, 'delete', allowed)).toEqual(options);
+    expect(filterContextualEditProperties(options, 'edit', null)).toEqual(options);
+  });
   it.each(['', 0, -1, 2, 1.5, true])('blocks invalid selection %s', selection => {
     expect(getUsesEditError({ ...form(), s1_7: selection })).not.toBe('');
   });
