@@ -254,7 +254,9 @@ export const getChangeReviewDetails = (review) => {
   }
 
   if (action === "merge nodes") {
-    return [...details, reviewDetail("Keep node", input.s1_2), reviewDetail("Merge and remove node", input.s1_3)];
+    return [...details, reviewDetail("Keep node", input.s1_2), reviewDetail("Merge and remove node", input.s1_3),
+      ...(typeof input.removeCyclicParents === "boolean"
+        ? [reviewDetail("Remove cyclical parents", input.removeCyclicParents ? "Yes" : "No")] : [])];
   }
 
   if (action === "delete node") {
@@ -455,6 +457,7 @@ const Admin = ({ database }) => {
   const [datasetID, setDatasetID] = useState('')
   const [mergeConfirmOpen, setMergeConfirmOpen] = useState(false);
   const [mergePreview, setMergePreview] = useState({ keep: null, discard: null });
+  const [cyclicParentChoice, setCyclicParentChoice] = useState("");
   const [submittedReviewOpen, setSubmittedReviewOpen] = useState(false);
   const [submittedReview, setSubmittedReview] = useState(null);
   const [pendingChangeReviews, setPendingChangeReviews] = useState([]);
@@ -671,7 +674,11 @@ const Admin = ({ database }) => {
     }));
   };
 
-  const submitAdminAction = async () => {
+  const submitAdminAction = async (mergeInput = null) => {
+    if (firstDropdownValue === "merge nodes" && !mergeInput?.cyclicParentToken) {
+      alert("Preview the merge before confirming.");
+      return;
+    }
     if (firstDropdownValue === "add/edit/delete USES property") {
       const error = getUsesEditError(formData);
       if (error) {
@@ -725,6 +732,7 @@ const Admin = ({ database }) => {
         ...formData,
         s1_2: formData.s1_2.trim(),
         s1_3: formData.s1_3.trim(),
+        ...(firstDropdownValue === "merge nodes" ? mergeInput : {}),
       };
 
       const response = await fetch(`${apiBaseUrl()}/admin/edit`, {
@@ -1602,23 +1610,6 @@ const Admin = ({ database }) => {
     closeAmbiguousTiesModal();
   };
 
-  const fetchMergeNodeSummary = async (cmid) => {
-    const response = await fetch(
-      `${apiBaseUrl()}/admin/nodeSummary?CMID=${encodeURIComponent(cmid)}&database=${encodeURIComponent(database)}`,
-      {
-        method: "GET",
-        headers: {
-          ...(cred ? { Authorization: `Bearer ${cred}` } : {}),
-        },
-      }
-    );
-    const data = await response.json();
-    if (!response.ok) {
-      throw new Error(data.error || "Unable to fetch node summary.");
-    }
-    return data;
-  };
-
   const previewMergeNodes = async () => {
     try {
       const keepCmid = (formData.s1_2 || "").trim();
@@ -1634,21 +1625,18 @@ const Admin = ({ database }) => {
       }
 
       setLoading(true);
-      const [keepSummary, discardSummary] = await Promise.all([
-        fetchMergeNodeSummary(keepCmid),
-        fetchMergeNodeSummary(discardCmid),
-      ]);
-
-      if (keepSummary.primaryDomain !== discardSummary.primaryDomain) {
-        alert(
-          `Primary domain mismatch. ` +
-          `${keepSummary.CMID} (${keepSummary.CMName || "Unknown"}) is ${keepSummary.primaryDomain}, ` +
-          `but ${discardSummary.CMID} (${discardSummary.CMName || "Unknown"}) is ${discardSummary.primaryDomain}.`
-        );
-        return;
-      }
-
-      setMergePreview({ keep: keepSummary, discard: discardSummary });
+      const response = await fetch(`${apiBaseUrl()}/admin/merge-preview`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(cred ? { Authorization: `Bearer ${cred}` } : {}),
+        },
+        body: JSON.stringify({ database, keepcmid: keepCmid, deletecmid: discardCmid }),
+      });
+      const preview = await response.json();
+      if (!response.ok) throw new Error(preview.error || "Unable to preview merge.");
+      setMergePreview(preview);
+      setCyclicParentChoice("");
       setMergeConfirmOpen(true);
     } catch (error) {
       alert(error.message || "Unable to validate merge nodes.");
@@ -3625,15 +3613,38 @@ const Admin = ({ database }) => {
           <Typography component="div" sx={{ color: "text.primary" }}><strong>Keep:</strong> {mergePreview.keep?.CMID} - {mergePreview.keep?.CMName}</Typography>
           <Typography component="div" sx={{ color: "text.primary" }}><strong>Discard:</strong> {mergePreview.discard?.CMID} - {mergePreview.discard?.CMName}</Typography>
           <Typography component="div" sx={{ mt: 2, color: "text.primary" }}><strong>Primary domain:</strong> {mergePreview.keep?.primaryDomain}</Typography>
+          {mergePreview.cyclicParentReferences?.length > 0 && (
+            <Box sx={{ mt: 2 }}>
+              <Typography id="cyclic-parent-question">
+                This merge would make a category its own parent. Remove the cyclical CONTAINS parent references?
+              </Typography>
+              <RadioGroup aria-labelledby="cyclic-parent-question" value={cyclicParentChoice}
+                onChange={(event) => setCyclicParentChoice(event.target.value)}>
+                <FormControlLabel value="yes" control={<Radio />} label="Yes, remove them" />
+                <FormControlLabel value="no" control={<Radio />} label="No, keep them and continue the merge" />
+              </RadioGroup>
+              <Typography variant="body2">
+                Yes removes only the parent and matching parentContext entries that become self-references.
+                Other parents and event details are preserved.
+              </Typography>
+            </Box>
+          )}
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setMergeConfirmOpen(false)}>Cancel</Button>
           <Button
             color="success"
             variant="contained"
+            disabled={loading || (mergePreview.cyclicParentReferences?.length > 0 && !cyclicParentChoice)}
             onClick={() => {
               setMergeConfirmOpen(false);
-              submitAdminAction();
+              submitAdminAction({
+                s1_2: mergePreview.keep.CMID,
+                s1_3: mergePreview.discard.CMID,
+                cyclicParentToken: mergePreview.cyclicParentToken,
+                ...(mergePreview.cyclicParentReferences?.length > 0
+                  ? { removeCyclicParents: cyclicParentChoice === "yes" } : {}),
+              });
             }}
           >
             Confirm Merge
