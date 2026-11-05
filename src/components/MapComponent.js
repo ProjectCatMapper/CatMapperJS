@@ -577,7 +577,7 @@ const DeckGlMap = ({ points, layers, sourceColorMap, stringToColor, onNodeClick,
   );
 };
 
-const MapComponent = ({ points = [], mapt = [], sources = [], layers = null, domains = [], mapType = "category", database }) => {
+const MapComponent = ({ points = [], mapt = [], sources = [], layers = null, domains = [], mapType = "category", mapHeight = "60vh", database }) => {
   const navigate = useNavigate();
   const nodePath = (item) => getMapNodePath(database, item);
   const onNodeClick = (item) => {
@@ -628,7 +628,7 @@ const MapComponent = ({ points = [], mapt = [], sources = [], layers = null, dom
     || (mapType === "dataset" ? DATASET_POINT_COLOR : getMapSourceColor(source));
 
   return (
-    <div style={{ height: "100%", display: "flex", flexDirection: "column" }}>
+    <div style={{ display: "flex", flexDirection: "column" }}>
       <FormControl size="small" sx={{ m: 1, minWidth: 200, maxWidth: 400 }}>
         <InputLabel id="map-domains-label">Domains</InputLabel>
         <Select
@@ -653,7 +653,8 @@ const MapComponent = ({ points = [], mapt = [], sources = [], layers = null, dom
           ))}
         </Select>
       </FormControl>
-      <div style={{ flex: 1, minHeight: 0, position: "relative" }}>
+      {/* Controls and the legend add to the page height, preserving the map viewport. */}
+      <div style={{ height: mapHeight, flexShrink: 0, position: "relative" }}>
         {shouldUseDeckGlMap(renderLayers, allPoints.length) ? (
           <DeckGlMap points={allPoints} layers={renderLayers} sourceColorMap={sourceColorMap} stringToColor={stringToColor} onNodeClick={onNodeClick} nodePath={nodePath} />
         ) : (

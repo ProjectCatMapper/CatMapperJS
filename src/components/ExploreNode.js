@@ -2091,12 +2091,11 @@ export default function Tableclick({ cmid, database, tabval }) {
                       top: "10",
                       left: "200",
                       width: "95%",
-                      height: "80vh",
                     }}
                   >
                     {loadingBackground ? null : (
                       datasetMapLayers.length > 0 ? (
-                        <MapComponent points={datasetpoints} mapt={mapt} sources={sources} layers={datasetMapLayers} mapType="dataset" database={database} />
+                        <MapComponent points={datasetpoints} mapt={mapt} sources={sources} layers={datasetMapLayers} mapType="dataset" mapHeight="80vh" database={database} />
                       ) : (
                         <p>No map layer selected.</p>
                       )
@@ -2324,7 +2323,6 @@ export default function Tableclick({ cmid, database, tabval }) {
                       top: "10",
                       left: "200",
                       width: "95%",
-                      height: "60vh",
                     }}
                   >
                     {categoryMapLayers.length > 0 ? (

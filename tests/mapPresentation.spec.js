@@ -54,7 +54,32 @@ test('category map keeps its dataset legend', async ({ page }, testInfo) => {
   await expect(legend).toContainText('EthnographicAtlas');
   await expect(legend).toContainText('HRAF');
   await expect(page.getByRole('group', { name: 'Map zoom controls' })).toBeVisible();
+  const mapBox = await page.locator('canvas#deckgl-overlay').boundingBox();
+  expect(mapBox.height).toBeCloseTo(page.viewportSize().height * 0.6, 0);
   await page.screenshot({ path: testInfo.outputPath('category-map.png'), fullPage: true });
+});
+
+test('a wrapped category legend preserves map height on desktop and mobile', async ({ page }) => {
+  await page.route('**/exploreGeometry/sociomap/SM254978', (route) => json(route, {
+    polygons: [], datasetpoints: [], badsources: [], points: Array.from({ length: 30 }, (_, index) => ({
+      CMID: 'SM254978', CMName: 'Klao', source: `Example dataset ${index + 1}`, cood: [-9, 5],
+    })),
+  }));
+  await page.goto(`${BASE_URL}/sociomap/SM254978/map`);
+  const canvas = page.locator('canvas#deckgl-overlay');
+  const legend = page.getByRole('group', { name: 'Map legend' });
+  await expect(legend).toContainText('Example dataset 30');
+  for (const viewport of [{ width: 1440, height: 900 }, { width: 390, height: 844 }]) {
+    await page.setViewportSize(viewport);
+    await expect(async () => {
+      const mapBox = await canvas.boundingBox();
+      const legendBox = await legend.boundingBox();
+      const dropdownBox = await page.getByRole('combobox', { name: 'Domains' }).boundingBox();
+      expect(mapBox.height).toBeCloseTo(viewport.height * 0.6, 0);
+      expect(legendBox.y).toBeGreaterThanOrEqual(mapBox.y + mapBox.height - 1);
+      expect(dropdownBox.y + dropdownBox.height).toBeLessThanOrEqual(mapBox.y);
+    }).toPass();
+  }
 });
 
 test('dataset map lets the user choose a coincident node and open its page', async ({ page }, testInfo) => {
@@ -63,6 +88,8 @@ test('dataset map lets the user choose a coincident node and open its page', asy
   await expect(page.getByLabel('Category locations', { exact: true })).toBeChecked();
   const canvas = page.locator('canvas#deckgl-overlay');
   await expect(canvas).toBeVisible();
+  const mapBox = await canvas.boundingBox();
+  expect(mapBox.height).toBeCloseTo(page.viewportSize().height * 0.8, 0);
   // The fixture points share a location, which is centered by fit-to-bounds.
   const stackCenter = async () => {
     await canvas.scrollIntoViewIfNeeded();
@@ -91,7 +118,7 @@ test('dataset map lets the user choose a coincident node and open its page', asy
   await expect(page.getByRole('dialog', { name: '2 points at this location' })).toBeVisible();
   await page.screenshot({ path: testInfo.outputPath('dataset-map.png'), fullPage: true });
   await page.getByRole('link', { name: 'Basti', exact: true }).click();
-  await expect(page).toHaveURL(/\/sociomap\/SM226738(?:\/network)?$/);
+  await expect(page).toHaveURL(/\/sociomap\/SM226738(?:\/(?:network|map))?$/);
 });
 
 test('clicking a single dataset point opens its category page', async ({ page }) => {
@@ -112,5 +139,5 @@ test('clicking a single dataset point opens its category page', async ({ page })
     await expect(page.getByText('CMID: SM226738', { exact: false })).toBeVisible({ timeout: 500 });
   }).toPass({ timeout: 10000 });
   await page.mouse.click(center.x, center.y);
-  await expect(page).toHaveURL(/\/sociomap\/SM226738(?:\/network)?$/);
+  await expect(page).toHaveURL(/\/sociomap\/SM226738(?:\/(?:network|map))?$/);
 });
