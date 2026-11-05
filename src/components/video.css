@@ -1,9 +1,11 @@
 #video{
-    position: fixed;
+    position: absolute;
+    inset: 0;
     width: 100%;
     height: 100%;
     object-fit: cover;
-    z-index: -1;
+    z-index: 0;
+    pointer-events: none;
 }
 
 #mainvideo{
@@ -17,6 +19,8 @@
 }
 
 .hero{
+    /* Keep white content readable even when autoplay or video decoding fails. */
+    background-color: #111;
     min-height: 100vh;
     width: 100%;
     object-fit: contain;
@@ -25,10 +29,11 @@
     align-items: center;
     text-align: center;
     position: relative;
-    margin-bottom: 2rem;
 }
 
 .hero .maincontent {
+    position: relative;
+    z-index: 1;
     max-width: 90%;
     padding: 1rem;
     color: white;
