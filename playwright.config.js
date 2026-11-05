@@ -33,5 +33,15 @@ module.exports = defineConfig({
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
     },
+    {
+      name: 'webkit-homepage',
+      testMatch: 'homePage.media.spec.js',
+      use: { ...devices['Desktop Safari'] },
+    },
+    {
+      name: 'mobile-webkit-homepage',
+      testMatch: 'homePage.media.spec.js',
+      use: { ...devices['iPhone 13'] },
+    },
   ],
 });

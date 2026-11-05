@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom'
 import './video.css'
 
 import mainvideo from "../assets/world.webm"
+import fallbackVideo from "../assets/world.mp4"
 
 const Video = ({ database }) => {
     const [displayData, setDisplayData] = useState([]);
@@ -40,8 +41,9 @@ const Video = ({ database }) => {
 
     return (
         <div className='hero'>
-            <video autoPlay loop muted playsInline controls={false} id='video'>
-                <source src={mainvideo} type='video/mp4' />
+            <video autoPlay loop muted playsInline controls={false} aria-hidden="true" id='video'>
+                <source src={mainvideo} type='video/webm' />
+                <source src={fallbackVideo} type='video/mp4' />
             </video>
             <div className='maincontent'>
                 <h1 id="mainvideo" className="stacked">{mainHeader}</h1>
