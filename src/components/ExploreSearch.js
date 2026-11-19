@@ -156,6 +156,28 @@ export default function Searchbar({ database }) {
   }, [database]);
   const [selectedcountry, setSelectedCountry] = useState(countries[0].code);
   const [selectedCategory, setSelectedCategory] = useState({});
+  const [domainTree, setDomainTree] = useState(null);
+  const [domainTreeError, setDomainTreeError] = useState(false);
+
+  useEffect(() => {
+    if (!database) return;
+    let active = true;
+    setDomainTree(null);
+    setDomainTreeError(false);
+    fetch(`${apiBaseUrl()}/getDomains/${database}`)
+      .then((res) => {
+        if (!res.ok) throw new Error(`Server error: ${res.status}`);
+        return res.json();
+      })
+      .then((data) => { if (active) setDomainTree(data); })
+      .catch((err) => {
+        if (active) {
+          console.error('Error loading subdomain descriptions:', err);
+          setDomainTreeError(true);
+        }
+      });
+    return () => { active = false; };
+  }, [database]);
 
   useEffect(() => {
     fetch(`${apiBaseUrl()}/metadata/subdomains/${database}`)
@@ -400,19 +422,20 @@ export default function Searchbar({ database }) {
           </tr>
         </thead>
         <tbody>
-          {infodata && selectedCategory?.[domainDrop]?.length > 0 ? (
-            infodata
-              .filter(desc => selectedCategory[domainDrop].includes(desc.label))
-              .map((category, index) => (
-                <tr key={index}>
-                  <td className="table-cell">{category.label}</td>
-                  <td className="table-cell">{category.description}</td>
+          {domainTree && selectedCategory?.[domainDrop]?.length > 0 ? (
+            selectedCategory[domainDrop].map((label) => {
+              const category = domainTree.find(row => row.domain === domainDrop && row.subdomain === label);
+              return (
+                <tr key={label}>
+                  <td className="table-cell">{label}</td>
+                  <td className="table-cell">{category?.description || 'Description unavailable'}</td>
                 </tr>
-              ))
+              );
+            })
           ) : (
             <tr>
               <td colSpan={2} style={{ padding: '8px', fontStyle: 'italic' }}>
-                Loading...
+                {domainTreeError ? 'Descriptions unavailable' : 'Loading...'}
               </td>
             </tr>
           )}
