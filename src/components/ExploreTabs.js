@@ -61,6 +61,12 @@ export default function ClickTable(props) {
       renderCell: (params1) => <a id='viewlink' href={params1.row.link2} target="_blank" rel="noopener noreferrer">{params1.row.source}</a>,
     },
     {
+      field: 'domain',
+      headerName: 'Domain',
+      minWidth: 120,
+      flex: 0.6,
+    },
+    {
       field: 'datasetKey',
       headerName: 'Key',
       flex: isCompactLayout ? 0.85 : 1.0,
@@ -90,7 +96,7 @@ export default function ClickTable(props) {
     },
   ]), [isCompactLayout]);
   const [rows, setRows] = useState([]);
-  const [columnVisibilityModel, setColumnVisibilityModel] = useState({ datasetKey: false });
+  const [columnVisibilityModel, setColumnVisibilityModel] = useState({ datasetKey: false, domain: false });
 
   useEffect(() => {
     setRows(props.usert.map((value, key) => {
@@ -115,6 +121,7 @@ export default function ClickTable(props) {
         samplesize: value['Sample size'],
         source: value.Source,
         datasetKey: value.Key ?? value.key ?? '',
+        domain: value.Domain ?? '',
         version: value.Version,
         link: value.Link,
         link2: value.link2,
@@ -139,9 +146,9 @@ export default function ClickTable(props) {
   }, [props.usert])
 
   const defaultColumnVisibilityModel = useMemo(() => {
-    const model = { datasetKey: false };
+    const model = { datasetKey: false, domain: false };
     for (const col of ccolumns) {
-      if (col.field === 'datasetKey') continue;
+      if (col.field === 'datasetKey' || col.field === 'domain') continue;
       model[col.field] = rows.some((row) =>
         (row[col.field] !== null) &&
         (row[col.field] !== undefined) &&
